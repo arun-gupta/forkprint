@@ -34,7 +34,7 @@ export function RepoInputForm({ onSubmit }: RepoInputFormProps) {
         aria-describedby={error ? 'repo-input-error' : undefined}
       />
       {error && (
-        <p id="repo-input-error" role="alert" className="mt-1 text-sm text-red-600">
+        <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600">
           {error}
         </p>
       )}

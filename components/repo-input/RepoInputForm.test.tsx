@@ -30,22 +30,22 @@ describe('RepoInputForm — US2 (invalid input)', () => {
   it('shows inline error on empty submission', async () => {
     render(<RepoInputForm onSubmit={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByTestId('repo-error')).toBeInTheDocument()
   })
 
   it('shows inline error for malformed slug', async () => {
     render(<RepoInputForm onSubmit={vi.fn()} />)
     await userEvent.type(screen.getByRole('textbox'), 'notaslug')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByTestId('repo-error')).toBeInTheDocument()
   })
 
   it('clears error on subsequent valid submission', async () => {
     render(<RepoInputForm onSubmit={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByTestId('repo-error')).toBeInTheDocument()
     await userEvent.type(screen.getByRole('textbox'), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('repo-error')).not.toBeInTheDocument()
   })
 })
