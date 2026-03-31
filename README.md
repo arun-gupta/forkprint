@@ -1,13 +1,28 @@
 # ForkPrint
 
-CHAOSS-aligned GitHub repository health analyzer. Accepts one or more `owner/repo` inputs, fetches real public data via the GitHub GraphQL API, and produces an interactive dashboard and raw JSON output.
+ForkPrint is a CHAOSS-aligned GitHub repository health analyzer being built in phases. The long-term goal is to accept one or more `owner/repo` inputs, fetch real public data via the GitHub GraphQL API, and produce an interactive dashboard and raw JSON output.
 
-## What it does
+## Current Status
 
-- Analyzes GitHub repos across four CHAOSS categories: **Ecosystem**, **Evolution**, **Sustainability**, and **Responsiveness**
-- Visualizes repos on an interactive 2×2 ecosystem map (stars × forks)
-- Compares multiple repos side by side across all health metrics
-- Exports results as JSON or Markdown
+The repo is currently in early Phase 1 development.
+
+Implemented today:
+
+- Repo input form on `/`
+- Client-side parsing of `owner/repo` slugs
+- Support for newline-separated input, comma-separated input, and full GitHub repo URLs
+- Inline validation for malformed or empty input
+- Deduplication of duplicate repo entries before submission
+- Unit/component tests with Vitest and React Testing Library
+- End-to-end coverage for the repo input flow with Playwright
+
+Not implemented yet:
+
+- GitHub data fetching
+- Dashboard and ecosystem map
+- Repo comparison view
+- JSON/Markdown export
+- GitHub PAT and OAuth authentication flows
 
 ## Roadmap
 
@@ -27,6 +42,13 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Planned Product Capabilities
+
+- Analyze GitHub repos across four CHAOSS categories: **Ecosystem**, **Evolution**, **Sustainability**, and **Responsiveness**
+- Visualize repos on an interactive 2×2 ecosystem map (stars × forks)
+- Compare multiple repos side by side across all health metrics
+- Export results as JSON or Markdown
 
 ## Testing
 
