@@ -53,10 +53,11 @@ Response: { "results": AnalysisResult[] }
 1. **Primary source**: GitHub GraphQL API (`https://api.github.com/graphql`).
 2. Each repo requires 1–3 GraphQL requests. Precise field selection — no over-fetching.
 3. REST API may supplement only where GraphQL cannot reach a specific metric. This is an exception, not a pattern.
-4. Auth: Personal Access Token (classic), minimum `public_repo` read-only scope.
+4. Auth: Personal Access Token (classic) OR GitHub OAuth App — both are supported in Phase 1. Minimum scope: `public_repo` read-only.
 5. `GITHUB_TOKEN` is always read from environment. It is **never hardcoded** anywhere in the codebase.
-6. Server-side `GITHUB_TOKEN` (Vercel env var) takes precedence over client-supplied token.
+6. Server-side `GITHUB_TOKEN` (Vercel env var) takes precedence over client-supplied token or OAuth session.
 7. Token is never included in URLs, never exposed to the client bundle, never logged.
+8. OAuth requires a `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` — both stored as environment variables, never committed to git, never sent to the client.
 
 ---
 

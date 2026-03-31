@@ -124,8 +124,8 @@ User can authenticate with GitHub to enable data fetching.
 - Missing token with no server-side fallback blocks submission with a clear error
 
 **Out of scope**
-- OAuth flow — PAT only for Phase 1
 - Multi-account or org-level token management
+- OAuth flow is handled by P1-F14 (implemented after P1-F07)
 
 ---
 
@@ -311,6 +311,27 @@ The UI makes data gaps explicit and never hides them.
 
 **Out of scope**
 - Suggesting alternative data sources for missing fields
+
+---
+
+#### `[P1-F14]` GitHub OAuth Authentication
+
+User can authenticate with GitHub via OAuth instead of manually entering a PAT.
+
+**Acceptance criteria**
+- "Sign in with GitHub" button initiates the OAuth flow using a registered GitHub OAuth App
+- OAuth access token is stored in `localStorage` — same storage contract as PAT
+- OAuth token has the same minimum required scope: `public_repo` read-only
+- After successful OAuth login, the token input field is replaced with a signed-in indicator showing the GitHub username
+- User can sign out, which clears the stored OAuth token from `localStorage`
+- If a server-side `GITHUB_TOKEN` is configured, the OAuth flow is hidden (same behavior as P1-F02)
+- `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are stored as environment variables — never committed, never sent to the client
+- OAuth callback is handled server-side; the access token is never exposed in the URL
+
+**Out of scope**
+- Multi-account or org-level OAuth management
+- Token refresh / long-lived session management (Phase 1 is stateless)
+- Replacing PAT support — PAT and OAuth coexist; PAT remains available for users who prefer it
 
 ---
 

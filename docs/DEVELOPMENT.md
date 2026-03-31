@@ -65,12 +65,13 @@ Once done, open a PR and merge before starting the next feature.
 | 5 | P1-F05 | Ecosystem Map | — |
 | 6 | P1-F06 | Repo Comparison | — |
 | 7 | P1-F07 | Metric Cards | — |
-| 8 | P1-F08 | Evolution | — |
-| 9 | P1-F09 | Contribution Dynamics | — |
-| 10 | P1-F10 | Responsiveness | — |
-| 11 | P1-F11 | Health Ratios | — |
-| 12 | P1-F12 | Missing Data & Accuracy | — |
-| 13 | P1-F13 | Export | — |
+| 8 | P1-F14 | GitHub OAuth Authentication | — |
+| 9 | P1-F08 | Evolution | — |
+| 10 | P1-F09 | Contribution Dynamics | — |
+| 11 | P1-F10 | Responsiveness | — |
+| 12 | P1-F11 | Health Ratios | — |
+| 13 | P1-F12 | Missing Data & Accuracy | — |
+| 14 | P1-F13 | Export | — |
 
 ---
 
