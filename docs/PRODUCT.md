@@ -101,7 +101,7 @@ Each feature is the unit of a SpecKit spec — one feature maps to one spec file
 User can provide one or more GitHub repositories for analysis.
 
 **Acceptance criteria**
-- Textarea accepts one `owner/repo` slug per line
+- Textarea accepts one `owner/repo` slug per line, or comma-separated
 - Client-side validation rejects malformed slugs before submission (`owner/repo` pattern, trims whitespace)
 - Empty submission is blocked with an inline error
 - Valid input is passed to the data fetching layer unchanged
@@ -112,23 +112,7 @@ User can provide one or more GitHub repositories for analysis.
 
 ---
 
-#### `[P1-F02]` Deployment
-
-ForkPrint deploys to Vercel with minimal configuration.
-
-**Acceptance criteria**
-- Deployable to Vercel with zero config
-- `GITHUB_TOKEN` configurable as a Vercel environment variable for shared/team deployments
-- No database, no auth system — stateless by default
-- `GITHUB_TOKEN` never exposed to the client bundle
-
-**Out of scope**
-- Self-hosted Docker deployment (not blocked, just not documented in Phase 1)
-- Multi-region or edge deployment configuration
-
----
-
-#### `[P1-F03]` Authentication
+#### `[P1-F02]` Authentication
 
 User can authenticate with GitHub to enable data fetching.
 
@@ -136,12 +120,28 @@ User can authenticate with GitHub to enable data fetching.
 - Token input field accepts a GitHub Personal Access Token
 - Token is stored in `localStorage` — never transmitted anywhere except the GitHub GraphQL API
 - UI displays the minimum required scope: `public_repo` read-only
-- If `GITHUB_TOKEN` is set as a Vercel environment variable, it is used server-side and the token field is hidden
 - Missing token with no server-side fallback blocks submission with a clear error
 
 **Out of scope**
 - OAuth flow — PAT only for Phase 1
 - Multi-account or org-level token management
+
+---
+
+#### `[P1-F03]` Deployment
+
+ForkPrint deploys to Vercel with minimal configuration.
+
+**Acceptance criteria**
+- Deployable to Vercel with zero config
+- `GITHUB_TOKEN` configurable as a Vercel environment variable for shared/team deployments
+- When `GITHUB_TOKEN` is set as a Vercel environment variable, it is used server-side and the token input field is hidden in the UI
+- No database, no auth system — stateless by default
+- `GITHUB_TOKEN` never exposed to the client bundle
+
+**Out of scope**
+- Self-hosted Docker deployment (not blocked, just not documented in Phase 1)
+- Multi-region or edge deployment configuration
 
 ---
 
@@ -156,6 +156,12 @@ The analyzer fetches exact, verified metric data from GitHub for each repo.
 - Rate limit state is surfaced to the user (remaining calls, `Retry-After` when exhausted)
 - Loading state shown per repo during fetch
 - No metric is estimated, inferred, or fabricated — missing fields are marked `"unavailable"`
+- Data fetched per repo covers the following placeholders:
+  - **Repo metadata**: name, description, created date, primary language
+  - **Ecosystem signals**: stars, forks, watchers
+  - **Evolution**: commits (last 30d, last 90d), releases (last 12mo), PRs opened (last 90d), PRs merged (last 90d), issues open, issues closed (last 90d)
+  - **Contribution Dynamics**: unique commit authors (last 90d), total contributors, commit counts per author
+  - **Responsiveness**: issue first-response timestamps, issue close timestamps, PR merge timestamps
 
 **Out of scope**
 - Caching or persisting fetched data
@@ -470,8 +476,8 @@ Once the feature is complete and tests pass, commit, then return to **3a** for t
 | # | Feature ID | Feature |
 |---|---|---|
 | 1 | P1-F01 | Repo Input |
-| 2 | P1-F02 | Deployment |
-| 3 | P1-F03 | Authentication |
+| 2 | P1-F02 | Authentication |
+| 3 | P1-F03 | Deployment |
 | 4 | P1-F04 | Data Fetching |
 | 5 | P1-F05 | Ecosystem Map |
 | 6 | P1-F06 | Repo Comparison |
