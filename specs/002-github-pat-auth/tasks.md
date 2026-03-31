@@ -20,9 +20,9 @@
 
 **Purpose**: Prepare the repo for the PAT authentication feature without introducing implementation behavior yet.
 
-- [ ] T001 Create `.env.example` with a blank `GITHUB_TOKEN=` placeholder in `/Users/arungupta/workspaces/forkprint/.env.example`
-- [ ] T002 [P] Create `components/token-input/` and add a `TokenInput.tsx` stub in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
-- [ ] T003 [P] Create `lib/token-storage.ts` with exported contract stubs in `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts`
+- [X] T001 Create `.env.example` with a blank `GITHUB_TOKEN=` placeholder in `/Users/arungupta/workspaces/forkprint/.env.example`
+- [X] T002 [P] Create `components/token-input/` and add a `TokenInput.tsx` stub in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
+- [X] T003 [P] Create `lib/token-storage.ts` with exported contract stubs in `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts`
 
 **Checkpoint**: Required files for the feature exist and the project still compiles.
 
@@ -34,9 +34,9 @@
 
 **⚠️ CRITICAL**: No user story implementation should start until this phase is complete.
 
-- [ ] T004 Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` type signature to accept `hasServerToken: boolean` and `onSubmit(repos, token)` flow per `specs/002-github-pat-auth/contracts/component-props.ts`
-- [ ] T005 Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` to pass a server-derived `hasServerToken` boolean into `RepoInputClient` without exposing the token value
-- [ ] T006 Create shared token error messaging and display contract between `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` and `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
+- [X] T004 Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` type signature to accept `hasServerToken: boolean` and `onSubmit(repos, token)` flow per `specs/002-github-pat-auth/contracts/component-props.ts`
+- [X] T005 Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` to pass a server-derived `hasServerToken` boolean into `RepoInputClient` without exposing the token value
+- [X] T006 Create shared token error messaging and display contract between `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` and `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
 
 **Checkpoint**: The app has the server/client wiring needed to support PAT UI behavior, but story functionality is not implemented yet.
 
@@ -52,17 +52,17 @@
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T007 [P] [US1] Add unit tests for token storage read/write/clear behavior in `/Users/arungupta/workspaces/forkprint/lib/token-storage.test.ts`
-- [ ] T008 [P] [US1] Add unit tests for token field rendering, masking, scope label, and change handling in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.test.tsx`
-- [ ] T009 [P] [US1] Add unit tests for loading a stored token and passing it through submit flow in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
-- [ ] T010 [US1] Add Playwright coverage for storing and reloading the PAT on the home page in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
+- [X] T007 [P] [US1] Add unit tests for token storage read/write/clear behavior in `/Users/arungupta/workspaces/forkprint/lib/token-storage.test.ts`
+- [X] T008 [P] [US1] Add unit tests for token field rendering, masking, scope label, and change handling in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.test.tsx`
+- [X] T009 [P] [US1] Add unit tests for loading a stored token and passing it through submit flow in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
+- [X] T010 [US1] Add Playwright coverage for storing and reloading the PAT on the home page in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement `readToken`, `writeToken`, `clearToken`, and `TOKEN_STORAGE_KEY` in `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts`
-- [ ] T012 [US1] Implement the controlled PAT field, label, and scope hint in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
-- [ ] T013 [US1] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to load stored tokens on mount and persist the trimmed token on successful submit
-- [ ] T014 [US1] Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` so the PAT entry UI appears on `/` when no server token is configured
+- [X] T011 [US1] Implement `readToken`, `writeToken`, `clearToken`, and `TOKEN_STORAGE_KEY` in `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts`
+- [X] T012 [US1] Implement the controlled PAT field, label, and scope hint in `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx`
+- [X] T013 [US1] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to load stored tokens on mount and persist the trimmed token on successful submit
+- [X] T014 [US1] Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` so the PAT entry UI appears on `/` when no server token is configured
 
 **Checkpoint**: User Story 1 is fully functional and independently testable.
 
@@ -78,15 +78,15 @@
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T015 [P] [US2] Add unit tests for empty and whitespace-only PAT submission blocking in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
-- [ ] T016 [P] [US2] Add unit tests for clearing stored PAT state when the field is emptied in `/Users/arungupta/workspaces/forkprint/lib/token-storage.test.ts`
-- [ ] T017 [US2] Add Playwright coverage for blocked submission and inline error behavior in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
+- [X] T015 [P] [US2] Add unit tests for empty and whitespace-only PAT submission blocking in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
+- [X] T016 [P] [US2] Add unit tests for clearing stored PAT state when the field is emptied in `/Users/arungupta/workspaces/forkprint/lib/token-storage.test.ts`
+- [X] T017 [US2] Add Playwright coverage for blocked submission and inline error behavior in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to block submit when `hasServerToken` is false and the trimmed PAT is empty
-- [ ] T019 [US2] Render a clear inline token-required error in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` and clear it after a valid resubmission
-- [ ] T020 [US2] Ensure `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts` removes the stored token when the submitted value is empty or whitespace-only
+- [X] T018 [US2] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to block submit when `hasServerToken` is false and the trimmed PAT is empty
+- [X] T019 [US2] Render a clear inline token-required error in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` and clear it after a valid resubmission
+- [X] T020 [US2] Ensure `/Users/arungupta/workspaces/forkprint/lib/token-storage.ts` removes the stored token when the submitted value is empty or whitespace-only
 
 **Checkpoint**: Empty-token submissions are blocked locally and the UX recovers correctly after correction.
 
@@ -102,13 +102,13 @@
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T021 [P] [US3] Add unit tests for conditional token UI visibility based on `hasServerToken` in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
-- [ ] T022 [US3] Add Playwright coverage for server-token mode hiding the PAT field in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
+- [X] T021 [P] [US3] Add unit tests for conditional token UI visibility based on `hasServerToken` in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
+- [X] T022 [US3] Add Playwright coverage for server-token mode hiding the PAT field in `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` to derive `hasServerToken` from `process.env.GITHUB_TOKEN` on the server
-- [ ] T024 [US3] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to skip client-token validation and hide `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx` when `hasServerToken` is true
+- [X] T023 [US3] Update `/Users/arungupta/workspaces/forkprint/app/page.tsx` to derive `hasServerToken` from `process.env.GITHUB_TOKEN` on the server
+- [X] T024 [US3] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to skip client-token validation and hide `/Users/arungupta/workspaces/forkprint/components/token-input/TokenInput.tsx` when `hasServerToken` is true
 
 **Checkpoint**: The home page behaves correctly in shared deployments with a configured server-side token.
 
@@ -118,12 +118,12 @@
 
 **Purpose**: Validate the feature end to end and align docs/checklists with the finished implementation.
 
-- [ ] T025 [P] Run unit tests with `npm test` and confirm the new PAT coverage passes
-- [ ] T026 [P] Run lint with `npm run lint` and remove any dead code, TODOs, or `console.log` related to PAT work
-- [ ] T027 [P] Run E2E coverage with `npm run test:e2e` for `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
+- [X] T025 [P] Run unit tests with `npm test` and confirm the new PAT coverage passes
+- [X] T026 [P] Run lint with `npm run lint` and remove any dead code, TODOs, or `console.log` related to PAT work
+- [X] T027 [P] Run E2E coverage with `npm run test:e2e` for `/Users/arungupta/workspaces/forkprint/e2e/auth.spec.ts`
 - [ ] T028 Run `npm run build` and verify the PAT feature does not introduce type or production build regressions
-- [ ] T029 Update the manual testing checklist for `P1-F02` in `/Users/arungupta/workspaces/forkprint/specs/002-github-pat-auth/checklists/requirements.md` and any feature-specific checklist items
-- [ ] T030 Update user-facing setup and behavior notes in `/Users/arungupta/workspaces/forkprint/README.md` if the completed PAT flow changes onboarding expectations
+- [X] T029 Update the manual testing checklist for `P1-F02` in `/Users/arungupta/workspaces/forkprint/specs/002-github-pat-auth/checklists/manual-testing.md` and any feature-specific checklist items
+- [X] T030 Update user-facing setup and behavior notes in `/Users/arungupta/workspaces/forkprint/README.md` if the completed PAT flow changes onboarding expectations
 
 ---
 
