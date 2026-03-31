@@ -165,6 +165,7 @@ A feature is complete only when all of the following are true:
 - [ ] Tests pass and linting is clean
 - [ ] No TODOs, dead code, `console.log`, or untyped values remain
 - [ ] All spec documents for the feature are current
+- [ ] Manual testing checklist completed and signed off
 - [ ] Constitution compliance verified — no rule violated
 
 ---
@@ -173,8 +174,9 @@ A feature is complete only when all of the following are true:
 
 1. All work happens on feature branches. No direct commits to `main`.
 2. All tests must pass and linting must be clean before a PR is merged.
-3. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
-4. README is updated when a completed feature changes the user-facing behavior or setup steps.
+3. A manual testing checklist must be completed and signed off before submitting a PR.
+4. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
+5. README is updated when a completed feature changes the user-facing behavior or setup steps.
 
 ---
 
