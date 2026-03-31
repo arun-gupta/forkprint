@@ -22,10 +22,19 @@ CHAOSS-aligned GitHub repository health analyzer. Accepts one or more `owner/rep
 Requires a GitHub Personal Access Token with `public_repo` read-only scope.
 
 ```bash
-cp .env.example .env.local
-# add your GITHUB_TOKEN to .env.local
 npm install
 npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Testing
+
+```bash
+npm test              # unit tests (Vitest + React Testing Library)
+npm run test:e2e      # E2E tests (Playwright)
+npm run lint          # ESLint
+npm run build         # production build check
 ```
 
 ## Development

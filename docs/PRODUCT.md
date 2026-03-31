@@ -101,9 +101,10 @@ Each feature is the unit of a SpecKit spec — one feature maps to one spec file
 User can provide one or more GitHub repositories for analysis.
 
 **Acceptance criteria**
-- Textarea accepts one `owner/repo` slug per line, or comma-separated
+- Textarea accepts one `owner/repo` slug per line, or comma-separated, or full GitHub URLs (`https://github.com/owner/repo`) — slug is extracted automatically
 - Client-side validation rejects malformed slugs before submission (`owner/repo` pattern, trims whitespace)
 - Empty submission is blocked with an inline error
+- Duplicate slugs are removed client-side before passing to the data fetching layer
 - Valid input is passed to the data fetching layer unchanged
 
 **Out of scope**
