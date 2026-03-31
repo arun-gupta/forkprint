@@ -12,3 +12,4 @@ Before running any `/speckit.*` command, always read `docs/PRODUCT.md`. The spec
 ## On Ambiguity
 If a spec is missing, incomplete, or conflicts with the constitution — 
 stop and ask. Do not infer. Do not proceed.
+
