@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RepoInputClient } from './RepoInputClient'
 
@@ -76,5 +76,141 @@ describe('RepoInputClient', () => {
 
     expect(screen.queryByTestId('token-error')).not.toBeInTheDocument()
     expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
+  })
+
+  it('renders returned analysis results after a successful submission', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          createdAt: '2013-05-24T16:15:54Z',
+          primaryLanguage: 'TypeScript',
+          stars: 244295,
+          forks: 25,
+          watchers: 10,
+          commits30d: 7,
+          commits90d: 18,
+          releases12mo: 'unavailable',
+          prsOpened90d: 4,
+          prsMerged90d: 3,
+          issuesOpen: 5,
+          issuesClosed90d: 6,
+          uniqueCommitAuthors90d: 'unavailable',
+          totalContributors: 'unavailable',
+          commitCountsByAuthor: 'unavailable',
+          issueFirstResponseTimestamps: 'unavailable',
+          issueCloseTimestamps: 'unavailable',
+          prMergeTimestamps: 'unavailable',
+          missingFields: [],
+        },
+      ],
+      failures: [],
+      rateLimit: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    const results = await screen.findByRole('region', { name: /analysis results/i })
+    expect(within(results).getByText('facebook/react')).toBeInTheDocument()
+    expect(within(results).getByText(/stars: 244,295/i)).toBeInTheDocument()
+  })
+
+  it('renders repository-specific failures alongside successful results', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          createdAt: '2013-05-24T16:15:54Z',
+          primaryLanguage: 'TypeScript',
+          stars: 100,
+          forks: 25,
+          watchers: 10,
+          commits30d: 7,
+          commits90d: 18,
+          releases12mo: 'unavailable',
+          prsOpened90d: 4,
+          prsMerged90d: 3,
+          issuesOpen: 5,
+          issuesClosed90d: 6,
+          uniqueCommitAuthors90d: 'unavailable',
+          totalContributors: 'unavailable',
+          commitCountsByAuthor: 'unavailable',
+          issueFirstResponseTimestamps: 'unavailable',
+          issueCloseTimestamps: 'unavailable',
+          prMergeTimestamps: 'unavailable',
+          missingFields: [],
+        },
+      ],
+      failures: [{ repo: 'facebook/missing-repo', reason: 'Repository could not be analyzed.', code: 'NOT_FOUND' }],
+      rateLimit: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react\nfacebook/missing-repo')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    const results = await screen.findByRole('region', { name: /analysis results/i })
+    expect(within(results).getByText(/failed repositories/i)).toBeInTheDocument()
+    expect(within(results).getByText(/facebook\/missing-repo:/i)).toBeInTheDocument()
+  })
+
+  it('shows loading state while analysis is running and then displays formatted rate-limit metadata', async () => {
+    let resolveAnalysis: ((value: {
+      results: never[]
+      failures: never[]
+      rateLimit: { remaining: number; resetAt: string; retryAfter: 'unavailable' }
+    }) => void) | null = null
+    const onAnalyze = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveAnalysis = resolve
+        }),
+    )
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    const loadingState = screen.getByRole('region', { name: /analysis loading state/i })
+    expect(within(loadingState).getByText(/loading analysis for:/i)).toBeInTheDocument()
+    expect(within(loadingState).getByText('facebook/react')).toBeInTheDocument()
+
+    resolveAnalysis?.({
+      results: [],
+      failures: [],
+      rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+    })
+
+    expect(await screen.findByText(/remaining api calls: 4,999/i)).toBeInTheDocument()
+    expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
+    expect(screen.queryByText(/retry after:/i)).not.toBeInTheDocument()
+  })
+
+  it('shows retry timing only when GitHub provides it', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [],
+      failures: [],
+      rateLimit: { remaining: 'unavailable', resetAt: 'unavailable', retryAfter: 60 },
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    expect(await screen.findByText(/retry after: 60s/i)).toBeInTheDocument()
   })
 })

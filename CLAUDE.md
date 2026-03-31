@@ -10,6 +10,7 @@ Command definitions are available in `.claude/commands/`.
 - `/speckit.implement` — execute plan
 
 Before running any `/speckit.*` command, always read `docs/PRODUCT.md`. The spec must be traceable to the acceptance criteria and out-of-scope boundaries defined there.
+Before choosing the next feature to implement, always read `docs/DEVELOPMENT.md` for the current implementation order.
 
 ## On Ambiguity
 If a spec is missing, incomplete, or conflicts with the constitution — 

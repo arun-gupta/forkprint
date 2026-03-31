@@ -44,11 +44,13 @@ Implemented today:
 - PAT input with `localStorage` persistence and reload
 - PAT-required validation with server-side `GITHUB_TOKEN` fallback
 - Client-side repo parsing, validation, and deduplication
+- `POST /api/analyze` data-fetching flow backed by the GitHub GraphQL API
+- Per-repo result and failure handling with explicit `"unavailable"` placeholders
+- Loading and rate-limit visibility on the home page
 - Automated coverage with Vitest, React Testing Library, and Playwright
 
 Not implemented yet:
 
-- GitHub data fetching
 - Dashboard and ecosystem map
 - Repo comparison view
 - JSON/Markdown export

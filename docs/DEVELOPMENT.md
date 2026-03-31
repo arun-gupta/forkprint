@@ -56,12 +56,14 @@ Once done, open a PR and merge before starting the next feature.
 
 ## Phase 1 feature order
 
+This is the planned implementation order for Phase 1. It may differ from the feature listing order in `docs/PRODUCT.md`, which remains the canonical product definition.
+
 | # | Feature ID | Feature | Status |
 |---|---|---|---|
 | 1 | P1-F01 | Repo Input | ✅ Done |
 | 2 | P1-F02 | Authentication | — |
-| 3 | P1-F03 | Deployment | — |
-| 4 | P1-F04 | Data Fetching | — |
+| 3 | P1-F04 | Data Fetching | — |
+| 4 | P1-F03 | Deployment | — |
 | 5 | P1-F05 | Ecosystem Map | — |
 | 6 | P1-F06 | Repo Comparison | — |
 | 7 | P1-F07 | Metric Cards | — |
