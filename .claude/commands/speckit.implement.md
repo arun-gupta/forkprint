@@ -54,6 +54,10 @@ You **MUST** consider the user input before proceeding (if not empty).
      - Total items: All lines matching `- [ ]` or `- [X]` or `- [x]`
      - Completed items: Lines matching `- [X]` or `- [x]`
      - Incomplete items: Lines matching `- [ ]`
+   - Treat `manual-testing.md` specially:
+     - It MUST exist before implementation begins
+     - Its incompleteness does **not** block `/speckit.implement`
+     - It is completed and signed off later, before opening the PR
    - Create a status table:
 
      ```text
@@ -65,18 +69,24 @@ You **MUST** consider the user input before proceeding (if not empty).
      ```
 
    - Calculate overall status:
-     - **PASS**: All checklists have 0 incomplete items
-     - **FAIL**: One or more checklists have incomplete items
+     - **PASS**: All non-manual checklists have 0 incomplete items, and `manual-testing.md` exists
+     - **FAIL**: One or more non-manual checklists have incomplete items, or `manual-testing.md` is missing
 
-   - **If any checklist is incomplete**:
+   - **If any non-manual checklist is incomplete**:
      - Display the table with incomplete item counts
      - **STOP** and ask: "Some checklists are incomplete. Do you want to proceed with implementation anyway? (yes/no)"
      - Wait for user response before continuing
      - If user says "no" or "wait" or "stop", halt execution
      - If user says "yes" or "proceed" or "continue", proceed to step 3
 
-   - **If all checklists are complete**:
-     - Display the table showing all checklists passed
+   - **If `manual-testing.md` is missing**:
+     - **STOP** and ask: "The feature is missing `checklists/manual-testing.md`. Do you want me to create it before implementation continues? (yes/no)"
+     - Wait for user response before continuing
+     - If user says "no" or "wait" or "stop", halt execution
+     - If user says "yes" or "proceed" or "continue", create the file and then proceed to step 3
+
+   - **If all non-manual checklists are complete and `manual-testing.md` exists**:
+     - Display the table showing checklist status, and note that `manual-testing.md` is expected to remain incomplete until after implementation
      - Automatically proceed to step 3
 
 3. Load and analyze the implementation context:

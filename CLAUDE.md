@@ -9,6 +9,8 @@ Command definitions are available in `.claude/commands/`.
 - `/speckit.tasks` — generate task list
 - `/speckit.implement` — execute plan
 
+These command definitions live in `.claude/commands/`.
+
 Before running any `/speckit.*` command, always read `docs/PRODUCT.md`. The spec must be traceable to the acceptance criteria and out-of-scope boundaries defined there.
 Before choosing the next feature to implement, always read `docs/DEVELOPMENT.md` for the current implementation order.
 

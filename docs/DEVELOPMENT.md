@@ -38,6 +38,8 @@ Review the task list before implementation begins.
 
 > `/speckit.implement` `[P1-F01]`
 
+Each feature must include a manual testing checklist at `specs/NNN-feature-name/checklists/manual-testing.md`. Create it during the feature workflow if it does not already exist, and complete/sign it off before opening the PR.
+
 ### Step 5 — PR
 
 Before opening a PR, verify the Definition of Done (constitution Section XII):
@@ -61,10 +63,10 @@ This is the planned implementation order for Phase 1. It may differ from the fea
 | # | Feature ID | Feature | Status |
 |---|---|---|---|
 | 1 | P1-F01 | Repo Input | ✅ Done |
-| 2 | P1-F02 | Authentication | — |
+| 2 | P1-F02 | Authentication | ✅ Done |
 | 3 | P1-F04 | Data Fetching | — |
-| 4 | P1-F03 | Deployment | — |
-| 5 | P1-F05 | Ecosystem Map | — |
+| 4 | P1-F05 | Ecosystem Map | — |
+| 5 | P1-F03 | Deployment | — |
 | 6 | P1-F06 | Repo Comparison | — |
 | 7 | P1-F07 | Metric Cards | — |
 | 8 | P1-F14 | GitHub OAuth Authentication | — |
@@ -87,5 +89,6 @@ When Phase 1 is complete and deployed, run the same loop for each Phase 2 featur
 
 - `.specify/` is managed by SpecKit. Do not manually edit files inside it outside of the workflows above.
 - Feature specs live in `specs/NNN-feature-name/`.
+- Every feature must have `specs/NNN-feature-name/checklists/manual-testing.md`.
 - Constitution: `.specify/memory/constitution.md`
 - Product definition: `docs/PRODUCT.md`
