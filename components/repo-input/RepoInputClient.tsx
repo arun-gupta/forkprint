@@ -90,7 +90,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
         <section aria-label="Analysis results" className="space-y-4">
           {analysisResponse.results.map((result) => (
             <article key={result.repo} className="rounded border border-gray-200 p-4">
-              <h2 className="font-semibold">{result.repo}</h2>
+              <h2 className="font-semibold text-slate-900">{result.repo}</h2>
               <p className="text-sm text-gray-600">Stars: {formatDisplayValue(result.stars)}</p>
             </article>
           ))}

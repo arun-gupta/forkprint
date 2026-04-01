@@ -15,25 +15,26 @@
 ### Single successful repo
 
 - Visible stars, forks, and watchers are shown for the repo
-- The repo may still appear on the bubble chart if stars, forks, and watchers are all available
-- A note explains that ForkPrint ecosystem classification is skipped because at least two successful repositories are required
+- The repo still receives a spectrum profile when verified ecosystem metrics exist
 
 ### Multiple successful repos
 
 - Visible stars, forks, and watchers are shown for each successful repo
-- Plot one bubble per plot-eligible successful repo
-- Show ForkPrint ecosystem classification labels derived from the median split
+- Show one profile card per successful repo
+- Show a config-driven ecosystem profile for each repo
+- Show a legend explaining the Reach, Builder Engagement, and Attention bands from shared config
 
-## Tooltip Content
+## Repository Detail Content
 
 - Repo name
 - Exact stars
 - Exact forks
 - Exact watchers
-- ForkPrint ecosystem classification when available
+- Derived fork rate
+- Derived watcher rate
 
 ## Unavailable Ecosystem Metrics
 
 - If stars, forks, or watchers are `"unavailable"`, the visible metric row keeps the `"unavailable"` value explicit
-- The chart does not invent a coordinate or bubble size for that repo
-- The UI provides a concise note that the repo could not be plotted because ecosystem metrics were incomplete
+- The spectrum profile does not invent a derived rate or tier for that repo
+- The UI provides a concise note that the repo could not receive a full derived profile because ecosystem metrics were incomplete

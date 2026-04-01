@@ -78,7 +78,7 @@ Four CHAOSS categories. Each maps to exactly one feature and produces exactly on
 
 | CHAOSS Category  | Feature ID | Feature Name            | Score Name           | Score Values                              |
 |------------------|------------|-------------------------|----------------------|-------------------------------------------|
-| Ecosystem        | P1-F05     | Ecosystem Map           | Quadrant             | Leaders / Buzz / Builders / Early         |
+| Ecosystem        | P1-F05     | Ecosystem Map           | Ecosystem profile    | Reach / Builder Engagement / Attention    |
 | Evolution        | P1-F08     | Evolution               | Evolution score      | High / Medium / Low                       |
 | Sustainability   | P1-F09     | Contribution Dynamics   | Resilience score     | High / Medium / Low                       |
 | Responsiveness   | P1-F10     | Responsiveness          | Responsiveness score | High / Medium / Low                       |
@@ -103,13 +103,13 @@ Rules:
 
 ---
 
-## VII. Quadrant Classification
+## VII. Ecosystem Spectrum
 
-1. Quadrant boundaries (Leaders / Buzz / Builders / Early) are computed using a **median split across the current input set**.
-2. Quadrant thresholds are **never hardcoded**. They are always derived from the data at analysis time.
-3. Single-repo input: quadrant classification is **skipped**. The UI displays an explanatory note — it does not assign a quadrant or fall back to a default.
-4. Axes: X = stars (awareness), Y = forks (action), bubble size = watchers (sustained interest).
-5. Quadrant badge colors: Leaders = green, Buzz = amber, Builders = blue, Early = gray.
+1. P1-F05 uses a **spectrum model**, not median-derived quadrants.
+2. Axes: X = stars (reach), Y = builder engagement (`forks / stars`), bubble size = attention (`watchers / stars`).
+3. Ecosystem profile tiers are **ForkPrint-defined** and aligned to the CHAOSS ecosystem category. They are not presented as an official CHAOSS taxonomy.
+4. Spectrum thresholds are defined in shared configuration and read from that configuration by the UI and supporting logic.
+5. Single-repo input remains fully valid: the UI still plots and profiles the repo when verified data exists.
 
 ---
 

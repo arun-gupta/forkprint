@@ -18,34 +18,34 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Add the charting dependency and file structure for ecosystem-map UI and helpers.
+**Purpose**: Add the file structure for ecosystem-map UI, helpers, and spectrum config.
 
-- [ ] T001 Add `chart.js` and `react-chartjs-2` to `/Users/arungupta/workspaces/forkprint/package.json`
-- [ ] T002 [P] Create `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/` with `EcosystemMap.tsx`, `EcosystemMap.test.tsx`, and `ecosystem-map-utils.test.ts`
-- [ ] T003 [P] Create `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/` with `classification.ts` and `chart-data.ts`
-- [ ] T004 [P] Create `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts` with a placeholder spec file
+- [x] T001 Create `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/` with `EcosystemMap.tsx`, `EcosystemMap.test.tsx`, and `ecosystem-map-utils.test.ts`
+- [x] T002 [P] Create `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/` with `classification.ts`, `chart-data.ts`, and `spectrum-config.ts`
+- [x] T003 [P] Create `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts` with initial feature coverage
 
-**Checkpoint**: The repo contains the planned ecosystem-map file structure and chart dependencies.
+**Checkpoint**: The repo contains the planned ecosystem-map file structure and spectrum-config file.
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Establish shared classification and view-model utilities before story implementation.
+**Purpose**: Establish shared spectrum config and view-model utilities before story implementation.
 
 **⚠️ CRITICAL**: No user story implementation should start until this phase is complete.
 
-- [ ] T005 Implement ecosystem-map view-model helpers in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
-- [ ] T006 [P] Implement median-split and single-repo classification helpers in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts`
-- [ ] T007 [P] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` state contract to pass successful `analysisResponse.results` into a reusable ecosystem-map section
+- [x] T005 Implement ecosystem-map view-model helpers in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
+- [x] T006 [P] Implement shared spectrum thresholds in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/spectrum-config.ts`
+- [x] T007 [P] Implement ecosystem profile and rate helpers in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts`
+- [x] T008 [P] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` state contract to pass successful `analysisResponse.results` into a reusable ecosystem-map section
 
-**Checkpoint**: Shared transformation and classification helpers exist, and the client can supply ecosystem-map input without extra API calls.
+**Checkpoint**: Shared transformation, spectrum config, and profile helpers exist, and the client can supply ecosystem-map input without extra API calls.
 
 ---
 
 ## Phase 3: User Story 1 - Show ecosystem metrics clearly for analyzed repos (Priority: P1) 🎯 MVP
 
-**Goal**: Users can see visible stars, forks, and watchers for each successful repository without relying on chart hover.
+**Goal**: Users can see visible stars, forks, and watchers for each successful repository without relying on secondary interactions.
 
 **Independent Test**: Submit one or more successful results and verify stars, forks, and watchers are visible as normal UI elements for every successful repository.
 
@@ -53,88 +53,88 @@
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T008 [P] [US1] Add view-model tests for visible ecosystem metrics in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
-- [ ] T009 [P] [US1] Add component tests for visible stars/forks/watchers rendering in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
-- [ ] T010 [P] [US1] Extend client integration tests for ecosystem-map metrics rendering in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
-- [ ] T011 [US1] Add Playwright coverage for visible ecosystem metrics in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
+- [x] T009 [P] [US1] Add view-model tests for visible ecosystem metrics in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
+- [x] T010 [P] [US1] Add component tests for visible stars/forks/watchers rendering in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
+- [x] T011 [P] [US1] Extend client integration tests for ecosystem-map metrics rendering in `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.test.tsx`
+- [x] T012 [US1] Add Playwright coverage for visible ecosystem metrics in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implement visible metric-row formatting in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
-- [ ] T013 [US1] Implement `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx` to render visible stars, forks, and watchers for successful repositories
-- [ ] T014 [US1] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to render `EcosystemMap` from successful results
+- [x] T013 [US1] Implement visible metric-row formatting in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
+- [x] T014 [US1] Implement `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx` to render visible stars, forks, and watchers for successful repositories
+- [x] T015 [US1] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to render `EcosystemMap` from successful results
 
 **Checkpoint**: Successful analyses show visible ecosystem metrics outside of any tooltip interactions.
 
 ---
 
-## Phase 4: User Story 2 - Visualize analyzed repos on the ecosystem map (Priority: P2)
+## Phase 4: User Story 2 - Understand the ecosystem spectrum view (Priority: P2)
 
-**Goal**: Users can see one or more successful repositories plotted on a bubble chart using stars, forks, and watchers.
+**Goal**: Users can see one or more successful repositories summarized in a spectrum-based ecosystem view using reach, builder engagement, and attention.
 
-**Independent Test**: Render the feature with one or more successful results and verify one bubble appears per plot-eligible successful repository with stars on X, forks on Y, and watchers as bubble size.
+**Independent Test**: Render the feature with one or more successful results and verify the spectrum legends and one profile card per successful repository appear without extra fetching.
 
 ### Tests for User Story 2 ⚠️
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T015 [P] [US2] Add chart-data tests for bubble plotting eligibility and chart coordinates in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
-- [ ] T016 [P] [US2] Extend component tests for bubble chart rendering in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
-- [ ] T017 [US2] Add Playwright coverage for single-repo and multi-repo bubble rendering in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
+- [x] T016 [P] [US2] Add view-model tests for spectrum legends and profile-card rendering in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
+- [x] T017 [P] [US2] Extend component tests for spectrum rendering in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
+- [x] T018 [US2] Add Playwright coverage for single-repo and multi-repo spectrum rendering in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implement chart dataset generation in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
-- [ ] T019 [US2] Implement the Chart.js bubble chart in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
-- [ ] T020 [US2] Handle unavailable ecosystem metrics honestly in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx` without fabricated plotted values
+- [x] T019 [US2] Implement spectrum/profile view-model generation in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/chart-data.ts`
+- [x] T020 [US2] Implement the spectrum legend and repository profile view in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
+- [x] T021 [US2] Handle unavailable ecosystem metrics honestly in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx` without fabricated derived values or rates
 
-**Checkpoint**: The ecosystem map renders a useful bubble chart for one or more successful repositories.
+**Checkpoint**: The ecosystem map renders a useful spectrum/profile view for one or more successful repositories.
 
 ---
 
-## Phase 5: User Story 3 - Understand ForkPrint ecosystem classification (Priority: P2)
+## Phase 5: User Story 3 - Understand the ecosystem spectrum profile (Priority: P2)
 
-**Goal**: Users can see ForkPrint ecosystem classifications derived from the current successful input set when multi-repo classification is possible.
+**Goal**: Users can see config-driven Reach / Builder Engagement / Attention profiles derived from exact ecosystem metrics.
 
-**Independent Test**: Render the feature with multiple successful repos and verify classifications change with the input set and use median-derived boundaries rather than hardcoded thresholds.
+**Independent Test**: Render the feature with successful repos and verify profile tiers and legends follow the shared spectrum configuration rather than inline thresholds.
 
 ### Tests for User Story 3 ⚠️
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T021 [P] [US3] Add classification tests for median split behavior in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
-- [ ] T022 [P] [US3] Extend component tests for classification labels and note text in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
-- [ ] T023 [US3] Add Playwright coverage for multi-repo ForkPrint ecosystem classification in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
+- [x] T022 [P] [US3] Add profile tests for shared spectrum-band behavior in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/ecosystem-map-utils.test.ts`
+- [x] T023 [P] [US3] Extend component tests for profile labels and legend text in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
+- [x] T024 [US3] Add Playwright coverage for config-driven ecosystem profile rendering in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implement median-split classification in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts`
-- [ ] T025 [US3] Render ForkPrint ecosystem classification labels and legend copy in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
-- [ ] T026 [US3] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to show the classification-aware ecosystem-map section alongside existing results/failure UI
+- [x] T025 [US3] Implement config-driven spectrum profile logic in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts`
+- [x] T026 [US3] Render Reach / Builder Engagement / Attention profile labels and legend copy in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
+- [x] T027 [US3] Update `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx` to show the profile-aware ecosystem-map section alongside existing results/failure UI
 
-**Checkpoint**: Multi-repo analyses show median-derived ForkPrint ecosystem classification without implying official CHAOSS labels.
+**Checkpoint**: The ecosystem map shows config-driven profiles without implying official CHAOSS terminology.
 
 ---
 
-## Phase 6: User Story 4 - Inspect bubble details and single-repo behavior (Priority: P3)
+## Phase 6: User Story 4 - Inspect exact values and derived rates (Priority: P3)
 
-**Goal**: Users can inspect exact chart details and understand why classification is skipped for single-repo analyses.
+**Goal**: Users can inspect exact values and derived rates while keeping single-repo behavior fully useful.
 
-**Independent Test**: Hover or focus a plotted bubble to inspect exact values and verify that a single successful repository shows a clear “classification skipped” note instead of a fabricated label.
+**Independent Test**: Inspect the repository cards and profile content to verify exact values and derived rates, and verify that a single successful repository still receives a full profile.
 
 ### Tests for User Story 4 ⚠️
 
 > **Write these tests first, and verify they fail before implementing the story.**
 
-- [ ] T027 [P] [US4] Add component tests for tooltip/focus detail and single-repo note behavior in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
-- [ ] T028 [US4] Add Playwright coverage for tooltip details and single-repo explanatory copy in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
+- [x] T028 [P] [US4] Add component tests for exact-value detail and single-repo profile behavior in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.test.tsx`
+- [x] T029 [US4] Add Playwright coverage for derived-rate details and single-repo profile behavior in `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Implement tooltip content and accessible focus detail in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
-- [ ] T030 [US4] Implement single-repo explanatory note and classification skip behavior in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts` and `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
+- [x] T030 [US4] Implement exact-value and derived-rate detail in `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
+- [x] T031 [US4] Implement single-repo profile behavior in `/Users/arungupta/workspaces/forkprint/lib/ecosystem-map/classification.ts` and `/Users/arungupta/workspaces/forkprint/components/ecosystem-map/EcosystemMap.tsx`
 
-**Checkpoint**: Single-repo analyses remain useful and honest, and bubble details are inspectable.
+**Checkpoint**: Single-repo analyses remain useful, profiled, and honest, and repository details expose the derived rates.
 
 ---
 
@@ -142,12 +142,12 @@
 
 **Purpose**: Final verification, documentation alignment, and manual-checklist readiness for the feature PR.
 
-- [ ] T031 [P] Run unit/integration tests with `npm test` and confirm ecosystem-map coverage passes
-- [ ] T032 [P] Run lint with `npm run lint` and remove any dead code, TODOs, or temporary logging
-- [ ] T033 [P] Run end-to-end coverage with `npm run test:e2e` including `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
-- [ ] T034 Run `npm run build` and verify the ecosystem-map changes do not introduce production build regressions
-- [ ] T035 Update `/Users/arungupta/workspaces/forkprint/specs/005-ecosystem-map/checklists/manual-testing.md` as the feature is manually verified
-- [ ] T036 Update `/Users/arungupta/workspaces/forkprint/README.md` if the completed ecosystem-map flow changes user-facing behavior or setup
+- [x] T032 [P] Run unit/integration tests with `npm test` and confirm ecosystem-map coverage passes
+- [x] T033 [P] Run lint with `npm run lint` and remove any dead code, TODOs, or temporary logging
+- [x] T034 [P] Run end-to-end coverage with `npm run test:e2e` including `/Users/arungupta/workspaces/forkprint/e2e/ecosystem-map.spec.ts`
+- [ ] T035 Run `npm run build` and verify the ecosystem-map changes do not introduce production build regressions
+- [x] T036 Update `/Users/arungupta/workspaces/forkprint/specs/005-ecosystem-map/checklists/manual-testing.md` as the feature is manually verified
+- [x] T037 Update `/Users/arungupta/workspaces/forkprint/README.md` if the completed ecosystem-map flow changes user-facing behavior or setup
 
 ---
 
@@ -163,9 +163,9 @@
 ### User Story Dependencies
 
 - **US1 (P1)**: Starts after Foundational and delivers the first usable ecosystem-map value
-- **US2 (P2)**: Depends on US1’s visible metric/view-model work and adds chart rendering
-- **US3 (P2)**: Depends on US2’s plotted dataset and adds ForkPrint ecosystem classification
-- **US4 (P3)**: Depends on US2/US3 chart behavior and adds final tooltip/single-repo polish
+- **US2 (P2)**: Depends on US1’s visible metric/view-model work and adds the spectrum view
+- **US3 (P2)**: Depends on US2’s profile dataset and adds the config-driven ecosystem profile
+- **US4 (P3)**: Depends on US2/US3 profile behavior and adds final exact-value/rate polish
 
 ### Within Each User Story
 
@@ -177,11 +177,11 @@
 ### Parallel Opportunities
 
 - T002, T003, and T004 can run in parallel
-- T005 and T006 can run in parallel
-- T008, T009, and T010 can run in parallel
-- T015 and T016 can run in parallel
-- T021 and T022 can run in parallel
-- T031, T032, and T033 can run in parallel
+- T005, T006, and T007 can run in parallel
+- T009, T010, and T011 can run in parallel
+- T016 and T017 can run in parallel
+- T022 and T023 can run in parallel
+- T032, T033, and T034 can run in parallel
 
 ---
 
@@ -203,14 +203,14 @@ Task: "Extend client integration tests for ecosystem-map metrics rendering in co
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational
 3. Complete Phase 3: User Story 1
-4. Stop and validate the visible ecosystem metrics experience before adding chart rendering
+4. Stop and validate the visible ecosystem metrics experience before adding the full spectrum/profile interpretation
 
 ### Incremental Delivery
 
 1. Add visible ecosystem metrics for successful repos
-2. Add bubble-chart rendering for one or more successful repos
-3. Add ForkPrint ecosystem classification for multi-repo runs
-4. Add tooltip detail and single-repo explanatory behavior
+2. Add the spectrum/profile view for one or more successful repos
+3. Add config-driven Reach / Builder Engagement / Attention profiles
+4. Add tooltip detail and derived-rate behavior
 5. Finish with verification, manual checklist completion, and README alignment
 
 ### TDD Reminder

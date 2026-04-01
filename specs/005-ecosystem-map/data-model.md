@@ -2,57 +2,57 @@
 
 ## Entities
 
-### EcosystemBubble
+### EcosystemProfileRow
 
-- **Purpose**: Represents one successful repository as plotted chart data plus visible ecosystem metrics
+- **Purpose**: Represents one successful repository as visible ecosystem metrics plus derived profile data
 - **Fields**:
   - `repo: string`
   - `stars: number | "unavailable"`
   - `forks: number | "unavailable"`
   - `watchers: number | "unavailable"`
-  - `classification: "Leaders" | "Buzz" | "Builders" | "Early" | null`
-  - `isPlotEligible: boolean`
+  - `builderEngagementRate: number | "unavailable"`
+  - `attentionRate: number | "unavailable"`
   - `missingEcosystemMetrics: Array<"stars" | "forks" | "watchers">`
 
-### QuadrantBoundarySet
+### SpectrumProfile
 
-- **Purpose**: Represents the current median-derived split values for classifying the successful input set
+- **Purpose**: Represents the derived ecosystem summary for one repository
 - **Fields**:
-  - `starMedian: number | null`
-  - `forkMedian: number | null`
-  - `classificationEnabled: boolean`
-  - `classificationReason: string | null`
+  - `reachTier: "Emerging" | "Growing" | "Strong" | "Exceptional" | null`
+  - `engagementTier: "Light" | "Healthy" | "Strong" | "Exceptional" | null`
+  - `attentionTier: "Light" | "Active" | "Strong" | "Exceptional" | null`
+  - `forkRateLabel: string | null`
+  - `watcherRateLabel: string | null`
+
+### SpectrumConfig
+
+- **Purpose**: Holds the shared threshold bands for ecosystem profile tiers
+- **Fields**:
+  - `reachBands`
+  - `builderEngagementBands`
+  - `attentionBands`
 
 ### VisibleMetricRow
 
-- **Purpose**: User-visible summary of ecosystem metrics that remains readable without chart hover
+- **Purpose**: User-visible summary of ecosystem metrics that remains readable without secondary interactions
 - **Fields**:
   - `repo: string`
   - `starsLabel: string`
   - `forksLabel: string`
   - `watchersLabel: string`
-  - `classificationLabel: string | null`
   - `plotStatusNote: string | null`
-
-### SingleRepoNotice
-
-- **Purpose**: Explains why quadrant classification is skipped for exactly one successful repository
-- **Fields**:
-  - `isVisible: boolean`
-  - `message: string`
 
 ## Relationships
 
 - One `AnalyzeResponse.results[]` entry can produce:
-  - one `EcosystemBubble`
+  - one `EcosystemProfileRow`
   - one `VisibleMetricRow`
-- One analysis run produces:
-  - zero or one `QuadrantBoundarySet`
-  - zero or one `SingleRepoNotice`
+  - one `SpectrumProfile` when verified ecosystem metrics exist
+- One analysis run consumes:
+  - one `SpectrumConfig`
 
 ## Validation Rules
 
-- `classificationEnabled` is `false` when fewer than two successful, plot-eligible repositories are present
-- `isPlotEligible` is `true` only when stars, forks, and watchers are all verified numbers
-- `classification` is `null` when classification is skipped or the repo is not plot-eligible
+- `builderEngagementRate` and `attentionRate` are derived only when the required verified source metrics exist and stars is greater than zero
+- `SpectrumProfile` values are derived from shared config bands, not inline thresholds
 - `missingEcosystemMetrics` is populated from `"unavailable"` ecosystem values and never inferred

@@ -29,7 +29,7 @@ export function RepoInputForm({ onSubmit }: RepoInputFormProps) {
         onChange={(e) => setValue(e.target.value)}
         placeholder={'facebook/react\ntorvalds/linux\nhttps://github.com/microsoft/typescript'}
         rows={5}
-        className="w-full rounded border border-gray-300 p-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Repository list"
         aria-describedby={error ? 'repo-input-error' : undefined}
       />

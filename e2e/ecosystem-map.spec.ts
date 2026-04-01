@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 test.describe('P1-F05 Ecosystem Map', () => {
   test.beforeEach(async ({ page }) => {
@@ -10,45 +11,18 @@ test.describe('P1-F05 Ecosystem Map', () => {
   })
 
   test('shows visible stars, forks, and watchers for successful repositories', async ({ page }) => {
-    await page.route('**/api/analyze', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          results: [
-            {
-              repo: 'facebook/react',
-              name: 'react',
-              description: 'A UI library',
-              createdAt: '2013-05-24T16:15:54Z',
-              primaryLanguage: 'TypeScript',
-              stars: 244295,
-              forks: 50872,
-              watchers: 6660,
-              commits30d: 7,
-              commits90d: 18,
-              releases12mo: 'unavailable',
-              prsOpened90d: 4,
-              prsMerged90d: 3,
-              issuesOpen: 5,
-              issuesClosed90d: 6,
-              uniqueCommitAuthors90d: 'unavailable',
-              totalContributors: 'unavailable',
-              commitCountsByAuthor: 'unavailable',
-              issueFirstResponseTimestamps: 'unavailable',
-              issueCloseTimestamps: 'unavailable',
-              prMergeTimestamps: 'unavailable',
-              missingFields: ['releases12mo'],
-            },
-          ],
-          failures: [],
-          rateLimit: null,
-        }),
-      })
-    })
+    await mockAnalyze(page, [
+      buildResult({
+        repo: 'facebook/react',
+        stars: 244295,
+        forks: 50872,
+        watchers: 6660,
+      }),
+    ])
 
     await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
     await page.getByRole('button', { name: /analyze/i }).click()
+    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
 
     const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
     await expect(ecosystemMap).toContainText('facebook/react')
@@ -57,74 +31,81 @@ test.describe('P1-F05 Ecosystem Map', () => {
     await expect(ecosystemMap).toContainText('Watchers: 6,660')
   })
 
-  test('renders a bubble-chart summary for plot-eligible repositories', async ({ page }) => {
-    await page.route('**/api/analyze', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          results: [
-            {
-              repo: 'facebook/react',
-              name: 'react',
-              description: 'A UI library',
-              createdAt: '2013-05-24T16:15:54Z',
-              primaryLanguage: 'TypeScript',
-              stars: 244295,
-              forks: 50872,
-              watchers: 6660,
-              commits30d: 7,
-              commits90d: 18,
-              releases12mo: 'unavailable',
-              prsOpened90d: 4,
-              prsMerged90d: 3,
-              issuesOpen: 5,
-              issuesClosed90d: 6,
-              uniqueCommitAuthors90d: 'unavailable',
-              totalContributors: 'unavailable',
-              commitCountsByAuthor: 'unavailable',
-              issueFirstResponseTimestamps: 'unavailable',
-              issueCloseTimestamps: 'unavailable',
-              prMergeTimestamps: 'unavailable',
-              missingFields: ['releases12mo'],
-            },
-            {
-              repo: 'vercel/next.js',
-              name: 'next.js',
-              description: 'The React Framework',
-              createdAt: '2016-10-05T23:32:51Z',
-              primaryLanguage: 'TypeScript',
-              stars: 132000,
-              forks: 28700,
-              watchers: 2400,
-              commits30d: 9,
-              commits90d: 34,
-              releases12mo: 'unavailable',
-              prsOpened90d: 8,
-              prsMerged90d: 5,
-              issuesOpen: 12,
-              issuesClosed90d: 10,
-              uniqueCommitAuthors90d: 'unavailable',
-              totalContributors: 'unavailable',
-              commitCountsByAuthor: 'unavailable',
-              issueFirstResponseTimestamps: 'unavailable',
-              issueCloseTimestamps: 'unavailable',
-              prMergeTimestamps: 'unavailable',
-              missingFields: ['releases12mo'],
-            },
-          ],
-          failures: [],
-          rateLimit: null,
-        }),
-      })
-    })
+  test('renders the ecosystem spectrum and legend for multiple repos', async ({ page }) => {
+    await mockAnalyze(page, [
+      buildResult({ repo: 'facebook/react', stars: 244295, forks: 50872, watchers: 6660 }),
+      buildResult({ repo: 'kubernetes/kubernetes', stars: 121419, forks: 42757, watchers: 3181 }),
+    ])
 
-    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react\nvercel/next.js')
+    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react\nkubernetes/kubernetes')
     await page.getByRole('button', { name: /analyze/i }).click()
+    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
 
-    await expect(page.getByRole('img', { name: /ecosystem bubble chart/i })).toBeVisible()
-    await expect(page.getByText(/stars \(x-axis\)/i)).toBeVisible()
-    await expect(page.getByText(/forks \(y-axis\)/i)).toBeVisible()
-    await expect(page.getByText(/watchers \(bubble size\)/i)).toBeVisible()
+    const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
+    await expect(ecosystemMap).toContainText('Ecosystem spectrum')
+    await expect(ecosystemMap).toContainText('Reach bands')
+    await expect(ecosystemMap).toContainText('Builder engagement')
+    await expect(ecosystemMap).toContainText('Attention')
+    await expect(ecosystemMap).toContainText('Reach')
+    await expect(ecosystemMap).toContainText('Builder engagement')
+    await expect(ecosystemMap).toContainText('Attention')
+  })
+
+  test('shows spectrum profiles with derived rates', async ({ page }) => {
+    await mockAnalyze(page, [
+      buildResult({ repo: 'kubernetes/kubernetes', stars: 121419, forks: 42757, watchers: 3181 }),
+    ])
+
+    await page.getByRole('textbox', { name: /repository list/i }).fill('kubernetes/kubernetes')
+    await page.getByRole('button', { name: /analyze/i }).click()
+    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
+
+    const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
+    await expect(ecosystemMap).toContainText('Spectrum profile')
+    await expect(ecosystemMap).toContainText('Exceptional (35.2% fork rate)')
+    await expect(ecosystemMap).toContainText('Exceptional (2.6% watcher rate)')
+    await expect(ecosystemMap).not.toContainText('classification is skipped')
   })
 })
+
+async function mockAnalyze(page: Page, results: unknown[]) {
+  await page.route('**/api/analyze', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        results,
+        failures: [],
+        rateLimit: null,
+      }),
+    })
+  })
+}
+
+function buildResult(overrides: Record<string, unknown>) {
+  return {
+    repo: 'facebook/react',
+    name: 'react',
+    description: 'A UI library',
+    createdAt: '2013-05-24T16:15:54Z',
+    primaryLanguage: 'TypeScript',
+    stars: 100,
+    forks: 25,
+    watchers: 10,
+    commits30d: 7,
+    commits90d: 18,
+    releases12mo: 'unavailable',
+    prsOpened90d: 4,
+    prsMerged90d: 3,
+    issuesOpen: 5,
+    issuesClosed90d: 6,
+    uniqueCommitAuthors90d: 'unavailable',
+    totalContributors: 'unavailable',
+    commitCountsByAuthor: 'unavailable',
+    issueFirstResponseTimestamps: 'unavailable',
+    issueCloseTimestamps: 'unavailable',
+    prMergeTimestamps: 'unavailable',
+    missingFields: [],
+    ...overrides,
+  }
+}

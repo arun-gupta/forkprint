@@ -55,7 +55,8 @@ test.describe('P1-F15 Results Shell', () => {
 
     await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
     await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
-    await expect(page.getByText(/ecosystem map view is coming soon/i)).toBeVisible()
+    await expect(page.getByRole('region', { name: /ecosystem map/i })).toBeVisible()
+    await expect(page.getByText(/ecosystem spectrum/i)).toBeVisible()
     await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
     await expect(page.getByRole('textbox', { name: /repository list/i })).toBeVisible()
     expect(requestCount).toBe(1)

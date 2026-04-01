@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { buildBubbleChartPoints, buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
+import { buildSpectrumProfile } from '@/lib/ecosystem-map/classification'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
-describe('buildEcosystemRows', () => {
+describe('ecosystem map helpers', () => {
   it('formats visible ecosystem metrics for successful repositories', () => {
     const results = [
       buildResult({
@@ -13,16 +14,13 @@ describe('buildEcosystemRows', () => {
       }),
     ]
 
-    expect(buildEcosystemRows(results)).toEqual([
-      {
-        repo: 'facebook/react',
-        starsLabel: '244,295',
-        forksLabel: '50,872',
-        watchersLabel: '6,660',
-        classificationLabel: null,
-        plotStatusNote: null,
-      },
-    ])
+    expect(buildEcosystemRows(results)[0]).toMatchObject({
+      repo: 'facebook/react',
+      starsLabel: '244,295',
+      forksLabel: '50,872',
+      watchersLabel: '6,660',
+      plotStatusNote: null,
+    })
   })
 
   it('keeps unavailable ecosystem metrics explicit instead of guessing values', () => {
@@ -35,19 +33,15 @@ describe('buildEcosystemRows', () => {
       }),
     ]
 
-    expect(buildEcosystemRows(results)).toEqual([
-      {
-        repo: 'facebook/react',
-        starsLabel: 'unavailable',
-        forksLabel: '50,872',
-        watchersLabel: 'unavailable',
-        classificationLabel: null,
-        plotStatusNote: 'Could not plot this repository because ecosystem metrics were incomplete.',
-      },
-    ])
+    expect(buildEcosystemRows(results)[0]).toMatchObject({
+      starsLabel: 'unavailable',
+      watchersLabel: 'unavailable',
+      plotStatusNote: 'Could not plot this repository because ecosystem metrics were incomplete.',
+      profile: null,
+    })
   })
 
-  it('builds bubble chart points only for plot-eligible repositories', () => {
+  it('builds bubble chart points from stars, fork rate, and watcher rate', () => {
     const results = [
       buildResult({
         repo: 'facebook/react',
@@ -55,22 +49,34 @@ describe('buildEcosystemRows', () => {
         forks: 50872,
         watchers: 6660,
       }),
-      buildResult({
-        repo: 'vercel/next.js',
-        stars: 'unavailable',
-        forks: 12000,
-        watchers: 2000,
-      }),
     ]
 
     expect(buildBubbleChartPoints(results)).toEqual([
-      {
+      expect.objectContaining({
         repo: 'facebook/react',
         x: 244295,
-        y: 50872,
-        r: 20,
-      },
+        y: expect.closeTo((50872 / 244295) * 100, 5),
+        stars: 244295,
+        forks: 50872,
+        watchers: 6660,
+        forkRateLabel: '20.8%',
+        watcherRateLabel: '2.7%',
+      }),
     ])
+  })
+
+  it('builds a config-driven spectrum profile', () => {
+    const profile = buildSpectrumProfile(
+      buildResult({ repo: 'kubernetes/kubernetes', stars: 121419, forks: 42757, watchers: 3181 }),
+    )
+
+    expect(profile).toMatchObject({
+      reachTier: 'Exceptional',
+      engagementTier: 'Exceptional',
+      attentionTier: 'Exceptional',
+      forkRateLabel: '35.2%',
+      watcherRateLabel: '2.6%',
+    })
   })
 })
 

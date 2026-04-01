@@ -5,36 +5,36 @@
 
 ## Setup
 
-- [ ] Confirm an available token source exists (`.env.local` with `GITHUB_TOKEN` or a valid PAT entered in the UI)
-- [ ] Run `npm run dev` and confirm the app starts
-- [ ] Open `http://localhost:3000` in a browser
+- [x] Confirm an available token source exists (`.env.local` with `GITHUB_TOKEN` or a valid PAT entered in the UI)
+- [x] Run `npm run dev` and confirm the app starts
+- [x] Open `http://localhost:3000` in a browser
 
 ## US1 — Visible ecosystem metrics
 
-- [ ] Submit one valid public repository and confirm stars, forks, and watchers are visible outside the tooltip
-- [ ] Submit multiple valid public repositories and confirm each successful repo has visible stars, forks, and watchers
-- [ ] Confirm failed repositories do not produce fabricated visible ecosystem metrics
+- [x] Submit one valid public repository and confirm stars, forks, and watchers are visible outside the tooltip
+- [x] Submit multiple valid public repositories and confirm each successful repo has visible stars, forks, and watchers
+- [x] Confirm failed repositories do not produce fabricated visible ecosystem metrics
 
-## US2 — Bubble chart visualization
+## US2 — Spectrum view
 
-- [ ] Confirm one successful repo can still render as a useful plotted bubble when ecosystem metrics are available
-- [ ] Confirm multiple successful repos render one bubble per successful, plot-eligible repository
-- [ ] Confirm the chart uses stars on the X axis, forks on the Y axis, and watchers for bubble size
+- [x] Confirm the `Ecosystem Map` tab shows the spectrum-based view without the old chart or quadrant display
+- [x] Confirm one successful repo still renders as a useful spectrum/profile view when ecosystem metrics are available
+- [x] Confirm multiple successful repos render one profile card per successful repository
 
-## US3 — ForkPrint ecosystem classification
+## US3 — Ecosystem spectrum profile
 
-- [ ] Confirm multi-repo analyses show ForkPrint ecosystem classifications (`Leaders`, `Buzz`, `Builders`, `Early`) derived from the current successful input set
-- [ ] Confirm changing the set of successful repos changes the derived classifications when the medians change
-- [ ] Confirm the UI does not present the quadrant labels as official CHAOSS terminology
+- [x] Confirm the UI shows Reach / Builder Engagement / Attention profile tiers for successful repositories
+- [x] Confirm the spectrum legends match the shared config-driven bands shown in the UI
+- [x] Confirm the UI presents the spectrum profile as a ForkPrint interpretation aligned to CHAOSS, not official CHAOSS terminology
 
-## US4 — Tooltip and single-repo behavior
+## US4 — Tooltip and derived-rate behavior
 
-- [ ] Confirm tooltip/focus details show repo name, exact stars, exact forks, exact watchers, and classification when available
-- [ ] Confirm single-repo analyses explain why classification is skipped
-- [ ] Confirm repos with unavailable ecosystem metrics are not plotted with fabricated coordinates or bubble sizes
+- [x] Confirm each repo card shows exact stars, exact forks, exact watchers, fork rate, and watcher rate when available
+- [x] Confirm single-repo analyses still show a full spectrum profile when verified ecosystem metrics exist
+- [x] Confirm repos with unavailable ecosystem metrics do not show fabricated rates or derived profile values
 
 ## Notes
 
 _Sign off below when all items are verified:_
 
-**Tested by**: ____________________  **Date**: ____________________
+**Tested by**: Arun Gupta  **Date**: 2026-03-31

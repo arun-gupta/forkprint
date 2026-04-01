@@ -40,7 +40,7 @@ All analysis is structured around four CHAOSS categories. Each maps to exactly o
 
 | CHAOSS Category | Feature | Derived Score |
 |---|---|---|
-| Ecosystem | Ecosystem Map (P1-F05) | Quadrant: Leaders / Buzz / Builders / Early |
+| Ecosystem | Ecosystem Map (P1-F05) | Ecosystem profile: Reach / Builder Engagement / Attention |
 | Evolution | Evolution (P1-F08) | Evolution score: High / Medium / Low |
 | Sustainability | Contribution Dynamics (P1-F09) | Resilience score: High / Medium / Low |
 | Responsiveness | Responsiveness (P1-F10) | Responsiveness score: High / Medium / Low |
@@ -66,7 +66,7 @@ Scores are assigned only when sufficient verified data exists. Otherwise: `"Insu
 - **Framework**: Next.js 14+ (App Router)
 - **Deployment**: Vercel — zero-config
 - **Styling**: Tailwind CSS
-- **Charts**: Chart.js via npm
+- **Visualization**: Spectrum/profile UI via React components
 - **Stateless** — no database, no auth system, all analysis is on-demand
 
 ### API Contract
@@ -172,17 +172,20 @@ The analyzer fetches exact, verified metric data from GitHub for each repo.
 
 #### `[P1-F05]` Ecosystem Map
 
-Repos are visualized on an interactive 2×2 bubble chart to reveal their ecosystem position.
+Repos are summarized in an interactive ecosystem view with a spectrum-based ecosystem profile.
 
 **Acceptance criteria**
-- Bubble chart: X axis = stars (awareness), Y axis = forks (action), bubble size = watchers (sustained interest)
-- Quadrant classification uses median split across the input set: Leaders / Buzz / Builders / Early
-- Hover tooltip shows: repo name, exact stars / forks / watches, assigned quadrant
-- Single-repo input: quadrant classification is skipped; a note explains why
-- Quadrant boundaries are computed from the input set, never hardcoded
+- Each successful repo surfaces an ecosystem profile with three tiered dimensions:
+  - Reach
+  - Builder Engagement
+  - Attention
+- Spectrum bands are defined in shared config and rendered consistently in the UI; component logic must not hardcode the thresholds independently
+- Each successful repo card shows exact stars / forks / watches plus derived fork rate and watcher rate where they are verifiable
+- Single-repo input remains fully useful: the repo is still profiled without requiring a comparison set
+- Repos with unavailable ecosystem metrics are never given fabricated rates or derived profile tiers
 
 **Out of scope**
-- Saving or sharing the chart image directly
+- Saving or sharing a generated visualization directly
 - Animating transitions between analyses
 
 ---
@@ -221,7 +224,7 @@ Users can compare two or more repos side by side across all health metrics.
 
 **Design constraints** *(inform all upstream features)*
 - `AnalysisResult` schema must be flat and consistent enough to diff across repos without transformation — design this from the start
-- Ecosystem Map bubble chart is the visual entry point into comparison; the comparison table is the detail layer
+- Ecosystem profile summaries are the visual entry point into comparison; the comparison table is the detail layer
 - UI layout must accommodate 2–6 repos in comparison without horizontal scroll on desktop viewports
 
 **Out of scope**
@@ -236,8 +239,8 @@ Users can compare two or more repos side by side across all health metrics.
 Each repo is summarized in a scannable card showing key health signals.
 
 **Acceptance criteria**
-- One card per repo displaying: stars, forks, watches, created date, quadrant badge, and one score badge per CHAOSS category (Evolution, Contribution Dynamics, Responsiveness)
-- Quadrant badge colors: Leaders = green, Buzz = amber, Builders = blue, Early = gray
+- One card per repo displaying: stars, forks, watches, created date, ecosystem profile summary (Reach / Builder Engagement / Attention), and one score badge per CHAOSS category (Evolution, Contribution Dynamics, Responsiveness)
+- Ecosystem profile badges use consistent visual treatment across Reach / Builder Engagement / Attention tiers
 - Score badge colors: High = green, Medium = amber, Low = red, Insufficient = gray — consistent across all three CHAOSS score badges
 - CHAOSS category label shown beneath each score badge so the framing is always visible
 - Card click or expand reveals full metric detail for that repo

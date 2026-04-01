@@ -30,7 +30,7 @@ GITHUB_TOKEN=
 ## Planned Product Capabilities
 
 - Analyze GitHub repos across four CHAOSS categories: **Ecosystem**, **Evolution**, **Sustainability**, and **Responsiveness**
-- Visualize repos on an interactive 2×2 ecosystem map (stars × forks)
+- Visualize repos with an interactive ecosystem view and profile summaries
 - Compare multiple repos side by side across all health metrics
 - Export results as JSON or Markdown
 
@@ -48,12 +48,12 @@ Implemented today:
 - Per-repo result and failure handling with explicit `"unavailable"` placeholders
 - Loading and rate-limit visibility on the home page
 - Results shell with a full-width header, stable analysis panel, and tabbed result workspace
-- `Overview`, `Ecosystem Map`, `Comparison`, and `Metrics` tabs, with placeholder states for future views
+- `Overview`, `Ecosystem Map`, `Comparison`, and `Metrics` tabs, with placeholder states where later features are still pending
+- Ecosystem spectrum view in the `Ecosystem Map` tab, including visible stars/forks/watchers and config-driven Reach / Builder Engagement / Attention profiles
 - Automated coverage with Vitest, React Testing Library, and Playwright
 
 Not implemented yet:
 
-- Ecosystem map visualization inside the `Ecosystem Map` tab
 - Repo comparison content inside the `Comparison` tab
 - Expanded metrics content inside the `Metrics` tab
 - JSON/Markdown export

@@ -1,11 +1,12 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { buildSpectrumProfiles, type EcosystemSpectrumProfile } from './classification'
 
 export interface VisibleMetricRow {
   repo: string
   starsLabel: string
   forksLabel: string
   watchersLabel: string
-  classificationLabel: string | null
+  profile: EcosystemSpectrumProfile | null
   plotStatusNote: string | null
 }
 
@@ -14,9 +15,19 @@ export interface BubbleChartPoint {
   x: number
   y: number
   r: number
+  stars: number
+  forks: number
+  watchers: number
+  forkRate: number
+  watcherRate: number
+  forkRateLabel: string
+  watcherRateLabel: string
+  profile: EcosystemSpectrumProfile
 }
 
 export function buildEcosystemRows(results: AnalysisResult[]): VisibleMetricRow[] {
+  const profiles = buildSpectrumProfiles(results)
+
   return results.map((result) => {
     const missingMetrics = [
       result.stars === 'unavailable' ? 'stars' : null,
@@ -29,25 +40,49 @@ export function buildEcosystemRows(results: AnalysisResult[]): VisibleMetricRow[
       starsLabel: formatMetric(result.stars),
       forksLabel: formatMetric(result.forks),
       watchersLabel: formatMetric(result.watchers),
-      classificationLabel: null,
+      profile: profiles[result.repo] ?? null,
       plotStatusNote:
-        missingMetrics.length > 0 ? 'Could not plot this repository because ecosystem metrics were incomplete.' : null,
+        missingMetrics.length > 0
+          ? 'Could not plot this repository because ecosystem metrics were incomplete.'
+          : null,
     }
   })
 }
 
 export function buildBubbleChartPoints(results: AnalysisResult[]): BubbleChartPoint[] {
+  const profiles = buildSpectrumProfiles(results)
+
   return results
     .filter(
       (result): result is AnalysisResult & { stars: number; forks: number; watchers: number } =>
-        typeof result.stars === 'number' && typeof result.forks === 'number' && typeof result.watchers === 'number',
+        typeof result.stars === 'number' &&
+        typeof result.forks === 'number' &&
+        typeof result.watchers === 'number' &&
+        result.stars > 0,
     )
-    .map((result) => ({
-      repo: result.repo,
-      x: result.stars,
-      y: result.forks,
-      r: scaleBubbleRadius(result.watchers),
-    }))
+    .map((result) => {
+      const profile = profiles[result.repo]
+
+      if (!profile) {
+        return null
+      }
+
+      return {
+        repo: result.repo,
+        x: result.stars,
+        y: profile.forkRate,
+        r: scaleBubbleRadius(profile.watcherRate),
+        stars: result.stars,
+        forks: result.forks,
+        watchers: result.watchers,
+        forkRate: profile.forkRate,
+        watcherRate: profile.watcherRate,
+        forkRateLabel: profile.forkRateLabel,
+        watcherRateLabel: profile.watcherRateLabel,
+        profile,
+      }
+    })
+    .filter((point): point is BubbleChartPoint => point !== null)
 }
 
 function formatMetric(value: number | 'unavailable') {
@@ -58,16 +93,16 @@ function formatMetric(value: number | 'unavailable') {
   return value
 }
 
-function scaleBubbleRadius(watchers: number) {
-  if (watchers >= 5000) {
+function scaleBubbleRadius(watcherRate: number) {
+  if (watcherRate >= 2.5) {
     return 20
   }
 
-  if (watchers >= 2000) {
+  if (watcherRate >= 1.5) {
     return 16
   }
 
-  if (watchers >= 500) {
+  if (watcherRate >= 0.5) {
     return 12
   }
 
