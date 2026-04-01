@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
+import { EcosystemMap } from '@/components/ecosystem-map/EcosystemMap'
 import { TokenInput } from '@/components/token-input/TokenInput'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import { readToken, writeToken } from '@/lib/token-storage'
@@ -123,7 +124,13 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
     <ResultsShell
       analysisPanel={analysisPanel}
       overview={overviewContent}
-      ecosystemMap={<p className="text-sm text-slate-600">Ecosystem map view is coming soon.</p>}
+      ecosystemMap={
+        analysisResponse ? (
+          <EcosystemMap results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-600">Run an analysis to populate the ecosystem map view.</p>
+        )
+      }
       comparison={<p className="text-sm text-slate-600">Comparison view is coming soon.</p>}
       metrics={<p className="text-sm text-slate-600">Metrics view is coming soon.</p>}
     />

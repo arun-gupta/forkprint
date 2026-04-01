@@ -119,6 +119,14 @@ describe('RepoInputClient', () => {
     const results = await screen.findByRole('region', { name: /analysis results/i })
     expect(within(results).getByText('facebook/react')).toBeInTheDocument()
     expect(within(results).getByText(/stars: 244,295/i)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Ecosystem Map' }))
+
+    const ecosystemMap = screen.getByRole('region', { name: /ecosystem map/i })
+    expect(within(ecosystemMap).getByText('facebook/react')).toBeInTheDocument()
+    expect(within(ecosystemMap).getByText('Stars: 244,295')).toBeInTheDocument()
+    expect(within(ecosystemMap).getByText('Forks: 25')).toBeInTheDocument()
+    expect(within(ecosystemMap).getByText('Watchers: 10')).toBeInTheDocument()
   })
 
   it('renders repository-specific failures alongside successful results', async () => {
