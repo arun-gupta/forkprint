@@ -64,18 +64,19 @@ This is the planned implementation order for Phase 1. It may differ from the fea
 |---|---|---|---|
 | 1 | P1-F01 | Repo Input | ✅ Done |
 | 2 | P1-F02 | Authentication | ✅ Done |
-| 3 | P1-F04 | Data Fetching | — |
-| 4 | P1-F05 | Ecosystem Map | — |
-| 5 | P1-F03 | Deployment | — |
-| 6 | P1-F06 | Repo Comparison | — |
-| 7 | P1-F07 | Metric Cards | — |
-| 8 | P1-F14 | GitHub OAuth Authentication | — |
-| 9 | P1-F08 | Evolution | — |
-| 10 | P1-F09 | Contribution Dynamics | — |
-| 11 | P1-F10 | Responsiveness | — |
-| 12 | P1-F11 | Health Ratios | — |
-| 13 | P1-F12 | Missing Data & Accuracy | — |
-| 14 | P1-F13 | Export | — |
+| 3 | P1-F04 | Data Fetching | ✅ Done |
+| 4 | P1-F15 | Results Shell | — |
+| 5 | P1-F05 | Ecosystem Map | — |
+| 6 | P1-F03 | Deployment | — |
+| 7 | P1-F06 | Repo Comparison | — |
+| 8 | P1-F07 | Metric Cards | — |
+| 9 | P1-F14 | GitHub OAuth Authentication | — |
+| 10 | P1-F08 | Evolution | — |
+| 11 | P1-F09 | Contribution Dynamics | — |
+| 12 | P1-F10 | Responsiveness | — |
+| 13 | P1-F11 | Health Ratios | — |
+| 14 | P1-F12 | Missing Data & Accuracy | — |
+| 15 | P1-F13 | Export | — |
 
 ---
 

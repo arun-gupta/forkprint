@@ -187,6 +187,26 @@ Repos are visualized on an interactive 2×2 bubble chart to reveal their ecosyst
 
 ---
 
+#### `[P1-F15]` Results Shell
+
+ForkPrint presents analysis in a stable app shell so users can submit repos once and switch between result views cleanly.
+
+**Acceptance criteria**
+- A top header/banner shows the ForkPrint brand and a visible GitHub repo link
+- Repo input and Analyze action live in a stable analysis panel that remains visible above the result views
+- Successful analyses populate a tabbed result area rather than stacking every future view vertically
+- The initial tabs provide a shell that can host at least: Overview, Ecosystem Map, Comparison, and Metrics
+- `Ecosystem Map` is the first populated results tab; other tabs may show intentional empty-state or coming-soon content until their features land
+- Switching tabs does not re-submit the analysis request or trigger extra API calls
+- The shell works for single-repo and multi-repo analyses on desktop and mobile layouts
+
+**Out of scope**
+- Persisting the selected tab across sessions
+- Replacing later feature-specific behavior inside each tab
+- User-customizable tab sets or dashboard layout editing
+
+---
+
 #### `[P1-F06]` Repo Comparison
 
 Users can compare two or more repos side by side across all health metrics.
