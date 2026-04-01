@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
+import { buildBubbleChartPoints, buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
 describe('buildEcosystemRows', () => {
@@ -43,6 +43,32 @@ describe('buildEcosystemRows', () => {
         watchersLabel: 'unavailable',
         classificationLabel: null,
         plotStatusNote: 'Could not plot this repository because ecosystem metrics were incomplete.',
+      },
+    ])
+  })
+
+  it('builds bubble chart points only for plot-eligible repositories', () => {
+    const results = [
+      buildResult({
+        repo: 'facebook/react',
+        stars: 244295,
+        forks: 50872,
+        watchers: 6660,
+      }),
+      buildResult({
+        repo: 'vercel/next.js',
+        stars: 'unavailable',
+        forks: 12000,
+        watchers: 2000,
+      }),
+    ]
+
+    expect(buildBubbleChartPoints(results)).toEqual([
+      {
+        repo: 'facebook/react',
+        x: 244295,
+        y: 50872,
+        r: 20,
       },
     ])
   })
