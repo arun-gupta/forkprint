@@ -78,6 +78,19 @@ describe('RepoInputClient', () => {
     expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
   })
 
+  it('does not persist or use a client token when a server token is configured', async () => {
+    const onAnalyze = vi.fn()
+    window.localStorage.setItem('forkprint_github_token', 'ghp_stale')
+
+    render(<RepoInputClient hasServerToken onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
+    expect(window.localStorage.getItem('forkprint_github_token')).toBe('ghp_stale')
+  })
+
   it('renders returned analysis results after a successful submission', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [

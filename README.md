@@ -2,6 +2,8 @@
 
 ForkPrint is a CHAOSS-aligned GitHub repository health analyzer being built in phases. The long-term goal is to accept one or more `owner/repo` inputs, fetch real public data via the GitHub GraphQL API, and produce an interactive dashboard and raw JSON output.
 
+Production deployment: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
+
 ## Roadmap
 
 | Phase | Platform | Status |
@@ -21,11 +23,33 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+### Local Development
+
 For local development, you can optionally create `.env.local` with:
 
 ```bash
 GITHUB_TOKEN=
 ```
+
+If `GITHUB_TOKEN` is not set locally, the app falls back to the existing PAT flow in the browser.
+
+### Shared Vercel Deployment
+
+Phase 1 deployment targets Vercel with the standard Next.js deployment path.
+
+For a shared deployment:
+
+1. Import the repo into Vercel
+2. Add `GITHUB_TOKEN` in the Vercel project's Environment Variables
+3. Deploy with the default Next.js build/runtime settings
+
+When `GITHUB_TOKEN` is configured server-side:
+
+- the PAT field is hidden in the UI
+- analysis requests use the server-side token path
+- the token is not exposed in the browser URL or rendered UI state
+
+Full deployment steps: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## Planned Product Capabilities
 
@@ -50,6 +74,7 @@ Implemented today:
 - Results shell with a full-width header, stable analysis panel, and tabbed result workspace
 - `Overview`, `Ecosystem Map`, `Comparison`, and `Metrics` tabs, with placeholder states where later features are still pending
 - Ecosystem spectrum view in the `Ecosystem Map` tab, including visible stars/forks/watchers and config-driven Reach / Builder Engagement / Attention profiles
+- Vercel-ready deployment path with server-side `GITHUB_TOKEN` support for shared deployments
 - Automated coverage with Vitest, React Testing Library, and Playwright
 
 Not implemented yet:
@@ -70,4 +95,4 @@ npm run build         # production build check
 
 ## Development
 
-Built with SpecKit / Specification-Driven Development. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the feature loop and workflow, [`docs/PRODUCT.md`](docs/PRODUCT.md) for the feature registry, and [`.specify/memory/constitution.md`](.specify/memory/constitution.md) for project rules.
+Built with SpecKit / Specification-Driven Development. See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the feature loop and workflow, [`docs/PRODUCT.md`](docs/PRODUCT.md) for the feature registry, [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the Phase 1 Vercel deployment guide, and [`.specify/memory/constitution.md`](.specify/memory/constitution.md) for project rules.
