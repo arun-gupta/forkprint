@@ -166,6 +166,7 @@ A feature is complete only when all of the following are true:
 - [ ] Tests pass and linting is clean
 - [ ] No TODOs, dead code, `console.log`, or untyped values remain
 - [ ] All spec documents for the feature are current
+- [ ] `docs/DEVELOPMENT.md` reflects the feature's completed status in the implementation order
 - [ ] `specs/NNN-feature-name/checklists/manual-testing.md` exists for the feature
 - [ ] Manual testing checklist completed and signed off
 - [ ] README updated for any user-facing or setup changes
@@ -180,9 +181,10 @@ A feature is complete only when all of the following are true:
 3. Every feature must maintain `specs/NNN-feature-name/checklists/manual-testing.md`.
 4. A manual testing checklist must be completed and signed off before submitting a PR.
 5. README must be updated to reflect any user-facing or setup changes before submitting a PR.
-6. A PR must be opened and merged before starting the next feature.
-7. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
-8. README is updated when a completed feature changes the user-facing behavior or setup steps.
+6. `docs/DEVELOPMENT.md` must be updated when a feature is completed so the implementation order reflects current status.
+7. A PR must be opened and merged before starting the next feature.
+8. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
+9. README is updated when a completed feature changes the user-facing behavior or setup steps.
 
 ---
 

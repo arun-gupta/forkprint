@@ -48,6 +48,7 @@ Before opening a PR, verify the Definition of Done (constitution Section XII):
 - [ ] Tests pass and linting is clean
 - [ ] No TODOs, dead code, `console.log`, or untyped values remain
 - [ ] All spec documents for the feature are current
+- [ ] `docs/DEVELOPMENT.md` reflects the feature's completed status in the implementation order
 - [ ] Manual testing checklist completed and signed off
 - [ ] README updated for any user-facing or setup changes
 - [ ] Constitution compliance verified — no rule violated
@@ -67,14 +68,14 @@ This is the planned implementation order for Phase 1. It may differ from the fea
 | 3 | P1-F04 | Data Fetching | ✅ Done |
 | 4 | P1-F15 | Results Shell | ✅ Done |
 | 5 | P1-F05 | Ecosystem Map | ✅ Done |
-| 6 | P1-F03 | Deployment | — |
-| 7 | P1-F06 | Repo Comparison | — |
-| 8 | P1-F07 | Metric Cards | — |
-| 9 | P1-F14 | GitHub OAuth Authentication | — |
-| 10 | P1-F08 | Evolution | — |
-| 11 | P1-F09 | Contribution Dynamics | — |
-| 12 | P1-F10 | Responsiveness | — |
-| 13 | P1-F11 | Health Ratios | — |
+| 6 | P1-F03 | Deployment | ✅ Done |
+| 7 | P1-F07 | Metric Cards | — |
+| 8 | P1-F14 | GitHub OAuth Authentication | — |
+| 9 | P1-F08 | Evolution | — |
+| 10 | P1-F09 | Contribution Dynamics | — |
+| 11 | P1-F10 | Responsiveness | — |
+| 12 | P1-F11 | Health Ratios | — |
+| 13 | P1-F06 | Repo Comparison | — |
 | 14 | P1-F12 | Missing Data & Accuracy | — |
 | 15 | P1-F13 | Export | — |
 
