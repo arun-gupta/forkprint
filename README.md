@@ -2,7 +2,7 @@
 
 ForkPrint is a CHAOSS-aligned GitHub repository health analyzer being built in phases. The long-term goal is to accept one or more `owner/repo` inputs, fetch real public data via the GitHub GraphQL API, and produce an interactive dashboard and raw JSON output.
 
-Production deployment: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
+Production: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
 
 ## Roadmap
 
@@ -14,7 +14,7 @@ Production deployment: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-
 
 ## Setup
 
-ForkPrint currently supports a GitHub Personal Access Token with `public_repo` read-only scope. In shared deployments, you can also configure `GITHUB_TOKEN` server-side to hide the PAT field.
+ForkPrint currently supports a GitHub Personal Access Token with `public_repo` read-only scope. For local development, you can optionally set `GITHUB_TOKEN` in `.env.local`.
 
 ```bash
 npm install
@@ -23,15 +23,11 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-### Local Development
-
-For local development, you can optionally create `.env.local` with:
+Optional local env:
 
 ```bash
 GITHUB_TOKEN=
 ```
-
-If `GITHUB_TOKEN` is not set locally, the app falls back to the existing PAT flow in the browser.
 
 ## Planned Product Capabilities
 
@@ -40,11 +36,9 @@ If `GITHUB_TOKEN` is not set locally, the app falls back to the existing PAT flo
 - Compare multiple repos side by side across all health metrics
 - Export results as JSON or Markdown
 
-## Development
+## Docs
 
-Built with SpecKit / Specification-Driven Development.
-
-- Development workflow, feature order, current implementation status, and testing commands: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
-- Product definition and planned feature set: [`docs/PRODUCT.md`](docs/PRODUCT.md)
-- Phase 1 Vercel deployment guide: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
-- Project rules: [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
+- Develop: [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)
+- Deploy: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- Product: [`docs/PRODUCT.md`](docs/PRODUCT.md)
+- Rules: [`.specify/memory/constitution.md`](.specify/memory/constitution.md)
