@@ -4,7 +4,7 @@ import { EcosystemMap } from './EcosystemMap'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
 describe('EcosystemMap', () => {
-  it('renders visible stars, forks, and watchers for successful repositories', () => {
+  it('renders the shared ecosystem spectrum guidance for successful repositories', () => {
     render(
       <EcosystemMap
         results={[
@@ -19,35 +19,27 @@ describe('EcosystemMap', () => {
     )
 
     const region = screen.getByRole('region', { name: /ecosystem map/i })
-    const articles = within(region).getAllByRole('article')
-
-    expect(within(articles[0]!).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Stars: 244,295')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Forks: 50,872')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Watchers: 6,660')).toBeInTheDocument()
+    expect(within(region).getByText(/ecosystem spectrum/i)).toBeInTheDocument()
+    expect(within(region).getByText(/^Reach bands$/)).toBeInTheDocument()
   })
 
-  it('shows unavailable ecosystem metrics explicitly', () => {
+  it('does not duplicate per-repo spectrum profile content', () => {
     render(
       <EcosystemMap
         results={[
           buildResult({
-            stars: 'unavailable',
+            repo: 'facebook/react',
+            stars: 244295,
             forks: 50872,
-            watchers: 'unavailable',
+            watchers: 6660,
           }),
         ]}
       />,
     )
 
     const region = screen.getByRole('region', { name: /ecosystem map/i })
-    const articles = within(region).getAllByRole('article')
-
-    expect(within(articles[0]!).getByText('Stars: unavailable')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Watchers: unavailable')).toBeInTheDocument()
-    expect(
-      within(region).getByText(/could not plot this repository because ecosystem metrics were incomplete/i),
-    ).toBeInTheDocument()
+    expect(within(region).queryByText('facebook/react')).not.toBeInTheDocument()
+    expect(within(region).queryByText(/spectrum profile/i)).not.toBeInTheDocument()
   })
 
   it('renders the spectrum-only view without the chart', () => {
@@ -93,7 +85,7 @@ describe('EcosystemMap', () => {
     expect(within(region).getAllByText(/^Attention$/).length).toBeGreaterThan(0)
   })
 
-  it('shows a full spectrum profile even for a single repo', () => {
+  it('shows band guidance without per-repo rate pills for a single repo', () => {
     render(
       <EcosystemMap
         results={[
@@ -109,13 +101,12 @@ describe('EcosystemMap', () => {
 
     const region = screen.getByRole('region', { name: /ecosystem map/i })
 
-    expect(within(region).queryByText(/classification is skipped/i)).not.toBeInTheDocument()
-    expect(within(region).getByText(/spectrum profile/i)).toBeInTheDocument()
-    expect(within(region).getByText(/20.8% fork rate/i)).toBeInTheDocument()
-    expect(within(region).getByText(/2.7% watcher rate/i)).toBeInTheDocument()
+    expect(within(region).queryByText(/20.8% fork rate/i)).not.toBeInTheDocument()
+    expect(within(region).queryByText(/2.7% watcher rate/i)).not.toBeInTheDocument()
+    expect(within(region).getByText(/^Builder engagement$/)).toBeInTheDocument()
   })
 
-  it('shows an exploratory spectrum preview with profile tiers', () => {
+  it('shows band tiers in the legend', () => {
     render(
       <EcosystemMap
         results={[
@@ -126,9 +117,9 @@ describe('EcosystemMap', () => {
 
     const region = screen.getByRole('region', { name: /ecosystem map/i })
 
-    expect(within(region).getByText(/35.2% fork rate/i)).toBeInTheDocument()
-    expect(within(region).getByText(/2.6% watcher rate/i)).toBeInTheDocument()
-    expect(within(region).getAllByText('Exceptional').length).toBeGreaterThan(0)
+    expect(within(region).getByText(/Exceptional 100k\+/i)).toBeInTheDocument()
+    expect(within(region).getByText(/Exceptional 25%\+/i)).toBeInTheDocument()
+    expect(within(region).getByText(/Exceptional 2.5%\+/i)).toBeInTheDocument()
   })
 })
 

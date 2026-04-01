@@ -50,8 +50,10 @@ test.describe('P1-F04 Data Fetching', () => {
     await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
     await page.getByRole('button', { name: /analyze/i }).click()
 
-    await expect(page.getByRole('region', { name: /analysis results/i })).toContainText('facebook/react')
-    await expect(page.getByRole('region', { name: /analysis results/i })).toContainText('Stars: 100')
+    const overview = page.getByRole('region', { name: /metric cards overview/i })
+    await expect(overview).toContainText('facebook/react')
+    await expect(overview).toContainText('Stars')
+    await expect(overview).toContainText('100')
   })
 
   test('shows successful results and failed repositories together', async ({ page }) => {

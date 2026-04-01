@@ -10,7 +10,7 @@ test.describe('P1-F05 Ecosystem Map', () => {
     }
   })
 
-  test('shows visible stars, forks, and watchers for successful repositories', async ({ page }) => {
+  test('shows the shared ecosystem spectrum guidance in the overview', async ({ page }) => {
     await mockAnalyze(page, [
       buildResult({
         repo: 'facebook/react',
@@ -22,13 +22,11 @@ test.describe('P1-F05 Ecosystem Map', () => {
 
     await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
     await page.getByRole('button', { name: /analyze/i }).click()
-    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
 
     const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
-    await expect(ecosystemMap).toContainText('facebook/react')
-    await expect(ecosystemMap).toContainText('Stars: 244,295')
-    await expect(ecosystemMap).toContainText('Forks: 50,872')
-    await expect(ecosystemMap).toContainText('Watchers: 6,660')
+    await expect(ecosystemMap).toContainText('Ecosystem spectrum')
+    await expect(ecosystemMap).toContainText('Reach bands')
+    await expect(ecosystemMap).not.toContainText('facebook/react')
   })
 
   test('renders the ecosystem spectrum and legend for multiple repos', async ({ page }) => {
@@ -39,7 +37,6 @@ test.describe('P1-F05 Ecosystem Map', () => {
 
     await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react\nkubernetes/kubernetes')
     await page.getByRole('button', { name: /analyze/i }).click()
-    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
 
     const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
     await expect(ecosystemMap).toContainText('Ecosystem spectrum')
@@ -51,20 +48,19 @@ test.describe('P1-F05 Ecosystem Map', () => {
     await expect(ecosystemMap).toContainText('Attention')
   })
 
-  test('shows spectrum profiles with derived rates', async ({ page }) => {
+  test('shows only the band legend rather than duplicated per-repo spectrum profiles', async ({ page }) => {
     await mockAnalyze(page, [
       buildResult({ repo: 'kubernetes/kubernetes', stars: 121419, forks: 42757, watchers: 3181 }),
     ])
 
     await page.getByRole('textbox', { name: /repository list/i }).fill('kubernetes/kubernetes')
     await page.getByRole('button', { name: /analyze/i }).click()
-    await page.getByRole('tab', { name: 'Ecosystem Map' }).click()
 
     const ecosystemMap = page.getByRole('region', { name: /ecosystem map/i })
-    await expect(ecosystemMap).toContainText('Spectrum profile')
-    await expect(ecosystemMap).toContainText('Exceptional (35.2% fork rate)')
-    await expect(ecosystemMap).toContainText('Exceptional (2.6% watcher rate)')
-    await expect(ecosystemMap).not.toContainText('classification is skipped')
+    await expect(ecosystemMap).toContainText('Exceptional 25%+')
+    await expect(ecosystemMap).toContainText('Exceptional 2.5%+')
+    await expect(ecosystemMap).not.toContainText('kubernetes/kubernetes')
+    await expect(ecosystemMap).not.toContainText('Spectrum profile')
   })
 })
 

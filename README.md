@@ -72,8 +72,9 @@ Implemented today:
 - Per-repo result and failure handling with explicit `"unavailable"` placeholders
 - Loading and rate-limit visibility on the home page
 - Results shell with a full-width header, stable analysis panel, and tabbed result workspace
-- `Overview`, `Ecosystem Map`, `Comparison`, and `Metrics` tabs, with placeholder states where later features are still pending
-- Ecosystem spectrum view in the `Ecosystem Map` tab, including visible stars/forks/watchers and config-driven Reach / Builder Engagement / Attention profiles
+- Metric-card summaries in the `Overview` tab, including exact repo counters, ecosystem profile summaries, CHAOSS badge slots, and expandable in-place detail
+- `Overview`, `Comparison`, and `Metrics` tabs, with placeholder states where later features are still pending
+- Ecosystem spectrum guidance folded into the `Overview` experience, including visible stars/forks/watchers and config-driven Reach / Builder Engagement / Attention profiles
 - Vercel-ready deployment path with server-side `GITHUB_TOKEN` support for shared deployments
 - Automated coverage with Vitest, React Testing Library, and Playwright
 

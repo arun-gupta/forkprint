@@ -5,13 +5,7 @@ export const resultTabs: ResultTabDefinition[] = [
     id: 'overview',
     label: 'Overview',
     status: 'implemented',
-    description: 'Current analysis summary and shared status',
-  },
-  {
-    id: 'ecosystem-map',
-    label: 'Ecosystem Map',
-    status: 'placeholder',
-    description: 'Ecosystem map view is coming soon.',
+    description: 'Current analysis summary, ecosystem profile, and shared status',
   },
   {
     id: 'comparison',

@@ -9,7 +9,6 @@ describe('ResultsShell', () => {
       <ResultsShell
         analysisPanel={<div>Analysis panel</div>}
         overview={<div>Overview content</div>}
-        ecosystemMap={<div>Ecosystem content</div>}
         comparison={<div>Comparison coming soon</div>}
         metrics={<div>Metrics coming soon</div>}
       />,
@@ -18,10 +17,10 @@ describe('ResultsShell', () => {
     expect(screen.getByText('Analysis panel')).toBeInTheDocument()
     expect(screen.getByText('Overview content')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('tab', { name: 'Ecosystem Map' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
 
     expect(screen.getByText('Analysis panel')).toBeInTheDocument()
-    expect(screen.getByText('Ecosystem content')).toBeInTheDocument()
+    expect(screen.getByText('Comparison coming soon')).toBeInTheDocument()
   })
 
   it('renders the GitHub repo link in the header', () => {
@@ -29,7 +28,6 @@ describe('ResultsShell', () => {
       <ResultsShell
         analysisPanel={<div>Analysis panel</div>}
         overview={<div>Overview content</div>}
-        ecosystemMap={<div>Ecosystem content</div>}
         comparison={<div>Comparison coming soon</div>}
         metrics={<div>Metrics coming soon</div>}
       />,

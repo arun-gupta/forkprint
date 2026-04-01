@@ -8,12 +8,11 @@ import { ResultsTabs } from './ResultsTabs'
 interface ResultsShellProps {
   analysisPanel: React.ReactNode
   overview: React.ReactNode
-  ecosystemMap: React.ReactNode
   comparison: React.ReactNode
   metrics: React.ReactNode
 }
 
-export function ResultsShell({ analysisPanel, overview, ecosystemMap, comparison, metrics }: ResultsShellProps) {
+export function ResultsShell({ analysisPanel, overview, comparison, metrics }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>('overview')
 
   return (
@@ -50,7 +49,6 @@ export function ResultsShell({ analysisPanel, overview, ecosystemMap, comparison
             <ResultsTabs tabs={resultTabs} activeTab={activeTab} onChange={setActiveTab} />
             <div className="mt-6">
               {activeTab === 'overview' ? overview : null}
-              {activeTab === 'ecosystem-map' ? ecosystemMap : null}
               {activeTab === 'comparison' ? comparison : null}
               {activeTab === 'metrics' ? metrics : null}
             </div>

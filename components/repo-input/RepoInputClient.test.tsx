@@ -130,17 +130,16 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     const results = await screen.findByRole('region', { name: /analysis results/i })
-    expect(within(results).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(results).getByText(/stars: 244,295/i)).toBeInTheDocument()
+    const metricCardsOverview = within(results).getByRole('region', { name: /metric cards overview/i })
+    expect(within(metricCardsOverview).getByTestId('metric-card-facebook/react')).toBeInTheDocument()
+    expect(within(metricCardsOverview).getByText('244,295')).toBeInTheDocument()
+    expect(within(metricCardsOverview).getByText(/ecosystem profile summary/i)).toBeInTheDocument()
+    expect(within(results).getAllByText('Not scored yet')).toHaveLength(3)
 
-    await userEvent.click(screen.getByRole('tab', { name: 'Ecosystem Map' }))
-
-    const ecosystemMap = screen.getByRole('region', { name: /ecosystem map/i })
-    const articles = within(ecosystemMap).getAllByRole('article')
-    expect(within(articles[0]!).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Stars: 244,295')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Forks: 25')).toBeInTheDocument()
-    expect(within(articles[0]!).getByText('Watchers: 10')).toBeInTheDocument()
+    const ecosystemMap = within(results).getByRole('region', { name: /ecosystem map/i })
+    expect(within(ecosystemMap).getByText(/ecosystem spectrum/i)).toBeInTheDocument()
+    expect(within(ecosystemMap).getByText(/^Reach bands$/)).toBeInTheDocument()
+    expect(within(ecosystemMap).queryByText('facebook/react')).not.toBeInTheDocument()
   })
 
   it('renders repository-specific failures alongside successful results', async () => {
@@ -275,8 +274,53 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     await screen.findByRole('tab', { name: 'Overview' })
-    await userEvent.click(screen.getByRole('tab', { name: 'Ecosystem Map' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
 
+    expect(onAnalyze).toHaveBeenCalledTimes(1)
+  })
+
+  it('expands a metric card without rerunning analysis', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          createdAt: '2013-05-24T16:15:54Z',
+          primaryLanguage: 'TypeScript',
+          stars: 244295,
+          forks: 25,
+          watchers: 10,
+          commits30d: 7,
+          commits90d: 18,
+          releases12mo: 'unavailable',
+          prsOpened90d: 4,
+          prsMerged90d: 3,
+          issuesOpen: 5,
+          issuesClosed90d: 6,
+          uniqueCommitAuthors90d: 'unavailable',
+          totalContributors: 'unavailable',
+          commitCountsByAuthor: 'unavailable',
+          issueFirstResponseTimestamps: 'unavailable',
+          issueCloseTimestamps: 'unavailable',
+          prMergeTimestamps: 'unavailable',
+          missingFields: ['releases12mo'],
+        },
+      ],
+      failures: [],
+      rateLimit: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByTestId('metric-card-facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /show details/i }))
+
+    expect(screen.getByText(/full metric detail/i)).toBeInTheDocument()
     expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
 })
