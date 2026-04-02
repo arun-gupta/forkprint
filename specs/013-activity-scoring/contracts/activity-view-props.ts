@@ -26,7 +26,7 @@ export interface ActivityScoreHelpProps {
 }
 
 export interface ActivityScoreProps {
-  category: 'Evolution'
+  category: 'Activity'
   value: ScoreValue
   tone: ScoreTone
   description: string

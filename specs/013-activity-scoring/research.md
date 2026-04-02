@@ -1,11 +1,11 @@
 # Research: Activity
 
-## Decision 1: Make `Activity` the workspace label but keep `Evolution` as the score badge category for this slice
+## Decision 1: Use `Activity` consistently for the workspace and score label
 
-- **Decision**: Use `Activity` as the top-level tab and detailed workspace name, while keeping the existing `Evolution` CHAOSS badge/category contract in overview cards for this implementation slice.
-- **Rationale**: The user wants the tab to be called `Activity`, while the constitution and existing card contracts still define the CHAOSS-aligned score category as `Evolution`. This keeps the user-facing workspace naming intuitive without forcing a constitution change during `P1-F08`.
+- **Decision**: Use `Activity` as the top-level tab, detailed workspace name, and score label for this implementation slice.
+- **Rationale**: Keeping one user-facing term avoids confusion and keeps the product, spec, and UI language aligned.
 - **Alternatives considered**:
-  - Rename every score/category reference from `Evolution` to `Activity`: rejected for this slice because it would conflict with the current constitution and upstream contracts
+  - Keep a legacy score label while using `Activity` for the tab: rejected because it creates unnecessary terminology drift
   - Keep the tab labeled `Metrics`: rejected because it weakens the information architecture and no longer matches the accepted spec direction
 
 ## Decision 2: Add a local recent-activity window control with fixed presets

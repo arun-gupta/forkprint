@@ -41,7 +41,7 @@ ForkPrint groups analysis into four CHAOSS-aligned reporting dimensions. These d
 | ForkPrint Dimension | CHAOSS Basis | Feature | Derived Score |
 |---|---|---|---|
 | Ecosystem | ForkPrint repo-profile layer informed by CHAOSS-style ecosystem signals | Ecosystem Map (P1-F05) | Ecosystem profile: Reach / Builder Engagement / Attention |
-| Activity | CHAOSS Evolution metrics and adjacent activity-flow signals | Activity (P1-F08) | Activity score: High / Medium / Low |
+| Activity | CHAOSS-aligned activity and adjacent activity-flow signals | Activity (P1-F08) | Activity score: High / Medium / Low |
 | Contributors | Contributor metrics with a dedicated Sustainability pane for resilience and organizational-risk signals | Contributors (P1-F09) | Core contributor metrics + Sustainability score |
 | Responsiveness | CHAOSS-aligned time-to-response and time-to-resolution metrics | Responsiveness (P1-F10) | Responsiveness score: High / Medium / Low |
 
@@ -198,7 +198,7 @@ ForkPrint presents analysis in a stable app shell so users can submit repos once
 - A top header/banner shows the ForkPrint brand and a visible GitHub repo link
 - Repo input and Analyze action live in a stable analysis panel that remains visible above the result views
 - Successful analyses populate a tabbed result area rather than stacking every future view vertically
-- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Metrics`, `Responsiveness`, and `Comparison` available as tabs
+- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, and `Comparison` available as tabs
 - The `Overview` tab is the first populated results tab and can absorb cross-feature summary content until later tabs deliver distinct value
 - Switching tabs does not re-submit the analysis request or trigger extra API calls
 - The shell works for single-repo and multi-repo analyses on desktop and mobile layouts
@@ -251,9 +251,9 @@ Each repo is summarized in a scannable card showing key health signals.
 
 ---
 
-#### `[P1-F08]` Activity *(CHAOSS-aligned: Evolution / activity flow)*
+#### `[P1-F08]` Activity *(CHAOSS-aligned: activity flow)*
 
-The analyzer measures how a repo's activity has changed over time.
+The analyzer measures how a repo's recent activity and delivery flow change across configurable recent windows.
 
 **Acceptance criteria**
 - Metrics computed:
@@ -262,9 +262,13 @@ The analyzer measures how a repo's activity has changed over time.
   - issue flow: opened, closed
   - release cadence and version frequency
   - PR merge rate (`merged / opened`)
-  - stale issue ratio (`open > 90d / total open`)
+  - issue closure rate (`closed / opened`) for the selected window
+  - stale issue ratio (`open older than selected window / total open`)
   - median time to merge PRs
   - median time to close issues
+- The `Activity` tab shows selected-window raw counts and throughput ratios together so users can interpret percentages in context
+- The `Activity` score in the `Activity` tab follows the selected recent-activity window, while the overview badge may continue to use the canonical default score window
+- The first implementation focuses on ratios and fixed-window comparisons; full time-series trend charts for commits, PRs, and issues are a follow-up once bucketed trend data is carried in the shared analysis payload
 - Activity score — High / Medium / Low — assigned only when sufficient verified data exists; otherwise surfaces `Insufficient verified public data`
 - Activity score is based on a weighted combination of:
   - recent volume: commits, PRs, and issues across `30d`, `90d`, and `180d`
@@ -294,12 +298,13 @@ The analyzer measures how a repo's activity has changed over time.
 - Activity score should balance absolute volume with ratios and medians, so larger repositories do not automatically outrank smaller but healthy ones
 - `Activity` owns throughput, cadence, and time-to-completion signals, while `Responsiveness` remains focused on first-response and maintainer-engagement latency
 - All thresholds defined in config, not hardcoded in logic
-- UI exposes thresholds via a "how is this scored?" tooltip
+- UI exposes thresholds via a "How is Activity scored?" help surface and keeps primary values visible without tooltip-only disclosure
 - CHAOSS category label displayed alongside the score in the UI
 
 **Out of scope**
 - User-adjustable thresholds in the UI (Future backlog)
 - Commit frequency broken down by day of week or time of day
+- Full commit / PR / issue sparkline charts before bucketed trend series are added to the shared `AnalysisResult` payload
 
 ---
 

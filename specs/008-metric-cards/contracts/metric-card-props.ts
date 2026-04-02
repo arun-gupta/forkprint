@@ -3,7 +3,7 @@ import type { AttentionTier, EngagementTier, ReachTier } from '@/lib/ecosystem-m
 
 export type ScoreValue = 'High' | 'Medium' | 'Low' | 'Not scored yet' | 'Insufficient verified public data'
 export type ScoreTone = 'success' | 'warning' | 'danger' | 'neutral'
-export type ScoreCategory = 'Evolution' | 'Sustainability' | 'Responsiveness'
+export type ScoreCategory = 'Activity' | 'Sustainability' | 'Responsiveness'
 
 export interface ScoreBadgeProps {
   category: ScoreCategory

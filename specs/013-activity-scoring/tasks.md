@@ -22,7 +22,7 @@
 
 - [ ] T001 Create `/Users/arungupta/workspaces/forkprint/specs/013-activity-scoring/tasks.md`
 - [ ] T002 [P] Review `/Users/arungupta/workspaces/forkprint/components/repo-input/RepoInputClient.tsx`, `/Users/arungupta/workspaces/forkprint/components/app-shell/ResultsShell.tsx`, and `/Users/arungupta/workspaces/forkprint/lib/results-shell/tabs.ts` for `Activity`-tab integration points and the current `Metrics` placeholder behavior
-- [ ] T003 [P] Review `/Users/arungupta/workspaces/forkprint/lib/analyzer/analysis-result.ts`, `/Users/arungupta/workspaces/forkprint/lib/analyzer/analyze.ts`, `/Users/arungupta/workspaces/forkprint/lib/analyzer/queries.ts`, and `/Users/arungupta/workspaces/forkprint/lib/metric-cards/score-config.ts` for reusable activity-score inputs and current Evolution badge behavior
+- [ ] T003 [P] Review `/Users/arungupta/workspaces/forkprint/lib/analyzer/analysis-result.ts`, `/Users/arungupta/workspaces/forkprint/lib/analyzer/analyze.ts`, `/Users/arungupta/workspaces/forkprint/lib/analyzer/queries.ts`, and `/Users/arungupta/workspaces/forkprint/lib/metric-cards/score-config.ts` for reusable activity-score inputs and current Activity badge behavior
 
 **Checkpoint**: Activity-tab touchpoints, analyzer dependencies, and score-surface constraints are identified.
 
@@ -87,6 +87,7 @@
 - [ ] T018 [US2] Update `/Users/arungupta/workspaces/forkprint/lib/analyzer/analyze.ts` and `/Users/arungupta/workspaces/forkprint/lib/analyzer/queries.ts` to populate the selected-window activity inputs and fixed commit windows required by `/Users/arungupta/workspaces/forkprint/lib/analyzer/analysis-result.ts`
 - [ ] T019 [US2] Update `/Users/arungupta/workspaces/forkprint/lib/activity/view-model.ts` to support `30d`, `60d`, `90d`, `180d`, and `12 months` local window selection using the shared analysis payload
 - [ ] T020 [US2] Update `/Users/arungupta/workspaces/forkprint/components/activity/ActivityView.tsx` to render the `Recent activity window` control with local state and synchronized per-repo updates
+- [ ] T020a [US2] Update `/Users/arungupta/workspaces/forkprint/lib/activity/view-model.ts` and `/Users/arungupta/workspaces/forkprint/components/activity/ActivityView.tsx` to surface selected-window PR merge rate and issue closure rate with raw-count context
 
 **Checkpoint**: The `Activity` tab supports local recent-activity window switching with no extra fetches.
 
@@ -94,7 +95,7 @@
 
 ## Phase 5: User Story 3 - Understand the Activity score and how it was derived (Priority: P1)
 
-**Goal**: A user can see a real Activity/Evolution score in overview cards and the `Activity` tab, with clear threshold and factor explanations.
+**Goal**: A user can see a real Activity score in overview cards and the `Activity` tab, with clear threshold and factor explanations.
 
 **Independent Test**: Render repositories with known activity inputs and confirm the Activity score shows High/Medium/Low/Insufficient correctly, the overview badge updates from the placeholder state, and the scoring help surface explains thresholds without hiding primary values.
 
@@ -104,16 +105,16 @@
 
 - [ ] T021 [P] [US3] Add analyzer and score tests in `/Users/arungupta/workspaces/forkprint/lib/analyzer/analyzer.test.ts` and `/Users/arungupta/workspaces/forkprint/lib/activity/score-config.test.ts` for High/Medium/Low/Insufficient activity scoring inputs and explicit unavailable behavior
 - [ ] T022 [P] [US3] Extend `/Users/arungupta/workspaces/forkprint/components/activity/ActivityView.test.tsx` to verify score rendering, help-surface copy, and derived-metric explanations
-- [ ] T023 [P] [US3] Extend `/Users/arungupta/workspaces/forkprint/components/metric-cards/MetricCard.test.tsx` or related score-badge tests to verify the overview Evolution badge can render a real score instead of only `Not scored yet`
+- [ ] T023 [P] [US3] Extend `/Users/arungupta/workspaces/forkprint/components/metric-cards/MetricCard.test.tsx` or related score-badge tests to verify the overview Activity badge can render a real score instead of only `Not scored yet`
 
 ### Implementation for User Story 3
 
 - [ ] T024 [US3] Update `/Users/arungupta/workspaces/forkprint/lib/analyzer/analyze.ts` and `/Users/arungupta/workspaces/forkprint/lib/analyzer/queries.ts` to populate the first-slice score inputs required for release cadence, PR merge rate, stale issue ratio, and median time-to-merge/close values
 - [ ] T025 [US3] Create `/Users/arungupta/workspaces/forkprint/components/activity/ActivityScoreHelp.tsx` with the "how is this scored?" help surface using `/Users/arungupta/workspaces/forkprint/lib/activity/score-config.ts`
 - [ ] T026 [US3] Update `/Users/arungupta/workspaces/forkprint/components/activity/ActivityView.tsx` to render the Activity score, score help, and derived-metric explanations while keeping primary values visible
-- [ ] T027 [US3] Update `/Users/arungupta/workspaces/forkprint/lib/metric-cards/score-config.ts`, `/Users/arungupta/workspaces/forkprint/lib/metric-cards/view-model.ts`, and `/Users/arungupta/workspaces/forkprint/components/metric-cards/MetricCard.tsx` so the overview Evolution badge consumes the first real Activity score output
+- [ ] T027 [US3] Update `/Users/arungupta/workspaces/forkprint/lib/metric-cards/score-config.ts`, `/Users/arungupta/workspaces/forkprint/lib/metric-cards/view-model.ts`, and `/Users/arungupta/workspaces/forkprint/components/metric-cards/MetricCard.tsx` so the overview Activity badge consumes the first real Activity score output
 
-**Checkpoint**: The `Activity` tab and overview card both expose the first real Activity/Evolution score and explanation surfaces.
+**Checkpoint**: The `Activity` tab and overview card both expose the first real Activity score and explanation surfaces.
 
 ---
 
@@ -194,7 +195,7 @@
 
 1. Rename the current `Metrics` placeholder into a real `Activity` workspace and render one section per successful repository
 2. Add local recent-activity window switching with the supported presets
-3. Add the first real Activity/Evolution score plus score/help surfaces and overview badge integration
+3. Add the first real Activity score plus score/help surfaces and overview badge integration
 4. Add explicit missing-data callouts and unavailable-state handling
 5. Finish with verification, manual checklist completion, and documentation alignment
 

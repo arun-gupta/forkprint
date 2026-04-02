@@ -2,7 +2,7 @@
 
 ## Goal
 
-Verify that the app now exposes a real `Activity` tab with local recent-activity window switching, explicit activity metrics, and a real score/help surface that does not trigger additional analysis requests.
+Verify that the app now exposes a real `Activity` tab with local recent-activity window switching, explicit activity metrics, visible throughput ratios, and a real score/help surface that does not trigger additional analysis requests.
 
 ## Scenarios
 
@@ -16,6 +16,7 @@ Verify that the app now exposes a real `Activity` tab with local recent-activity
    - `Activity` appears as a top-level tab label
    - one activity section appears per successful repository
    - primary activity values are visible without tooltip interaction
+   - PR and issue throughput percentages are shown with their raw-count context
 
 ### 2. Change the recent-activity window locally
 
@@ -28,14 +29,22 @@ Verify that the app now exposes a real `Activity` tab with local recent-activity
 
 ### 3. Inspect score help and derived metrics
 
-1. In the `Activity` tab, inspect the Activity/Evolution score area
+1. In the `Activity` tab, inspect the Activity score area
 2. Open the "how is this scored?" help surface
 3. Confirm:
    - thresholds and weighted factors are explained clearly
    - derived metrics can be explained without hiding the primary values
    - unavailable derived values remain explicit rather than guessed
 
-### 4. Verify unavailable-data behavior
+### 4. Verify throughput-ratio context
+
+1. In the `Activity` tab, inspect the selected-window PR and issue cards
+2. Confirm:
+   - `PR merge rate` is shown when both opened and merged counts exist for the selected window
+   - `Issue closure rate` is shown when both opened and closed counts exist for the selected window
+   - each percentage includes the underlying counts used to compute it
+
+### 5. Verify unavailable-data behavior
 
 1. Use a repository or mocked response with partial activity data
 2. Open the `Activity` tab

@@ -4,9 +4,9 @@ import { ScoreBadge } from './ScoreBadge'
 
 describe('ScoreBadge', () => {
   it('renders the category label and score value', () => {
-    render(<ScoreBadge category="Evolution" value="Not scored yet" tone="neutral" />)
+    render(<ScoreBadge category="Activity" value="Not scored yet" tone="neutral" />)
 
-    expect(screen.getByText('Evolution')).toBeInTheDocument()
+    expect(screen.getByText('Activity')).toBeInTheDocument()
     expect(screen.getByText('Not scored yet')).toBeInTheDocument()
   })
 })

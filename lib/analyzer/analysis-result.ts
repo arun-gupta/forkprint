@@ -19,6 +19,9 @@ export interface ActivityWindowMetrics {
   issuesOpened: number | Unavailable
   issuesClosed: number | Unavailable
   releases: number | Unavailable
+  staleIssueRatio: number | Unavailable
+  medianTimeToMergeHours: number | Unavailable
+  medianTimeToCloseHours: number | Unavailable
 }
 
 export interface AnalysisResult {
@@ -46,6 +49,9 @@ export interface AnalysisResult {
   experimentalUnattributedAuthors90d: number | Unavailable
   contributorMetricsByWindow?: Record<ContributorWindowDays, ContributorWindowMetrics>
   activityMetricsByWindow?: Record<ActivityWindowDays, ActivityWindowMetrics>
+  staleIssueRatio?: number | Unavailable
+  medianTimeToMergeHours?: number | Unavailable
+  medianTimeToCloseHours?: number | Unavailable
   issueFirstResponseTimestamps: string[] | Unavailable
   issueCloseTimestamps: string[] | Unavailable
   prMergeTimestamps: string[] | Unavailable

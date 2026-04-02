@@ -21,11 +21,11 @@ test.describe('P1-F08 Activity', () => {
           results: [
             buildResult({
               activityMetricsByWindow: {
-                30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1 },
-                60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2 },
-                90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3 },
-                180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4 },
-                365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6 },
+                30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
+                60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
+                90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
+                180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
+                365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
               },
             }),
           ],
@@ -40,16 +40,23 @@ test.describe('P1-F08 Activity', () => {
 
     await page.getByRole('tab', { name: 'Activity' }).click()
     const activityView = page.getByRole('region', { name: /activity view/i })
-    await expect(activityView).toContainText('Commits (90d)')
+    await expect(activityView).toContainText('Commits')
     await expect(activityView).toContainText('18')
+    await expect(activityView).toContainText('20.0%')
+    await expect(activityView).toContainText('1.0d')
 
     await page.getByRole('button', { name: '30d' }).click()
-    await expect(activityView).toContainText('Commits (30d)')
+    await expect(activityView).toContainText('Commits')
     await expect(activityView).toContainText('7')
+    await expect(activityView).toContainText('10.0%')
+    await expect(activityView).toContainText('12.0h')
 
     await page.getByRole('button', { name: '12 months' }).click()
-    await expect(activityView).toContainText('Releases (12mo)')
+    await expect(activityView).toContainText('Releases')
     await expect(activityView).toContainText('6')
+    await expect(activityView).toContainText('40.0%')
+    await expect(activityView).toContainText('4.0d')
+    await expect(activityView).toContainText('6.0d')
     expect(requestCount).toBe(1)
   })
 })
@@ -71,6 +78,9 @@ function buildResult(overrides: Record<string, unknown>) {
     prsMerged90d: 3,
     issuesOpen: 5,
     issuesClosed90d: 6,
+    staleIssueRatio: 0.2,
+    medianTimeToMergeHours: 24,
+    medianTimeToCloseHours: 36,
     uniqueCommitAuthors90d: 'unavailable',
     totalContributors: 'unavailable',
     commitCountsByAuthor: 'unavailable',

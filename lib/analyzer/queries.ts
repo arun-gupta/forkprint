@@ -52,6 +52,11 @@ export const REPO_ACTIVITY_QUERY = `
     $issuesClosed90Query: String!
     $issuesClosed180Query: String!
     $issuesClosed365Query: String!
+    $staleIssues30Query: String!
+    $staleIssues60Query: String!
+    $staleIssues90Query: String!
+    $staleIssues180Query: String!
+    $staleIssues365Query: String!
   ) {
     repository(owner: $owner, name: $name) {
       releases(first: 100, orderBy: { field: CREATED_AT, direction: DESC }) {
@@ -154,6 +159,37 @@ export const REPO_ACTIVITY_QUERY = `
     }
     issuesClosed365: search(query: $issuesClosed365Query, type: ISSUE) {
       issueCount
+    }
+    staleIssues30: search(query: $staleIssues30Query, type: ISSUE) {
+      issueCount
+    }
+    staleIssues60: search(query: $staleIssues60Query, type: ISSUE) {
+      issueCount
+    }
+    staleIssues90: search(query: $staleIssues90Query, type: ISSUE) {
+      issueCount
+    }
+    staleIssues180: search(query: $staleIssues180Query, type: ISSUE) {
+      issueCount
+    }
+    staleIssues365: search(query: $staleIssues365Query, type: ISSUE) {
+      issueCount
+    }
+    recentMergedPullRequests: search(query: $prsMerged365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on PullRequest {
+          createdAt
+          mergedAt
+        }
+      }
+    }
+    recentClosedIssues: search(query: $issuesClosed365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
+          createdAt
+          closedAt
+        }
+      }
     }
     rateLimit {
       remaining

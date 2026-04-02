@@ -118,12 +118,15 @@ describe('RepoInputClient', () => {
           experimentalAttributedAuthors90d: 'unavailable',
           experimentalUnattributedAuthors90d: 'unavailable',
           activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3 },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6 },
+            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
+            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
+            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
+            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
+            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
           },
+          staleIssueRatio: 0.2,
+          medianTimeToMergeHours: 24,
+          medianTimeToCloseHours: 36,
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
@@ -145,8 +148,8 @@ describe('RepoInputClient', () => {
     expect(within(metricCardsOverview).getByTestId('metric-card-facebook/react')).toBeInTheDocument()
     expect(within(metricCardsOverview).getByText('244,295')).toBeInTheDocument()
     expect(within(metricCardsOverview).getByText(/ecosystem profile/i)).toBeInTheDocument()
-    expect(within(results).getByText('Insufficient verified public data')).toBeInTheDocument()
-    expect(within(results).getAllByText('Not scored yet')).toHaveLength(2)
+    expect(within(results).getAllByText('Insufficient verified public data')).toHaveLength(1)
+    expect(within(results).getAllByText('Not scored yet')).toHaveLength(1)
 
     const ecosystemMap = within(results).getByRole('region', { name: /ecosystem map/i })
     expect(within(ecosystemMap).getByText(/ecosystem spectrum/i)).toBeInTheDocument()
@@ -381,8 +384,70 @@ describe('RepoInputClient', () => {
     const activityView = screen.getByRole('region', { name: /activity view/i })
     expect(activityView).toBeInTheDocument()
     expect(within(activityView).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(activityView).getByText(/commits \(90d\)/i)).toBeInTheDocument()
+    expect(within(activityView).getByText(/^commits$/i)).toBeInTheDocument()
+    expect(within(activityView).getByText(/^pull requests$/i)).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
+  })
+
+  it('renders available activity values while calling out missing selected-window data', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          createdAt: '2013-05-24T16:15:54Z',
+          primaryLanguage: 'TypeScript',
+          stars: 244295,
+          forks: 25,
+          watchers: 10,
+          commits30d: 7,
+          commits90d: 18,
+          releases12mo: 'unavailable',
+          prsOpened90d: 4,
+          prsMerged90d: 3,
+          issuesOpen: 5,
+          issuesClosed90d: 6,
+          uniqueCommitAuthors90d: 'unavailable',
+          totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
+          commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
+          activityMetricsByWindow: {
+            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
+            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
+            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 24, medianTimeToCloseHours: 'unavailable' },
+            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
+            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
+          },
+          staleIssueRatio: 'unavailable',
+          medianTimeToMergeHours: 24,
+          medianTimeToCloseHours: 'unavailable',
+          issueFirstResponseTimestamps: 'unavailable',
+          issueCloseTimestamps: 'unavailable',
+          prMergeTimestamps: 'unavailable',
+          missingFields: [],
+        },
+      ],
+      failures: [],
+      rateLimit: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
+
+    const activityView = screen.getByRole('region', { name: /activity view/i })
+    expect(within(activityView).getByText('18')).toBeInTheDocument()
+    expect(within(activityView).getAllByText('unavailable').length).toBeGreaterThan(0)
+    expect(within(activityView).getByText(/^missing data$/i)).toBeInTheDocument()
+    expect(within(activityView).getByText(/unavailable in selected 90d window: releases, stale issue ratio, median time to close\./i)).toBeInTheDocument()
   })
 
   it('does not call onAnalyze again when changing the recent activity window', async () => {
@@ -412,12 +477,15 @@ describe('RepoInputClient', () => {
           experimentalAttributedAuthors90d: 'unavailable',
           experimentalUnattributedAuthors90d: 'unavailable',
           activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3 },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6 },
+            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
+            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
+            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
+            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
+            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
           },
+          staleIssueRatio: 0.2,
+          medianTimeToMergeHours: 24,
+          medianTimeToCloseHours: 36,
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',

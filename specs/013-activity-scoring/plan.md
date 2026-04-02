@@ -5,7 +5,7 @@
 
 ## Summary
 
-Turn the current `Metrics` placeholder into a real `Activity` workspace. This slice introduces an `Activity` top-level tab with a local recent-activity window control (`30d`, `60d`, `90d`, `180d`, `12 months`), extends `AnalysisResult` with the verified public activity inputs and derived values needed for `P1-F08`, and replaces the overview card's placeholder Evolution badge with a real config-driven score plus a clear "how is this scored?" help surface.
+Turn the current `Metrics` placeholder into a real `Activity` workspace. This slice introduces an `Activity` top-level tab with a local recent-activity window control (`30d`, `60d`, `90d`, `180d`, `12 months`), extends `AnalysisResult` with the verified public activity inputs and derived values needed for `P1-F08`, surfaces selected-window throughput ratios alongside raw counts, and replaces the overview card's placeholder Activity badge with a real config-driven score plus a clear "how is this scored?" help surface.
 
 ## Technical Context
 
@@ -16,7 +16,7 @@ Turn the current `Metrics` placeholder into a real `Activity` workspace. This sl
 **Target Platform**: Vercel-hosted Next.js web app, modern desktop/mobile browsers  
 **Project Type**: Web application with server-side API routes and client-side analysis UI  
 **Performance Goals**: Switching into `Activity`, changing the recent activity window, and opening scoring help must remain local UI work with no additional analysis request or extra API calls  
-**Constraints**: Reuse and extend the shared `AnalysisResult[]` contract; keep unavailable values explicit; keep Activity thresholds config-driven; use GitHub GraphQL as the primary source and REST only if GraphQL cannot reach a required field; preserve the overview-card badge contract while reconciling the `Activity` tab name with the existing `Evolution` CHAOSS score label; keep primary values visible outside tooltips  
+**Constraints**: Reuse and extend the shared `AnalysisResult[]` contract; keep unavailable values explicit; keep Activity thresholds config-driven; use GitHub GraphQL as the primary source and REST only if GraphQL cannot reach a required field; preserve the overview-card badge contract while aligning the score label with the `Activity` workspace name; keep primary values visible outside tooltips; defer full trend charts until bucketed series are part of the shared payload  
 **Scale/Scope**: `Activity` tab rename and implementation, recent-activity window presets, analyzer contract extension for activity inputs, config-driven Activity scoring, score/help UI, tests/manual checklist/docs
 
 ## Constitution Check
@@ -26,7 +26,7 @@ Turn the current `Metrics` placeholder into a real `Activity` workspace. This sl
 | I / Phase 1 stack | PASS | Remains within the existing Next.js / React / Tailwind stack |
 | II / Honest data only | PASS | Activity metrics and scores must render exact values or explicit unavailable states only |
 | III / Shared analyzer outputs | PASS | Reuses and extends `AnalysisResult` rather than introducing a second activity data path |
-| V / CHAOSS alignment | PASS | Keeps the existing Evolution badge contract while making `Activity` the tab/workspace label |
+| V / CHAOSS alignment | PASS | Keeps the Activity dimension and score label aligned across the tab, badge, and product framing |
 | VI / Config-driven thresholds | PASS | Activity scoring thresholds and help text remain centralized in shared config |
 | IX / Feature scope rules | PASS | Scope is limited to the Activity workspace, score contract, and required analyzer inputs |
 | XI — TDD mandatory | PASS | Analyzer mapping, scoring helpers, and tab behavior will require focused unit/integration coverage before implementation completes |
@@ -66,7 +66,7 @@ components/
 │   ├── ActivityView.test.tsx                ← NEW: window switching, score help, and missing-data behavior
 │   └── ActivityScoreHelp.tsx                ← NEW: lightweight help surface for score thresholds and derived metrics
 ├── metric-cards/
-│   ├── MetricCard.tsx                       ← MODIFIED: existing Evolution badge consumes real Activity score
+│   ├── MetricCard.tsx                       ← MODIFIED: existing Activity badge consumes real Activity score
 │   └── ScoreBadge.tsx                       ← MODIFIED: optional help affordance if needed by score surfaces
 └── repo-input/
     ├── RepoInputClient.tsx                  ← MODIFIED: routes analysis results into `Activity`
@@ -78,7 +78,7 @@ lib/
 │   ├── analyze.ts                           ← MODIFIED: populate first-slice activity inputs without forking feature logic
 │   └── queries.ts                           ← MODIFIED: extend GraphQL queries for activity windows, releases, and timing inputs
 ├── metric-cards/
-│   └── score-config.ts                      ← MODIFIED: Evolution badge semantics move from placeholder to real score input
+│   └── score-config.ts                      ← MODIFIED: Activity badge semantics move from placeholder to real score input
 ├── results-shell/
 │   └── tabs.ts                              ← MODIFIED: rename `Metrics` tab label/description to `Activity`
 └── activity/
@@ -94,7 +94,7 @@ e2e/
 ### Phase 0 — Research
 
 1. Confirm which activity inputs already exist in `AnalysisResult` and which first-slice fields still need analyzer support
-2. Decide how to reconcile the `Activity` workspace label with the existing `Evolution` score badge contract without introducing inconsistent terminology in code or UI
+2. Confirm the Activity naming contract stays consistent across the workspace, score badge, and product framing
 3. Decide the minimum verified public GitHub fields required for release cadence, stale issue ratio, PR merge medians, and issue close medians
 4. Confirm the tooltip/help-surface strategy so primary values stay visible while derived metrics remain explainable
 
@@ -109,9 +109,9 @@ e2e/
 
 9. Extend the analyzer contract only for the first-slice activity inputs needed by `Activity`, the overview badge, and score explanation
 10. Rename the current `Metrics` top-level tab contract to `Activity` while preserving stable results-shell behavior
-11. Add shared activity view-model and score-config helpers so UI logic stays thin and reusable
+11. Add shared activity view-model and score-config helpers so UI logic stays thin and reusable, including selected-window throughput-ratio formatting
 12. Implement the `Activity` tab content using the existing `AnalysisResult[]`, with local recent-activity window switching and explicit help/missing-data surfaces
-13. Replace the current placeholder Evolution badge state on overview cards with the first real Activity/Evolution score output
+13. Replace the current placeholder Activity badge state on overview cards with the first real Activity score output
 14. Add unit/integration/E2E coverage for tab label behavior, window switching, unavailable values, scoring help, and no-extra-fetch behavior
 
 ## Complexity Tracking

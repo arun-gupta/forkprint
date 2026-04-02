@@ -17,7 +17,7 @@ A user can open the `Activity` tab after analysis and see a dedicated activity v
 
 **Acceptance Scenarios**:
 
-1. **Given** one successful repository has been analyzed, **When** the user opens the `Activity` tab, **Then** the tab shows that repository's activity metrics including commit windows, PR flow, issue flow, release cadence, and completion-speed metrics.
+1. **Given** one successful repository has been analyzed, **When** the user opens the `Activity` tab, **Then** the tab shows that repository's activity metrics including commit windows, PR flow, issue flow, throughput ratios, release cadence, and completion-speed metrics.
 2. **Given** multiple successful repositories have been analyzed, **When** the user opens the `Activity` tab, **Then** each successful repository appears with its own activity section and failed repositories do not produce fabricated metric views.
 3. **Given** the user switches between `Overview` and `Activity`, **When** the activity content is shown, **Then** no new analysis request or extra API call is triggered.
 
@@ -43,7 +43,7 @@ A user can switch the recent activity window in the `Activity` tab so they can i
 
 A user can see a real Activity score for each successful repository and understand which verified public signals contributed to that score.
 
-**Why this priority**: The overview cards already reserve an Evolution score position, so `P1-F08` needs to replace the current placeholder state with a real, explainable score.
+**Why this priority**: The overview cards already reserve an Activity score position, so `P1-F08` needs to replace the current placeholder state with a real, explainable score.
 
 **Independent Test**: Can be fully tested by rendering repositories with known activity inputs and confirming the computed score and score explanation match the shared config-driven thresholds and weights.
 
@@ -84,13 +84,13 @@ A user can tell which activity inputs were unavailable so they can trust the met
 - **FR-001**: The system MUST populate the `Activity` tab with activity content for successful repositories.
 - **FR-002**: The `Activity` tab MUST expose a `Recent activity window` control with exact presets `30d`, `60d`, `90d`, `180d`, and `12 months`.
 - **FR-003**: Changing the `Recent activity window` control MUST update activity-derived metrics locally without rerunning repository analysis.
-- **FR-004**: The `Activity` tab MUST surface the following verified activity metrics per successful repository when publicly verifiable for the selected window: commits; PRs opened, merged, and closed; issues opened and closed; release cadence and version frequency; PR merge rate; stale issue ratio; median time to merge pull requests; and median time to close issues.
+- **FR-004**: The `Activity` tab MUST surface the following verified activity metrics per successful repository when publicly verifiable for the selected window: commits; PRs opened, merged, and closed; issues opened and closed; release cadence and version frequency; PR merge rate; issue closure rate; stale issue ratio; median time to merge pull requests; and median time to close issues.
 - **FR-004a**: The feature MUST continue to support the fixed comparison windows required by the product contract where they remain part of scoring logic, including commit windows in `30d`, `90d`, and `180d`.
 - **FR-005**: The default recent activity window in the `Activity` tab MUST be `90d`.
 - **FR-006**: The system MUST compute an Activity score of `High`, `Medium`, or `Low` using a shared config-driven scoring model when sufficient verified activity data exists.
 - **FR-007**: When sufficient verified activity data does not exist, the Activity score MUST be the literal string `Insufficient verified public data`.
 - **FR-008**: The Activity score MUST be based on the weighted activity groups defined by the product contract: PR flow, issue flow, completion speed, sustained activity, and release cadence.
-- **FR-009**: The overview card's `Evolution` score badge MUST update from the current placeholder state when a real Activity score is available.
+- **FR-009**: The overview card's `Activity` score badge MUST update from the current placeholder state when a real Activity score is available.
 - **FR-010**: The score presentation MUST keep the CHAOSS-aligned category label visible alongside the score in the UI.
 - **FR-011**: All Activity thresholds, score bands, and weighting inputs MUST be defined in shared config rather than hardcoded in scoring logic.
 - **FR-012**: The UI MUST expose a "how is this scored?" help surface for Activity without requiring another analysis request.
@@ -99,12 +99,14 @@ A user can tell which activity inputs were unavailable so they can trust the met
 - **FR-015**: Opening, closing, or switching to the `Activity` tab MUST NOT rerun repository analysis or trigger extra API calls.
 - **FR-016**: Primary activity values such as raw counts and selected-window values MUST remain visible in the `Activity` tab and MUST NOT require tooltip interaction to be discovered.
 - **FR-017**: Tooltip or equivalent help surfaces MAY be used for derived metrics, scoring explanations, and non-obvious definitions, but MUST NOT be the only place where primary activity values are shown.
+- **FR-018**: The `Activity` tab SHOULD render selected-window throughput ratios together with the raw counts they are derived from so percentages remain interpretable at a glance.
+- **FR-019**: Full time-series trend charts for commits, PRs, and issues are deferred until bucketed trend data is present in the shared `AnalysisResult[]` payload.
 
 ### Key Entities
 
 - **Activity View**: The `Activity` tab surface that renders one repository's activity metrics, score, explanation, and missing-data callouts.
 - **Activity Score**: The config-driven classification of repository activity as `High`, `Medium`, `Low`, or `Insufficient verified public data`.
-- **Activity Metric Set**: The verified public metrics used by this feature, including commit windows, PR and issue flow, release cadence, ratios, and completion-speed medians.
+- **Activity Metric Set**: The verified public metrics used by this feature, including commit windows, PR and issue flow, throughput ratios, release cadence, and completion-speed medians.
 - **Missing Activity Data Callout**: The per-repository explanation surface that lists unavailable inputs affecting the rendered metrics or score.
 
 ## Success Criteria *(mandatory)*
@@ -120,6 +122,6 @@ A user can tell which activity inputs were unavailable so they can trust the met
 
 - The existing results shell will expose an `Activity` tab as the intended home for `P1-F08`.
 - `AnalysisResult` will grow to carry the verified raw inputs and derived values required for Activity, but it remains the single source of truth for rendering.
-- The first implementation slice will focus on repository-level activity metrics and score explanation rather than historical trend charts or day-by-day visualizations.
+- The first implementation slice will focus on repository-level activity metrics, throughput ratios, and score explanation rather than historical trend charts or day-by-day visualizations.
 - The product's accuracy policy continues to forbid inferred or fabricated activity values when verified public GitHub data is missing.
 - Tooltips or equivalent help surfaces will be reserved for scoring explanations, derived metrics, and terminology clarification rather than serving as the primary container for raw metric values.

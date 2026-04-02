@@ -154,7 +154,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
           <ActivityView results={analysisResponse.results} />
         ) : (
           <p className="text-sm text-slate-600">
-            Activity will become the primary workspace for Evolution scoring and detailed repo metrics.
+            Activity will become the primary workspace for activity scoring and detailed repo metrics.
           </p>
         )
       }

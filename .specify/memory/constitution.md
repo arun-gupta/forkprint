@@ -80,7 +80,7 @@ Four CHAOSS categories. Each maps to exactly one feature and produces exactly on
 | CHAOSS Category  | Feature ID | Feature Name            | Score Name           | Score Values                              |
 |------------------|------------|-------------------------|----------------------|-------------------------------------------|
 | Ecosystem        | P1-F05     | Ecosystem Map           | Ecosystem profile    | Reach / Builder Engagement / Attention    |
-| Evolution        | P1-F08     | Evolution               | Evolution score      | High / Medium / Low                       |
+| Activity         | P1-F08     | Activity                | Activity score       | High / Medium / Low                       |
 | Sustainability   | P1-F09     | Contribution Dynamics   | Resilience score     | High / Medium / Low                       |
 | Responsiveness   | P1-F10     | Responsiveness          | Responsiveness score | High / Medium / Low                       |
 
@@ -98,7 +98,7 @@ Rules:
 3. The UI exposes thresholds via a "how is this scored?" tooltip for each CHAOSS score.
 4. Phase 2 threshold alerting sources values from the shared config — not from the workflow YAML.
 5. The following scores use config-driven thresholds:
-   - Evolution score (P1-F08): commit frequency, PR merge rate, stale issue ratio, release cadence
+   - Activity score (P1-F08): commit frequency, PR merge rate, stale issue ratio, release cadence
    - Resilience score (P1-F09): contribution concentration, contributor count, repeat contributor ratio
    - Responsiveness score (P1-F10): median first response time, median time to close issues, median PR merge time
 

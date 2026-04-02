@@ -17,7 +17,7 @@ export const resultTabs: ResultTabDefinition[] = [
     id: 'activity',
     label: 'Activity',
     status: 'placeholder',
-    description: 'Evolution metrics and scoring are coming soon.',
+    description: 'Activity metrics and scoring are coming soon.',
   },
   {
     id: 'responsiveness',

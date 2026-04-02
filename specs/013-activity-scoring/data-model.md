@@ -31,6 +31,7 @@
   - `issuesClosed: number | "unavailable"`
   - `releases: number | "unavailable"`
   - `prMergeRate: number | "unavailable"`
+  - `issueClosureRate: number | "unavailable"`
   - `staleIssueRatio: number | "unavailable"`
   - `medianTimeToMergeHours: number | "unavailable"`
   - `medianTimeToCloseHours: number | "unavailable"`
@@ -62,6 +63,7 @@
   - `repo: string`
   - `windowKey: ActivityWindowKey`
   - `metrics: ActivityMetricsByWindow`
+  - `throughputRatioDetails: { prMergeRateDetail: string | "unavailable"; issueClosureRateDetail: string | "unavailable" }`
   - `fixedCommitWindows: { commits30d: number | "unavailable"; commits90d: number | "unavailable"; commits180d: number | "unavailable" }`
   - `score: ActivityScoreDefinition`
   - `missingFields: string[]`
@@ -72,5 +74,6 @@
 - Switching `windowKey` never mutates server-side analysis request state by itself
 - Primary counts and selected-window values remain visible outside tooltip-only surfaces
 - Derived rates and timing metrics are shown only when all required verified inputs exist; otherwise they remain `"unavailable"`
+- Throughput percentages always render next to or beneath the raw counts they are derived from
 - Activity scoring returns `Insufficient verified public data` when the minimum verified inputs are incomplete
-- The same `AnalysisResult` payload must support both the overview Evolution badge and the `Activity` tab detail
+- The same `AnalysisResult` payload must support both the overview Activity badge and the `Activity` tab detail

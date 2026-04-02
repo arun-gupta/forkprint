@@ -1,5 +1,6 @@
 import type { ScoreBadgeProps, ScoreCategory, ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { getActivityScore } from '@/lib/activity/score-config'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
 
 export interface ScoreBadgeDefinition extends ScoreBadgeProps {
@@ -9,14 +10,14 @@ export interface ScoreBadgeDefinition extends ScoreBadgeProps {
 const PENDING_VALUE: ScoreValue = 'Not scored yet'
 const PENDING_TONE: ScoreTone = 'neutral'
 
-export const SCORE_CATEGORIES: ScoreCategory[] = ['Evolution', 'Sustainability', 'Responsiveness']
+export const SCORE_CATEGORIES: ScoreCategory[] = ['Activity', 'Sustainability', 'Responsiveness']
 
 export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
   {
-    category: 'Evolution',
+    category: 'Activity',
     value: PENDING_VALUE,
     tone: PENDING_TONE,
-    description: 'Score will populate when evolution scoring lands in P1-F08.',
+    description: 'Score will populate when activity scoring lands in P1-F08.',
   },
   {
     category: 'Sustainability',
@@ -43,9 +44,17 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
     return badges
   }
 
+  const activityScore = getActivityScore(result)
   const sustainabilityScore = getSustainabilityScore(result)
   return badges.map((badge) =>
-    badge.category === 'Sustainability'
+    badge.category === 'Activity'
+      ? {
+          ...badge,
+          value: activityScore.value,
+          tone: activityScore.tone,
+          description: activityScore.description,
+        }
+      : badge.category === 'Sustainability'
       ? {
           ...badge,
           value: sustainabilityScore.value,
