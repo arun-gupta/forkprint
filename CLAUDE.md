@@ -25,3 +25,6 @@ These command definitions live in `.claude/commands/`.
 ## On Ambiguity
 If a spec is missing, incomplete, or conflicts with the constitution — 
 stop and ask. Do not infer. Do not proceed.
+
+## Signoff Metadata
+When filling manual checklist signoff or similar metadata, use the authenticated GitHub username when it can be verified locally. Do not infer identity from the filesystem path alone. If no verified username is available, leave the field blank or ask the user.

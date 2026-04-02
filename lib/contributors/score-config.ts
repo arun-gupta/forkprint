@@ -48,7 +48,13 @@ const INSUFFICIENT_SCORE: SustainabilityScoreDefinition = {
 }
 
 export function getSustainabilityScore(result: AnalysisResult): SustainabilityScoreDefinition {
-  const concentration = getContributionConcentrationDetails(result.commitCountsByAuthor)
+  return getSustainabilityScoreFromCommitCounts(result.commitCountsByAuthor)
+}
+
+export function getSustainabilityScoreFromCommitCounts(
+  commitCountsByAuthor: Record<string, number> | Unavailable,
+): SustainabilityScoreDefinition {
+  const concentration = getContributionConcentrationDetails(commitCountsByAuthor)
 
   if (concentration === 'unavailable') {
     return INSUFFICIENT_SCORE

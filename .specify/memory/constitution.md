@@ -45,6 +45,7 @@ Response: { "results": AnalysisResult[] }
 4. One metric may never substitute for another. Each field maps to exactly one GraphQL field or derived formula over verified fields.
 5. Scores are assigned only when sufficient verified data exists. When data is insufficient, the output is the literal string `"Insufficient verified public data"` — not a score, not a guess.
 6. If the GitHub GraphQL API does not expose a required field, that field is marked `"unavailable"` and listed explicitly in the per-repo missing data panel.
+7. Narrow exception: `Elephant Factor` and `Single-vendor dependency ratio` may be shown as best-effort estimates only inside a clearly labeled `Experimental` UI surface with an explicit warning that heuristic public-org attribution may be incomplete or inaccurate.
 
 ---
 
@@ -124,6 +125,7 @@ Rules:
    - Distributed + **unknown orgs** → moderate confidence *(not strong — org diversity is unverified)*
 4. The UI never implies that org diversity has been confirmed when it has not.
 5. Missing org data is listed in the per-repo missing data panel.
+6. Narrow exception: `Elephant Factor` and `Single-vendor dependency ratio` may use heuristic public-org attribution only when they are rendered inside a clearly labeled `Experimental` surface with an explicit warning. They must never be presented as fully verified organizational metrics.
 
 ---
 

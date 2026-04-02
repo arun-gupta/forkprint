@@ -5,7 +5,7 @@
 
 ## Summary
 
-Introduce the `Contributors` tab as the first detailed contributor-health workspace after `Overview`. The initial `P1-F09` slice delivers a `Core` pane with verified contributor metrics plus a person-level contribution heatmap, a `Sustainability` pane with the first real Sustainability score and supporting explanation surfaces, and a clearly labeled placeholder area for later resilience and organizational-risk signals, all without triggering new analysis requests.
+Introduce the `Contributors` tab as the first detailed contributor-health workspace after `Overview`. The current `P1-F09` slice delivers a `Core` pane with a contributor-composition summary plus a person-level contribution heatmap, a `Sustainability` pane with the first real Sustainability score and supporting explanation surfaces, an `Experimental` subsection for heuristic org-based signals, and a local recent-activity window control (`30d`, `60d`, `90d`, `180d`, `365d`) that does not trigger new analysis requests.
 
 ## Technical Context
 
@@ -16,8 +16,8 @@ Introduce the `Contributors` tab as the first detailed contributor-health worksp
 **Target Platform**: Vercel-hosted Next.js web app, modern desktop/mobile browsers  
 **Project Type**: Web application with server-side API routes and client-side analysis UI  
 **Performance Goals**: Switching into `Contributors` and between `Core` / `Sustainability` panes must be local UI only and must not trigger additional analysis requests  
-**Constraints**: Reuse the shared `AnalysisResult[]` contract; keep unavailable values explicit; scoring thresholds must remain config-driven; do not overbuild for later sustainability signals in the first slice; preserve the current Overview-card badge contract; use a supported public GitHub contributor-count surface for total contributors if GraphQL alone is insufficient  
-**Scale/Scope**: Contributors-tab shell content, first-slice contributor metrics, person-level heatmap, Sustainability score contract, placeholder reserve area, tests/manual checklist/docs
+**Constraints**: Reuse the shared `AnalysisResult[]` contract; keep unavailable values explicit; scoring thresholds must remain config-driven; preserve the current Overview-card badge contract; use a supported public GitHub contributor-count surface for total contributors if GraphQL alone is insufficient; precompute contributor windows in the analyzer so switching windows stays local  
+**Scale/Scope**: Contributors-tab shell content, recent-activity window presets, contributor-composition metrics, person-level heatmap, Sustainability score contract, experimental org metrics, tests/manual checklist/docs
 
 ## Constitution Check
 

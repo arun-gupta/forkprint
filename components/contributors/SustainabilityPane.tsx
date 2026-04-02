@@ -11,7 +11,7 @@ interface SustainabilityPaneProps {
 
 export function SustainabilityPane({ section }: SustainabilityPaneProps) {
   const [showThresholds, setShowThresholds] = useState(false)
-  const groupedSignals = groupPlaceholderSignals(section.placeholderSignals)
+  const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
 
   return (
     <section aria-label="Sustainability pane" className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -73,93 +73,107 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
 
       <dl className="mt-4 grid gap-3 md:grid-cols-2">
         {section.sustainabilityMetrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div
+            key={metric.label}
+            className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+            title={metric.hoverText}
+            aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
+          >
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
             <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
+            {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}
           </div>
         ))}
       </dl>
 
-      {section.sustainabilityScore.topContributorCount !== 'unavailable' && section.sustainabilityScore.contributorCount !== 'unavailable' ? (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-cyan-50 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-cyan-900">What was scored?</p>
-          <p className="mt-1 text-sm text-cyan-950">
-            {`${section.sustainabilityScore.topContributorCount} of ${section.sustainabilityScore.contributorCount} active contributors produced ${section.sustainabilityMetrics[0]?.value ?? 'unavailable'} of recent verified commits.`}
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-amber-900">Experimental</p>
+          <p className="text-sm text-amber-900">{section.experimentalWarning}</p>
+          <p className="text-sm text-amber-900">
+            <a
+              href="https://chaoss.community/kb/metric-elephant-factor/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium underline underline-offset-2"
+            >
+              CHAOSS Elephant Factor reference
+            </a>
           </p>
         </div>
-      ) : null}
+        <dl className="mt-3 grid gap-3 md:grid-cols-2">
+          {section.experimentalMetrics.map((metric) => (
+            <div
+              key={metric.label}
+              className="rounded-xl border border-amber-200 bg-white p-3"
+              title={metric.hoverText}
+              aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
+            >
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
+              <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {section.experimentalHeatmap.length > 0 ? (
+          <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Attributed organization heatmap</p>
+                <p className="mt-1 text-xs text-slate-500">Darker bubbles indicate more experimentally attributed recent commits.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExperimentalHeatmap((current) => !current)}
+                className="rounded-full border border-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition hover:border-amber-300"
+                aria-pressed={showExperimentalHeatmap}
+              >
+                {showExperimentalHeatmap ? 'Hide heatmap' : 'Show heatmap'}
+              </button>
+            </div>
+            {showExperimentalHeatmap ? (
+              <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-2 sm:grid-cols-6 lg:grid-cols-8" role="list" aria-label="Attributed organization heatmap">
+                {section.experimentalHeatmap.map((cell) => (
+                  <div
+                    key={`${cell.contributor}-${cell.commitsLabel}`}
+                    role="listitem"
+                    className="flex flex-col items-center gap-1"
+                    title={`${cell.contributor}: ${cell.commitsLabel}`}
+                  >
+                    <div
+                      aria-label={`${cell.contributor} ${cell.commitsLabel}`}
+                      className={`h-4 w-4 rounded-full border ${
+                        cell.intensity === 'max'
+                          ? 'border-amber-950 bg-amber-950'
+                          : cell.intensity === 'higher'
+                            ? 'border-amber-800 bg-amber-800'
+                            : cell.intensity === 'high'
+                              ? 'border-amber-600 bg-amber-600'
+                              : cell.intensity === 'medium'
+                                ? 'border-amber-400 bg-amber-400'
+                                : cell.intensity === 'low'
+                                  ? 'border-amber-200 bg-amber-200'
+                                  : 'border-amber-100 bg-amber-100'
+                      }`}
+                    />
+                    <p className="max-w-20 text-center text-[10px] font-medium leading-tight text-slate-700">{cell.contributor}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
-      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-amber-900">Missing data</p>
-        {section.missingData.length > 0 ? (
+      {section.missingData.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-amber-900">Missing data</p>
           <ul className="mt-2 list-disc pl-5 text-sm text-amber-900">
             {section.missingData.map((field) => (
               <li key={field}>{field}</li>
             ))}
           </ul>
-        ) : (
-          <p className="mt-1 text-sm text-amber-900">No missing contributor fields are affecting the current Sustainability view.</p>
-        )}
-      </div>
-
-      <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Later sustainability signals</p>
-        <p className="mt-1 text-sm text-slate-600">This first slice scores contributor concentration. Broader sustainability signals land next in grouped areas.</p>
-        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {groupedSignals.map((group) => (
-            <div key={group.label} className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{group.label}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {group.signals.map((signal) => (
-                  <span key={signal} className="rounded-full bg-slate-100 px-2 py-1 text-[11px] text-slate-700">
-                    {signal}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
-      </div>
+      ) : null}
     </section>
   )
-}
-
-function groupPlaceholderSignals(signals: string[]) {
-  const groups = [
-    {
-      label: 'Maintainership',
-      items: ['Maintainer count'],
-    },
-    {
-      label: 'Contributor continuity',
-      items: [
-        'Inactive contributors',
-        'Occasional contributors',
-        'No contributions in the last 6 months',
-        'New contributors (90d)',
-        'New vs. returning contributor ratio per release cycle',
-      ],
-    },
-    {
-      label: 'Contribution shape',
-      items: ['Types of contributions'],
-    },
-    {
-      label: 'Organization risk',
-      items: [
-        'Organizational diversity',
-        'Organization-level contribution heatmap',
-        'Unique employer/org count among contributors',
-        'Single-vendor dependency ratio',
-        'Elephant Factor',
-      ],
-    },
-  ]
-
-  return groups
-    .map((group) => ({
-      label: group.label,
-      signals: group.items.filter((item) => signals.includes(item)),
-    }))
-    .filter((group) => group.signals.length > 0)
 }

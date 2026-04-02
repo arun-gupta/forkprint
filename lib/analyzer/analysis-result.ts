@@ -1,4 +1,14 @@
 export type Unavailable = 'unavailable'
+export const CONTRIBUTOR_WINDOW_DAYS = [30, 60, 90, 180, 365] as const
+export type ContributorWindowDays = (typeof CONTRIBUTOR_WINDOW_DAYS)[number]
+
+export interface ContributorWindowMetrics {
+  uniqueCommitAuthors: number | Unavailable
+  commitCountsByAuthor: Record<string, number> | Unavailable
+  commitCountsByExperimentalOrg: Record<string, number> | Unavailable
+  experimentalAttributedAuthors: number | Unavailable
+  experimentalUnattributedAuthors: number | Unavailable
+}
 
 export interface AnalysisResult {
   repo: string
@@ -18,7 +28,12 @@ export interface AnalysisResult {
   issuesClosed90d: number | Unavailable
   uniqueCommitAuthors90d: number | Unavailable
   totalContributors: number | Unavailable
+  maintainerCount: number | Unavailable
   commitCountsByAuthor: Record<string, number> | Unavailable
+  commitCountsByExperimentalOrg: Record<string, number> | Unavailable
+  experimentalAttributedAuthors90d: number | Unavailable
+  experimentalUnattributedAuthors90d: number | Unavailable
+  contributorMetricsByWindow?: Record<ContributorWindowDays, ContributorWindowMetrics>
   issueFirstResponseTimestamps: string[] | Unavailable
   issueCloseTimestamps: string[] | Unavailable
   prMergeTimestamps: string[] | Unavailable

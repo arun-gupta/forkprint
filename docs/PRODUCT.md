@@ -274,34 +274,43 @@ The Contributors workspace measures the depth and distribution of contributor ac
 
 **Acceptance criteria**
 - Top-level results navigation places `Contributors` immediately after `Overview`
+- The `Contributors` tab includes a `Recent activity window` control with presets:
+  - `30d`
+  - `60d`
+  - `90d` (default)
+  - `180d`
+  - `365d`
+- Changing the `Recent activity window` updates contributor-derived metrics locally without rerunning analysis
 - The `Contributors` tab is organized into two panes:
   - `Core`
   - `Sustainability`
 - The initial `Core` pane in `P1-F09` includes:
-  - total contributors (from a supported public GitHub contributor-count surface)
-  - active contributors in last 90d (unique commit authors)
-  - repeat contributors
-  - person-level contribution heatmap for recent verified commit activity
+  - a `Contributor composition` summary card
+  - `GitHub API contributors` as the top-level contributor-count source
+  - active / repeat / one-time / inactive contributor composition for the selected recent-activity window
+  - person-level contribution heatmap for the selected recent-activity window
 - The `Sustainability` pane includes the Sustainability score and related explanation surfaces
 - The `Sustainability` pane owns contribution concentration and related top-20%-share explanation surfaces
+- The `Sustainability` pane also includes:
+  - maintainer or owner count from supported public repository files such as `OWNERS`, `OWNERS.alias`, `MAINTAINERS`, `MAINTAINERS.md`, `.github/CODEOWNERS`, or `GOVERNANCE.md`
+  - observed types of contributions from verified recent repository activity
+- The `Sustainability` pane includes an `Experimental` subsection for:
+  - Elephant Factor (best-effort heuristic using public GitHub org visibility)
+  - single-vendor dependency ratio (best-effort heuristic using public GitHub org visibility)
+  - explicit warning that these two estimates may be incomplete or inaccurate
 - Resilience score — High / Medium / Low — derived from contribution dynamics data; assigned only when concentration data is verifiable
 - Scoring logic: high contribution concentration = fragile; moderate concentration = moderate; distributed contributors = strong, with insufficient verified public data blocking the score when contributor-distribution evidence is incomplete
 - All thresholds defined in config, not hardcoded in logic
 - CHAOSS category label displayed alongside the score in the UI
 - Missing data explicitly listed in the per-repo callout panel
-- The `Sustainability` pane also reserves a clearly labeled placeholder area for later sustainability signals that are part of `P1-F09` but not required in the first implementation slice:
-  - maintainer count from a supported `MAINTAINERS` file
-  - inactive contributors
-  - occasional contributors
+- Additional later sustainability signals remain tracked in the product/docs roadmap rather than rendered as placeholder UI in the current pane:
   - no contributions in the last 6 months
-  - types of contributions
   - new contributors (first verified contribution in last 90d)
   - new vs. returning contributor ratio per release cycle
   - organizational diversity
   - organization-level contribution heatmap
   - unique employer/org count among contributors
-  - single-vendor dependency ratio (% of commits from one org)
-  - Elephant Factor ([CHAOSS metric reference](https://chaoss.community/kb/metric-elephant-factor/))
+  - richer Elephant Factor and vendor-risk refinements beyond the experimental heuristic ([CHAOSS metric reference](https://chaoss.community/kb/metric-elephant-factor/))
 
 **Out of scope**
 - Manually overriding org affiliation

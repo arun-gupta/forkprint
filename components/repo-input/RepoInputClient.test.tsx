@@ -112,7 +112,11 @@ describe('RepoInputClient', () => {
           issuesClosed90d: 6,
           uniqueCommitAuthors90d: 'unavailable',
           totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
           commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
@@ -165,7 +169,11 @@ describe('RepoInputClient', () => {
           issuesClosed90d: 6,
           uniqueCommitAuthors90d: 'unavailable',
           totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
           commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
@@ -258,7 +266,11 @@ describe('RepoInputClient', () => {
           issuesClosed90d: 6,
           uniqueCommitAuthors90d: 'unavailable',
           totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
           commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
@@ -301,12 +313,16 @@ describe('RepoInputClient', () => {
           issuesOpen: 5,
           issuesClosed90d: 6,
           uniqueCommitAuthors90d: 2,
-          totalContributors: 'unavailable',
+          totalContributors: 1742,
+          maintainerCount: 4,
           commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 },
+          commitCountsByExperimentalOrg: { meta: 3 },
+          experimentalAttributedAuthors90d: 2,
+          experimentalUnattributedAuthors90d: 0,
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
-          missingFields: ['totalContributors'],
+          missingFields: [],
         },
       ],
       failures: [],
@@ -328,7 +344,8 @@ describe('RepoInputClient', () => {
     expect(contributorsView).toBeInTheDocument()
     expect(screen.getByText(/top 20% contributor share/i)).toBeInTheDocument()
     expect(within(corePane).getByText(/^Contribution heatmap$/i)).toBeInTheDocument()
-    expect(screen.getByText(/later sustainability signals/i)).toBeInTheDocument()
+    expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/missing data/i)).not.toBeInTheDocument()
   })
 
   it('keeps overview cards summary-only after analysis succeeds', async () => {
@@ -352,7 +369,11 @@ describe('RepoInputClient', () => {
           issuesClosed90d: 6,
           uniqueCommitAuthors90d: 'unavailable',
           totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
           commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',

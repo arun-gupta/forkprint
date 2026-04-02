@@ -1,14 +1,18 @@
 'use client'
 
+import type { ContributorWindowDays } from '@/lib/analyzer/analysis-result'
 import { useState } from 'react'
 import type { ContributorHeatmapCell, ContributorMetricRow } from '@/lib/contributors/view-model'
 
 interface CoreContributorsPaneProps {
   metrics: ContributorMetricRow[]
   heatmap: ContributorHeatmapCell[]
+  windowDays: ContributorWindowDays
+  includeBots: boolean
+  onToggleIncludeBots: () => void
 }
 
-export function CoreContributorsPane({ metrics, heatmap }: CoreContributorsPaneProps) {
+export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots, onToggleIncludeBots }: CoreContributorsPaneProps) {
   const [showNames, setShowNames] = useState(false)
   const [showNumbers, setShowNumbers] = useState(false)
   const compactMode = !showNames && !showNumbers
@@ -17,13 +21,58 @@ export function CoreContributorsPane({ metrics, heatmap }: CoreContributorsPaneP
     <section aria-label="Core contributors pane" className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <div className="mb-3">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Core</h3>
-        <p className="mt-1 text-sm text-slate-600">First-slice contributor metrics from verified public data.</p>
+        <p className="mt-1 text-sm text-slate-600">{`Contributor metrics from verified public data for the last ${windowDays} days.`}</p>
       </div>
-      <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <dl className="grid gap-3">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3">
+          <div
+            key={metric.label}
+            className="rounded-xl border border-slate-200 bg-white p-3"
+            title={metric.hoverText}
+            aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
+          >
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
+            {metric.secondaryValue ? <p className="mt-1 text-xs text-slate-500">{metric.secondaryValue}</p> : null}
             <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
+            {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}
+            {metric.breakdown ? (
+              (() => {
+                const segments = metric.breakdown.segments
+                const total = Math.max(
+                  segments.reduce((sum, current) => sum + current.value, 0),
+                  1,
+                )
+
+                return (
+                  <div className="mt-3 space-y-1">
+                    <div className="h-2 overflow-hidden rounded-full bg-cyan-100">
+                      <div className="flex h-full w-full overflow-hidden rounded-full">
+                        {segments.map((segment) => (
+                          <div
+                            key={segment.label}
+                            className={
+                              segment.tone === 'strong'
+                                ? 'bg-cyan-800'
+                                : segment.tone === 'medium'
+                                  ? 'bg-cyan-500'
+                                  : 'bg-cyan-200'
+                            }
+                            style={{
+                              width: `${(segment.value / total) * 100}%`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
+                      {segments.map((segment) => (
+                        <span key={segment.label}>{`${segment.label} ${segment.value}`}</span>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()
+            ) : null}
           </div>
         ))}
       </dl>
@@ -31,9 +80,23 @@ export function CoreContributorsPane({ metrics, heatmap }: CoreContributorsPaneP
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Contribution heatmap</p>
-            <p className="mt-1 text-xs text-slate-500">Darker bubbles indicate more recent commits.</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {`Darker bubbles indicate contributor activity in the last ${windowDays} days. Detected bot accounts like `}
+              <code>dependabot[bot]</code>
+              {' or '}
+              <code>k8s-ci-robot</code>
+              {' can be included here when needed.'}
+            </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onToggleIncludeBots}
+              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+              aria-pressed={includeBots}
+            >
+              {includeBots ? 'Exclude bots from heatmap' : 'Include bots in heatmap'}
+            </button>
             <button
               type="button"
               onClick={() => setShowNames((current) => !current)}

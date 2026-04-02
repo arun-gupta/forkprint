@@ -29,6 +29,7 @@ export const REPO_ACTIVITY_QUERY = `
     $name: String!
     $since30: GitTimestamp!
     $since90: GitTimestamp!
+    $since365: GitTimestamp!
     $prsOpenedQuery: String!
     $prsMergedQuery: String!
     $issuesClosedQuery: String!
@@ -43,7 +44,7 @@ export const REPO_ACTIVITY_QUERY = `
             recent90: history(since: $since90) {
               totalCount
             }
-            recent90Commits: history(first: 100, since: $since90) {
+            recent365Commits: history(first: 100, since: $since365) {
               pageInfo {
                 hasNextPage
                 endCursor
@@ -83,14 +84,14 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
   query RepoCommitHistoryPage(
     $owner: String!
     $name: String!
-    $since90: GitTimestamp!
+    $since365: GitTimestamp!
     $after: String!
   ) {
     repository(owner: $owner, name: $name) {
       defaultBranchRef {
         target {
           ... on Commit {
-            recent90Commits: history(first: 100, since: $since90, after: $after) {
+            recent365Commits: history(first: 100, since: $since365, after: $after) {
               pageInfo {
                 hasNextPage
                 endCursor
