@@ -107,7 +107,7 @@ describe('analyze', () => {
       prsMerged90d: 3,
       issuesOpen: 5,
       issuesClosed90d: 6,
-      releases12mo: 'unavailable',
+      releases12mo: 0,
       uniqueCommitAuthors90d: 2,
       totalContributors: 1742,
       maintainerCount: 4,
@@ -124,7 +124,7 @@ describe('analyze', () => {
       issueCloseTimestamps: 'unavailable',
       prMergeTimestamps: 'unavailable',
     })
-    expect(result.results[0]?.missingFields).toContain('releases12mo')
+    expect(result.results[0]?.missingFields).not.toContain('releases12mo')
     expect(result.results[0]?.missingFields).not.toContain('uniqueCommitAuthors90d')
     expect(result.results[0]?.missingFields).not.toContain('totalContributors')
     expect(result.results[0]?.missingFields).not.toContain('maintainerCount')

@@ -117,6 +117,13 @@ describe('RepoInputClient', () => {
           commitCountsByExperimentalOrg: 'unavailable',
           experimentalAttributedAuthors90d: 'unavailable',
           experimentalUnattributedAuthors90d: 'unavailable',
+          activityMetricsByWindow: {
+            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1 },
+            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2 },
+            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3 },
+            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4 },
+            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6 },
+          },
           issueFirstResponseTimestamps: 'unavailable',
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
@@ -374,8 +381,64 @@ describe('RepoInputClient', () => {
     const activityView = screen.getByRole('region', { name: /activity view/i })
     expect(activityView).toBeInTheDocument()
     expect(within(activityView).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(activityView).getByText(/commits \(30d\)/i)).toBeInTheDocument()
+    expect(within(activityView).getByText(/commits \(90d\)/i)).toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
+  })
+
+  it('does not call onAnalyze again when changing the recent activity window', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          createdAt: '2013-05-24T16:15:54Z',
+          primaryLanguage: 'TypeScript',
+          stars: 244295,
+          forks: 25,
+          watchers: 10,
+          commits30d: 7,
+          commits90d: 18,
+          releases12mo: 6,
+          prsOpened90d: 4,
+          prsMerged90d: 3,
+          issuesOpen: 5,
+          issuesClosed90d: 6,
+          uniqueCommitAuthors90d: 'unavailable',
+          totalContributors: 'unavailable',
+          maintainerCount: 'unavailable',
+          commitCountsByAuthor: 'unavailable',
+          commitCountsByExperimentalOrg: 'unavailable',
+          experimentalAttributedAuthors90d: 'unavailable',
+          experimentalUnattributedAuthors90d: 'unavailable',
+          activityMetricsByWindow: {
+            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1 },
+            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2 },
+            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3 },
+            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4 },
+            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6 },
+          },
+          issueFirstResponseTimestamps: 'unavailable',
+          issueCloseTimestamps: 'unavailable',
+          prMergeTimestamps: 'unavailable',
+          missingFields: [],
+        },
+      ],
+      failures: [],
+      rateLimit: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
+    await userEvent.click(screen.getByRole('button', { name: '30d' }))
+    await userEvent.click(screen.getByRole('button', { name: '12 months' }))
+
+    expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
 
   it('renders contributors content after a successful analysis', async () => {
