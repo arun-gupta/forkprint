@@ -75,6 +75,10 @@ Scores are assigned only when sufficient verified data exists. Otherwise: `"Insu
 POST /api/analyze
 Body:     { "repos": ["owner/repo", ...], "token"?: "ghp_..." }
 Response: { "results": AnalysisResult[] }
+
+POST /api/analyze-org
+Body:     { "org": "github-org", "token"?: "ghp_..." }
+Response: { "org": "github-org", "results": OrgRepoSummary[] }
 ```
 
 Server-side token (`GITHUB_TOKEN` env var) takes precedence. If absent, token is supplied client-side from `localStorage`. Token is never included in URLs or exposed to the client bundle.
@@ -110,6 +114,33 @@ User can provide one or more GitHub repositories for analysis.
 **Out of scope**
 - Saving or persisting repo lists across sessions
 - Browsing or searching GitHub repos from within the UI
+
+---
+
+#### `[P1-F16]` Org-Level Repo Inventory
+
+User can provide a GitHub organization and get a high-level inventory of its public repositories.
+
+**Acceptance criteria**
+- Input accepts a top-level GitHub org slug or GitHub org URL and normalizes it to the org name before submission
+- App fetches the org's public repositories using public GitHub metadata only
+- Results render in a sortable table with one row per repo
+- Table includes at least: repository name, description, primary language, stars, forks, watchers, open issues count, last pushed date, and repo URL
+- Table supports lightweight filtering by repo name, language, and archived status
+- Org-level summary area shows high-level rollups such as total public repos, total stars, most-starred repos, most recently active repos, language distribution, and archived vs active repo count
+- Each repo row links into the existing repo-level analysis flow so users can drill into a specific repository
+- Empty orgs, invalid orgs, and rate-limit states are handled clearly without fabricating results
+
+**Design constraints**
+- This is a high-level organization inventory view, not a full CHAOSS analysis computed for every repo in the org
+- Phase 1 implementation stays within lightweight public metadata and should avoid expensive per-repo deep fetches by default
+- Table layout must remain usable on desktop and mobile, with pagination or virtualization available for large orgs
+
+**Out of scope**
+- Analyzing private repositories
+- Running the full per-repo metric pipeline automatically for every repo in an org
+- Historical org snapshots or trend charts
+- Cross-org comparison
 
 ---
 
@@ -516,7 +547,6 @@ The MCP Server is deployable and documented for common AI assistant setups.
 Not specced. Captured here so Phase 1–3 decisions don't foreclose them.
 
 - `[FUT-F01]` **Historical trending** — store snapshots over time, chart metric trajectory per repo
-- `[FUT-F02]` **Org-level view** — analyze all public repos under a GitHub org in one pass
 - `[FUT-F03]` **CHAOSS expansion** — Bus Factor, Change Request Closure Ratio, Code Coverage metrics
 - `[FUT-F04]` **Embeddable badge** — `![ForkPrint Health](https://forkprint.vercel.app/badge/owner/repo)` for READMEs
 - `[FUT-F05]` **Webhook mode** — trigger analysis on push or release events via GitHub webhook
