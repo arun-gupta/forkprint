@@ -33,7 +33,7 @@ test.describe('P1-F07 Metric Cards', () => {
     await expect(overview).toContainText('kubernetes/kubernetes')
     await expect(overview).toContainText('Ecosystem profile')
     await expect(overview).toContainText('Engagement')
-    await expect(overview).toContainText('Evolution')
+    await expect(overview).toContainText('Activity')
     await expect(overview).toContainText('Sustainability')
     await expect(overview).toContainText('Responsiveness')
   })

@@ -53,6 +53,27 @@ describe('fetchMaintainerCount', () => {
 
     expect(result.data).toBe('unavailable')
   })
+
+  it('parses bare usernames from a generic MAINTAINERS file', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input)
+
+      if (url.endsWith('/MAINTAINERS')) {
+        return buildJsonResponse({
+          content: Buffer.from('acdlite eps1lon EugeneChoi4 gaearon\n').toString('base64'),
+          encoding: 'base64',
+        })
+      }
+
+      return new Response(null, { status: 404 })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchMaintainerCount('ghp_test', 'facebook', 'react')
+
+    expect(result.data).toBe(4)
+  })
 })
 
 function buildJsonResponse(body: unknown) {

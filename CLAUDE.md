@@ -28,3 +28,10 @@ stop and ask. Do not infer. Do not proceed.
 
 ## Signoff Metadata
 When filling manual checklist signoff or similar metadata, use the authenticated GitHub username when it can be verified locally. Do not infer identity from the filesystem path alone. If no verified username is available, leave the field blank or ask the user.
+
+## Active Technologies
+- TypeScript 5, React 19, Next.js 16.2 (App Router) + Next.js 16.2, Tailwind CSS 4, Vitest 4, React Testing Library 16, Playwright 1.58 (013-activity-scoring)
+- Stateless; no database or persistent server storage (013-activity-scoring)
+
+## Recent Changes
+- 013-activity-scoring: Added TypeScript 5, React 19, Next.js 16.2 (App Router) + Next.js 16.2, Tailwind CSS 4, Vitest 4, React Testing Library 16, Playwright 1.58

@@ -1,4 +1,6 @@
 import type {
+  ActivityWindowDays,
+  ActivityWindowMetrics,
   AnalysisDiagnostic,
   AnalysisResult,
   AnalyzeInput,
@@ -29,17 +31,65 @@ interface RepoOverviewResponse {
 
 interface RepoActivityResponse {
   repository: {
+    releases: {
+      nodes: Array<{
+        createdAt: string
+        publishedAt: string | null
+      }>
+    }
     defaultBranchRef: {
       target: {
         recent30: { totalCount: number }
+        recent60: { totalCount: number }
         recent90: { totalCount: number }
+        recent180: { totalCount: number }
         recent365Commits: CommitHistoryConnection | null
       } | null
     } | null
   } | null
-  prsOpened: { issueCount: number }
-  prsMerged: { issueCount: number }
-  issuesClosed: { issueCount: number }
+  prsOpened30: { issueCount: number }
+  prsOpened60: { issueCount: number }
+  prsOpened90: { issueCount: number }
+  prsOpened180: { issueCount: number }
+  prsOpened365: { issueCount: number }
+  prsMerged30: { issueCount: number }
+  prsMerged60: { issueCount: number }
+  prsMerged90: { issueCount: number }
+  prsMerged180: { issueCount: number }
+  prsMerged365: { issueCount: number }
+  issuesOpened30: { issueCount: number }
+  issuesOpened60: { issueCount: number }
+  issuesOpened90: { issueCount: number }
+  issuesOpened180: { issueCount: number }
+  issuesOpened365: { issueCount: number }
+  issuesClosed30: { issueCount: number }
+  issuesClosed60: { issueCount: number }
+  issuesClosed90: { issueCount: number }
+  issuesClosed180: { issueCount: number }
+  issuesClosed365: { issueCount: number }
+  staleIssues30: { issueCount: number }
+  staleIssues60: { issueCount: number }
+  staleIssues90: { issueCount: number }
+  staleIssues180: { issueCount: number }
+  staleIssues365: { issueCount: number }
+  recentMergedPullRequests: {
+    nodes: Array<{
+      createdAt: string
+      mergedAt: string | null
+    }>
+  }
+  recentClosedIssues: {
+    nodes: Array<{
+      createdAt: string
+      closedAt: string | null
+    }>
+  }
+}
+
+interface LegacyRepoActivityResponse {
+  prsOpened?: { issueCount: number }
+  prsMerged?: { issueCount: number }
+  issuesClosed?: { issueCount: number }
 }
 
 interface RepoCommitHistoryPageResponse {
@@ -115,19 +165,57 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       since30.setDate(now.getDate() - 30)
       const since90 = new Date(now)
       since90.setDate(now.getDate() - 90)
+      const since60 = new Date(now)
+      since60.setDate(now.getDate() - 60)
+      const since180 = new Date(now)
+      since180.setDate(now.getDate() - 180)
       const since365 = new Date(now)
       since365.setDate(now.getDate() - 365)
+      const staleBefore30 = new Date(now)
+      staleBefore30.setDate(now.getDate() - 30)
+      const staleBefore60 = new Date(now)
+      staleBefore60.setDate(now.getDate() - 60)
+      const staleBefore90 = new Date(now)
+      staleBefore90.setDate(now.getDate() - 90)
+      const staleBefore180 = new Date(now)
+      staleBefore180.setDate(now.getDate() - 180)
+      const staleBefore365 = new Date(now)
+      staleBefore365.setDate(now.getDate() - 365)
       const repoSearch = `${owner}/${name}`
 
       const activity = await queryGitHubGraphQL<RepoActivityResponse>(input.token, REPO_ACTIVITY_QUERY, {
         owner,
         name,
         since30: since30.toISOString(),
+        since60: since60.toISOString(),
         since90: since90.toISOString(),
+        since180: since180.toISOString(),
         since365: since365.toISOString(),
-        prsOpenedQuery: `repo:${repoSearch} is:pr created:>=${since90.toISOString().slice(0, 10)}`,
-        prsMergedQuery: `repo:${repoSearch} is:pr is:merged merged:>=${since90.toISOString().slice(0, 10)}`,
-        issuesClosedQuery: `repo:${repoSearch} is:issue closed:>=${since90.toISOString().slice(0, 10)}`,
+        prsOpened30Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since30),
+        prsOpened60Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since60),
+        prsOpened90Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since90),
+        prsOpened180Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since180),
+        prsOpened365Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since365),
+        prsMerged30Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since30),
+        prsMerged60Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since60),
+        prsMerged90Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since90),
+        prsMerged180Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since180),
+        prsMerged365Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since365),
+        issuesOpened30Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since30),
+        issuesOpened60Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since60),
+        issuesOpened90Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since90),
+        issuesOpened180Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since180),
+        issuesOpened365Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since365),
+        issuesClosed30Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since30),
+        issuesClosed60Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since60),
+        issuesClosed90Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since90),
+        issuesClosed180Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since180),
+        issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
+        staleIssues30Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore30),
+        staleIssues60Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore60),
+        staleIssues90Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore90),
+        staleIssues180Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore180),
+        staleIssues365Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore365),
       })
       latestRateLimit = activity.rateLimit ?? latestRateLimit
 
@@ -163,6 +251,12 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       latestRateLimit = commitHistory.rateLimit ?? latestRateLimit
 
       const contributorMetricsByWindow = buildContributorMetricsByWindow(commitHistory.nodes, now)
+      const activityMetricsByWindow = buildActivityMetricsByWindow(
+        activity.data,
+        now,
+        commitHistory.nodes,
+        overview.data.repository?.issues.totalCount,
+      )
       const experimentalOrgAttribution = await buildExperimentalOrganizationCommitCountsByWindow(input.token, commitHistory.nodes, now)
       latestRateLimit = experimentalOrgAttribution.rateLimit ?? latestRateLimit
 
@@ -172,6 +266,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
           overview.data,
           activity.data,
           contributorMetricsByWindow,
+          activityMetricsByWindow,
           contributorCount.data,
           maintainerCount.data,
           experimentalOrgAttribution.data,
@@ -211,14 +306,20 @@ function buildAnalysisResult(
   overview: RepoOverviewResponse,
   activity: RepoActivityResponse,
   contributorMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
+  activityMetricsByWindow: Record<ActivityWindowDays, ActivityWindowMetrics>,
   totalContributorCount: number | Unavailable,
   maintainerCount: number | Unavailable,
   experimentalMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
 ): AnalysisResult {
   const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
+  const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
   const contributorMetrics = contributorMetricsByWindow[90]
   const experimentalMetrics = experimentalMetricsByWindow[90]
   const missingFields = [...UNAVAILABLE_FIELDS].filter((field) => {
+    if (field === 'releases12mo') {
+      return activityMetricsByWindow[365].releases === 'unavailable'
+    }
+
     if (field === 'uniqueCommitAuthors90d') {
       return contributorMetrics.uniqueCommitAuthors === 'unavailable'
     }
@@ -261,11 +362,11 @@ function buildAnalysisResult(
     watchers: overview.repository?.watchers.totalCount ?? 'unavailable',
     commits30d: defaultBranchTarget?.recent30.totalCount ?? 'unavailable',
     commits90d: defaultBranchTarget?.recent90.totalCount ?? 'unavailable',
-    releases12mo: 'unavailable',
-    prsOpened90d: activity.prsOpened.issueCount,
-    prsMerged90d: activity.prsMerged.issueCount,
+    releases12mo: activityMetricsByWindow[365].releases,
+    prsOpened90d: activity.prsOpened90?.issueCount ?? legacyActivity.prsOpened?.issueCount ?? 'unavailable',
+    prsMerged90d: activity.prsMerged90?.issueCount ?? legacyActivity.prsMerged?.issueCount ?? 'unavailable',
     issuesOpen: overview.repository?.issues.totalCount ?? 'unavailable',
-    issuesClosed90d: activity.issuesClosed.issueCount,
+    issuesClosed90d: activity.issuesClosed90?.issueCount ?? legacyActivity.issuesClosed?.issueCount ?? 'unavailable',
     uniqueCommitAuthors90d: contributorMetrics.uniqueCommitAuthors,
     totalContributors: totalContributorCount,
     maintainerCount,
@@ -284,11 +385,191 @@ function buildAnalysisResult(
         },
       ]),
     ) as Record<ContributorWindowDays, ContributorWindowMetrics>,
+    activityMetricsByWindow,
+    staleIssueRatio: activityMetricsByWindow[90].staleIssueRatio,
+    medianTimeToMergeHours: activityMetricsByWindow[90].medianTimeToMergeHours,
+    medianTimeToCloseHours: activityMetricsByWindow[90].medianTimeToCloseHours,
     issueFirstResponseTimestamps: 'unavailable',
     issueCloseTimestamps: 'unavailable',
     prMergeTimestamps: 'unavailable',
     missingFields,
   }
+}
+
+function buildSearchQuery(repoSearch: string, qualifiers: string, dateField: 'created' | 'merged' | 'closed', since: Date) {
+  return `repo:${repoSearch} ${qualifiers} ${dateField}:>=${since.toISOString().slice(0, 10)}`
+}
+
+function buildOpenIssuesOlderThanQuery(repoSearch: string, before: Date) {
+  return `repo:${repoSearch} is:issue is:open created:<${before.toISOString().slice(0, 10)}`
+}
+
+function buildActivityMetricsByWindow(
+  activity: RepoActivityResponse,
+  now: Date,
+  recentCommitNodes: CommitNode[],
+  openIssueCount: number | undefined,
+): Record<ActivityWindowDays, ActivityWindowMetrics> {
+  const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
+  const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
+  const releaseDates =
+    activity.repository?.releases?.nodes
+      .map((release) => release.publishedAt ?? release.createdAt)
+      .filter((value): value is string => Boolean(value)) ?? []
+
+  const commitCountsByWindow: Record<ActivityWindowDays, number | Unavailable> = {
+    30: defaultBranchTarget?.recent30?.totalCount ?? 'unavailable',
+    60: defaultBranchTarget?.recent60?.totalCount ?? 'unavailable',
+    90: defaultBranchTarget?.recent90?.totalCount ?? 'unavailable',
+    180: defaultBranchTarget?.recent180?.totalCount ?? 'unavailable',
+    365: recentCommitNodes.length > 0 ? recentCommitNodes.length : defaultBranchTarget?.recent365Commits?.nodes.length ?? 'unavailable',
+  }
+
+  const mergedPullRequestNodes = activity.recentMergedPullRequests?.nodes ?? []
+  const closedIssueNodes = activity.recentClosedIssues?.nodes ?? []
+
+  return {
+    30: {
+      commits: commitCountsByWindow[30],
+      prsOpened: activity.prsOpened30?.issueCount ?? 'unavailable',
+      prsMerged: activity.prsMerged30?.issueCount ?? 'unavailable',
+      issuesOpened: activity.issuesOpened30?.issueCount ?? 'unavailable',
+      issuesClosed: activity.issuesClosed30?.issueCount ?? 'unavailable',
+      releases: countReleaseDatesWithinWindow(releaseDates, now, 30),
+      staleIssueRatio: computeStaleIssueRatio(activity.staleIssues30?.issueCount, openIssueCount),
+      medianTimeToMergeHours: computeMedianDurationHoursWithinWindow(mergedPullRequestNodes, 'mergedAt', now, 30),
+      medianTimeToCloseHours: computeMedianDurationHoursWithinWindow(closedIssueNodes, 'closedAt', now, 30),
+    },
+    60: {
+      commits: commitCountsByWindow[60],
+      prsOpened: activity.prsOpened60?.issueCount ?? 'unavailable',
+      prsMerged: activity.prsMerged60?.issueCount ?? 'unavailable',
+      issuesOpened: activity.issuesOpened60?.issueCount ?? 'unavailable',
+      issuesClosed: activity.issuesClosed60?.issueCount ?? 'unavailable',
+      releases: countReleaseDatesWithinWindow(releaseDates, now, 60),
+      staleIssueRatio: computeStaleIssueRatio(activity.staleIssues60?.issueCount, openIssueCount),
+      medianTimeToMergeHours: computeMedianDurationHoursWithinWindow(mergedPullRequestNodes, 'mergedAt', now, 60),
+      medianTimeToCloseHours: computeMedianDurationHoursWithinWindow(closedIssueNodes, 'closedAt', now, 60),
+    },
+    90: {
+      commits: commitCountsByWindow[90],
+      prsOpened: activity.prsOpened90?.issueCount ?? legacyActivity.prsOpened?.issueCount ?? 'unavailable',
+      prsMerged: activity.prsMerged90?.issueCount ?? legacyActivity.prsMerged?.issueCount ?? 'unavailable',
+      issuesOpened: activity.issuesOpened90?.issueCount ?? 'unavailable',
+      issuesClosed: activity.issuesClosed90?.issueCount ?? legacyActivity.issuesClosed?.issueCount ?? 'unavailable',
+      releases: countReleaseDatesWithinWindow(releaseDates, now, 90),
+      staleIssueRatio: computeStaleIssueRatio(activity.staleIssues90?.issueCount, openIssueCount),
+      medianTimeToMergeHours: computeMedianDurationHoursWithinWindow(mergedPullRequestNodes, 'mergedAt', now, 90),
+      medianTimeToCloseHours: computeMedianDurationHoursWithinWindow(closedIssueNodes, 'closedAt', now, 90),
+    },
+    180: {
+      commits: commitCountsByWindow[180],
+      prsOpened: activity.prsOpened180?.issueCount ?? 'unavailable',
+      prsMerged: activity.prsMerged180?.issueCount ?? 'unavailable',
+      issuesOpened: activity.issuesOpened180?.issueCount ?? 'unavailable',
+      issuesClosed: activity.issuesClosed180?.issueCount ?? 'unavailable',
+      releases: countReleaseDatesWithinWindow(releaseDates, now, 180),
+      staleIssueRatio: computeStaleIssueRatio(activity.staleIssues180?.issueCount, openIssueCount),
+      medianTimeToMergeHours: computeMedianDurationHoursWithinWindow(mergedPullRequestNodes, 'mergedAt', now, 180),
+      medianTimeToCloseHours: computeMedianDurationHoursWithinWindow(closedIssueNodes, 'closedAt', now, 180),
+    },
+    365: {
+      commits: commitCountsByWindow[365],
+      prsOpened: activity.prsOpened365?.issueCount ?? 'unavailable',
+      prsMerged: activity.prsMerged365?.issueCount ?? 'unavailable',
+      issuesOpened: activity.issuesOpened365?.issueCount ?? 'unavailable',
+      issuesClosed: activity.issuesClosed365?.issueCount ?? 'unavailable',
+      releases: countReleaseDatesWithinWindow(releaseDates, now, 365),
+      staleIssueRatio: computeStaleIssueRatio(activity.staleIssues365?.issueCount, openIssueCount),
+      medianTimeToMergeHours: computeMedianDurationHoursWithinWindow(mergedPullRequestNodes, 'mergedAt', now, 365),
+      medianTimeToCloseHours: computeMedianDurationHoursWithinWindow(closedIssueNodes, 'closedAt', now, 365),
+    },
+  }
+}
+
+function countReleaseDatesWithinWindow(releaseDates: string[], now: Date, windowDays: ActivityWindowDays): number | Unavailable {
+  if (releaseDates.length === 0) {
+    return 0
+  }
+
+  const cutoff = new Date(now)
+  cutoff.setDate(cutoff.getDate() - windowDays)
+
+  return releaseDates.filter((value) => {
+    const date = new Date(value)
+    return !Number.isNaN(date.getTime()) && date >= cutoff
+  }).length
+}
+
+function computeStaleIssueRatio(staleIssueCount: number | undefined, openIssueCount: number | undefined): number | Unavailable {
+  if (typeof staleIssueCount !== 'number' || typeof openIssueCount !== 'number' || openIssueCount <= 0) {
+    return 'unavailable'
+  }
+
+  return staleIssueCount / openIssueCount
+}
+
+function computeMedianDurationHours<T extends { createdAt: string }>(
+  nodes: Array<T & Record<string, string | null>> | undefined,
+  endField: string,
+): number | Unavailable {
+  if (!nodes?.length) {
+    return 'unavailable'
+  }
+
+  const durations = nodes
+    .map((node) => {
+      const createdAt = new Date(node.createdAt)
+      const endValue = node[endField]
+      const endedAt = typeof endValue === 'string' ? new Date(endValue) : null
+
+      if (Number.isNaN(createdAt.getTime()) || !endedAt || Number.isNaN(endedAt.getTime()) || endedAt < createdAt) {
+        return null
+      }
+
+      return (endedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+    })
+    .filter((value): value is number => value != null)
+    .sort((left, right) => left - right)
+
+  if (durations.length === 0) {
+    return 'unavailable'
+  }
+
+  const middle = Math.floor(durations.length / 2)
+  if (durations.length % 2 === 1) {
+    return durations[middle] ?? 'unavailable'
+  }
+
+  const lower = durations[middle - 1]
+  const upper = durations[middle]
+  if (lower == null || upper == null) {
+    return 'unavailable'
+  }
+
+  return (lower + upper) / 2
+}
+
+function computeMedianDurationHoursWithinWindow<T extends { createdAt: string }>(
+  nodes: Array<T & Record<string, string | null>>,
+  endField: string,
+  now: Date,
+  windowDays: ActivityWindowDays,
+): number | Unavailable {
+  const cutoff = new Date(now)
+  cutoff.setDate(cutoff.getDate() - windowDays)
+
+  const windowNodes = nodes.filter((node) => {
+    const endValue = node[endField]
+    if (typeof endValue !== 'string') {
+      return false
+    }
+
+    const endDate = new Date(endValue)
+    return !Number.isNaN(endDate.getTime()) && endDate >= cutoff
+  })
+
+  return computeMedianDurationHours(windowNodes, endField)
 }
 
 async function buildExperimentalOrganizationCommitCountsByWindow(

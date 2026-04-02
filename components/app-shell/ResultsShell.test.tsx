@@ -10,7 +10,7 @@ describe('ResultsShell', () => {
         analysisPanel={<div>Analysis panel</div>}
         overview={<div>Overview content</div>}
         contributors={<div>Contributors coming soon</div>}
-        metrics={<div>Metrics coming soon</div>}
+        activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -31,7 +31,7 @@ describe('ResultsShell', () => {
         analysisPanel={<div>Analysis panel</div>}
         overview={<div>Overview content</div>}
         contributors={<div>Contributors coming soon</div>}
-        metrics={<div>Metrics coming soon</div>}
+        activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,

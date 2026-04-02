@@ -245,6 +245,20 @@ function parseGenericMaintainers(decoded: string) {
         maintainers.add(handle)
       }
     }
+
+    const candidate = line
+      .replace(/\[[^\]]+\]/g, ' ')
+      .replace(/[:,]/g, ' ')
+      .trim()
+
+    for (const token of candidate.split(/\s+/)) {
+      const normalized = token.replace(/^@/, '').trim().toLowerCase()
+      if (!isLikelyMaintainerToken(normalized)) {
+        continue
+      }
+
+      maintainers.add(normalized)
+    }
   }
 
   return maintainers
@@ -260,6 +274,7 @@ function isLikelyMaintainerToken(token: string) {
   }
 
   const stopwords = new Set([
+    'and',
     'approvers',
     'reviewers',
     'labels',

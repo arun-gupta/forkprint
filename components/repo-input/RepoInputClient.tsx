@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
+import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { EcosystemMap } from '@/components/ecosystem-map/EcosystemMap'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
@@ -148,10 +149,14 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
           </p>
         )
       }
-      metrics={
-        <p className="text-sm text-slate-600">
-          Metrics will become the primary workspace for Evolution scoring and detailed repo metrics.
-        </p>
+      activity={
+        analysisResponse ? (
+          <ActivityView results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-600">
+            Activity will become the primary workspace for activity scoring and detailed repo metrics.
+          </p>
+        )
       }
       responsiveness={<p className="text-sm text-slate-600">Responsiveness metrics are coming soon.</p>}
       comparison={<p className="text-sm text-slate-600">Comparison view is planned for a later Phase 1 step.</p>}

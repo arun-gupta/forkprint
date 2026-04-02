@@ -1,6 +1,8 @@
 export type Unavailable = 'unavailable'
 export const CONTRIBUTOR_WINDOW_DAYS = [30, 60, 90, 180, 365] as const
 export type ContributorWindowDays = (typeof CONTRIBUTOR_WINDOW_DAYS)[number]
+export const ACTIVITY_WINDOW_DAYS = [30, 60, 90, 180, 365] as const
+export type ActivityWindowDays = (typeof ACTIVITY_WINDOW_DAYS)[number]
 
 export interface ContributorWindowMetrics {
   uniqueCommitAuthors: number | Unavailable
@@ -8,6 +10,18 @@ export interface ContributorWindowMetrics {
   commitCountsByExperimentalOrg: Record<string, number> | Unavailable
   experimentalAttributedAuthors: number | Unavailable
   experimentalUnattributedAuthors: number | Unavailable
+}
+
+export interface ActivityWindowMetrics {
+  commits: number | Unavailable
+  prsOpened: number | Unavailable
+  prsMerged: number | Unavailable
+  issuesOpened: number | Unavailable
+  issuesClosed: number | Unavailable
+  releases: number | Unavailable
+  staleIssueRatio: number | Unavailable
+  medianTimeToMergeHours: number | Unavailable
+  medianTimeToCloseHours: number | Unavailable
 }
 
 export interface AnalysisResult {
@@ -34,6 +48,10 @@ export interface AnalysisResult {
   experimentalAttributedAuthors90d: number | Unavailable
   experimentalUnattributedAuthors90d: number | Unavailable
   contributorMetricsByWindow?: Record<ContributorWindowDays, ContributorWindowMetrics>
+  activityMetricsByWindow?: Record<ActivityWindowDays, ActivityWindowMetrics>
+  staleIssueRatio?: number | Unavailable
+  medianTimeToMergeHours?: number | Unavailable
+  medianTimeToCloseHours?: number | Unavailable
   issueFirstResponseTimestamps: string[] | Unavailable
   issueCloseTimestamps: string[] | Unavailable
   prMergeTimestamps: string[] | Unavailable

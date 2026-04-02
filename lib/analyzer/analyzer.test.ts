@@ -107,7 +107,7 @@ describe('analyze', () => {
       prsMerged90d: 3,
       issuesOpen: 5,
       issuesClosed90d: 6,
-      releases12mo: 'unavailable',
+      releases12mo: 0,
       uniqueCommitAuthors90d: 2,
       totalContributors: 1742,
       maintainerCount: 4,
@@ -124,7 +124,7 @@ describe('analyze', () => {
       issueCloseTimestamps: 'unavailable',
       prMergeTimestamps: 'unavailable',
     })
-    expect(result.results[0]?.missingFields).toContain('releases12mo')
+    expect(result.results[0]?.missingFields).not.toContain('releases12mo')
     expect(result.results[0]?.missingFields).not.toContain('uniqueCommitAuthors90d')
     expect(result.results[0]?.missingFields).not.toContain('totalContributors')
     expect(result.results[0]?.missingFields).not.toContain('maintainerCount')
@@ -135,6 +135,96 @@ describe('analyze', () => {
       resetAt: '2026-03-31T23:59:59Z',
       retryAfter: 'unavailable',
     })
+  })
+
+  it('counts 12-month commits across paginated commit-history pages instead of capping at the first 100 nodes', async () => {
+    const firstPageNodes = Array.from({ length: 100 }, (_, index) => ({
+      authoredDate: `2026-03-${String((index % 28) + 1).padStart(2, '0')}T12:00:00Z`,
+      author: { name: 'Alice', email: 'alice@example.com', user: { login: 'alice' } },
+    }))
+    const secondPageNodes = Array.from({ length: 30 }, (_, index) => ({
+      authoredDate: `2026-02-${String((index % 28) + 1).padStart(2, '0')}T12:00:00Z`,
+      author: { name: 'Bob', email: 'bob@example.com', user: { login: 'bob' } },
+    }))
+
+    queryGitHubGraphQLMock
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            name: 'react',
+            description: 'A UI library',
+            createdAt: '2013-05-24T16:15:54Z',
+            primaryLanguage: { name: 'TypeScript' },
+            stargazerCount: 100,
+            forkCount: 25,
+            watchers: { totalCount: 10 },
+            issues: { totalCount: 5 },
+          },
+        },
+        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            releases: { nodes: [] },
+            defaultBranchRef: {
+              target: {
+                recent30: { totalCount: 7 },
+                recent60: { totalCount: 12 },
+                recent90: { totalCount: 18 },
+                recent180: { totalCount: 50 },
+                recent365Commits: {
+                  pageInfo: { hasNextPage: true, endCursor: 'cursor-1' },
+                  nodes: firstPageNodes,
+                },
+              },
+            },
+          },
+          prsOpened30: { issueCount: 2 },
+          prsOpened60: { issueCount: 3 },
+          prsOpened90: { issueCount: 4 },
+          prsOpened180: { issueCount: 7 },
+          prsOpened365: { issueCount: 12 },
+          prsMerged30: { issueCount: 1 },
+          prsMerged60: { issueCount: 2 },
+          prsMerged90: { issueCount: 3 },
+          prsMerged180: { issueCount: 5 },
+          prsMerged365: { issueCount: 9 },
+          issuesOpened30: { issueCount: 4 },
+          issuesOpened60: { issueCount: 6 },
+          issuesOpened90: { issueCount: 8 },
+          issuesOpened180: { issueCount: 10 },
+          issuesOpened365: { issueCount: 16 },
+          issuesClosed30: { issueCount: 3 },
+          issuesClosed60: { issueCount: 5 },
+          issuesClosed90: { issueCount: 6 },
+          issuesClosed180: { issueCount: 8 },
+          issuesClosed365: { issueCount: 13 },
+        },
+        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            defaultBranchRef: {
+              target: {
+                recent365Commits: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: secondPageNodes,
+                },
+              },
+            },
+          },
+        },
+        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+
+    const result = await analyze({
+      repos: ['facebook/react'],
+      token: 'ghp_test',
+    })
+
+    expect(result.results[0]?.activityMetricsByWindow?.[365]?.commits).toBe(130)
   })
 
   it('isolates a failing repository while still returning successful results for others', async () => {

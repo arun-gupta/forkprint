@@ -9,7 +9,7 @@ interface ResultsShellProps {
   analysisPanel: React.ReactNode
   overview: React.ReactNode
   contributors: React.ReactNode
-  metrics: React.ReactNode
+  activity: React.ReactNode
   responsiveness: React.ReactNode
   comparison: React.ReactNode
 }
@@ -18,7 +18,7 @@ export function ResultsShell({
   analysisPanel,
   overview,
   contributors,
-  metrics,
+  activity,
   responsiveness,
   comparison,
 }: ResultsShellProps) {
@@ -59,7 +59,7 @@ export function ResultsShell({
             <div className="mt-6">
               {activeTab === 'overview' ? overview : null}
               {activeTab === 'contributors' ? contributors : null}
-              {activeTab === 'metrics' ? metrics : null}
+              {activeTab === 'activity' ? activity : null}
               {activeTab === 'responsiveness' ? responsiveness : null}
               {activeTab === 'comparison' ? comparison : null}
             </div>

@@ -7,6 +7,7 @@ import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/re
 const tabs: ResultTabDefinition[] = [
   { id: 'overview', label: 'Overview', status: 'implemented', description: 'Overview content' },
   { id: 'contributors', label: 'Contributors', status: 'placeholder', description: 'Contributors content' },
+  { id: 'activity', label: 'Activity', status: 'placeholder', description: 'Activity content' },
 ]
 
 describe('ResultsTabs', () => {
@@ -20,5 +21,12 @@ describe('ResultsTabs', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Contributors' }))
 
     expect(onChange).toHaveBeenCalledWith('contributors')
+  })
+
+  it('renders Activity as a top-level tab label', () => {
+    render(<ResultsTabs tabs={tabs} activeTab="overview" onChange={vi.fn()} />)
+
+    expect(screen.getByRole('tab', { name: 'Activity' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
   })
 })
