@@ -10,9 +10,15 @@ interface HealthRatiosViewProps {
 }
 
 const CATEGORY_LABELS = {
-  ecosystem: 'Ecosystem',
-  activity: 'Activity',
+  ecosystem: 'Overview',
   contributors: 'Contributors',
+  activity: 'Activity',
+} as const
+
+const CATEGORY_DESCRIPTIONS = {
+  ecosystem: 'Compare overview-level reach and attention ratios like forks and watchers relative to stars.',
+  contributors: 'Compare contributor mix ratios like repeat and new contributors across analyzed repositories.',
+  activity: 'Compare delivery-flow ratios like PR merge rate and stale issue ratio across analyzed repositories.',
 } as const
 
 export function HealthRatiosView({ results }: HealthRatiosViewProps) {
@@ -23,8 +29,8 @@ export function HealthRatiosView({ results }: HealthRatiosViewProps) {
   const rowsByCategory = useMemo(() => {
     return {
       ecosystem: ratioRows.filter((row) => row.category === 'ecosystem'),
-      activity: ratioRows.filter((row) => row.category === 'activity'),
       contributors: ratioRows.filter((row) => row.category === 'contributors'),
+      activity: ratioRows.filter((row) => row.category === 'activity'),
     }
   }, [ratioRows])
 
@@ -32,7 +38,7 @@ export function HealthRatiosView({ results }: HealthRatiosViewProps) {
     <section aria-label="Health ratios view" className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-sm text-slate-600">
-          Compare verified ecosystem, activity, and contributor ratios across successful repositories without rerunning analysis.
+          Compare overview, contributor, and activity ratios across successful repositories without rerunning analysis.
         </p>
       </div>
 
@@ -44,7 +50,7 @@ export function HealthRatiosView({ results }: HealthRatiosViewProps) {
           <section key={category} className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">{CATEGORY_LABELS[category]}</h2>
-              <p className="mt-1 text-sm text-slate-600">{`Verified ${CATEGORY_LABELS[category].toLowerCase()} ratios shown with explicit unavailable states.`}</p>
+              <p className="mt-1 text-sm text-slate-600">{CATEGORY_DESCRIPTIONS[category]}</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full border-separate border-spacing-y-2">

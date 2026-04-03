@@ -9,7 +9,9 @@ describe('HealthRatiosView', () => {
     render(<HealthRatiosView results={[buildResult('facebook/react')]} />)
 
     const region = screen.getByRole('region', { name: /health ratios view/i })
-    expect(within(region).getByRole('heading', { name: 'Ecosystem' })).toBeInTheDocument()
+    const headings = within(region).getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
+    expect(headings).toEqual(['Overview', 'Contributors', 'Activity'])
+    expect(within(region).getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
     expect(within(region).getByRole('heading', { name: 'Activity' })).toBeInTheDocument()
     expect(within(region).getByRole('heading', { name: 'Contributors' })).toBeInTheDocument()
     expect(within(region).getByText('Fork rate')).toBeInTheDocument()
@@ -20,16 +22,16 @@ describe('HealthRatiosView', () => {
   it('sorts repository rows by the selected ratio column', async () => {
     render(<HealthRatiosView results={[buildResult('facebook/react', { forks: 25 }), buildResult('vercel/next.js', { forks: 10 })]} />)
 
-    const ecosystemSection = screen.getByRole('heading', { name: 'Ecosystem' }).closest('section')
-    expect(ecosystemSection).not.toBeNull()
+    const overviewSection = screen.getByRole('heading', { name: 'Overview' }).closest('section')
+    expect(overviewSection).not.toBeNull()
 
-    const beforeSortRows = within((ecosystemSection as HTMLElement).querySelector('tbody') as HTMLElement).getAllByRole('row')
+    const beforeSortRows = within((overviewSection as HTMLElement).querySelector('tbody') as HTMLElement).getAllByRole('row')
     expect(beforeSortRows[0]).toHaveTextContent('facebook/react')
     expect(beforeSortRows[1]).toHaveTextContent('vercel/next.js')
 
-    await userEvent.click(within(ecosystemSection as HTMLElement).getByRole('button', { name: /fork rate/i }))
+    await userEvent.click(within(overviewSection as HTMLElement).getByRole('button', { name: /fork rate/i }))
 
-    const afterSortRows = within((ecosystemSection as HTMLElement).querySelector('tbody') as HTMLElement).getAllByRole('row')
+    const afterSortRows = within((overviewSection as HTMLElement).querySelector('tbody') as HTMLElement).getAllByRole('row')
     expect(afterSortRows[0]).toHaveTextContent('vercel/next.js')
     expect(afterSortRows[1]).toHaveTextContent('facebook/react')
   })
