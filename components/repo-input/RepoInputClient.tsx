@@ -6,6 +6,7 @@ import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { EcosystemMap } from '@/components/ecosystem-map/EcosystemMap'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
+import { ResponsivenessView } from '@/components/responsiveness/ResponsivenessView'
 import { TokenInput } from '@/components/token-input/TokenInput'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import { readToken, writeToken } from '@/lib/token-storage'
@@ -158,7 +159,15 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
           </p>
         )
       }
-      responsiveness={<p className="text-sm text-slate-600">Responsiveness metrics are coming soon.</p>}
+      responsiveness={
+        analysisResponse ? (
+          <ResponsivenessView results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-600">
+            Responsiveness will become the home for issue and pull-request response-time, backlog, and engagement signals.
+          </p>
+        )
+      }
       comparison={<p className="text-sm text-slate-600">Comparison view is planned for a later Phase 1 step.</p>}
     />
   )

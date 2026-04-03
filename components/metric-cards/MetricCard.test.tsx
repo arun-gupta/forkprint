@@ -20,9 +20,9 @@ describe('MetricCard', () => {
     expect(screen.getByText('244,295')).toBeInTheDocument()
     expect(screen.getByText('50,872')).toBeInTheDocument()
     expect(screen.getByText('6,660')).toBeInTheDocument()
+    expect(screen.getAllByText('High')).toHaveLength(2)
     expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
-    expect(screen.getByText('High')).toBeInTheDocument()
-    expect(screen.getAllByText('Not scored yet')).toHaveLength(1)
+    expect(screen.queryByText('Not scored yet')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /missing data/i })).not.toBeInTheDocument()
   })
 })
@@ -54,6 +54,26 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     staleIssueRatio: 0.2,
     medianTimeToMergeHours: 24,
     medianTimeToCloseHours: 36,
+    responsivenessMetrics: {
+      issueFirstResponseMedianHours: 4,
+      issueFirstResponseP90Hours: 20,
+      prFirstReviewMedianHours: 8,
+      prFirstReviewP90Hours: 24,
+      issueResolutionMedianHours: 48,
+      issueResolutionP90Hours: 120,
+      prMergeMedianHours: 36,
+      prMergeP90Hours: 96,
+      issueResolutionRate: 0.92,
+      contributorResponseRate: 0.88,
+      botResponseRatio: 0.1,
+      humanResponseRatio: 0.9,
+      staleIssueRatio: 0.12,
+      stalePrRatio: 0.08,
+      prReviewDepth: 2.4,
+      issuesClosedWithoutCommentRatio: 0.08,
+      openIssueCount: 22,
+      openPullRequestCount: 11,
+    },
     uniqueCommitAuthors90d: 'unavailable',
     totalContributors: 'unavailable',
     maintainerCount: 'unavailable',

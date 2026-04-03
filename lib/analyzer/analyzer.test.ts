@@ -205,6 +205,20 @@ describe('analyze', () => {
       })
       .mockResolvedValueOnce({
         data: {
+          recentCreatedIssues: { nodes: [] },
+          recentClosedIssues: { nodes: [] },
+          recentCreatedPullRequests: { nodes: [] },
+          recentMergedPullRequests: { nodes: [] },
+          staleOpenPullRequests30: { issueCount: 0 },
+          staleOpenPullRequests60: { issueCount: 0 },
+          staleOpenPullRequests90: { issueCount: 0 },
+          staleOpenPullRequests180: { issueCount: 0 },
+          staleOpenPullRequests365: { issueCount: 0 },
+        },
+        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
           repository: {
             defaultBranchRef: {
               target: {
@@ -216,7 +230,7 @@ describe('analyze', () => {
             },
           },
         },
-        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -225,6 +239,160 @@ describe('analyze', () => {
     })
 
     expect(result.results[0]?.activityMetricsByWindow?.[365]?.commits).toBe(130)
+  })
+
+  it('derives first-response, stale backlog, and engagement responsiveness metrics from verified issue and PR event data', async () => {
+    queryGitHubGraphQLMock
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            name: 'react',
+            description: 'A UI library',
+            createdAt: '2013-05-24T16:15:54Z',
+            primaryLanguage: { name: 'TypeScript' },
+            stargazerCount: 100,
+            forkCount: 25,
+            watchers: { totalCount: 10 },
+            issues: { totalCount: 10 },
+            pullRequests: { totalCount: 4 },
+          },
+        },
+        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            releases: { nodes: [] },
+            defaultBranchRef: {
+              target: {
+                recent30: { totalCount: 7 },
+                recent60: { totalCount: 12 },
+                recent90: { totalCount: 18 },
+                recent180: { totalCount: 30 },
+                recent365Commits: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [
+                    {
+                      authoredDate: '2026-03-30T12:00:00Z',
+                      author: { name: 'Alice', email: 'alice@example.com', user: { login: 'alice' } },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          prsOpened30: { issueCount: 2 },
+          prsOpened60: { issueCount: 3 },
+          prsOpened90: { issueCount: 4 },
+          prsOpened180: { issueCount: 5 },
+          prsOpened365: { issueCount: 6 },
+          prsMerged30: { issueCount: 1 },
+          prsMerged60: { issueCount: 2 },
+          prsMerged90: { issueCount: 3 },
+          prsMerged180: { issueCount: 4 },
+          prsMerged365: { issueCount: 5 },
+          issuesOpened30: { issueCount: 3 },
+          issuesOpened60: { issueCount: 5 },
+          issuesOpened90: { issueCount: 8 },
+          issuesOpened180: { issueCount: 10 },
+          issuesOpened365: { issueCount: 11 },
+          issuesClosed30: { issueCount: 2 },
+          issuesClosed60: { issueCount: 4 },
+          issuesClosed90: { issueCount: 6 },
+          issuesClosed180: { issueCount: 8 },
+          issuesClosed365: { issueCount: 9 },
+          staleIssues30: { issueCount: 1 },
+          staleIssues60: { issueCount: 1 },
+          staleIssues90: { issueCount: 2 },
+          staleIssues180: { issueCount: 2 },
+          staleIssues365: { issueCount: 3 },
+          recentMergedPullRequests: { nodes: [{ createdAt: '2026-03-01T00:00:00Z', mergedAt: '2026-03-02T12:00:00Z' }] },
+          recentClosedIssues: { nodes: [{ createdAt: '2026-03-03T00:00:00Z', closedAt: '2026-03-05T00:00:00Z' }] },
+        },
+        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          recentCreatedIssues: {
+            nodes: [
+              {
+                createdAt: '2026-03-10T00:00:00Z',
+                author: { login: 'alice' },
+                comments: {
+                  totalCount: 1,
+                  nodes: [{ createdAt: '2026-03-10T06:00:00Z', author: { login: 'bob' } }],
+                },
+              },
+              {
+                createdAt: '2026-03-11T00:00:00Z',
+                author: { login: 'carol' },
+                comments: { totalCount: 0, nodes: [] },
+              },
+            ],
+          },
+          recentClosedIssues: {
+            nodes: [
+              {
+                createdAt: '2026-03-03T00:00:00Z',
+                closedAt: '2026-03-05T00:00:00Z',
+                author: { login: 'alice' },
+                comments: { totalCount: 0, nodes: [] },
+              },
+            ],
+          },
+          recentCreatedPullRequests: {
+            nodes: [
+              {
+                createdAt: '2026-03-12T00:00:00Z',
+                author: { login: 'dave' },
+                comments: { totalCount: 0, nodes: [] },
+                reviews: {
+                  totalCount: 2,
+                  nodes: [{ createdAt: '2026-03-12T12:00:00Z', author: { login: 'erin' } }],
+                },
+              },
+            ],
+          },
+          recentMergedPullRequests: {
+            nodes: [{ createdAt: '2026-03-01T00:00:00Z', mergedAt: '2026-03-02T12:00:00Z' }],
+          },
+          staleOpenPullRequests30: { issueCount: 0 },
+          staleOpenPullRequests60: { issueCount: 0 },
+          staleOpenPullRequests90: { issueCount: 1 },
+          staleOpenPullRequests180: { issueCount: 1 },
+          staleOpenPullRequests365: { issueCount: 1 },
+        },
+        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+
+    const result = await analyze({
+      repos: ['facebook/react'],
+      token: 'ghp_test',
+    })
+
+    expect(result.results[0]?.responsivenessMetrics).toMatchObject({
+      issueFirstResponseMedianHours: 6,
+      issueFirstResponseP90Hours: 6,
+      prFirstReviewMedianHours: 12,
+      prFirstReviewP90Hours: 12,
+      issueResolutionMedianHours: 48,
+      issueResolutionP90Hours: 48,
+      prMergeMedianHours: 36,
+      prMergeP90Hours: 36,
+      issueResolutionRate: 0.75,
+      contributorResponseRate: 2 / 3,
+      botResponseRatio: 0,
+      humanResponseRatio: 1,
+      staleIssueRatio: 0.2,
+      stalePrRatio: 0.25,
+      prReviewDepth: 2,
+      issuesClosedWithoutCommentRatio: 1,
+      openIssueCount: 10,
+      openPullRequestCount: 4,
+    })
+    expect(result.results[0]?.issueFirstResponseTimestamps).toEqual(['2026-03-10T06:00:00Z'])
+    expect(result.results[0]?.issueCloseTimestamps).toEqual(['2026-03-05T00:00:00Z'])
+    expect(result.results[0]?.prMergeTimestamps).toEqual(['2026-03-02T12:00:00Z'])
   })
 
   it('isolates a failing repository while still returning successful results for others', async () => {
@@ -270,6 +438,20 @@ describe('analyze', () => {
           rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z' },
         },
         rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          recentCreatedIssues: { nodes: [] },
+          recentClosedIssues: { nodes: [] },
+          recentCreatedPullRequests: { nodes: [] },
+          recentMergedPullRequests: { nodes: [] },
+          staleOpenPullRequests30: { issueCount: 0 },
+          staleOpenPullRequests60: { issueCount: 0 },
+          staleOpenPullRequests90: { issueCount: 0 },
+          staleOpenPullRequests180: { issueCount: 0 },
+          staleOpenPullRequests365: { issueCount: 0 },
+        },
+        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockRejectedValueOnce(new Error('not found'))
 

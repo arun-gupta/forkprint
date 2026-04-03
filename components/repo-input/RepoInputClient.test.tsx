@@ -148,8 +148,8 @@ describe('RepoInputClient', () => {
     expect(within(metricCardsOverview).getByTestId('metric-card-facebook/react')).toBeInTheDocument()
     expect(within(metricCardsOverview).getByText('244,295')).toBeInTheDocument()
     expect(within(metricCardsOverview).getByText(/ecosystem profile/i)).toBeInTheDocument()
-    expect(within(results).getAllByText('Insufficient verified public data')).toHaveLength(1)
-    expect(within(results).getAllByText('Not scored yet')).toHaveLength(1)
+    expect(within(results).getAllByText('Insufficient verified public data')).toHaveLength(2)
+    expect(within(results).queryByText('Not scored yet')).not.toBeInTheDocument()
 
     const ecosystemMap = within(results).getByRole('region', { name: /ecosystem map/i })
     expect(within(ecosystemMap).getByText(/ecosystem spectrum/i)).toBeInTheDocument()

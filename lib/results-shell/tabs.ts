@@ -22,8 +22,8 @@ export const resultTabs: ResultTabDefinition[] = [
   {
     id: 'responsiveness',
     label: 'Responsiveness',
-    status: 'placeholder',
-    description: 'Responsiveness metrics are coming soon.',
+    status: 'implemented',
+    description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
   },
   {
     id: 'comparison',

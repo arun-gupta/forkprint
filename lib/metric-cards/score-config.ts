@@ -2,6 +2,7 @@ import type { ScoreBadgeProps, ScoreCategory, ScoreTone, ScoreValue } from '@/sp
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getActivityScore } from '@/lib/activity/score-config'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
+import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 
 export interface ScoreBadgeDefinition extends ScoreBadgeProps {
   description: string
@@ -46,6 +47,7 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
 
   const activityScore = getActivityScore(result)
   const sustainabilityScore = getSustainabilityScore(result)
+  const responsivenessScore = getResponsivenessScore(result)
   return badges.map((badge) =>
     badge.category === 'Activity'
       ? {
@@ -60,6 +62,13 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
           value: sustainabilityScore.value,
           tone: sustainabilityScore.tone,
           description: sustainabilityScore.description,
+        }
+      : badge.category === 'Responsiveness'
+      ? {
+          ...badge,
+          value: responsivenessScore.value,
+          tone: responsivenessScore.tone,
+          description: responsivenessScore.description,
         }
       : badge,
   )
