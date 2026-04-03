@@ -8,8 +8,8 @@ describe('score-config', () => {
 
     expect(badges).toHaveLength(3)
     expect(badges.map((badge) => badge.category)).toEqual([
-      'Activity',
       'Sustainability',
+      'Activity',
       'Responsiveness',
     ])
     expect(badges.every((badge) => badge.value === 'Not scored yet')).toBe(true)

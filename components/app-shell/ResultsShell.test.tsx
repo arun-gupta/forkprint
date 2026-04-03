@@ -40,4 +40,35 @@ describe('ResultsShell', () => {
     const link = screen.getByRole('link', { name: /github repository/i })
     expect(link).toHaveAttribute('href', 'https://github.com/arun-gupta/forkprint')
   })
+
+  it('returns to the overview tab when the reset key changes', async () => {
+    const { rerender } = render(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        overview={<div>Overview content</div>}
+        contributors={<div>Contributors coming soon</div>}
+        activity={<div>Activity coming soon</div>}
+        responsiveness={<div>Responsiveness coming soon</div>}
+        comparison={<div>Comparison coming soon</div>}
+        resetKey={0}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Activity' }))
+    expect(screen.getByText('Activity coming soon')).toBeInTheDocument()
+
+    rerender(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        overview={<div>Overview content</div>}
+        contributors={<div>Contributors coming soon</div>}
+        activity={<div>Activity coming soon</div>}
+        responsiveness={<div>Responsiveness coming soon</div>}
+        comparison={<div>Comparison coming soon</div>}
+        resetKey={1}
+      />,
+    )
+
+    expect(screen.getByText('Overview content')).toBeInTheDocument()
+  })
 })

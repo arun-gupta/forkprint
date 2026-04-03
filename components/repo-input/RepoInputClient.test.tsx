@@ -336,6 +336,84 @@ describe('RepoInputClient', () => {
     expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
 
+  it('clears previous results and returns to the overview tab when a new analysis starts', async () => {
+    let resolveSecondAnalysis: ((value: {
+      results: never[]
+      failures: never[]
+      rateLimit: null
+    }) => void) | null = null
+
+    const onAnalyze = vi
+      .fn()
+      .mockResolvedValueOnce({
+        results: [
+          {
+            repo: 'facebook/react',
+            name: 'react',
+            description: 'A UI library',
+            createdAt: '2013-05-24T16:15:54Z',
+            primaryLanguage: 'TypeScript',
+            stars: 244295,
+            forks: 25,
+            watchers: 10,
+            commits30d: 7,
+            commits90d: 18,
+            releases12mo: 'unavailable',
+            prsOpened90d: 4,
+            prsMerged90d: 3,
+            issuesOpen: 5,
+            issuesClosed90d: 6,
+            uniqueCommitAuthors90d: 'unavailable',
+            totalContributors: 'unavailable',
+            maintainerCount: 'unavailable',
+            commitCountsByAuthor: 'unavailable',
+            commitCountsByExperimentalOrg: 'unavailable',
+            experimentalAttributedAuthors90d: 'unavailable',
+            experimentalUnattributedAuthors90d: 'unavailable',
+            issueFirstResponseTimestamps: 'unavailable',
+            issueCloseTimestamps: 'unavailable',
+            prMergeTimestamps: 'unavailable',
+            missingFields: [],
+          },
+        ],
+        failures: [],
+        rateLimit: null,
+      })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSecondAnalysis = resolve
+          }),
+      )
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    const repoList = screen.getByRole('textbox', { name: /repository list/i })
+
+    await userEvent.type(repoList, 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByRole('region', { name: /analysis results/i })
+    await userEvent.click(screen.getByRole('tab', { name: 'Activity' }))
+    expect(screen.getByRole('region', { name: /activity view/i })).toBeInTheDocument()
+
+    await userEvent.clear(repoList)
+    await userEvent.type(repoList, 'vercel/next.js')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    expect(screen.queryByRole('region', { name: /analysis results/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /analysis loading state/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Activity' })).toHaveAttribute('aria-selected', 'false')
+
+    resolveSecondAnalysis?.({
+      results: [],
+      failures: [],
+      rateLimit: null,
+    })
+  })
+
   it('renders activity content after a successful analysis', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [

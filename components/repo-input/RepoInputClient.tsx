@@ -23,6 +23,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
   const [submissionError, setSubmissionError] = useState<string | null>(null)
   const [loadingRepos, setLoadingRepos] = useState<string[]>([])
+  const [resultsResetKey, setResultsResetKey] = useState(0)
 
   useEffect(() => {
     if (!analysisResponse?.diagnostics?.length) {
@@ -52,6 +53,8 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
 
     setTokenError(null)
     setSubmissionError(null)
+    setAnalysisResponse(null)
+    setResultsResetKey((current) => current + 1)
     setLoadingRepos(repos)
 
     if (!hasServerToken) {
@@ -169,6 +172,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
         )
       }
       comparison={<p className="text-sm text-slate-600">Comparison view is planned for a later Phase 1 step.</p>}
+      resetKey={resultsResetKey}
     />
   )
 }

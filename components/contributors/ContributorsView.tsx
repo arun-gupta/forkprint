@@ -47,6 +47,9 @@ export function ContributorsView({ results }: ContributorsViewProps) {
           <div>
             <h2 className="text-lg font-semibold text-slate-900">{section.repo}</h2>
             <p className="mt-1 text-sm text-slate-600">{`Contributor health and sustainability signals derived from verified public repository activity over the last ${section.windowDays} days.`}</p>
+            <p className="mt-2 text-sm text-slate-700">
+              The `Contributors` tab is the workspace for contributor analysis; the corresponding overview score category is `Sustainability`.
+            </p>
           </div>
           <CoreContributorsPane
             metrics={section.coreMetrics}

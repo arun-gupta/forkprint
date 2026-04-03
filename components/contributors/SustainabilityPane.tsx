@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
+import { HelpLabel } from '@/components/shared/HelpLabel'
 import { SUSTAINABILITY_THRESHOLDS } from '@/lib/contributors/score-config'
 import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model'
 
@@ -73,13 +74,10 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
 
       <dl className="mt-4 grid gap-3 md:grid-cols-2">
         {section.sustainabilityMetrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-xl border border-slate-200 bg-slate-50 p-3"
-            title={metric.hoverText}
-            aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
-          >
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
+          <div key={metric.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <HelpLabel label={metric.label} helpText={metric.hoverText} />
+            </dt>
             <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
             {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}
           </div>
@@ -103,13 +101,10 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
         </div>
         <dl className="mt-3 grid gap-3 md:grid-cols-2">
           {section.experimentalMetrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="rounded-xl border border-amber-200 bg-white p-3"
-              title={metric.hoverText}
-              aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
-            >
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
+            <div key={metric.label} className="rounded-xl border border-amber-200 bg-white p-3">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <HelpLabel label={metric.label} helpText={metric.hoverText} />
+              </dt>
               <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
             </div>
           ))}

@@ -11,20 +11,20 @@ export interface ScoreBadgeDefinition extends ScoreBadgeProps {
 const PENDING_VALUE: ScoreValue = 'Not scored yet'
 const PENDING_TONE: ScoreTone = 'neutral'
 
-export const SCORE_CATEGORIES: ScoreCategory[] = ['Activity', 'Sustainability', 'Responsiveness']
+export const SCORE_CATEGORIES: ScoreCategory[] = ['Sustainability', 'Activity', 'Responsiveness']
 
 export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
-  {
-    category: 'Activity',
-    value: PENDING_VALUE,
-    tone: PENDING_TONE,
-    description: 'Score will populate when activity scoring lands in P1-F08.',
-  },
   {
     category: 'Sustainability',
     value: PENDING_VALUE,
     tone: PENDING_TONE,
     description: 'Score will populate when sustainability scoring lands in P1-F09.',
+  },
+  {
+    category: 'Activity',
+    value: PENDING_VALUE,
+    tone: PENDING_TONE,
+    description: 'Score will populate when activity scoring lands in P1-F08.',
   },
   {
     category: 'Responsiveness',

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
+import { HelpLabel } from '@/components/shared/HelpLabel'
 import { type ActivityWindowDays, type AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildResponsivenessSections, getResponsivenessWindowOptions } from '@/lib/responsiveness/view-model'
 import { ResponsivenessScoreHelp } from './ResponsivenessScoreHelp'
@@ -67,13 +68,10 @@ export function ResponsivenessView({ results }: ResponsivenessViewProps) {
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{pane.title}</p>
                 <dl className="mt-3 space-y-2">
                   {pane.metrics.map((metric) => (
-                    <div
-                      key={metric.label}
-                      className="flex items-baseline justify-between gap-4"
-                      title={metric.helpText}
-                      aria-label={metric.helpText ? `${metric.label}. ${metric.helpText}` : undefined}
-                    >
-                      <dt className="text-sm text-slate-600">{metric.label}</dt>
+                    <div key={metric.label} className="flex items-baseline justify-between gap-4">
+                      <dt className="text-sm text-slate-600">
+                        <HelpLabel label={metric.label} helpText={metric.helpText} />
+                      </dt>
                       <dd className="text-base font-semibold text-slate-900">{metric.value}</dd>
                     </div>
                   ))}
