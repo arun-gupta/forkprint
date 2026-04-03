@@ -8,13 +8,14 @@ import type {
   ContributorWindowDays,
   ContributorWindowMetrics,
   RateLimitState,
+  ResponsivenessMetrics,
   RepositoryFetchFailure,
   Unavailable,
 } from './analysis-result'
 import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
-import { REPO_ACTIVITY_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY } from './queries'
+import { REPO_ACTIVITY_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_QUERY } from './queries'
 
 interface RepoOverviewResponse {
   repository: {
@@ -26,6 +27,7 @@ interface RepoOverviewResponse {
     forkCount: number
     watchers: { totalCount: number }
     issues: { totalCount: number }
+    pullRequests?: { totalCount: number }
   } | null
 }
 
@@ -83,6 +85,76 @@ interface RepoActivityResponse {
       createdAt: string
       closedAt: string | null
     }>
+  }
+}
+
+interface SearchActorNode {
+  login: string | null
+}
+
+interface SearchCommentNode {
+  createdAt: string
+  author: SearchActorNode | null
+}
+
+interface SearchReviewNode {
+  createdAt: string
+  author: SearchActorNode | null
+}
+
+interface ResponsivenessIssueNode {
+  createdAt: string
+  closedAt?: string | null
+  author: SearchActorNode | null
+  comments: {
+    totalCount: number
+    nodes: SearchCommentNode[]
+  }
+}
+
+interface ResponsivenessPullRequestNode {
+  createdAt: string
+  author: SearchActorNode | null
+  comments: {
+    totalCount: number
+    nodes: SearchCommentNode[]
+  }
+  reviews: {
+    totalCount: number
+    nodes: SearchReviewNode[]
+  }
+}
+
+interface RepoResponsivenessResponse {
+  recentCreatedIssues: {
+    nodes: ResponsivenessIssueNode[]
+  }
+  recentClosedIssues: {
+    nodes: ResponsivenessIssueNode[]
+  }
+  recentCreatedPullRequests: {
+    nodes: ResponsivenessPullRequestNode[]
+  }
+  recentMergedPullRequests: {
+    nodes: Array<{
+      createdAt: string
+      mergedAt: string | null
+    }>
+  }
+  staleOpenPullRequests30: {
+    issueCount: number
+  }
+  staleOpenPullRequests60: {
+    issueCount: number
+  }
+  staleOpenPullRequests90: {
+    issueCount: number
+  }
+  staleOpenPullRequests180: {
+    issueCount: number
+  }
+  staleOpenPullRequests365: {
+    issueCount: number
   }
 }
 
@@ -219,6 +291,33 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       })
       latestRateLimit = activity.rateLimit ?? latestRateLimit
 
+      const responsiveness =
+        (await Promise.resolve(
+          queryGitHubGraphQL<RepoResponsivenessResponse>(input.token, REPO_RESPONSIVENESS_QUERY, {
+            issuesCreated365Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since365),
+            issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
+            prsCreated365Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since365),
+            prsMerged365Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since365),
+            stalePrs30Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore30),
+            stalePrs60Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore60),
+            stalePrs90Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore90),
+            stalePrs180Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore180),
+            stalePrs365Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore365),
+          }),
+        ).catch((error) => {
+          latestRateLimit = extractRateLimitFromError(error) ?? latestRateLimit
+          diagnostics.push(buildDiagnostic(repo, 'github-graphql:responsiveness', error))
+
+          return {
+            data: createUnavailableResponsivenessResponse(),
+            rateLimit: extractRateLimitFromError(error),
+          }
+        })) ?? {
+          data: createUnavailableResponsivenessResponse(),
+          rateLimit: null,
+        }
+      latestRateLimit = responsiveness.rateLimit ?? latestRateLimit
+
       const contributorCount = await fetchContributorCount(input.token, owner, name).catch((error) => {
         latestRateLimit = extractRateLimitFromError(error) ?? latestRateLimit
         diagnostics.push(buildDiagnostic(repo, 'github-rest:contributors', error))
@@ -265,6 +364,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
           repo,
           overview.data,
           activity.data,
+          responsiveness.data,
           contributorMetricsByWindow,
           activityMetricsByWindow,
           contributorCount.data,
@@ -287,6 +387,11 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
   }
 }
 
+interface ResponseSignal {
+  firstResponderKind: 'bot' | 'human' | null
+  firstHumanResponseAt: string | null
+}
+
 function extractRateLimitFromError(error: unknown): RateLimitState | null {
   const maybeError = error as Error & { status?: number; retryAfter?: number | Unavailable }
 
@@ -305,6 +410,7 @@ function buildAnalysisResult(
   repo: string,
   overview: RepoOverviewResponse,
   activity: RepoActivityResponse,
+  responsiveness: RepoResponsivenessResponse,
   contributorMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
   activityMetricsByWindow: Record<ActivityWindowDays, ActivityWindowMetrics>,
   totalContributorCount: number | Unavailable,
@@ -315,6 +421,16 @@ function buildAnalysisResult(
   const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
   const contributorMetrics = contributorMetricsByWindow[90]
   const experimentalMetrics = experimentalMetricsByWindow[90]
+  const responsivenessMetricsByWindow = buildResponsivenessMetricsByWindow(
+    responsiveness,
+    activityMetricsByWindow,
+    overview.repository?.issues.totalCount,
+    overview.repository?.pullRequests?.totalCount,
+  )
+  const responsivenessMetrics = responsivenessMetricsByWindow[90]
+  const issueFirstResponseTimestamps = collectIssueFirstResponseTimestamps(responsiveness.recentCreatedIssues?.nodes ?? [], 90)
+  const issueCloseTimestamps = collectIssueCloseTimestamps(responsiveness.recentClosedIssues?.nodes ?? [], 90)
+  const prMergeTimestamps = collectPullRequestMergeTimestamps(responsiveness.recentMergedPullRequests?.nodes ?? [], 90)
   const missingFields = [...UNAVAILABLE_FIELDS].filter((field) => {
     if (field === 'releases12mo') {
       return activityMetricsByWindow[365].releases === 'unavailable'
@@ -348,7 +464,19 @@ function buildAnalysisResult(
       return experimentalMetrics.experimentalUnattributedAuthors === 'unavailable'
     }
 
-    return true
+    if (field === 'issueFirstResponseTimestamps') {
+      return issueFirstResponseTimestamps === 'unavailable'
+    }
+
+    if (field === 'issueCloseTimestamps') {
+      return issueCloseTimestamps === 'unavailable'
+    }
+
+    if (field === 'prMergeTimestamps') {
+      return prMergeTimestamps === 'unavailable'
+    }
+
+    return false
   })
 
   return {
@@ -386,12 +514,14 @@ function buildAnalysisResult(
       ]),
     ) as Record<ContributorWindowDays, ContributorWindowMetrics>,
     activityMetricsByWindow,
+    responsivenessMetricsByWindow,
+    responsivenessMetrics,
     staleIssueRatio: activityMetricsByWindow[90].staleIssueRatio,
     medianTimeToMergeHours: activityMetricsByWindow[90].medianTimeToMergeHours,
     medianTimeToCloseHours: activityMetricsByWindow[90].medianTimeToCloseHours,
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
+    issueFirstResponseTimestamps,
+    issueCloseTimestamps,
+    prMergeTimestamps,
     missingFields,
   }
 }
@@ -404,6 +534,165 @@ function buildOpenIssuesOlderThanQuery(repoSearch: string, before: Date) {
   return `repo:${repoSearch} is:issue is:open created:<${before.toISOString().slice(0, 10)}`
 }
 
+function buildOpenPullRequestsOlderThanQuery(repoSearch: string, before: Date) {
+  return `repo:${repoSearch} is:pr is:open created:<${before.toISOString().slice(0, 10)}`
+}
+
+function createUnavailableResponsivenessResponse(): RepoResponsivenessResponse {
+  return {
+    recentCreatedIssues: { nodes: [] },
+    recentClosedIssues: { nodes: [] },
+    recentCreatedPullRequests: { nodes: [] },
+    recentMergedPullRequests: { nodes: [] },
+    staleOpenPullRequests30: { issueCount: 0 },
+    staleOpenPullRequests60: { issueCount: 0 },
+    staleOpenPullRequests90: { issueCount: 0 },
+    staleOpenPullRequests180: { issueCount: 0 },
+    staleOpenPullRequests365: { issueCount: 0 },
+  }
+}
+
+function buildResponsivenessMetricsByWindow(
+  responsiveness: RepoResponsivenessResponse,
+  activityMetricsByWindow: Record<ActivityWindowDays, ActivityWindowMetrics>,
+  openIssueCount: number | undefined,
+  openPullRequestCount: number | undefined,
+): Record<ActivityWindowDays, ResponsivenessMetrics> {
+  const recentCreatedIssues = responsiveness.recentCreatedIssues?.nodes ?? []
+  const recentClosedIssues = responsiveness.recentClosedIssues?.nodes ?? []
+  const recentCreatedPullRequests = responsiveness.recentCreatedPullRequests?.nodes ?? []
+  const recentMergedPullRequests = responsiveness.recentMergedPullRequests?.nodes ?? []
+
+  return {
+    30: buildResponsivenessMetricsForWindow(
+      30,
+      recentCreatedIssues,
+      recentClosedIssues,
+      recentCreatedPullRequests,
+      recentMergedPullRequests,
+      activityMetricsByWindow[30],
+      responsiveness.staleOpenPullRequests30?.issueCount,
+      openIssueCount,
+      openPullRequestCount,
+    ),
+    60: buildResponsivenessMetricsForWindow(
+      60,
+      recentCreatedIssues,
+      recentClosedIssues,
+      recentCreatedPullRequests,
+      recentMergedPullRequests,
+      activityMetricsByWindow[60],
+      responsiveness.staleOpenPullRequests60?.issueCount,
+      openIssueCount,
+      openPullRequestCount,
+    ),
+    90: buildResponsivenessMetricsForWindow(
+      90,
+      recentCreatedIssues,
+      recentClosedIssues,
+      recentCreatedPullRequests,
+      recentMergedPullRequests,
+      activityMetricsByWindow[90],
+      responsiveness.staleOpenPullRequests90?.issueCount,
+      openIssueCount,
+      openPullRequestCount,
+    ),
+    180: buildResponsivenessMetricsForWindow(
+      180,
+      recentCreatedIssues,
+      recentClosedIssues,
+      recentCreatedPullRequests,
+      recentMergedPullRequests,
+      activityMetricsByWindow[180],
+      responsiveness.staleOpenPullRequests180?.issueCount,
+      openIssueCount,
+      openPullRequestCount,
+    ),
+    365: buildResponsivenessMetricsForWindow(
+      365,
+      recentCreatedIssues,
+      recentClosedIssues,
+      recentCreatedPullRequests,
+      recentMergedPullRequests,
+      activityMetricsByWindow[365],
+      responsiveness.staleOpenPullRequests365?.issueCount,
+      openIssueCount,
+      openPullRequestCount,
+    ),
+  }
+}
+
+function buildResponsivenessMetricsForWindow(
+  windowDays: ActivityWindowDays,
+  recentCreatedIssues: ResponsivenessIssueNode[],
+  recentClosedIssues: ResponsivenessIssueNode[],
+  recentCreatedPullRequests: ResponsivenessPullRequestNode[],
+  recentMergedPullRequests: Array<{ createdAt: string; mergedAt: string | null }>,
+  activityMetrics: ActivityWindowMetrics,
+  staleOpenPullRequestCount: number | undefined,
+  openIssueCount: number | undefined,
+  openPullRequestCount: number | undefined,
+): ResponsivenessMetrics {
+  const issueNodesInWindow = filterNodesByStartDate(recentCreatedIssues, windowDays)
+  const closedIssueNodesInWindow = filterNodesByEndDate(recentClosedIssues, 'closedAt', windowDays)
+  const createdPullRequestsInWindow = filterNodesByStartDate(recentCreatedPullRequests, windowDays)
+  const mergedPullRequestsInWindow = filterNodesByEndDate(recentMergedPullRequests, 'mergedAt', windowDays)
+
+  const issueFirstResponseDurations = issueNodesInWindow
+    .map((issue) => getIssueFirstResponseDurationHours(issue))
+    .filter((value): value is number => value != null)
+  const prFirstReviewDurations = createdPullRequestsInWindow
+    .map((pullRequest) => getPullRequestFirstReviewDurationHours(pullRequest))
+    .filter((value): value is number => value != null)
+  const issueResolutionDurations = closedIssueNodesInWindow
+    .map((issue) => getDurationHours(issue.createdAt, issue.closedAt ?? null))
+    .filter((value): value is number => value != null)
+  const prMergeDurations = mergedPullRequestsInWindow
+    .map((pullRequest) => getDurationHours(pullRequest.createdAt, pullRequest.mergedAt))
+    .filter((value): value is number => value != null)
+
+  const interactionSignals = [
+    ...issueNodesInWindow.map((issue) => getResponseSignal(issue.author?.login ?? null, issue.comments.nodes)),
+    ...createdPullRequestsInWindow.map((pullRequest) =>
+      getResponseSignal(pullRequest.author?.login ?? null, [...pullRequest.comments.nodes, ...pullRequest.reviews.nodes]),
+    ),
+  ].filter((signal): signal is ResponseSignal => signal != null)
+
+  const itemsWithHumanResponse = interactionSignals.filter((signal) => signal.firstHumanResponseAt != null).length
+  const itemsWithBotFirstResponse = interactionSignals.filter((signal) => signal.firstResponderKind === 'bot').length
+  const itemsWithHumanFirstResponse = interactionSignals.filter((signal) => signal.firstResponderKind === 'human').length
+  const itemsWithAnyFirstResponse = interactionSignals.filter((signal) => signal.firstResponderKind != null).length
+
+  return {
+    issueFirstResponseMedianHours: computeMedian(issueFirstResponseDurations),
+    issueFirstResponseP90Hours: computePercentile(issueFirstResponseDurations, 0.9),
+    prFirstReviewMedianHours: computeMedian(prFirstReviewDurations),
+    prFirstReviewP90Hours: computePercentile(prFirstReviewDurations, 0.9),
+    issueResolutionMedianHours: computeMedian(issueResolutionDurations),
+    issueResolutionP90Hours: computePercentile(issueResolutionDurations, 0.9),
+    prMergeMedianHours: computeMedian(prMergeDurations),
+    prMergeP90Hours: computePercentile(prMergeDurations, 0.9),
+    issueResolutionRate: computeRatio(activityMetrics.issuesClosed, activityMetrics.issuesOpened),
+    contributorResponseRate:
+      interactionSignals.length > 0 ? itemsWithHumanResponse / interactionSignals.length : 'unavailable',
+    botResponseRatio: itemsWithAnyFirstResponse > 0 ? itemsWithBotFirstResponse / itemsWithAnyFirstResponse : 'unavailable',
+    humanResponseRatio: itemsWithAnyFirstResponse > 0 ? itemsWithHumanFirstResponse / itemsWithAnyFirstResponse : 'unavailable',
+    staleIssueRatio: activityMetrics.staleIssueRatio,
+    stalePrRatio: computeStaleItemRatio(staleOpenPullRequestCount, openPullRequestCount),
+    prReviewDepth:
+      createdPullRequestsInWindow.length > 0
+        ? createdPullRequestsInWindow.reduce((total, pullRequest) => total + pullRequest.reviews.totalCount, 0) /
+          createdPullRequestsInWindow.length
+        : 'unavailable',
+    issuesClosedWithoutCommentRatio:
+      closedIssueNodesInWindow.length > 0
+        ? closedIssueNodesInWindow.filter((issue) => issue.comments.totalCount === 0).length / closedIssueNodesInWindow.length
+        : 'unavailable',
+    openIssueCount: typeof openIssueCount === 'number' ? openIssueCount : 'unavailable',
+    openPullRequestCount: typeof openPullRequestCount === 'number' ? openPullRequestCount : 'unavailable',
+  }
+}
+
 function buildActivityMetricsByWindow(
   activity: RepoActivityResponse,
   now: Date,
@@ -413,9 +702,8 @@ function buildActivityMetricsByWindow(
   const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
   const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
   const releaseDates =
-    activity.repository?.releases?.nodes
-      .map((release) => release.publishedAt ?? release.createdAt)
-      .filter((value): value is string => Boolean(value)) ?? []
+    activity.repository?.releases?.nodes?.map((release) => release.publishedAt ?? release.createdAt).filter((value): value is string => Boolean(value)) ??
+    []
 
   const commitCountsByWindow: Record<ActivityWindowDays, number | Unavailable> = {
     30: defaultBranchTarget?.recent30?.totalCount ?? 'unavailable',
@@ -509,6 +797,42 @@ function computeStaleIssueRatio(staleIssueCount: number | undefined, openIssueCo
   return staleIssueCount / openIssueCount
 }
 
+function computeStaleItemRatio(staleItemCount: number | undefined, openItemCount: number | undefined): number | Unavailable {
+  if (typeof staleItemCount !== 'number' || typeof openItemCount !== 'number' || openItemCount <= 0) {
+    return 'unavailable'
+  }
+
+  return staleItemCount / openItemCount
+}
+
+function collectIssueFirstResponseTimestamps(issues: ResponsivenessIssueNode[], windowDays: ActivityWindowDays): string[] | Unavailable {
+  const timestamps = filterNodesByStartDate(issues, windowDays)
+    .map((issue) => getFirstNonAuthorInteraction(issue.author?.login ?? null, issue.comments.nodes)?.createdAt ?? null)
+    .filter((value): value is string => Boolean(value))
+
+  return timestamps.length > 0 ? timestamps : 'unavailable'
+}
+
+function collectIssueCloseTimestamps(issues: ResponsivenessIssueNode[], windowDays: ActivityWindowDays): string[] | Unavailable {
+  const timestamps = filterNodesByEndDate(issues, 'closedAt', windowDays)
+    .map((issue) => issue.closedAt)
+    .filter((value): value is string => Boolean(value))
+  return timestamps.length > 0 ? timestamps : 'unavailable'
+}
+
+function collectPullRequestMergeTimestamps(
+  pullRequests: Array<{
+    createdAt: string
+    mergedAt: string | null
+  }>,
+  windowDays: ActivityWindowDays,
+): string[] | Unavailable {
+  const timestamps = filterNodesByEndDate(pullRequests, 'mergedAt', windowDays)
+    .map((pullRequest) => pullRequest.mergedAt)
+    .filter((value): value is string => Boolean(value))
+  return timestamps.length > 0 ? timestamps : 'unavailable'
+}
+
 function computeMedianDurationHours<T extends { createdAt: string }>(
   nodes: Array<T & Record<string, string | null>> | undefined,
   endField: string,
@@ -548,6 +872,145 @@ function computeMedianDurationHours<T extends { createdAt: string }>(
   }
 
   return (lower + upper) / 2
+}
+
+function computeMedian(values: number[]): number | Unavailable {
+  if (values.length === 0) {
+    return 'unavailable'
+  }
+
+  const sorted = [...values].sort((left, right) => left - right)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 1) {
+    return sorted[middle] ?? 'unavailable'
+  }
+
+  const lower = sorted[middle - 1]
+  const upper = sorted[middle]
+  if (lower == null || upper == null) {
+    return 'unavailable'
+  }
+
+  return (lower + upper) / 2
+}
+
+function computePercentile(values: number[], percentile: number): number | Unavailable {
+  if (values.length === 0) {
+    return 'unavailable'
+  }
+
+  const sorted = [...values].sort((left, right) => left - right)
+  const index = Math.max(0, Math.ceil(sorted.length * percentile) - 1)
+  return sorted[index] ?? 'unavailable'
+}
+
+function computeRatio(numerator: number | Unavailable, denominator: number | Unavailable): number | Unavailable {
+  if (typeof numerator !== 'number' || typeof denominator !== 'number' || denominator <= 0) {
+    return 'unavailable'
+  }
+
+  return numerator / denominator
+}
+
+function getIssueFirstResponseDurationHours(issue: ResponsivenessIssueNode): number | null {
+  return getDurationHours(issue.createdAt, getFirstNonAuthorInteraction(issue.author?.login ?? null, issue.comments.nodes)?.createdAt ?? null)
+}
+
+function getPullRequestFirstReviewDurationHours(pullRequest: ResponsivenessPullRequestNode): number | null {
+  const firstReview = getFirstNonAuthorInteraction(pullRequest.author?.login ?? null, pullRequest.reviews.nodes)
+  return getDurationHours(pullRequest.createdAt, firstReview?.createdAt ?? null)
+}
+
+function getResponseSignal(
+  authorLogin: string | null,
+  interactions: Array<{ createdAt: string; author: SearchActorNode | null }>,
+): ResponseSignal | null {
+  const firstResponse = getFirstNonAuthorInteraction(authorLogin, interactions)
+  if (!firstResponse) {
+    return {
+      firstResponderKind: null,
+      firstHumanResponseAt: null,
+    }
+  }
+
+  return {
+    firstResponderKind: isBotLogin(firstResponse.author?.login ?? null) ? 'bot' : 'human',
+    firstHumanResponseAt: isBotLogin(firstResponse.author?.login ?? null) ? null : firstResponse.createdAt,
+  }
+}
+
+function getFirstNonAuthorInteraction<T extends { createdAt: string; author: SearchActorNode | null }>(
+  authorLogin: string | null,
+  interactions: T[],
+): T | null {
+  const createdAtSorted = [...interactions].sort(
+    (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
+  )
+
+  for (const interaction of createdAtSorted) {
+    const responderLogin = interaction.author?.login ?? null
+    if (!responderLogin || responderLogin === authorLogin) {
+      continue
+    }
+
+    return interaction
+  }
+
+  return null
+}
+
+function getDurationHours(start: string, end: string | null): number | null {
+  if (!end) {
+    return null
+  }
+
+  const startedAt = new Date(start)
+  const endedAt = new Date(end)
+
+  if (Number.isNaN(startedAt.getTime()) || Number.isNaN(endedAt.getTime()) || endedAt < startedAt) {
+    return null
+  }
+
+  return (endedAt.getTime() - startedAt.getTime()) / (1000 * 60 * 60)
+}
+
+function filterNodesByStartDate<T extends { createdAt: string }>(nodes: T[], windowDays: ActivityWindowDays) {
+  const cutoffTime = getWindowCutoffTime(windowDays)
+
+  return nodes.filter((node) => {
+    const createdAt = new Date(node.createdAt).getTime()
+    return !Number.isNaN(createdAt) && createdAt >= cutoffTime
+  })
+}
+
+function filterNodesByEndDate<T extends object, K extends keyof T>(
+  nodes: T[],
+  endField: K,
+  windowDays: ActivityWindowDays,
+) {
+  const cutoffTime = getWindowCutoffTime(windowDays)
+
+  return nodes.filter((node) => {
+    const endValue = node[endField]
+    if (typeof endValue !== 'string') {
+      return false
+    }
+
+    const endedAt = new Date(endValue).getTime()
+    return !Number.isNaN(endedAt) && endedAt >= cutoffTime
+  })
+}
+
+function getWindowCutoffTime(windowDays: ActivityWindowDays) {
+  return Date.now() - windowDays * 24 * 60 * 60 * 1000
+}
+
+function isBotLogin(login: string | null) {
+  if (!login) {
+    return false
+  }
+
+  return login.includes('[bot]') || login.endsWith('-bot')
 }
 
 function computeMedianDurationHoursWithinWindow<T extends { createdAt: string }>(

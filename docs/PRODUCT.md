@@ -394,15 +394,49 @@ The Contributors workspace measures the depth and distribution of contributor ac
 The analyzer measures how quickly maintainers engage with community activity.
 
 **Acceptance criteria**
-- Metrics computed: median time to first issue response, median time to close issues, median time to merge PRs
+- The `Responsiveness` tab is organized into panes that map directly to the feature's metric groups:
+  - `Issue & PR response time`
+  - `Resolution metrics`
+  - `Maintainer activity signals`
+  - `Volume & backlog health`
+  - `Engagement quality signals`
+- `Issue & PR response time` includes:
+  - time to first issue response
+  - time to first PR review
+  - median response times
+  - 90th percentile response times
+- `Resolution metrics` includes:
+  - issue resolution duration
+  - PR merge duration
+  - issue resolution rate (`closed / opened`) for the selected window
+- `Maintainer activity signals` includes:
+  - contributor response rate
+  - ratio of bot responses vs. human responses
+- `Volume & backlog health` includes:
+  - stale issue ratio
+  - stale PR ratio
+- `Engagement quality signals` includes:
+  - PR review depth
+  - issues closed without comment
 - Computed from exact timestamps in GraphQL issue and PR event data — no estimation
+- Response and resolution metrics SHOULD expose both median and `p90` values when enough verified public data exists, so outliers are visible without requiring full event-history charts
 - Responsiveness score — High / Medium / Low — assigned only when sufficient event data exists; otherwise surfaces `Insufficient verified public data`
+- Responsiveness score is based on a weighted combination of:
+  - `30%` Issue & PR response time
+  - `25%` Resolution metrics
+  - `15%` Maintainer activity signals
+  - `15%` Volume & backlog health
+  - `15%` Engagement quality signals
 - All thresholds defined in config, not hardcoded in logic
 - If GitHub does not surface required event timestamps via GraphQL, fields are marked `"unavailable"` and called out explicitly in the missing data panel
 - CHAOSS category label displayed alongside the score in the UI
 
 **Out of scope**
-- First response time broken down by label or contributor type
+- Bus Factor and responder concentration risk, which belong in contributor/sustainability analysis
+- Review turnaround time per reviewer
+- Label assignment lag
+- Open issue or PR trend charts over time
+- Reopened issue rate
 - SLA tracking over time (Future backlog)
 
 ---

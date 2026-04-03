@@ -2,6 +2,7 @@
 
 import type { ContributorWindowDays } from '@/lib/analyzer/analysis-result'
 import { useState } from 'react'
+import { HelpLabel } from '@/components/shared/HelpLabel'
 import type { ContributorHeatmapCell, ContributorMetricRow } from '@/lib/contributors/view-model'
 
 interface CoreContributorsPaneProps {
@@ -25,13 +26,10 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
       </div>
       <dl className="grid gap-3">
         {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-xl border border-slate-200 bg-white p-3"
-            title={metric.hoverText}
-            aria-label={metric.hoverText ? `${metric.label}. ${metric.hoverText}` : metric.label}
-          >
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{metric.label}</dt>
+          <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <HelpLabel label={metric.label} helpText={metric.hoverText} />
+            </dt>
             {metric.secondaryValue ? <p className="mt-1 text-xs text-slate-500">{metric.secondaryValue}</p> : null}
             <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
             {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}

@@ -8,8 +8,8 @@ describe('score-config', () => {
 
     expect(badges).toHaveLength(3)
     expect(badges.map((badge) => badge.category)).toEqual([
-      'Activity',
       'Sustainability',
+      'Activity',
       'Responsiveness',
     ])
     expect(badges.every((badge) => badge.value === 'Not scored yet')).toBe(true)
@@ -22,11 +22,12 @@ describe('score-config', () => {
     expect(scoreToneClass('neutral')).toContain('slate')
   })
 
-  it('replaces the activity and sustainability placeholders when real scores are available', () => {
+  it('replaces the activity, sustainability, and responsiveness placeholders when real scores are available', () => {
     const badges = getScoreBadges(buildResult())
 
     expect(badges.find((badge) => badge.category === 'Activity')?.value).toBe('High')
     expect(badges.find((badge) => badge.category === 'Sustainability')?.value).toBe('Medium')
+    expect(badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('High')
   })
 })
 
@@ -57,6 +58,26 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     staleIssueRatio: 0.2,
     medianTimeToMergeHours: 24,
     medianTimeToCloseHours: 36,
+    responsivenessMetrics: {
+      issueFirstResponseMedianHours: 4,
+      issueFirstResponseP90Hours: 20,
+      prFirstReviewMedianHours: 8,
+      prFirstReviewP90Hours: 24,
+      issueResolutionMedianHours: 48,
+      issueResolutionP90Hours: 120,
+      prMergeMedianHours: 36,
+      prMergeP90Hours: 96,
+      issueResolutionRate: 0.92,
+      contributorResponseRate: 0.88,
+      botResponseRatio: 0.1,
+      humanResponseRatio: 0.9,
+      staleIssueRatio: 0.12,
+      stalePrRatio: 0.08,
+      prReviewDepth: 2.4,
+      issuesClosedWithoutCommentRatio: 0.08,
+      openIssueCount: 22,
+      openPullRequestCount: 11,
+    },
     uniqueCommitAuthors90d: 4,
     totalContributors: 'unavailable',
     maintainerCount: 'unavailable',

@@ -24,6 +24,27 @@ export interface ActivityWindowMetrics {
   medianTimeToCloseHours: number | Unavailable
 }
 
+export interface ResponsivenessMetrics {
+  issueFirstResponseMedianHours: number | Unavailable
+  issueFirstResponseP90Hours: number | Unavailable
+  prFirstReviewMedianHours: number | Unavailable
+  prFirstReviewP90Hours: number | Unavailable
+  issueResolutionMedianHours: number | Unavailable
+  issueResolutionP90Hours: number | Unavailable
+  prMergeMedianHours: number | Unavailable
+  prMergeP90Hours: number | Unavailable
+  issueResolutionRate: number | Unavailable
+  contributorResponseRate: number | Unavailable
+  botResponseRatio: number | Unavailable
+  humanResponseRatio: number | Unavailable
+  staleIssueRatio: number | Unavailable
+  stalePrRatio: number | Unavailable
+  prReviewDepth: number | Unavailable
+  issuesClosedWithoutCommentRatio: number | Unavailable
+  openIssueCount: number | Unavailable
+  openPullRequestCount: number | Unavailable
+}
+
 export interface AnalysisResult {
   repo: string
   name: string | Unavailable
@@ -49,6 +70,8 @@ export interface AnalysisResult {
   experimentalUnattributedAuthors90d: number | Unavailable
   contributorMetricsByWindow?: Record<ContributorWindowDays, ContributorWindowMetrics>
   activityMetricsByWindow?: Record<ActivityWindowDays, ActivityWindowMetrics>
+  responsivenessMetricsByWindow?: Record<ActivityWindowDays, ResponsivenessMetrics>
+  responsivenessMetrics?: ResponsivenessMetrics
   staleIssueRatio?: number | Unavailable
   medianTimeToMergeHours?: number | Unavailable
   medianTimeToCloseHours?: number | Unavailable

@@ -15,6 +15,9 @@ export const REPO_OVERVIEW_QUERY = `
       issues(states: OPEN) {
         totalCount
       }
+      pullRequests(states: OPEN) {
+        totalCount
+      }
     }
     rateLimit {
       remaining
@@ -228,6 +231,115 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
           }
         }
       }
+    }
+    rateLimit {
+      remaining
+      resetAt
+    }
+  }
+`
+
+export const REPO_RESPONSIVENESS_QUERY = `
+  query RepoResponsiveness(
+    $issuesCreated365Query: String!
+    $issuesClosed365Query: String!
+    $prsCreated365Query: String!
+    $prsMerged365Query: String!
+    $stalePrs30Query: String!
+    $stalePrs60Query: String!
+    $stalePrs90Query: String!
+    $stalePrs180Query: String!
+    $stalePrs365Query: String!
+  ) {
+    recentCreatedIssues: search(query: $issuesCreated365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
+          createdAt
+          author {
+            login
+          }
+          comments(first: 20) {
+            totalCount
+            nodes {
+              createdAt
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+    recentClosedIssues: search(query: $issuesClosed365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
+          createdAt
+          closedAt
+          author {
+            login
+          }
+          comments(first: 20) {
+            totalCount
+            nodes {
+              createdAt
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+    recentCreatedPullRequests: search(query: $prsCreated365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on PullRequest {
+          createdAt
+          author {
+            login
+          }
+          comments(first: 20) {
+            totalCount
+            nodes {
+              createdAt
+              author {
+                login
+              }
+            }
+          }
+          reviews(first: 20) {
+            totalCount
+            nodes {
+              createdAt
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+    recentMergedPullRequests: search(query: $prsMerged365Query, type: ISSUE, first: 100) {
+      nodes {
+        ... on PullRequest {
+          createdAt
+          mergedAt
+        }
+      }
+    }
+    staleOpenPullRequests30: search(query: $stalePrs30Query, type: ISSUE) {
+      issueCount
+    }
+    staleOpenPullRequests60: search(query: $stalePrs60Query, type: ISSUE) {
+      issueCount
+    }
+    staleOpenPullRequests90: search(query: $stalePrs90Query, type: ISSUE) {
+      issueCount
+    }
+    staleOpenPullRequests180: search(query: $stalePrs180Query, type: ISSUE) {
+      issueCount
+    }
+    staleOpenPullRequests365: search(query: $stalePrs365Query, type: ISSUE) {
+      issueCount
     }
     rateLimit {
       remaining

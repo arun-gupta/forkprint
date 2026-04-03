@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
+import { HelpLabel } from '@/components/shared/HelpLabel'
 import { getActivityScore, formatHours, formatPercentage } from '@/lib/activity/score-config'
 import { type ActivityWindowDays, type AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildActivitySections, getActivityWindowOptions } from '@/lib/activity/view-model'
@@ -93,12 +94,10 @@ export function ActivityView({ results }: ActivityViewProps) {
                           ) : null}
                           {card.title === 'Issues' ? (
                             <>
-                              <div
-                                className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2"
-                                title={staleIssueTooltip}
-                                aria-label={`Stale issue ratio. ${staleIssueTooltip}`}
-                              >
-                                <dt className="text-sm text-slate-600">Stale issue ratio</dt>
+                              <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2">
+                                <dt className="text-sm text-slate-600">
+                                  <HelpLabel label="Stale issue ratio" helpText={staleIssueTooltip} />
+                                </dt>
                                 <dd className="text-base font-semibold text-slate-900">{formatPercentage(section.metrics.staleIssueRatio)}</dd>
                               </div>
                               <div className="flex items-baseline justify-between gap-4">
