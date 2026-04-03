@@ -35,6 +35,13 @@ test.describe('P1-F15 Results Shell', () => {
               prsMerged90d: 3,
               issuesOpen: 5,
               issuesClosed90d: 6,
+              activityMetricsByWindow: {
+                30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 'unavailable', medianTimeToCloseHours: 'unavailable' },
+                60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 'unavailable', medianTimeToCloseHours: 'unavailable' },
+                90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 'unavailable', medianTimeToCloseHours: 'unavailable' },
+                180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 'unavailable', medianTimeToCloseHours: 'unavailable' },
+                365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 'unavailable', medianTimeToCloseHours: 'unavailable' },
+              },
               uniqueCommitAuthors90d: 'unavailable',
               totalContributors: 'unavailable',
               commitCountsByAuthor: 'unavailable',
@@ -57,7 +64,8 @@ test.describe('P1-F15 Results Shell', () => {
     await expect(page.getByRole('region', { name: /ecosystem map/i })).toBeVisible()
     await expect(page.getByText(/ecosystem spectrum/i)).toBeVisible()
     await page.getByRole('tab', { name: 'Activity' }).click()
-    await expect(page.getByText(/activity will become the primary workspace for activity scoring/i)).toBeVisible()
+    await expect(page.getByRole('region', { name: /activity view/i })).toContainText('facebook/react')
+    await expect(page.getByRole('region', { name: /activity view/i })).toContainText('Commits')
     await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
     await expect(page.getByRole('textbox', { name: /repository list/i })).toBeVisible()
     expect(requestCount).toBe(1)

@@ -229,7 +229,7 @@ ForkPrint presents analysis in a stable app shell so users can submit repos once
 - A top header/banner shows the ForkPrint brand and a visible GitHub repo link
 - Repo input and Analyze action live in a stable analysis panel that remains visible above the result views
 - Successful analyses populate a tabbed result area rather than stacking every future view vertically
-- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, and `Comparison` available as tabs
+- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, `Health Ratios`, and `Comparison` available as tabs
 - The `Overview` tab is the first populated results tab and can absorb cross-feature summary content until later tabs deliver distinct value
 - Switching tabs does not re-submit the analysis request or trigger extra API calls
 - The shell works for single-repo and multi-repo analyses on desktop and mobile layouts
@@ -456,6 +456,7 @@ Computed diagnostic ratios provide a quick cross-repo comparison surface, drawn 
   - activity-flow ratios remain in the `Activity` tab
   - contributor-composition ratios remain in the `Contributors` tab
 - The `Health Ratios` tab aggregates those verified ratios into a dedicated cross-repo comparison table rather than becoming the first or only place the user sees them
+- The `Health Ratios` tab groups those rollups into `Overview`, `Contributors`, and `Activity` sections so the comparison view mirrors the main workspace navigation
 - Unavailable ratios displayed as `—`, never estimated
 - Ratios grouped by CHAOSS category in the UI
 - Table is sortable by ratio value across repos
