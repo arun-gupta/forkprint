@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import type { ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { ResultsTabs } from './ResultsTabs'
@@ -12,7 +12,6 @@ interface ResultsShellProps {
   activity: React.ReactNode
   responsiveness: React.ReactNode
   comparison: React.ReactNode
-  resetKey?: number
 }
 
 export function ResultsShell({
@@ -22,13 +21,8 @@ export function ResultsShell({
   activity,
   responsiveness,
   comparison,
-  resetKey = 0,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>('overview')
-
-  useEffect(() => {
-    setActiveTab('overview')
-  }, [resetKey])
 
   return (
     <main className="min-h-screen bg-slate-50">

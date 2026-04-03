@@ -142,6 +142,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
 
   return (
     <ResultsShell
+      key={resultsResetKey}
       analysisPanel={analysisPanel}
       overview={overviewContent}
       contributors={
@@ -172,7 +173,6 @@ export function RepoInputClient({ hasServerToken, onAnalyze }: RepoInputClientPr
         )
       }
       comparison={<p className="text-sm text-slate-600">Comparison view is planned for a later Phase 1 step.</p>}
-      resetKey={resultsResetKey}
     />
   )
 }

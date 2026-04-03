@@ -389,17 +389,16 @@ describe('RepoInputClient', () => {
     render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
 
     await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
-    const repoList = screen.getByRole('textbox', { name: /repository list/i })
-
-    await userEvent.type(repoList, 'facebook/react')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     await screen.findByRole('region', { name: /analysis results/i })
     await userEvent.click(screen.getByRole('tab', { name: 'Activity' }))
     expect(screen.getByRole('region', { name: /activity view/i })).toBeInTheDocument()
 
-    await userEvent.clear(repoList)
-    await userEvent.type(repoList, 'vercel/next.js')
+    const refreshedRepoList = screen.getByRole('textbox', { name: /repository list/i })
+    await userEvent.clear(refreshedRepoList)
+    await userEvent.type(refreshedRepoList, 'vercel/next.js')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     expect(screen.queryByRole('region', { name: /analysis results/i })).not.toBeInTheDocument()

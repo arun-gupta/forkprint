@@ -983,9 +983,9 @@ function filterNodesByStartDate<T extends { createdAt: string }>(nodes: T[], win
   })
 }
 
-function filterNodesByEndDate<T extends Record<string, string | null>>(
+function filterNodesByEndDate<T extends object, K extends keyof T>(
   nodes: T[],
-  endField: keyof T,
+  endField: K,
   windowDays: ActivityWindowDays,
 ) {
   const cutoffTime = getWindowCutoffTime(windowDays)
