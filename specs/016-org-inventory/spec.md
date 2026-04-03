@@ -36,7 +36,8 @@ A user can quickly find relevant repositories within a larger organization by so
 1. **Given** a populated org inventory, **When** the user types into the repo-name filter, **Then** the table narrows locally to matching repositories.
 2. **Given** repositories with multiple primary languages, **When** the user selects a language filter, **Then** only matching repositories remain visible.
 3. **Given** a mix of archived and active repositories, **When** the user toggles archived-status filtering, **Then** the table updates locally to show the selected subset.
-4. **Given** a populated table, **When** the user clicks a sortable column header, **Then** the rows reorder locally without rerunning the org inventory request.
+4. **Given** a populated table, **When** the user clicks any visible column header, **Then** the rows reorder locally without rerunning the org inventory request.
+5. **Given** a sorted column, **When** the user activates that same column again, **Then** the sort direction toggles between ascending and descending.
 
 ---
 
@@ -94,17 +95,18 @@ A user can distinguish between an empty organization, an invalid organization, a
 - **FR-004**: The system MUST render a sortable table with one row per public repository.
 - **FR-005**: Each table row MUST include repository name, description, primary language, stars, forks, watchers, open issues count, last pushed date, archived status, and repo URL.
 - **FR-006**: The inventory table MUST support local filtering by repository name, primary language, and archived status without rerunning the org inventory request.
-- **FR-007**: The inventory table MUST support local sorting on relevant visible columns without rerunning the org inventory request.
-- **FR-008**: The system MUST provide a repo-level drill-in action from each row that connects into the existing repo analysis flow for that repository.
-- **FR-009**: The system MUST allow selecting multiple repositories from the org inventory table for bulk analysis using the existing repo-analysis flow.
-- **FR-010**: The system MUST expose a slider control that lets the user set the current bulk-selection limit locally before choosing repositories to analyze.
-- **FR-011**: The maximum number of repositories allowed by the slider in Phase 1 MUST be driven by shared configuration rather than hardcoded in the component layer, with a default cap of `5`.
-- **FR-012**: The system MUST prevent extra selections or bulk analysis submissions that exceed the current slider limit and explain the limit clearly in the UI.
-- **FR-013**: The system MUST define deterministic behavior when the slider is lowered below the current selected count, such as trimming selection or blocking the new limit until the selection is reduced.
-- **FR-014**: The system MUST show clear invalid-org, empty-org, loading, and rate-limit states without fabricating results.
-- **FR-015**: Missing per-row fields MUST render explicitly as unavailable or empty values appropriate to the field type rather than substituted metrics.
-- **FR-016**: The Phase 1 implementation MUST avoid running full repo-level CHAOSS analysis automatically for every repository in the org inventory view.
-- **FR-017**: The org inventory layout MUST remain usable on desktop and mobile, with pagination or virtualization available if needed for larger orgs.
+- **FR-007**: The inventory table MUST support local sorting on every visible column without rerunning the org inventory request.
+- **FR-008**: Every sortable column MUST support both ascending and descending order.
+- **FR-009**: The system MUST provide a repo-level drill-in action from each row that connects into the existing repo analysis flow for that repository.
+- **FR-010**: The system MUST allow selecting multiple repositories from the org inventory table for bulk analysis using the existing repo-analysis flow.
+- **FR-011**: The system MUST expose a slider control that lets the user set the current bulk-selection limit locally before choosing repositories to analyze.
+- **FR-012**: The maximum number of repositories allowed by the slider in Phase 1 MUST be driven by shared configuration rather than hardcoded in the component layer, with a default cap of `5`.
+- **FR-013**: The system MUST prevent extra selections or bulk analysis submissions that exceed the current slider limit and explain the limit clearly in the UI.
+- **FR-014**: The system MUST define deterministic behavior when the slider is lowered below the current selected count, such as trimming selection or blocking the new limit until the selection is reduced.
+- **FR-015**: The system MUST show clear invalid-org, empty-org, loading, and rate-limit states without fabricating results.
+- **FR-016**: Missing per-row fields MUST render explicitly as unavailable or empty values appropriate to the field type rather than substituted metrics.
+- **FR-017**: The Phase 1 implementation MUST avoid running full repo-level CHAOSS analysis automatically for every repository in the org inventory view.
+- **FR-018**: The org inventory layout MUST remain usable on desktop and mobile, with pagination or virtualization available if needed for larger orgs.
 
 ### Key Entities *(include if feature involves data)*
 
