@@ -24,6 +24,7 @@ describe('OrgInventoryView', () => {
           buildRepo('facebook/react', { stars: 100 }),
           buildRepo('facebook/jest', { stars: 80, primaryLanguage: 'JavaScript' }),
         ]}
+        rateLimit={null}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={vi.fn()}
       />,
@@ -56,6 +57,7 @@ describe('OrgInventoryView', () => {
           activeRepoCount: 1,
         }}
         results={[buildRepo('facebook/react')]}
+        rateLimit={null}
         onAnalyzeRepo={onAnalyzeRepo}
         onAnalyzeSelected={vi.fn()}
       />,
@@ -84,6 +86,7 @@ describe('OrgInventoryView', () => {
           buildRepo('facebook/react', { stars: 100, description: 'React UI library' }),
           buildRepo('facebook/jest', { stars: 80, description: 'Jest testing framework' }),
         ]}
+        rateLimit={null}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={onAnalyzeSelected}
       />,
@@ -126,6 +129,7 @@ describe('OrgInventoryView', () => {
           buildRepo('facebook/jest'),
           buildRepo('facebook/relay'),
         ]}
+        rateLimit={null}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={vi.fn()}
       />,
@@ -158,6 +162,7 @@ describe('OrgInventoryView', () => {
           activeRepoCount: 1,
         }}
         results={[buildRepo('facebook/react')]}
+        rateLimit={null}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={vi.fn()}
       />,
@@ -187,6 +192,7 @@ describe('OrgInventoryView', () => {
           activeRepoCount: 30,
         }}
         results={repos}
+        rateLimit={null}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={vi.fn()}
       />,
@@ -205,6 +211,30 @@ describe('OrgInventoryView', () => {
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
     expect(screen.getByText('Showing 1-30 of 30 matching repositories')).toBeInTheDocument()
     expect(screen.getByText('facebook/repo-26')).toBeInTheDocument()
+  })
+
+  it('shows the remaining API-call footer when rate-limit metadata is available', () => {
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={{
+          totalPublicRepos: 1,
+          totalStars: 100,
+          mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
+          mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
+          languageDistribution: [{ language: 'TypeScript', repoCount: 1 }],
+          archivedRepoCount: 0,
+          activeRepoCount: 1,
+        }}
+        results={[buildRepo('facebook/react')]}
+        rateLimit={{ remaining: 4963, resetAt: '2026-04-03T00:50:00Z', retryAfter: 'unavailable' }}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByText('Remaining API calls: 4,963')).toHaveLength(1)
+    expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
   })
 })
 

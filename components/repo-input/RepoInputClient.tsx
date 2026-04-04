@@ -33,6 +33,10 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
   const [resultsResetKey, setResultsResetKey] = useState(0)
   const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
 
+  function handleModeChange(mode: 'repos' | 'org') {
+    setInputMode(mode)
+  }
+
   useEffect(() => {
     if (!analysisResponse?.diagnostics?.length) {
       return
@@ -140,7 +144,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
       ) : null}
       <RepoInputForm
         mode={inputMode}
-        onModeChange={setInputMode}
+        onModeChange={handleModeChange}
         onSubmitRepos={handleSubmit}
         onSubmitOrg={handleOrgSubmit}
       />
@@ -150,11 +154,13 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
   const orgInventoryTabs: ResultTabDefinition[] = [
     {
       id: 'overview',
-      label: 'Organization',
+      label: 'Overview',
       status: 'implemented',
       description: 'Organization inventory summary and lightweight public repository metadata.',
     },
   ]
+
+  const showOrgWorkspace = inputMode === 'org' && !analysisResponse
 
   const overviewContent = (
     <div className="space-y-4">
@@ -179,7 +185,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
           <p className="mt-2 text-sm text-blue-900">{loadingOrg}</p>
         </section>
       ) : null}
-      {analysisResponse ? (
+      {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
           <MetricCardsOverview results={analysisResponse.results} />
           <EcosystemMap results={analysisResponse.results} />
@@ -206,17 +212,8 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
           ) : null}
         </section>
       ) : null}
-      {orgInventoryResponse ? (
+      {inputMode === 'org' && orgInventoryResponse ? (
         <section aria-label="Org inventory results" className="space-y-4">
-          {orgInventoryResponse.rateLimit ? (
-            <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-              <p>Remaining API calls: {formatDisplayValue(orgInventoryResponse.rateLimit.remaining)}</p>
-              <p>Rate limit resets at: {formatRateLimitReset(orgInventoryResponse.rateLimit.resetAt)}</p>
-              {orgInventoryResponse.rateLimit.retryAfter !== 'unavailable' ? (
-                <p>Retry after: {formatRetryAfter(orgInventoryResponse.rateLimit.retryAfter)}</p>
-              ) : null}
-            </section>
-          ) : null}
           {orgInventoryResponse.failure ? (
             <section className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               <p>{orgInventoryResponse.failure.message}</p>
@@ -226,6 +223,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
               org={orgInventoryResponse.org}
               summary={orgInventoryResponse.summary}
               results={orgInventoryResponse.results}
+              rateLimit={orgInventoryResponse.rateLimit}
               onAnalyzeRepo={(repo) => {
                 void handleSubmit([repo])
               }}
@@ -236,6 +234,14 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
           )}
         </section>
       ) : null}
+      {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (
+        <section className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          <h2 className="font-semibold text-slate-900">Organization inventory</h2>
+          <p className="mt-2">
+            Enter a GitHub organization slug or org URL above to browse its public repository inventory.
+          </p>
+        </section>
+      ) : null}
     </div>
   )
 
@@ -243,7 +249,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
     <ResultsShell
       key={resultsResetKey}
       analysisPanel={analysisPanel}
-      tabs={orgInventoryResponse && !analysisResponse ? orgInventoryTabs : undefined}
+      tabs={showOrgWorkspace ? orgInventoryTabs : undefined}
       overview={overviewContent}
       contributors={
         analysisResponse ? (

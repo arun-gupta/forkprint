@@ -210,15 +210,73 @@ describe('RepoInputClient', () => {
     await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.click(screen.getByRole('button', { name: /organization/i }))
     await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
-    await userEvent.click(screen.getByRole('button', { name: /browse org/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
 
     const orgInventory = await screen.findByRole('region', { name: /org inventory view/i })
     expect(within(orgInventory).getByText('facebook')).toBeInTheDocument()
     expect(within(orgInventory).getAllByText('facebook/react').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Organization' })).toHaveClass('bg-slate-900')
-    expect(screen.getByRole('tab', { name: 'Organization' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.queryByRole('tab', { name: 'Contributors' })).not.toBeInTheDocument()
     expect(onAnalyzeOrg).toHaveBeenCalledWith('facebook', 'ghp_saved')
+  })
+
+  it('hides org inventory results when switching back to repositories mode', async () => {
+    const onAnalyzeOrg = vi.fn().mockResolvedValue({
+      org: 'facebook',
+      summary: {
+        totalPublicRepos: 1,
+        totalStars: 100,
+        mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
+        mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
+        languageDistribution: [{ language: 'TypeScript', repoCount: 1 }],
+        archivedRepoCount: 0,
+        activeRepoCount: 1,
+      },
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          primaryLanguage: 'TypeScript',
+          stars: 100,
+          forks: 25,
+          watchers: 10,
+          openIssues: 5,
+          pushedAt: '2026-04-02T00:00:00Z',
+          archived: false,
+          url: 'https://github.com/facebook/react',
+        },
+      ],
+      rateLimit: null,
+      failure: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyzeOrg={onAnalyzeOrg} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.click(screen.getByRole('button', { name: /organization/i }))
+    await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+
+    expect(await screen.findByRole('region', { name: /org inventory view/i })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Repositories' }))
+
+    expect(screen.queryByRole('region', { name: /org inventory view/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'Contributors' })).toBeInTheDocument()
+  })
+
+  it('switches the empty workspace to organization mode before any org results exist', async () => {
+    render(<RepoInputClient hasServerToken />)
+
+    await userEvent.click(screen.getByRole('button', { name: /organization/i }))
+
+    expect(screen.getByRole('button', { name: 'Organization' })).toHaveClass('bg-slate-900')
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('tab', { name: 'Contributors' })).not.toBeInTheDocument()
+    expect(screen.getByText(/enter a github organization slug or org url above/i)).toBeInTheDocument()
   })
 
   it('renders repository-specific failures alongside successful results', async () => {

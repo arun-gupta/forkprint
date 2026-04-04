@@ -16,13 +16,14 @@ describe('analyzer/org-inventory', () => {
   it('normalizes an org slug or GitHub org URL', () => {
     expect(normalizeOrgInput('facebook')).toEqual({ valid: true, org: 'facebook' })
     expect(normalizeOrgInput('https://github.com/vercel')).toEqual({ valid: true, org: 'vercel' })
+    expect(normalizeOrgInput('github.com/openai')).toEqual({ valid: true, org: 'openai' })
     expect(normalizeOrgInput(' https://github.com/openai/ ')).toEqual({ valid: true, org: 'openai' })
   })
 
   it('rejects malformed org input', () => {
     expect(normalizeOrgInput('')).toEqual({ valid: false, error: 'A GitHub organization is required.' })
-    expect(normalizeOrgInput('github.com/vercel')).toEqual({ valid: false, error: 'Enter a GitHub org slug or a full GitHub org URL.' })
     expect(normalizeOrgInput('https://github.com/vercel/next.js')).toEqual({ valid: false, error: 'Enter a top-level GitHub organization, not a repository URL.' })
+    expect(normalizeOrgInput('github.com/vercel/next.js')).toEqual({ valid: false, error: 'Enter a top-level GitHub organization, not a repository URL.' })
   })
 
   it('shapes lightweight public repository metadata into an org repo summary', () => {

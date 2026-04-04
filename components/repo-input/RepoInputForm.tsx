@@ -92,7 +92,7 @@ export function RepoInputForm({ onSubmitRepos, onSubmitOrg, mode: controlledMode
         <input
           value={orgValue}
           onChange={(e) => setOrgValue(e.target.value)}
-          placeholder="facebook or https://github.com/facebook"
+          placeholder="facebook, github.com/facebook, or https://github.com/facebook"
           className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Organization input"
           aria-describedby={error ? 'repo-input-error' : undefined}
@@ -107,7 +107,7 @@ export function RepoInputForm({ onSubmitRepos, onSubmitOrg, mode: controlledMode
         type="submit"
         className="mt-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        {mode === 'repos' ? 'Analyze' : 'Browse org'}
+        Analyze
       </button>
     </form>
   )

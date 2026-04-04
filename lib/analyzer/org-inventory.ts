@@ -66,8 +66,9 @@ export function normalizeOrgInput(input: string):
     return { valid: false, error: 'A GitHub organization is required.' }
   }
 
-  if (trimmed.startsWith('https://github.com/')) {
-    const withoutOrigin = trimmed.replace('https://github.com/', '').replace(/\/+$/, '')
+  const githubUrlMatch = trimmed.match(/^(?:https?:\/\/)?github\.com\/(.+)$/i)
+  if (githubUrlMatch) {
+    const withoutOrigin = githubUrlMatch[1].replace(/\/+$/, '')
     const segments = withoutOrigin.split('/').filter(Boolean)
 
     if (segments.length === 1) {
@@ -78,7 +79,7 @@ export function normalizeOrgInput(input: string):
   }
 
   if (trimmed.includes('/')) {
-    return { valid: false, error: 'Enter a GitHub org slug or a full GitHub org URL.' }
+    return { valid: false, error: 'Enter a GitHub org slug or a GitHub org URL.' }
   }
 
   return { valid: true, org: trimmed }

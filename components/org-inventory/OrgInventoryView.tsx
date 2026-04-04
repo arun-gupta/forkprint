@@ -25,11 +25,12 @@ interface OrgInventoryViewProps {
   org: string
   summary: OrgInventoryResponse['summary']
   results: OrgInventoryResponse['results']
+  rateLimit: OrgInventoryResponse['rateLimit']
   onAnalyzeRepo: (repo: string) => void
   onAnalyzeSelected: (repos: string[]) => void
 }
 
-export function OrgInventoryView({ org, summary, results, onAnalyzeRepo, onAnalyzeSelected }: OrgInventoryViewProps) {
+export function OrgInventoryView({ org, summary, results, rateLimit, onAnalyzeRepo, onAnalyzeSelected }: OrgInventoryViewProps) {
   const [filters, setFilters] = useState<OrgInventoryFilters>({
     repoQuery: '',
     language: 'all',
@@ -282,6 +283,45 @@ export function OrgInventoryView({ org, summary, results, onAnalyzeRepo, onAnaly
           </div>
         </div>
       ) : null}
+      {rateLimit ? (
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+          <p>Remaining API calls: {formatDisplayValue(rateLimit.remaining)}</p>
+          <p>Rate limit resets at: {formatRateLimitReset(rateLimit.resetAt)}</p>
+          {rateLimit.retryAfter !== 'unavailable' ? <p>Retry after: {formatRetryAfter(rateLimit.retryAfter)}</p> : null}
+        </section>
+      ) : null}
     </section>
   )
+}
+
+function formatDisplayValue(value: number | string) {
+  if (typeof value === 'number') {
+    return new Intl.NumberFormat('en-US').format(value)
+  }
+
+  return value
+}
+
+function formatRateLimitReset(value: string) {
+  if (value === 'unavailable') {
+    return value
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
+function formatRetryAfter(value: number | string) {
+  if (typeof value !== 'number') {
+    return value
+  }
+
+  return `${new Intl.NumberFormat('en-US').format(value)}s`
 }

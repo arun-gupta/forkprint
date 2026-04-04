@@ -41,7 +41,7 @@ export function OrgInventoryTable({
       <table className="min-w-full border-separate border-spacing-y-2">
         <thead>
           <tr>
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Select</th>
+            <th className="w-16 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Select</th>
             {(['repo', ...visibleColumns] as OrgInventorySortColumn[]).map((column) => (
               <th key={column} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                 <button type="button" className="inline-flex items-center gap-2" onClick={() => onToggleSort(column)}>
@@ -50,7 +50,7 @@ export function OrgInventoryTable({
                 </button>
               </th>
             ))}
-            <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Actions</th>
+            <th className="w-28 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -73,11 +73,11 @@ export function OrgInventoryTable({
               <td className="rounded-r-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
                 <button
                   type="button"
-                  className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                  className="w-full whitespace-nowrap rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
                   onClick={() => onAnalyzeRepo(result.repo)}
                   aria-label={`Analyze ${result.repo}`}
                 >
-                  Analyze repo
+                  Analyze
                 </button>
               </td>
             </tr>
