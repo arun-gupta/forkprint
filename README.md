@@ -1,6 +1,6 @@
 # ForkPrint
 
-ForkPrint is a CHAOSS-aligned GitHub repository health analyzer. The current Phase 1 app accepts one or more `owner/repo` inputs, fetches verified public data from GitHub, and presents summary cards plus dedicated `Overview`, `Contributors`, `Activity`, `Responsiveness`, and `Health Ratios` views in a web dashboard. It also supports an `Organization` workflow for browsing public repo inventory, sorting/filtering repos locally, selecting visible columns, and launching single-repo or small-set analysis from an org table. `Activity` and `Responsiveness` both support local recent-window switching, while broader comparison workflows and export remain on the roadmap.
+ForkPrint is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and review results in a web dashboard. Comparison workflows and export are still on the roadmap.
 
 Live in action: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
 
