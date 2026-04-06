@@ -1,4 +1,4 @@
-# ForkPrint — Deployment
+# RepoPulse — Deployment
 
 Phase 1 deployment targets **Vercel**.
 
@@ -18,7 +18,7 @@ Use `.env.local` only for local development:
 GITHUB_TOKEN=
 ```
 
-If `GITHUB_TOKEN` is not set locally, ForkPrint uses the browser PAT flow.
+If `GITHUB_TOKEN` is not set locally, RepoPulse uses the browser PAT flow.
 
 Recommended GitHub token:
 

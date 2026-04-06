@@ -1,6 +1,6 @@
-# ForkPrint
+# RepoPulse
 
-ForkPrint is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and review results in a web dashboard. Comparison workflows and export are still on the roadmap.
+RepoPulse is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and review results in a web dashboard. Comparison workflows and export are still on the roadmap.
 
 Live in action: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
 
@@ -12,7 +12,7 @@ Live in action: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.v
 
 ## Getting Started
 
-ForkPrint supports a server-side `GITHUB_TOKEN` or the browser PAT flow. For local development, you can optionally set `GITHUB_TOKEN` in `.env.local`.
+RepoPulse supports a server-side `GITHUB_TOKEN` or the browser PAT flow. For local development, you can optionally set `GITHUB_TOKEN` in `.env.local`.
 
 ```bash
 npm install

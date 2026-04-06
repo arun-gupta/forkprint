@@ -455,7 +455,7 @@ describe('RepoInputClient', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
-    expect(warnSpy).toHaveBeenCalledWith('[ForkPrint GitHub diagnostic]', {
+    expect(warnSpy).toHaveBeenCalledWith('[RepoPulse GitHub diagnostic]', {
       repo: 'facebook/react',
       source: 'github-rest:contributors',
       message: 'GitHub REST request failed with status 403',

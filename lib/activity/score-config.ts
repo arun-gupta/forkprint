@@ -108,7 +108,7 @@ const ACTIVITY_THRESHOLDS: ActivityScoreDefinition['thresholds'] = [
 const INSUFFICIENT_SCORE: ActivityScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
-  description: 'ForkPrint cannot verify enough recent activity and delivery-flow data to score this repository yet.',
+  description: 'RepoPulse cannot verify enough recent activity and delivery-flow data to score this repository yet.',
   summary: 'Verified recent-flow inputs are incomplete.',
   weightedFactors: ACTIVITY_FACTORS.map((factor) => ({
     label: factor.label,

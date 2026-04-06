@@ -1,6 +1,6 @@
-# ForkPrint — Development Workflow
+# RepoPulse — Development Workflow
 
-This document describes how to develop ForkPrint using the SpecKit / Specification-Driven Development (SDD) workflow.
+This document describes how to develop RepoPulse using the SpecKit / Specification-Driven Development (SDD) workflow.
 
 ---
 

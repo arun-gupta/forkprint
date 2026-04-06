@@ -44,7 +44,7 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
 
     for (const diagnostic of analysisResponse.diagnostics) {
       const log = diagnostic.level === 'error' ? console.error : console.warn
-      log('[ForkPrint GitHub diagnostic]', {
+      log('[RepoPulse GitHub diagnostic]', {
         repo: diagnostic.repo,
         source: diagnostic.source,
         message: diagnostic.message,

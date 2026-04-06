@@ -41,7 +41,7 @@ export const SUSTAINABILITY_THRESHOLDS: SustainabilityThreshold[] = [
 const INSUFFICIENT_SCORE: SustainabilityScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
-  description: 'ForkPrint cannot verify enough contributor-distribution data to score sustainability yet.',
+  description: 'RepoPulse cannot verify enough contributor-distribution data to score sustainability yet.',
   concentration: 'unavailable',
   topContributorCount: 'unavailable',
   contributorCount: 'unavailable',

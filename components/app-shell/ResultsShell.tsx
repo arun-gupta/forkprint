@@ -38,7 +38,7 @@ export function ResultsShell({
       <header className="w-full bg-sky-900 text-white">
         <div className="mx-auto flex max-w-5xl items-start justify-between gap-4 px-4 py-5">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white">ForkPrint</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             <p className="mt-1 text-sm text-sky-100 md:text-base">
               CHAOSS-aligned GitHub repository health analyzer. Enter one or more repositories to analyze.
             </p>
