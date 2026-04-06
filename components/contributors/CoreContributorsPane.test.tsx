@@ -1,10 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { CoreContributorsPane } from './CoreContributorsPane'
 
 describe('CoreContributorsPane', () => {
-  it('renders the core contributor metrics and compact heatmap with optional names and numbers', async () => {
+  it('renders the core contributor metrics and contribution chart with optional names and numbers', async () => {
+    const onToggleIncludeBots = vi.fn()
+
     render(
       <CoreContributorsPane
         metrics={[
@@ -25,12 +27,12 @@ describe('CoreContributorsPane', () => {
           },
         ]}
         heatmap={[
-          { contributor: 'alice', commitsLabel: '5 commits', intensity: 'max' },
-          { contributor: 'bob', commitsLabel: '2 commits', intensity: 'medium' },
+          { contributor: 'alice', commits: 5, commitsLabel: '5 commits', intensity: 'max' },
+          { contributor: 'bob', commits: 2, commitsLabel: '2 commits', intensity: 'medium' },
         ]}
         windowDays={90}
         includeBots={false}
-        onToggleIncludeBots={() => {}}
+        onToggleIncludeBots={onToggleIncludeBots}
       />,
     )
 
@@ -49,25 +51,30 @@ describe('CoreContributorsPane', () => {
     expect(screen.getByText('One-time 2')).toBeInTheDocument()
     expect(screen.getByText('Inactive 7')).toBeInTheDocument()
     expect(screen.queryByText('Contribution concentration')).not.toBeInTheDocument()
-    expect(screen.getByText(/contribution heatmap/i)).toBeInTheDocument()
-    expect(screen.getByText(/darker bubbles indicate contributor activity in the last 90 days/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /include bots in heatmap/i })).toBeInTheDocument()
-    expect(screen.getByRole('list', { name: /contribution heatmap tiles/i })).toBeInTheDocument()
-    expect(screen.queryByText('alice')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /show names/i })).toBeInTheDocument()
+    expect(screen.getByText(/contribution chart/i)).toBeInTheDocument()
+    expect(screen.getByText(/longer bars indicate contributor activity in the last 90 days/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /include bots in chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide names/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /show numbers/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /contribution activity bars/i })).toBeInTheDocument()
+    expect(screen.getByText('alice')).toBeInTheDocument()
     expect(screen.getByLabelText(/alice 5 commits/i)).toBeInTheDocument()
     expect(screen.queryByText('5 commits')).not.toBeInTheDocument()
+    expect(screen.getByText('12')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /show names/i }))
+    await userEvent.click(screen.getByRole('button', { name: /hide names/i }))
 
-    expect(screen.getByRole('button', { name: /hide names/i })).toBeInTheDocument()
-    expect(screen.getByText('alice')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show names/i })).toBeInTheDocument()
+    expect(screen.queryByText('alice')).not.toBeInTheDocument()
+    expect(screen.queryByText(/contributor hidden/i)).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /show numbers/i }))
 
     expect(screen.getByRole('button', { name: /hide numbers/i })).toBeInTheDocument()
     expect(screen.getByText('5 commits')).toBeInTheDocument()
-    expect(screen.getByText('12')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /include bots in chart/i }))
+
+    expect(onToggleIncludeBots).toHaveBeenCalledTimes(1)
   })
 })

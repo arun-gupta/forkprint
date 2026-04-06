@@ -17,7 +17,7 @@ describe('ContributorsView', () => {
     expect(within(region).getByRole('heading', { name: /sustainability/i })).toBeInTheDocument()
     expect(within(corePane).getByText('Repeat contributor ratio')).toBeInTheDocument()
     expect(within(corePane).getByText('New contributor ratio')).toBeInTheDocument()
-    expect(within(corePane).getByText(/^Contribution heatmap$/i)).toBeInTheDocument()
+    expect(within(corePane).getByText(/^Contribution chart$/i)).toBeInTheDocument()
     expect(within(region).queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
   })
 
@@ -38,12 +38,12 @@ describe('ContributorsView', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /include bots in heatmap/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /include bots in chart/i })).toBeInTheDocument()
     expect(screen.queryByLabelText(/dependabot\[bot\] 3 commits/i)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /include bots in heatmap/i }))
+    await userEvent.click(screen.getByRole('button', { name: /include bots in chart/i }))
 
-    expect(screen.getByRole('button', { name: /exclude bots from heatmap/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /exclude bots from chart/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/dependabot\[bot\] 3 commits/i)).toBeInTheDocument()
   })
 
@@ -57,14 +57,12 @@ describe('ContributorsView', () => {
     expect(screen.getByText(/contributor metrics from verified public data for the last 30 days/i)).toBeInTheDocument()
   })
 
-  it('uses a mobile-friendly heatmap layout when names are shown', async () => {
+  it('renders the contribution chart in a mobile-friendly stacked layout', () => {
     render(<ContributorsView results={[buildResult()]} />)
 
-    await userEvent.click(screen.getByRole('button', { name: /show names/i }))
-
-    const heatmap = screen.getByRole('list', { name: /contribution heatmap tiles/i })
-    expect(heatmap.className).toContain('grid-cols-2')
-    expect(screen.getByText('alice')).toHaveClass('break-words')
+    const chart = screen.getByRole('list', { name: /contribution activity bars/i })
+    expect(chart.className).toContain('space-y-3')
+    expect(screen.getByText('alice')).toHaveClass('truncate')
   })
 })
 

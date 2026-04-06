@@ -5,6 +5,7 @@ import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { HelpLabel } from '@/components/shared/HelpLabel'
 import { SUSTAINABILITY_THRESHOLDS } from '@/lib/contributors/score-config'
 import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model'
+import { ContributionBarChart } from './ContributionBarChart'
 
 interface SustainabilityPaneProps {
   section: ContributorsSectionViewModel
@@ -13,6 +14,8 @@ interface SustainabilityPaneProps {
 export function SustainabilityPane({ section }: SustainabilityPaneProps) {
   const [showThresholds, setShowThresholds] = useState(false)
   const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
+  const [showExperimentalNames, setShowExperimentalNames] = useState(true)
+  const [showExperimentalNumbers, setShowExperimentalNumbers] = useState(false)
 
   return (
     <section aria-label="Sustainability pane" className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -110,52 +113,51 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
           ))}
         </dl>
         {section.experimentalHeatmap.length > 0 ? (
-          <div className="mt-3 rounded-xl border border-amber-200 bg-white p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Attributed organization heatmap</p>
-                <p className="mt-1 text-xs text-slate-500">Darker bubbles indicate more experimentally attributed recent commits.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowExperimentalHeatmap((current) => !current)}
-                className="rounded-full border border-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition hover:border-amber-300"
-                aria-pressed={showExperimentalHeatmap}
-              >
-                {showExperimentalHeatmap ? 'Hide heatmap' : 'Show heatmap'}
-              </button>
-            </div>
-            {showExperimentalHeatmap ? (
-              <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-2 sm:grid-cols-6 lg:grid-cols-8" role="list" aria-label="Attributed organization heatmap">
-                {section.experimentalHeatmap.map((cell) => (
-                  <div
-                    key={`${cell.contributor}-${cell.commitsLabel}`}
-                    role="listitem"
-                    className="flex flex-col items-center gap-1"
-                    title={`${cell.contributor}: ${cell.commitsLabel}`}
-                  >
-                    <div
-                      aria-label={`${cell.contributor} ${cell.commitsLabel}`}
-                      className={`h-4 w-4 rounded-full border ${
-                        cell.intensity === 'max'
-                          ? 'border-amber-950 bg-amber-950'
-                          : cell.intensity === 'higher'
-                            ? 'border-amber-800 bg-amber-800'
-                            : cell.intensity === 'high'
-                              ? 'border-amber-600 bg-amber-600'
-                              : cell.intensity === 'medium'
-                                ? 'border-amber-400 bg-amber-400'
-                                : cell.intensity === 'low'
-                                  ? 'border-amber-200 bg-amber-200'
-                                  : 'border-amber-100 bg-amber-100'
-                      }`}
-                    />
-                    <p className="max-w-20 text-center text-[10px] font-medium leading-tight text-slate-700">{cell.contributor}</p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <ContributionBarChart
+            title="Attributed organization chart"
+            description="Longer bars indicate more experimentally attributed recent commits."
+            items={section.experimentalHeatmap}
+            ariaLabel="Attributed organization bars"
+            emptyText="unavailable"
+            tone="amber"
+            entityLabel="organizations"
+            defaultVisibleCount={8}
+            collapsed={!showExperimentalHeatmap}
+            showLabels={showExperimentalNames}
+            showValues={showExperimentalNumbers}
+            actions={
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowExperimentalHeatmap((current) => !current)}
+                  className="rounded-full border border-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition hover:border-amber-300"
+                  aria-pressed={showExperimentalHeatmap}
+                >
+                  {showExperimentalHeatmap ? 'Hide chart' : 'Show chart'}
+                </button>
+                {showExperimentalHeatmap ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowExperimentalNames((current) => !current)}
+                      className="rounded-full border border-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition hover:border-amber-300"
+                      aria-pressed={showExperimentalNames}
+                    >
+                      {showExperimentalNames ? 'Hide names' : 'Show names'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowExperimentalNumbers((current) => !current)}
+                      className="rounded-full border border-amber-200 px-3 py-1 text-xs font-medium text-amber-900 transition hover:border-amber-300"
+                      aria-pressed={showExperimentalNumbers}
+                    >
+                      {showExperimentalNumbers ? 'Hide numbers' : 'Show numbers'}
+                    </button>
+                  </>
+                ) : null}
+              </>
+            }
+          />
         ) : null}
       </div>
 

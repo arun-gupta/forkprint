@@ -832,7 +832,7 @@ describe('RepoInputClient', () => {
 
     expect(contributorsView).toBeInTheDocument()
     expect(screen.getByText(/top 20% contributor share/i)).toBeInTheDocument()
-    expect(within(corePane).getByText(/^Contribution heatmap$/i)).toBeInTheDocument()
+    expect(within(corePane).getByText(/^Contribution chart$/i)).toBeInTheDocument()
     expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/missing data/i)).not.toBeInTheDocument()
   })
