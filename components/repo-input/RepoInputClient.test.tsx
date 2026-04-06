@@ -268,6 +268,61 @@ describe('RepoInputClient', () => {
     expect(screen.getByRole('tab', { name: 'Contributors' })).toBeInTheDocument()
   })
 
+  it('resets a stale comparison selection when switching from repositories to organization mode', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [],
+      failures: [],
+      rateLimit: null,
+    })
+    const onAnalyzeOrg = vi.fn().mockResolvedValue({
+      org: 'facebook',
+      summary: {
+        totalPublicRepos: 1,
+        totalStars: 100,
+        mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
+        mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
+        languageDistribution: [{ language: 'TypeScript', repoCount: 1 }],
+        archivedRepoCount: 0,
+        activeRepoCount: 1,
+      },
+      results: [
+        {
+          repo: 'facebook/react',
+          name: 'react',
+          description: 'A UI library',
+          primaryLanguage: 'TypeScript',
+          stars: 100,
+          forks: 25,
+          watchers: 10,
+          openIssues: 5,
+          pushedAt: '2026-04-02T00:00:00Z',
+          archived: false,
+          url: 'https://github.com/facebook/react',
+        },
+      ],
+      rateLimit: null,
+      failure: null,
+    })
+
+    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} onAnalyzeOrg={onAnalyzeOrg} />)
+
+    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+
+    await screen.findByRole('tab', { name: 'Comparison' })
+    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Organization' }))
+    await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+
+    expect(await screen.findByRole('region', { name: /org inventory view/i })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByText(/comparison will let you evaluate multiple analyzed repositories/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Comparison' })).not.toBeInTheDocument()
+  })
+
   it('switches the empty workspace to organization mode before any org results exist', async () => {
     render(<RepoInputClient hasServerToken />)
 

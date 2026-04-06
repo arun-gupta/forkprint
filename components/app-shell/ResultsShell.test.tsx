@@ -61,4 +61,38 @@ describe('ResultsShell', () => {
     expect(screen.queryByRole('tab', { name: 'Contributors' })).not.toBeInTheDocument()
     expect(screen.getByText('Organization content')).toBeInTheDocument()
   })
+
+  it('resets the active tab when the available tab set changes', async () => {
+    const { rerender } = render(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        overview={<div>Overview content</div>}
+        contributors={<div>Contributors content</div>}
+        activity={<div>Activity content</div>}
+        responsiveness={<div>Responsiveness content</div>}
+        healthRatios={<div>Health ratios content</div>}
+        comparison={<div>Comparison content</div>}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
+    expect(screen.getByText('Comparison content')).toBeInTheDocument()
+
+    rerender(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        tabs={[{ id: 'overview', label: 'Overview', status: 'implemented', description: 'Org inventory' }]}
+        overview={<div>Organization content</div>}
+        contributors={<div>Contributors content</div>}
+        activity={<div>Activity content</div>}
+        responsiveness={<div>Responsiveness content</div>}
+        healthRatios={<div>Health ratios content</div>}
+        comparison={<div>Comparison content</div>}
+      />,
+    )
+
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText('Organization content')).toBeInTheDocument()
+    expect(screen.queryByText('Comparison content')).not.toBeInTheDocument()
+  })
 })

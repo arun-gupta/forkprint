@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import type { ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
@@ -28,6 +28,10 @@ export function ResultsShell({
   tabs = resultTabs,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>('overview')
+  const currentActiveTab = useMemo(
+    () => (tabs.some((tab) => tab.id === activeTab) ? activeTab : tabs[0]?.id ?? 'overview'),
+    [activeTab, tabs],
+  )
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -60,14 +64,14 @@ export function ResultsShell({
           </section>
 
           <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <ResultsTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+            <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} />
             <div className="mt-6">
-              {activeTab === 'overview' ? overview : null}
-              {activeTab === 'contributors' ? contributors : null}
-              {activeTab === 'activity' ? activity : null}
-              {activeTab === 'responsiveness' ? responsiveness : null}
-              {activeTab === 'health-ratios' ? healthRatios : null}
-              {activeTab === 'comparison' ? comparison : null}
+              {currentActiveTab === 'overview' ? overview : null}
+              {currentActiveTab === 'contributors' ? contributors : null}
+              {currentActiveTab === 'activity' ? activity : null}
+              {currentActiveTab === 'responsiveness' ? responsiveness : null}
+              {currentActiveTab === 'health-ratios' ? healthRatios : null}
+              {currentActiveTab === 'comparison' ? comparison : null}
             </div>
           </section>
         </section>
