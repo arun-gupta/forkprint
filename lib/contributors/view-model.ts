@@ -19,6 +19,7 @@ export interface ContributorMetricRow {
 
 export interface ContributorHeatmapCell {
   contributor: string
+  commits: number
   commitsLabel: string
   intensity: 'lowest' | 'low' | 'medium' | 'high' | 'higher' | 'max'
 }
@@ -442,6 +443,7 @@ function buildHeatmap(
 
   return entries.map(([contributor, commits]) => ({
     contributor: kind === 'organization' ? contributor : formatContributorLabel(contributor),
+    commits,
     commitsLabel: `${new Intl.NumberFormat('en-US').format(commits)} ${kind === 'organization' ? 'attributed ' : ''}${commits === 1 ? 'commit' : 'commits'}`,
     intensity: getIntensity(commits, maxCommits),
   }))
