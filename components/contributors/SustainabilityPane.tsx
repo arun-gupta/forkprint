@@ -34,7 +34,7 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this scored?</p>
             <p className="mt-1 text-sm text-slate-700">
-              ForkPrint scores sustainability from recent commit concentration. Lower top-20% share means the active contributor base is more distributed.
+              RepoPulse scores sustainability from recent commit concentration. Lower top-20% share means the active contributor base is more distributed.
             </p>
           </div>
           <button

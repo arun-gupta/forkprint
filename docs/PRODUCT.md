@@ -1,4 +1,4 @@
-# ForkPrint — Product Definition
+# RepoPulse — Product Definition
 
 **Repo**: `arun-gupta/forkprint`  
 **Description**: CHAOSS-aligned GitHub repository health analyzer. Accepts one or more `owner/repo` inputs, fetches real public data via the GitHub GraphQL API, and produces an interactive dashboard and raw JSON output.  
@@ -6,13 +6,13 @@
 **Phase 1 Data Layer**: Next.js API Routes  
 **Development Methodology**: SpecKit / Specification-Driven Development (SDD)
 
-This document is the canonical product definition for ForkPrint. It is the source of truth for all features across all phases. `.specify/memory/constitution.md` references this document. SpecKit specs are traceable to feature IDs defined here.
+This document is the canonical product definition for RepoPulse. It is the source of truth for all features across all phases. `.specify/memory/constitution.md` references this document. SpecKit specs are traceable to feature IDs defined here.
 
 ---
 
 ## Roadmap
 
-ForkPrint is built in three phases. Phase 1 architectural decisions must not block Phases 2 or 3.
+RepoPulse is built in three phases. Phase 1 architectural decisions must not block Phases 2 or 3.
 
 - **Phase 1** — Web app (Next.js / Vercel): interactive dashboard for on-demand repo analysis
 - **Phase 2** — GitHub Action: scheduled or triggered analysis with artifact output and threshold alerting
@@ -36,11 +36,11 @@ The core analysis logic is shared across all three phases via a framework-agnost
 
 ## CHAOSS Alignment
 
-ForkPrint groups analysis into four CHAOSS-aligned reporting dimensions. These dimensions are product-level buckets, not a claim that they are the official top-level CHAOSS metric taxonomy.
+RepoPulse groups analysis into four CHAOSS-aligned reporting dimensions. These dimensions are product-level buckets, not a claim that they are the official top-level CHAOSS metric taxonomy.
 
-| ForkPrint Dimension | CHAOSS Basis | Feature | Derived Score |
+| RepoPulse Dimension | CHAOSS Basis | Feature | Derived Score |
 |---|---|---|---|
-| Ecosystem | ForkPrint repo-profile layer informed by CHAOSS-style ecosystem signals | Ecosystem Map (P1-F05) | Ecosystem profile: Reach / Builder Engagement / Attention |
+| Ecosystem | RepoPulse repo-profile layer informed by CHAOSS-style ecosystem signals | Ecosystem Map (P1-F05) | Ecosystem profile: Reach / Builder Engagement / Attention |
 | Activity | CHAOSS-aligned activity and adjacent activity-flow signals | Activity (P1-F08) | Activity score: High / Medium / Low |
 | Contributors | Contributor metrics with a dedicated Sustainability pane for resilience and organizational-risk signals | Contributors (P1-F09) | Core contributor metrics + Sustainability score |
 | Responsiveness | CHAOSS-aligned time-to-response and time-to-resolution metrics | Responsiveness (P1-F10) | Responsiveness score: High / Medium / Low |
@@ -166,7 +166,7 @@ User can authenticate with GitHub to enable data fetching.
 
 #### `[P1-F03]` Deployment
 
-ForkPrint deploys to Vercel with minimal configuration.
+RepoPulse deploys to Vercel with minimal configuration.
 
 **Acceptance criteria**
 - Deployable to Vercel with zero config
@@ -227,10 +227,10 @@ Repos are summarized in an interactive ecosystem view with a spectrum-based ecos
 
 #### `[P1-F15]` Results Shell
 
-ForkPrint presents analysis in a stable app shell so users can submit repos once and switch between result views cleanly.
+RepoPulse presents analysis in a stable app shell so users can submit repos once and switch between result views cleanly.
 
 **Acceptance criteria**
-- A top header/banner shows the ForkPrint brand and a visible GitHub repo link
+- A top header/banner shows the RepoPulse brand and a visible GitHub repo link
 - Repo input and Analyze action live in a stable analysis panel that remains visible above the result views
 - Successful analyses populate a tabbed result area rather than stacking every future view vertically
 - The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, `Health Ratios`, and `Comparison` available as tabs
@@ -528,7 +528,7 @@ Users can take analysis results out of the UI in standard formats.
 
 #### `[P2-F01]` Scheduled Analysis
 
-ForkPrint runs as a GitHub Action on a schedule or manual trigger.
+RepoPulse runs as a GitHub Action on a schedule or manual trigger.
 
 **Acceptance criteria**
 - Action supports `schedule` (cron) and `workflow_dispatch` triggers
@@ -563,7 +563,7 @@ The action can open a GitHub Issue when health drops below a defined threshold.
 
 #### `[P3-F01]` Analyze Tool
 
-ForkPrint exposes repo health analysis as an MCP tool callable by AI assistants.
+RepoPulse exposes repo health analysis as an MCP tool callable by AI assistants.
 
 **Acceptance criteria**
 - MCP Server exposes an `analyze_repo` tool
@@ -599,7 +599,7 @@ Not specced. Captured here so Phase 1–3 decisions don't foreclose them.
 
 - `[FUT-F01]` **Historical trending** — store snapshots over time, chart metric trajectory per repo
 - `[FUT-F03]` **CHAOSS expansion** — Bus Factor, Change Request Closure Ratio, Code Coverage metrics
-- `[FUT-F04]` **Embeddable badge** — `![ForkPrint Health](https://forkprint.vercel.app/badge/owner/repo)` for READMEs
+- `[FUT-F04]` **Embeddable badge** — `![RepoPulse Health](https://forkprint.vercel.app/badge/owner/repo)` for READMEs
 - `[FUT-F05]` **Webhook mode** — trigger analysis on push or release events via GitHub webhook
 
 ---

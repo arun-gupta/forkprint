@@ -108,7 +108,7 @@ const RESPONSIVENESS_THRESHOLDS: ResponsivenessScoreDefinition['thresholds'] = [
 const INSUFFICIENT_SCORE: ResponsivenessScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
-  description: 'ForkPrint cannot verify enough public issue and pull-request event history to score this repository yet.',
+  description: 'RepoPulse cannot verify enough public issue and pull-request event history to score this repository yet.',
   summary: 'Verified responsiveness inputs are incomplete.',
   weightedCategories: RESPONSIVENESS_CATEGORIES.map((category) => ({
     label: category.label,

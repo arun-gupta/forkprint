@@ -92,7 +92,7 @@ export function OrgInventoryView({ org, summary, results, rateLimit, onAnalyzeRe
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <h3 className="text-lg font-semibold text-slate-900">No public repositories found</h3>
           <p className="mt-2 text-sm text-slate-600">
-            ForkPrint did not find any public repositories for this organization.
+            RepoPulse did not find any public repositories for this organization.
           </p>
         </section>
       ) : (
