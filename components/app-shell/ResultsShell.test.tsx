@@ -43,6 +43,26 @@ describe('ResultsShell', () => {
     expect(link).toHaveAttribute('href', 'https://github.com/arun-gupta/forkprint')
   })
 
+  it('describes both repository and organization workflows in the header', () => {
+    render(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        overview={<div>Overview content</div>}
+        contributors={<div>Contributors coming soon</div>}
+        activity={<div>Activity coming soon</div>}
+        responsiveness={<div>Responsiveness coming soon</div>}
+        healthRatios={<div>Health ratios coming soon</div>}
+        comparison={<div>Comparison coming soon</div>}
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        /chaoss-aligned github health analyzer for repository analysis and organization inventory browsing/i,
+      ),
+    ).toBeInTheDocument()
+  })
+
   it('supports a custom tab set for alternate workflows like org inventory', () => {
     render(
       <ResultsShell

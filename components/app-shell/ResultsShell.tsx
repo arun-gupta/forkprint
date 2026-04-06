@@ -40,7 +40,7 @@ export function ResultsShell({
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-white">ForkPrint</h1>
             <p className="mt-1 text-sm text-sky-100 md:text-base">
-              CHAOSS-aligned GitHub repository health analyzer. Enter one or more repositories to analyze.
+              CHAOSS-aligned GitHub health analyzer for repository analysis and organization inventory browsing.
             </p>
           </div>
           <a
