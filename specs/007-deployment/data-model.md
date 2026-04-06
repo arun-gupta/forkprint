@@ -4,7 +4,7 @@
 
 ### DeploymentEnvironment
 
-- **Purpose**: Represents the runtime environment where ForkPrint runs
+- **Purpose**: Represents the runtime environment where RepoPulse runs
 - **Fields**:
   - `name: "local" | "vercel"`
   - `hasServerToken: boolean`

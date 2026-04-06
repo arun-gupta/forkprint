@@ -5,7 +5,7 @@
 
 ## Summary
 
-Allow users to enter and persist a GitHub Personal Access Token in `localStorage` so ForkPrint can authenticate against the GitHub GraphQL API. Blocks form submission when no token is available. Hides the token input field when a server-side `GITHUB_TOKEN` is configured. Token never appears in URLs or server responses.
+Allow users to enter and persist a GitHub Personal Access Token in `localStorage` so RepoPulse can authenticate against the GitHub GraphQL API. Blocks form submission when no token is available. Hides the token input field when a server-side `GITHUB_TOKEN` is configured. Token never appears in URLs or server responses.
 
 ## Technical Context
 
@@ -90,7 +90,7 @@ tests/
 ### Step 1 — Token storage utility
 
 4. Implement `lib/token-storage.ts`
-   - Export `TOKEN_STORAGE_KEY = 'forkprint_github_token'`
+   - Export `TOKEN_STORAGE_KEY = 'repo_pulse_github_token'`
    - `readToken()`: try/catch localStorage.getItem; return null if unavailable
    - `writeToken(value)`: trim; if empty call clearToken(); else localStorage.setItem
    - `clearToken()`: localStorage.removeItem wrapped in try/catch

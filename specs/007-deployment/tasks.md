@@ -42,9 +42,9 @@
 
 ---
 
-## Phase 3: User Story 1 - Deploy ForkPrint to Vercel with minimal setup (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Deploy RepoPulse to Vercel with minimal setup (Priority: P1) 🎯 MVP
 
-**Goal**: A maintainer can deploy ForkPrint to Vercel with the standard Next.js path and documented setup.
+**Goal**: A maintainer can deploy RepoPulse to Vercel with the standard Next.js path and documented setup.
 
 **Independent Test**: Review the app and deployment docs, then verify that the current project remains compatible with default Vercel deployment expectations and that setup guidance is clear.
 

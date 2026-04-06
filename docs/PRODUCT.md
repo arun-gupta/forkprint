@@ -1,6 +1,6 @@
 # RepoPulse — Product Definition
 
-**Repo**: `arun-gupta/forkprint`  
+**Repo**: `arun-gupta/repo-pulse`  
 **Description**: CHAOSS-aligned GitHub repository health analyzer. Accepts one or more `owner/repo` inputs, fetches real public data via the GitHub GraphQL API, and produces an interactive dashboard and raw JSON output.  
 **Phase 1 Platform**: Next.js deployed on Vercel  
 **Phase 1 Data Layer**: Next.js API Routes  
@@ -599,7 +599,7 @@ Not specced. Captured here so Phase 1–3 decisions don't foreclose them.
 
 - `[FUT-F01]` **Historical trending** — store snapshots over time, chart metric trajectory per repo
 - `[FUT-F03]` **CHAOSS expansion** — Bus Factor, Change Request Closure Ratio, Code Coverage metrics
-- `[FUT-F04]` **Embeddable badge** — `![RepoPulse Health](https://forkprint.vercel.app/badge/owner/repo)` for READMEs
+- `[FUT-F04]` **Embeddable badge** — `![RepoPulse Health](https://repo-pulse.vercel.app/badge/owner/repo)` for READMEs
 - `[FUT-F05]` **Webhook mode** — trigger analysis on push or release events via GitHub webhook
 
 ---

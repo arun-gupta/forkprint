@@ -5,7 +5,7 @@
 
 ## Summary
 
-Make ForkPrint ready for Phase 1 Vercel deployment without changing the product surface beyond deployment-specific behavior. The feature will verify zero-config Vercel deployability, document the deployment setup, preserve the existing stateless architecture, and confirm that server-side `GITHUB_TOKEN` takes precedence while the PAT field stays hidden in shared deployments.
+Make RepoPulse ready for Phase 1 Vercel deployment without changing the product surface beyond deployment-specific behavior. The feature will verify zero-config Vercel deployability, document the deployment setup, preserve the existing stateless architecture, and confirm that server-side `GITHUB_TOKEN` takes precedence while the PAT field stays hidden in shared deployments.
 
 ## Technical Context
 

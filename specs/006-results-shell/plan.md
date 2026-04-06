@@ -5,7 +5,7 @@
 
 ## Summary
 
-Introduce a stable application shell for ForkPrint so analysis is submitted once and then explored through tabs instead of stacking each view vertically on the page. The shell adds a branded header with a GitHub repo link, a persistent analysis panel, and a result workspace that can host current and future views, starting with an Overview tab and an Ecosystem Map tab that will later absorb the paused `P1-F05` work.
+Introduce a stable application shell for RepoPulse so analysis is submitted once and then explored through tabs instead of stacking each view vertically on the page. The shell adds a branded header with a GitHub repo link, a persistent analysis panel, and a result workspace that can host current and future views, starting with an Overview tab and an Ecosystem Map tab that will later absorb the paused `P1-F05` work.
 
 ## Technical Context
 

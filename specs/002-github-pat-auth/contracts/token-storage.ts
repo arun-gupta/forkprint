@@ -6,7 +6,7 @@
  * from browser-local storage. This is the only place the storage key is defined.
  */
 
-export const TOKEN_STORAGE_KEY = 'forkprint_github_token'
+export const TOKEN_STORAGE_KEY = 'repo_pulse_github_token'
 
 /** Read the stored token. Returns null if absent or storage is unavailable. */
 export declare function readToken(): string | null

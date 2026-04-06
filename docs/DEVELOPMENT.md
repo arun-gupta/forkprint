@@ -6,7 +6,7 @@ This document describes how to develop RepoPulse using the SpecKit / Specificati
 
 ## Prerequisites
 
-- `arun-gupta/forkprint` repo is cloned locally
+- `arun-gupta/repo-pulse` repo is cloned locally
 - `CLAUDE.md` exists — it points Claude Code to `.specify/memory/constitution.md`
 - Claude Code is running in the repo root
 

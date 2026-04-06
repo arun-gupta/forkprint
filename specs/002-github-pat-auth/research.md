@@ -14,7 +14,7 @@
 
 ## Decision 2: localStorage key for the token
 
-**Decision**: `forkprint_github_token`
+**Decision**: `repo_pulse_github_token`
 
 **Rationale**: Namespaced to the app, human-readable, avoids collision with other tools. Defined as a single constant in `lib/token-storage.ts` — not inlined anywhere.
 

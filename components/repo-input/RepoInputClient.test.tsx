@@ -10,7 +10,7 @@ describe('RepoInputClient', () => {
   })
 
   it('pre-populates the token field from localStorage', () => {
-    window.localStorage.setItem('forkprint_github_token', 'ghp_saved')
+    window.localStorage.setItem('repo_pulse_github_token', 'ghp_saved')
 
     render(<RepoInputClient hasServerToken={false} />)
 
@@ -26,7 +26,7 @@ describe('RepoInputClient', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
-    expect(window.localStorage.getItem('forkprint_github_token')).toBe('ghp_saved')
+    expect(window.localStorage.getItem('repo_pulse_github_token')).toBe('ghp_saved')
     expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], 'ghp_saved')
   })
 
@@ -80,7 +80,7 @@ describe('RepoInputClient', () => {
 
   it('does not persist or use a client token when a server token is configured', async () => {
     const onAnalyze = vi.fn()
-    window.localStorage.setItem('forkprint_github_token', 'ghp_stale')
+    window.localStorage.setItem('repo_pulse_github_token', 'ghp_stale')
 
     render(<RepoInputClient hasServerToken onAnalyze={onAnalyze} />)
 
@@ -88,7 +88,7 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
-    expect(window.localStorage.getItem('forkprint_github_token')).toBe('ghp_stale')
+    expect(window.localStorage.getItem('repo_pulse_github_token')).toBe('ghp_stale')
   })
 
   it('renders returned analysis results after a successful submission', async () => {

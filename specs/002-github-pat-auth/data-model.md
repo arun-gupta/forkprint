@@ -9,7 +9,7 @@ Represents the PAT persisted in the browser.
 | Field       | Type     | Source         | Notes                                      |
 |-------------|----------|----------------|--------------------------------------------|
 | `value`     | `string` | User input     | Trimmed. Empty string treated as absent.   |
-| `key`       | `string` | Constant       | Always `forkprint_github_token`            |
+| `key`       | `string` | Constant       | Always `repo_pulse_github_token`           |
 
 **Lifecycle**:
 - Written to `localStorage` on form submit (if non-empty)

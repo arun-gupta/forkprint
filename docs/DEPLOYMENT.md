@@ -33,7 +33,7 @@ Recommended GitHub token:
 
 ## Vercel
 
-1. Import `arun-gupta/forkprint` into Vercel
+1. Import `arun-gupta/repo-pulse` into Vercel
 2. Keep the default Next.js framework/build settings
 3. In the Vercel project, open `Settings -> Environment Variables`
 4. Add a variable named `GITHUB_TOKEN`

@@ -40,7 +40,7 @@ describe('ResultsShell', () => {
     )
 
     const link = screen.getByRole('link', { name: /github repository/i })
-    expect(link).toHaveAttribute('href', 'https://github.com/arun-gupta/forkprint')
+    expect(link).toHaveAttribute('href', 'https://github.com/arun-gupta/repo-pulse')
   })
 
   it('describes both repository and organization workflows in the header', () => {

@@ -25,7 +25,7 @@ A user can submit repositories once and then move between result views through t
 
 ### User Story 2 - Understand the app structure at a glance (Priority: P1)
 
-A user can immediately understand that ForkPrint is an application with a stable header, a clear GitHub repo link, and a dedicated analysis workspace.
+A user can immediately understand that RepoPulse is an application with a stable header, a clear GitHub repo link, and a dedicated analysis workspace.
 
 **Why this priority**: This gives the app a durable product frame before more data views land and reduces the “prototype stack of boxes” feeling.
 
@@ -33,7 +33,7 @@ A user can immediately understand that ForkPrint is an application with a stable
 
 **Acceptance Scenarios**:
 
-1. **Given** the user loads the app, **When** the page renders, **Then** a header/banner presents the ForkPrint brand and a GitHub repo link in a predictable location.
+1. **Given** the user loads the app, **When** the page renders, **Then** a header/banner presents the RepoPulse brand and a GitHub repo link in a predictable location.
 2. **Given** the user is on desktop or mobile, **When** the shell renders, **Then** the header and analysis panel remain readable and usable without layout breakage.
 3. **Given** the user has not analyzed anything yet, **When** they view the shell, **Then** the page still feels intentional rather than like a collection of unrelated controls.
 
@@ -68,7 +68,7 @@ A user can use tabs as a stable navigation model for current and upcoming result
 ### Functional Requirements
 
 - **FR-001**: The system MUST provide a stable application shell around the analysis experience.
-- **FR-002**: The shell MUST include a top header/banner with ForkPrint branding.
+- **FR-002**: The shell MUST include a top header/banner with RepoPulse branding.
 - **FR-003**: The shell MUST include a visible GitHub repository link in the header.
 - **FR-004**: The shell MUST keep the repo input and Analyze controls in a stable analysis panel that remains available while browsing result views.
 - **FR-005**: The shell MUST provide tabs for navigating between result views after analysis.
@@ -84,7 +84,7 @@ A user can use tabs as a stable navigation model for current and upcoming result
 ### Key Entities
 
 - **Results Shell**: The stable page frame containing the header, analysis panel, and tabbed result area.
-- **Header Banner**: The top application region containing ForkPrint branding and the GitHub repo link.
+- **Header Banner**: The top application region containing RepoPulse branding and the GitHub repo link.
 - **Analysis Panel**: The stable control area containing repo input, auth controls, and the Analyze action.
 - **Result Tab**: A named navigation target for a result view such as `Overview`, `Contributors`, `Metrics`, `Responsiveness`, or `Comparison`.
 - **Placeholder View**: An intentional temporary state for a future tab that is not fully implemented yet.

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Implement the first real analysis pipeline for ForkPrint: submit validated repos plus an available token source, fetch verified public GitHub data through a Next.js API route, and return flat per-repo analysis results with isolated failures, loading state, and rate-limit metadata. The core analyzer stays framework-agnostic so later GitHub Action and MCP phases can reuse it without duplication.
+Implement the first real analysis pipeline for RepoPulse: submit validated repos plus an available token source, fetch verified public GitHub data through a Next.js API route, and return flat per-repo analysis results with isolated failures, loading state, and rate-limit metadata. The core analyzer stays framework-agnostic so later GitHub Action and MCP phases can reuse it without duplication.
 
 ## Technical Context
 

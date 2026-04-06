@@ -2,7 +2,7 @@
 
 ## Goal
 
-Verify that ForkPrint can be prepared for a shared Vercel deployment while preserving the existing local-development and token-handling behavior.
+Verify that RepoPulse can be prepared for a shared Vercel deployment while preserving the existing local-development and token-handling behavior.
 
 ## Scenarios
 

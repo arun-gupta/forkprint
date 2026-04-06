@@ -40,7 +40,7 @@ A user who has not entered a token (and no server-side token is configured) atte
 
 ### User Story 3 - Token Field Hidden on Server-Token Deployments (Priority: P2)
 
-When ForkPrint is deployed with a server-side `GITHUB_TOKEN`, the token input field is hidden from the UI. Users on a shared or team deployment do not need to supply their own token.
+When RepoPulse is deployed with a server-side `GITHUB_TOKEN`, the token input field is hidden from the UI. Users on a shared or team deployment do not need to supply their own token.
 
 **Why this priority**: This is a deployment-time UX concern — important for team use but not required for basic single-user functionality.
 

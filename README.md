@@ -2,7 +2,7 @@
 
 RepoPulse is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and review results in a web dashboard. Comparison workflows and export are still on the roadmap.
 
-Live in action: [forkprint-arun-gupta.vercel.app](https://forkprint-arun-gupta.vercel.app)
+Live in action: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 
 ## Roadmap
 
