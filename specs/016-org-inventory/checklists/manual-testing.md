@@ -47,38 +47,38 @@
 
 ## Selection And Analysis Handoff
 
-- [ ] Confirm row checkboxes allow selecting repositories for bulk analysis
-- [ ] Confirm the bulk-selection slider enforces the configured cap
-- [ ] Confirm lowering the slider below the current selected count trims selection deterministically and explains what happened
-- [ ] Confirm `Analyze` on a single row launches the existing repo-analysis flow for that repository
-- [ ] Confirm `Analyze selected` launches the existing repo-analysis flow for the chosen repositories
+- [x] Confirm row checkboxes allow selecting repositories for bulk analysis
+- [x] Confirm the bulk-selection slider enforces the configured cap
+- [x] Confirm lowering the slider below the current selected count trims selection deterministically and explains what happened
+- [x] Confirm `Analyze` on a single row launches the existing repo-analysis flow for that repository
+- [x] Confirm `Analyze selected` launches the existing repo-analysis flow for the chosen repositories
 
 ## Empty And Error States
 
-- [ ] Confirm an invalid organization shows a clear error state instead of a fake table
-- [ ] Confirm an organization with no public repositories shows the explicit empty state
-- [ ] Confirm filter combinations that remove every row show `No matching repositories`
-- [ ] Confirm missing per-row fields remain explicit instead of showing fabricated values
+- [x] Confirm an invalid organization shows a clear error state instead of a fake table
+- [x] Confirm an organization with no public repositories shows the explicit empty state
+- [x] Confirm filter combinations that remove every row show `No matching repositories`
+- [x] Confirm missing per-row fields remain explicit instead of showing fabricated values
 
 ## Rate Limit And Mode Switching
 
-- [ ] Confirm remaining API-call information is visible at the bottom of the org inventory view
-- [ ] Confirm switching from `Organization` back to `Repositories` immediately hides the org inventory workspace
-- [ ] Confirm switching back to `Organization` restores the org-specific empty or loaded workspace without stale repo-analysis content
+- [x] Confirm remaining API-call information is visible at the bottom of the org inventory view
+- [x] Confirm switching from `Organization` back to `Repositories` immediately hides the org inventory workspace
+- [x] Confirm switching back to `Organization` restores the org-specific empty or loaded workspace without stale repo-analysis content
 
 ## Mobile And Readability
 
-- [ ] Confirm the org summary cards remain readable on a mobile-width viewport
-- [ ] Confirm the table remains scannable on mobile, including pagination and action controls
-- [ ] Confirm the action column does not waste excessive horizontal space relative to the data columns
+- [x] Confirm the org summary cards remain readable on a mobile-width viewport
+- [x] Confirm the table remains scannable on mobile, including pagination and action controls
+- [x] Confirm the action column does not waste excessive horizontal space relative to the data columns
 
 ## Repo Coverage
 
-- [ ] Test a large public org such as `nvidia` and confirm the inventory shows more than the first 100 repositories
-- [ ] Confirm a large org remains usable with filtering, pagination, and language-distribution expansion
+- [x] Test a large public org such as `nvidia` and confirm the inventory shows more than the first 100 repositories
+- [x] Confirm a large org remains usable with filtering, pagination, and language-distribution expansion
 
 ## Notes
 
 _Sign off below when all items are verified manually:_
 
-**Tested by**:   **Date**: 
+**Tested by**: Arun Gupta  **Date**: 2026-04-05

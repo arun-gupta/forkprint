@@ -125,10 +125,14 @@ User can provide a GitHub organization and get a high-level inventory of its pub
 - Input accepts a top-level GitHub org slug or GitHub org URL and normalizes it to the org name before submission
 - App fetches the org's public repositories using public GitHub metadata only
 - Results render in a sortable table with one row per repo
+- Every visible column supports ascending and descending local sorting without rerunning the org request
 - Table includes at least: repository name, description, primary language, stars, forks, watchers, open issues count, last pushed date, and repo URL
+- Users can choose which optional columns are visible while `Repository` remains pinned
 - Table supports lightweight filtering by repo name, language, and archived status
+- Large org inventories support local pagination controls with configurable rows per page
 - Org-level summary area shows high-level rollups such as total public repos, total stars, most-starred repos, most recently active repos, language distribution, and archived vs active repo count
 - Each repo row links into the existing repo-level analysis flow so users can drill into a specific repository
+- Users can select multiple repositories from the org inventory table and launch the existing repo-analysis flow for that selection, up to the configured bulk-selection limit
 - Empty orgs, invalid orgs, and rate-limit states are handled clearly without fabricating results
 
 **Design constraints**

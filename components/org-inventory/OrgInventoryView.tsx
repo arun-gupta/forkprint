@@ -41,8 +41,8 @@ export function OrgInventoryView({ org, summary, results, rateLimit, onAnalyzeRe
     sortColumn: 'repo',
     sortDirection: 'asc',
   })
-  const [selectionLimit, setSelectionLimit] = useState(ORG_INVENTORY_CONFIG.defaultBulkSelectionLimit)
-  const [pageSize, setPageSize] = useState(ORG_INVENTORY_CONFIG.defaultPageSize)
+  const [selectionLimit, setSelectionLimit] = useState<number>(ORG_INVENTORY_CONFIG.defaultBulkSelectionLimit)
+  const [pageSize, setPageSize] = useState<number>(ORG_INVENTORY_CONFIG.defaultPageSize)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRepos, setSelectedRepos] = useState<string[]>([])
   const [selectionError, setSelectionError] = useState<string | null>(null)
@@ -88,141 +88,6 @@ export function OrgInventoryView({ org, summary, results, rateLimit, onAnalyzeRe
         <p className="mt-2 text-sm text-slate-600">Browse lightweight public repository metadata and launch repo analysis from any row.</p>
       </div>
 
-      <OrgInventorySummary summary={summary} />
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Repo filter</span>
-            <input
-              value={filters.repoQuery}
-              onChange={(event) => {
-                setCurrentPage(1)
-                setFilters((current) => ({ ...current, repoQuery: event.target.value }))
-              }}
-              className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
-              placeholder="Filter by repo name"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Language</span>
-            <select
-              value={filters.language}
-              onChange={(event) => {
-                setCurrentPage(1)
-                setFilters((current) => ({ ...current, language: event.target.value }))
-              }}
-              className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
-            >
-              <option value="all">All languages</option>
-              {languageOptions.map((language) => (
-                <option key={language} value={language}>
-                  {language}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Archived status</span>
-            <select
-              value={filters.archived}
-              onChange={(event) =>
-                {
-                  setCurrentPage(1)
-                  setFilters((current) => ({
-                    ...current,
-                    archived: event.target.value as OrgInventoryFilters['archived'],
-                  }))
-                }
-              }
-              className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
-            >
-              <option value="all">All repos</option>
-              <option value="active">Active only</option>
-              <option value="archived">Archived only</option>
-            </select>
-          </label>
-          <label className="space-y-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Bulk selection limit</span>
-            <input
-              type="range"
-              min={1}
-              max={ORG_INVENTORY_CONFIG.maxBulkSelectionLimit}
-              value={selectionLimit}
-              onChange={(event) => {
-                const nextLimit = Number(event.target.value)
-                const validation = validateSelectionLimit(selectedRepos, nextLimit)
-                const nextSelection = applySelectionLimit(selectedRepos, nextLimit)
-                setSelectedRepos(nextSelection.selectedRepos)
-                setSelectionError(nextSelection.error ?? validation.error)
-                setSelectionLimit(nextLimit)
-              }}
-              aria-label="Bulk selection limit"
-            />
-            <p className="text-sm text-slate-600">Select up to {selectionLimit} repositories for bulk analysis.</p>
-          </label>
-        </div>
-
-        <div className="mt-4 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Visible columns</p>
-          <div className="flex flex-wrap gap-3">
-            {OPTIONAL_ORG_INVENTORY_COLUMNS.map((column) => (
-              <label key={column} className="inline-flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={visibleColumns.includes(column)}
-                  onChange={() =>
-                    setVisibleColumns((current) => {
-                      const next = toggleVisibleColumn(current, column)
-                      setSortState((sortCurrent) => getEffectiveSortState(sortCurrent, next))
-                      return next
-                    })
-                  }
-                />
-                {columnLabels[column]}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-600">{selectedRepos.length} selected</p>
-          <button
-            type="button"
-            disabled={selectedRepos.length === 0}
-            className="rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={() => onAnalyzeSelected(selectedRepos)}
-          >
-            Analyze selected
-          </button>
-        </div>
-        {selectionError ? <p className="mt-2 text-sm text-amber-700">{selectionError}</p> : null}
-
-        {results.length > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-            <p className="text-sm text-slate-600">
-              Showing {visibleRangeStart}-{visibleRangeEnd} of {sortedRows.length} matching repositories
-            </p>
-            <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-              <span>Rows per page</span>
-              <select
-                aria-label="Rows per page"
-                value={pageSize}
-                onChange={(event) => {
-                  setCurrentPage(1)
-                  setPageSize(clampOrgInventoryPageSize(Number(event.target.value)))
-                }}
-                className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              >
-                {ORG_INVENTORY_CONFIG.pageSizeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        ) : null}
-      </section>
       {results.length === 0 ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <h3 className="text-lg font-semibold text-slate-900">No public repositories found</h3>
@@ -230,7 +95,141 @@ export function OrgInventoryView({ org, summary, results, rateLimit, onAnalyzeRe
             ForkPrint did not find any public repositories for this organization.
           </p>
         </section>
-      ) : null}
+      ) : (
+        <>
+          <OrgInventorySummary summary={summary} />
+          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Repo filter</span>
+                <input
+                  value={filters.repoQuery}
+                  onChange={(event) => {
+                    setCurrentPage(1)
+                    setFilters((current) => ({ ...current, repoQuery: event.target.value }))
+                  }}
+                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
+                  placeholder="Filter by repo name"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Language</span>
+                <select
+                  value={filters.language}
+                  onChange={(event) => {
+                    setCurrentPage(1)
+                    setFilters((current) => ({ ...current, language: event.target.value }))
+                  }}
+                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
+                >
+                  <option value="all">All languages</option>
+                  {languageOptions.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Archived status</span>
+                <select
+                  value={filters.archived}
+                  onChange={(event) => {
+                    setCurrentPage(1)
+                    setFilters((current) => ({
+                      ...current,
+                      archived: event.target.value as OrgInventoryFilters['archived'],
+                    }))
+                  }}
+                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
+                >
+                  <option value="all">All repos</option>
+                  <option value="active">Active only</option>
+                  <option value="archived">Archived only</option>
+                </select>
+              </label>
+              <label className="space-y-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Bulk selection limit</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={ORG_INVENTORY_CONFIG.maxBulkSelectionLimit}
+                  value={selectionLimit}
+                  onChange={(event) => {
+                    const nextLimit = Number(event.target.value)
+                    const validation = validateSelectionLimit(selectedRepos, nextLimit)
+                    const nextSelection = applySelectionLimit(selectedRepos, nextLimit)
+                    setSelectedRepos(nextSelection.selectedRepos)
+                    setSelectionError(nextSelection.error ?? validation.error)
+                    setSelectionLimit(nextLimit)
+                  }}
+                  aria-label="Bulk selection limit"
+                />
+                <p className="text-sm text-slate-600">Select up to {selectionLimit} repositories for bulk analysis.</p>
+              </label>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Visible columns</p>
+              <div className="flex flex-wrap gap-3">
+                {OPTIONAL_ORG_INVENTORY_COLUMNS.map((column) => (
+                  <label key={column} className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns.includes(column)}
+                      onChange={() =>
+                        setVisibleColumns((current) => {
+                          const next = toggleVisibleColumn(current, column)
+                          setSortState((sortCurrent) => getEffectiveSortState(sortCurrent, next))
+                          return next
+                        })
+                      }
+                    />
+                    {columnLabels[column]}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-600">{selectedRepos.length} selected</p>
+              <button
+                type="button"
+                disabled={selectedRepos.length === 0}
+                className="rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => onAnalyzeSelected(selectedRepos)}
+              >
+                Analyze selected
+              </button>
+            </div>
+            {selectionError ? <p className="mt-2 text-sm text-amber-700">{selectionError}</p> : null}
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <p className="text-sm text-slate-600">
+                Showing {visibleRangeStart}-{visibleRangeEnd} of {sortedRows.length} matching repositories
+              </p>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <span>Rows per page</span>
+                <select
+                  aria-label="Rows per page"
+                  value={pageSize}
+                  onChange={(event) => {
+                    setCurrentPage(1)
+                    setPageSize(clampOrgInventoryPageSize(Number(event.target.value)))
+                  }}
+                  className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+                >
+                  {ORG_INVENTORY_CONFIG.pageSizeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </section>
+        </>
+      )}
       {results.length > 0 && sortedRows.length === 0 ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-6">
           <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>

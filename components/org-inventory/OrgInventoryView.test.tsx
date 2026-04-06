@@ -236,6 +236,33 @@ describe('OrgInventoryView', () => {
     expect(screen.getAllByText('Remaining API calls: 4,963')).toHaveLength(1)
     expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
   })
+
+  it('shows only the explicit empty state for organizations with no public repositories', () => {
+    render(
+      <OrgInventoryView
+        org="__empty__"
+        summary={{
+          totalPublicRepos: 0,
+          totalStars: 'unavailable',
+          mostStarredRepos: [],
+          mostRecentlyActiveRepos: [],
+          languageDistribution: [],
+          archivedRepoCount: 0,
+          activeRepoCount: 0,
+        }}
+        results={[]}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('No public repositories found')).toBeInTheDocument()
+    expect(screen.queryByText('Total public repos')).not.toBeInTheDocument()
+    expect(screen.queryByText('Repo filter')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bulk selection limit')).not.toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
 })
 
 function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
