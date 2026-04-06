@@ -7,9 +7,9 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Deploy ForkPrint to Vercel with minimal setup (Priority: P1)
+### User Story 1 - Deploy RepoPulse to Vercel with minimal setup (Priority: P1)
 
-A maintainer can deploy ForkPrint to Vercel with zero custom server infrastructure so the current web app can be shared outside local development.
+A maintainer can deploy RepoPulse to Vercel with zero custom server infrastructure so the current web app can be shared outside local development.
 
 **Why this priority**: The feature only delivers value if the current app can be deployed reliably in the Phase 1 hosting model defined in the product and constitution.
 
@@ -17,7 +17,7 @@ A maintainer can deploy ForkPrint to Vercel with zero custom server infrastructu
 
 **Acceptance Scenarios**:
 
-1. **Given** the current ForkPrint repo is connected to a new Vercel project, **When** the default build and runtime settings are used, **Then** the app deploys without requiring custom server infrastructure or platform-specific code changes.
+1. **Given** the current RepoPulse repo is connected to a new Vercel project, **When** the default build and runtime settings are used, **Then** the app deploys without requiring custom server infrastructure or platform-specific code changes.
 2. **Given** a successful Vercel deployment exists, **When** a user opens the deployed site, **Then** the existing Phase 1 UI loads and the analysis flow remains available.
 
 ---
@@ -74,7 +74,7 @@ A maintainer can rely on the deployed app remaining stateless and not introducin
 
 ### Key Entities
 
-- **Deployment Environment**: The runtime configuration for ForkPrint in local development or Vercel, including environment variables such as `GITHUB_TOKEN`.
+- **Deployment Environment**: The runtime configuration for RepoPulse in local development or Vercel, including environment variables such as `GITHUB_TOKEN`.
 - **Shared Deployment Token Path**: The server-side execution path that uses deployment environment variables instead of a client-supplied PAT.
 - **Deployment Setup Guide**: The user-facing documentation that explains how to configure and verify a Vercel deployment safely.
 

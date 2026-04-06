@@ -11,7 +11,7 @@
 
 ### User Story 1 — Enter repos and submit for analysis (Priority: P1)
 
-A user arrives at the ForkPrint home page and wants to analyze one or more GitHub repositories. They type or paste repo slugs (or full GitHub URLs) into a textarea and submit.
+A user arrives at the RepoPulse home page and wants to analyze one or more GitHub repositories. They type or paste repo slugs (or full GitHub URLs) into a textarea and submit.
 
 **Why this priority**: This is the entry point to the entire application. Nothing else works without it.
 

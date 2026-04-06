@@ -2,7 +2,7 @@
 
 ## What's being built
 
-The first real analysis pipeline for ForkPrint:
+The first real analysis pipeline for RepoPulse:
 - submit validated repos from the home page
 - fetch verified GitHub GraphQL data through `POST /api/analyze`
 - return flat per-repo results plus isolated failures and rate-limit metadata

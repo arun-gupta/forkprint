@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { TOKEN_STORAGE_KEY, clearToken, readToken, writeToken } from './token-storage'
+import { LEGACY_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY, clearToken, readToken, writeToken } from './token-storage'
 
 describe('token storage', () => {
   beforeEach(() => {
@@ -17,6 +17,12 @@ describe('token storage', () => {
     expect(readToken()).toBe('ghp_example')
   })
 
+  it('reads from the legacy token key when the new key is absent', () => {
+    window.localStorage.setItem(LEGACY_TOKEN_STORAGE_KEY, 'ghp_legacy')
+
+    expect(readToken()).toBe('ghp_legacy')
+  })
+
   it('trims whitespace before storing', () => {
     writeToken('  ghp_trimmed  ')
     expect(readToken()).toBe('ghp_trimmed')
@@ -24,6 +30,7 @@ describe('token storage', () => {
 
   it('clears the token when an empty value is written', () => {
     window.localStorage.setItem(TOKEN_STORAGE_KEY, 'ghp_existing')
+    window.localStorage.setItem(LEGACY_TOKEN_STORAGE_KEY, 'ghp_legacy')
     writeToken('   ')
     expect(readToken()).toBeNull()
   })
@@ -37,6 +44,7 @@ describe('token storage', () => {
 
   it('removes the stored token explicitly', () => {
     window.localStorage.setItem(TOKEN_STORAGE_KEY, 'ghp_existing')
+    window.localStorage.setItem(LEGACY_TOKEN_STORAGE_KEY, 'ghp_legacy')
     clearToken()
     expect(readToken()).toBeNull()
   })

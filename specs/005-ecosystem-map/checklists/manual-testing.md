@@ -25,7 +25,7 @@
 
 - [x] Confirm the UI shows Reach / Builder Engagement / Attention profile tiers for successful repositories
 - [x] Confirm the spectrum legends match the shared config-driven bands shown in the UI
-- [x] Confirm the UI presents the spectrum profile as a ForkPrint interpretation aligned to CHAOSS, not official CHAOSS terminology
+- [x] Confirm the UI presents the spectrum profile as a RepoPulse interpretation aligned to CHAOSS, not official CHAOSS terminology
 
 ## US4 — Tooltip and derived-rate behavior
 

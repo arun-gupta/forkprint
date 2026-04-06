@@ -100,7 +100,7 @@ A user can inspect exact ecosystem values from the repository cards and understa
 ### Key Entities
 
 - **Ecosystem View**: The combined legend and repository-profile presentation for successful repositories using exact stars, derived builder engagement, derived attention, and exact ecosystem metrics.
-- **Spectrum Profile**: The ForkPrint-defined ecosystem summary for one repository across Reach, Builder Engagement, and Attention tiers.
+- **Spectrum Profile**: The RepoPulse-defined ecosystem summary for one repository across Reach, Builder Engagement, and Attention tiers.
 - **Spectrum Config**: The shared threshold definition that controls Reach, Builder Engagement, and Attention bands for both UI legends and profile logic.
 - **Rate Summary**: The derived fork-rate and watcher-rate values shown in tooltips and profile detail.
 

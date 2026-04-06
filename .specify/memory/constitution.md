@@ -1,4 +1,4 @@
-# ForkPrint Constitution
+# RepoPulse Constitution
 
 **Single authoritative source of all project rules.**
 Every spec, plan, task, and line of code must comply. No exceptions.
@@ -108,7 +108,7 @@ Rules:
 
 1. P1-F05 uses a **spectrum model**, not median-derived quadrants.
 2. Axes: X = stars (reach), Y = builder engagement (`forks / stars`), bubble size = attention (`watchers / stars`).
-3. Ecosystem profile tiers are **ForkPrint-defined** and aligned to the CHAOSS ecosystem category. They are not presented as an official CHAOSS taxonomy.
+3. Ecosystem profile tiers are **RepoPulse-defined** and aligned to the CHAOSS ecosystem category. They are not presented as an official CHAOSS taxonomy.
 4. Spectrum thresholds are defined in shared configuration and read from that configuration by the UI and supporting logic.
 5. Single-repo input remains fully valid: the UI still plots and profiles the repo when verified data exists.
 

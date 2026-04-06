@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add the first visual analysis layer to ForkPrint by turning successful `AnalysisResult[]` data into an ecosystem-map section on the home page. The feature will show visible ecosystem metrics for each successful repository, derive a config-driven ecosystem profile across Reach / Builder Engagement / Attention, and keep the feature useful for both single-repo and multi-repo analysis.
+Add the first visual analysis layer to RepoPulse by turning successful `AnalysisResult[]` data into an ecosystem-map section on the home page. The feature will show visible ecosystem metrics for each successful repository, derive a config-driven ecosystem profile across Reach / Builder Engagement / Attention, and keep the feature useful for both single-repo and multi-repo analysis.
 
 ## Technical Context
 
@@ -26,7 +26,7 @@ Add the first visual analysis layer to ForkPrint by turning successful `Analysis
 | I / Phase 1 stack | PASS | Uses the existing Phase 1 Next.js/React/Tailwind stack without adding architecture that blocks later phases |
 | II — Verified data only | PASS | Spectrum view uses already-fetched `AnalysisResult[]`; no guessed derived rates for unavailable metrics |
 | IV — Shared analyzer boundary | PASS | No analyzer changes required beyond consuming existing flat results |
-| V / VII — CHAOSS alignment and ecosystem spectrum rules | PASS | Treat the ecosystem output as a ForkPrint profile aligned to CHAOSS; use config-driven spectrum thresholds |
+| V / VII — CHAOSS alignment and ecosystem spectrum rules | PASS | Treat the ecosystem output as a RepoPulse profile aligned to CHAOSS; use config-driven spectrum thresholds |
 | VII.5 — Single-repo behavior | PASS | Single successful repo renders profile and exact metrics without requiring a comparison set |
 | IX.5 — Flat `AnalysisResult` schema | PASS | Visualization consumes existing flat schema without transformation requirements leaking upstream |
 | XI — TDD mandatory | PASS | Classification/profile tests are written before implementation in tasks phase |

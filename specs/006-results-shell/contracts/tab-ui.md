@@ -2,7 +2,7 @@
 
 ## Header
 
-- Shows ForkPrint title and short product framing
+- Shows RepoPulse title and short product framing
 - Shows a visible GitHub repo link in the header
 - On desktop, the GitHub link is placed in the top-right area of the header
 - On mobile, the link remains visible within the header without overlap or clipping

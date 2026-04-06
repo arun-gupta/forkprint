@@ -44,7 +44,7 @@ export function ResultsShell({
             </p>
           </div>
           <a
-            href="https://github.com/arun-gupta/forkprint"
+            href="https://github.com/arun-gupta/repo-pulse"
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub repository"
