@@ -115,7 +115,7 @@
 
 - [X] T033 [P] Add E2E test in `e2e/missing-data.spec.ts` — mock a result with `missingFields: ['releases12mo', 'totalContributors']`; assert `"—"` appears in rendered output and no `"unavailable"` string is visible to the user
 - [X] T034 [P] Run `npm test` — confirm all unit tests pass with zero regressions
-- [ ] T035 [P] Run `npm run test:e2e` — confirm E2E suite passes
+- [X] T035 [P] Run `npm run test:e2e` — confirm E2E suite passes
 - [X] T036 [P] Run `npm run lint` — confirm no lint errors
 - [X] T037 [P] Run `npm run build` — confirm production build succeeds
 - [X] T038 Create `specs/031-missing-data-accuracy/checklists/manual-testing.md` — checklist covering: unavailable metric card stats, activity tab inline dashes, responsiveness tab inline dashes, health ratios muted cells, comparison muted cells, no amber callout panels visible

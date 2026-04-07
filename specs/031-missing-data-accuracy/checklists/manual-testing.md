@@ -42,5 +42,6 @@ Analyze any public repository with real data (e.g. `nvidia/topograph` or `facebo
 | Item | Status | Notes |
 |------|--------|-------|
 | All automated tests pass (`npm test`) | ✅ 241 passed (48 files) | |
+| All E2E tests pass (`npx playwright test`) | ✅ 9 passed | Includes 3 new P1-F12 missing-data tests |
 | Manual checklist reviewed | ✅ | |
 | Reviewed by | arun-gupta | 2026-04-06 |
