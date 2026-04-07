@@ -19,11 +19,31 @@ describe('buildMetricCardViewModels', () => {
     expect(card.repo).toBe('facebook/react')
     expect(card.starsLabel).toBe('244,295')
     expect(card.createdAtLabel).toBe('May 24, 2013')
-    expect(card.primaryLanguage).toBe('unavailable')
+    expect(card.primaryLanguage).toBe('—')
     expect(card.profile?.reachTier).toBe('Exceptional')
     expect(card.scoreBadges).toHaveLength(3)
     expect(card.scoreBadges.find((badge) => badge.category === 'Sustainability')?.value).toBe('Insufficient verified public data')
-    expect(card.details.find((detail) => detail.label === 'Releases (12mo)')?.value).toBe('unavailable')
+    expect(card.details.find((detail) => detail.label === 'Releases (12mo)')?.value).toBe('—')
+  })
+
+  it('formats unavailable numeric fields as em-dash', () => {
+    const card = buildMetricCardViewModels([
+      buildResult({ stars: 'unavailable', forks: 'unavailable', watchers: 'unavailable' }),
+    ])[0]!
+
+    expect(card.starsLabel).toBe('—')
+    expect(card.forksLabel).toBe('—')
+    expect(card.watchersLabel).toBe('—')
+  })
+
+  it('formats zero values as "0" distinct from em-dash', () => {
+    const card = buildMetricCardViewModels([
+      buildResult({ stars: 0, forks: 0, watchers: 0 }),
+    ])[0]!
+
+    expect(card.starsLabel).toBe('0')
+    expect(card.forksLabel).toBe('0')
+    expect(card.watchersLabel).toBe('0')
   })
 })
 

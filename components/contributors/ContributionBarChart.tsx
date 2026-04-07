@@ -96,7 +96,7 @@ export function ContributionBarChart({
           ) : null}
         </>
       ) : (
-        <p className="mt-2 text-sm text-slate-600">{emptyText}</p>
+        <p className="mt-2 text-sm text-slate-400">{emptyText}</p>
       )}
     </div>
   )

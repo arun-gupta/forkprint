@@ -21,10 +21,6 @@ export interface ResponsivenessSectionViewModel {
   repo: string
   panes: ResponsivenessPaneViewModel[]
   score: ReturnType<typeof getResponsivenessScore>
-  missingDataCallout?: {
-    title: string
-    details: string[]
-  }
 }
 
 export function getResponsivenessWindowOptions() {
@@ -42,7 +38,6 @@ export function buildResponsivenessSections(results: AnalysisResult[], windowDay
       repo: result.repo,
       panes: buildPanes(metrics),
       score: getResponsivenessScore(result, windowDays),
-      missingDataCallout: buildMissingDataCallout(metrics, windowDays),
     }
   })
 }
@@ -169,36 +164,3 @@ function buildPanes(metrics: ResponsivenessMetrics): ResponsivenessPaneViewModel
   ]
 }
 
-function buildMissingDataCallout(metrics: ResponsivenessMetrics, windowDays: ActivityWindowDays) {
-  const unavailableMetricLabels = [
-    { label: 'Issue first response (median)', value: metrics.issueFirstResponseMedianHours },
-    { label: 'Issue first response (p90)', value: metrics.issueFirstResponseP90Hours },
-    { label: 'PR first review (median)', value: metrics.prFirstReviewMedianHours },
-    { label: 'PR first review (p90)', value: metrics.prFirstReviewP90Hours },
-    { label: 'Issue resolution duration (median)', value: metrics.issueResolutionMedianHours },
-    { label: 'Issue resolution duration (p90)', value: metrics.issueResolutionP90Hours },
-    { label: 'PR merge duration (median)', value: metrics.prMergeMedianHours },
-    { label: 'PR merge duration (p90)', value: metrics.prMergeP90Hours },
-    { label: 'Issue resolution rate', value: metrics.issueResolutionRate },
-    { label: 'Contributor response rate', value: metrics.contributorResponseRate },
-    { label: 'Human first-response ratio', value: metrics.humanResponseRatio },
-    { label: 'Bot first-response ratio', value: metrics.botResponseRatio },
-    { label: 'Stale issue ratio', value: metrics.staleIssueRatio },
-    { label: 'Stale PR ratio', value: metrics.stalePrRatio },
-    { label: 'PR review depth', value: metrics.prReviewDepth },
-    { label: 'Issues closed without comment', value: metrics.issuesClosedWithoutCommentRatio },
-    { label: 'Open issues', value: metrics.openIssueCount },
-    { label: 'Open PR backlog', value: metrics.openPullRequestCount },
-  ]
-    .filter((entry) => entry.value === 'unavailable')
-    .map((entry) => entry.label)
-
-  if (unavailableMetricLabels.length === 0) {
-    return undefined
-  }
-
-  return {
-    title: 'Missing data',
-    details: [`Unavailable responsiveness inputs in selected ${windowDays === 365 ? '12 months' : `${windowDays}d`} window: ${unavailableMetricLabels.join(', ')}.`],
-  }
-}

@@ -34,6 +34,11 @@ describe('activity/score-config', () => {
     expect(formatHours(72)).toBe('3.0d')
   })
 
+  it('returns em-dash for unavailable inputs', () => {
+    expect(formatPercentage('unavailable')).toBe('—')
+    expect(formatHours('unavailable')).toBe('—')
+  })
+
   it('uses the selected activity window when computing the score', () => {
     const score30 = getActivityScore(buildResult(), 30)
     const score365 = getActivityScore(buildResult(), 365)

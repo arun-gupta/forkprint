@@ -256,7 +256,7 @@ function isVerifiedNumber(value: number | Unavailable | undefined): value is num
 
 export function formatPercentage(value: number | Unavailable) {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   return `${(value * 100).toFixed(1)}%`
@@ -264,7 +264,7 @@ export function formatPercentage(value: number | Unavailable) {
 
 export function formatHours(value: number | Unavailable) {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   if (value < 24) {

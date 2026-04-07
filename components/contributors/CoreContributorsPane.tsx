@@ -79,7 +79,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
         description={`Longer bars indicate contributor activity in the last ${windowDays} days. Detected bot accounts like dependabot[bot] or k8s-ci-robot can be included here when needed.`}
         items={heatmap}
         ariaLabel="Contribution activity bars"
-        emptyText="unavailable"
+        emptyText="—"
         tone="cyan"
         entityLabel="contributors"
         showLabels={showNames}

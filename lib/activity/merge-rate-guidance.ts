@@ -18,9 +18,9 @@ export function getMergeRateGuidance(
   if (typeof merged !== 'number' || typeof opened !== 'number' || opened <= 0) {
     return {
       ratio: 'unavailable',
-      percentage: 'unavailable',
+      percentage: '—',
       band: 'unavailable',
-      bandLabel: 'Unavailable',
+      bandLabel: '—',
       summary: 'RepoPulse cannot verify enough PR flow data to judge merge throughput in the selected window.',
       recommendation: 'Collect more opened and merged PR activity before drawing conclusions.',
       helpText:

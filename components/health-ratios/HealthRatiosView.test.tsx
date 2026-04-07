@@ -37,10 +37,14 @@ describe('HealthRatiosView', () => {
     expect(afterSortRows[1]).toHaveTextContent('facebook/react')
   })
 
-  it('renders unavailable values as an em dash', () => {
-    render(<HealthRatiosView results={[buildResult('facebook/react', { totalContributors: 'unavailable' })]} />)
+  it('renders unavailable values as a muted em dash', () => {
+    const { container } = render(<HealthRatiosView results={[buildResult('facebook/react', { totalContributors: 'unavailable' })]} />)
 
     expect(screen.getAllByText('—').length).toBeGreaterThan(0)
+    const mutedDashCells = Array.from(container.querySelectorAll('td')).filter(
+      (td) => td.textContent?.trim() === '—' && td.className.includes('text-slate-400'),
+    )
+    expect(mutedDashCells.length).toBeGreaterThan(0)
   })
 })
 

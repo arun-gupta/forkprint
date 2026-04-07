@@ -86,10 +86,10 @@ describe('ActivityView', () => {
     const activityView = screen.getByRole('region', { name: /activity view/i })
     expect(within(activityView).getByText(/^releases$/i)).toBeInTheDocument()
     expect(within(activityView).getByText(/^pull requests$/i)).toBeInTheDocument()
-    expect(within(activityView).getAllByText('unavailable').length).toBeGreaterThan(0)
-    expect(within(activityView).getByText(/^missing data$/i)).toBeInTheDocument()
-    expect(within(activityView).getByText(/unavailable in selected 90d window/i)).toBeInTheDocument()
-    expect(within(activityView).getByText(/activity score is waiting on:/i)).toBeInTheDocument()
+    expect(within(activityView).getAllByText('—').length).toBeGreaterThan(0)
+    expect(within(activityView).queryByText(/^missing data$/i)).not.toBeInTheDocument()
+    expect(within(activityView).queryByText(/unavailable in selected 90d window/i)).not.toBeInTheDocument()
+    expect(within(activityView).queryByText('unavailable')).not.toBeInTheDocument()
   })
 
   it('shows activity score help and threshold details on demand', async () => {

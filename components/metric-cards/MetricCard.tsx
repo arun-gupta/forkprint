@@ -1,6 +1,7 @@
 'use client'
 
 import type { MetricCardViewModel } from '@/lib/metric-cards/view-model'
+import { MetricValue } from '@/components/shared/MetricValue'
 import { ScoreBadge } from './ScoreBadge'
 
 interface MetricCardProps {
@@ -59,7 +60,9 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+      <p className="mt-1 text-lg">
+        <MetricValue value={value} />
+      </p>
     </div>
   )
 }

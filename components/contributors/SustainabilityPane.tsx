@@ -118,7 +118,7 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
             description="Longer bars indicate more experimentally attributed recent commits."
             items={section.experimentalHeatmap}
             ariaLabel="Attributed organization bars"
-            emptyText="unavailable"
+            emptyText="—"
             tone="amber"
             entityLabel="organizations"
             defaultVisibleCount={8}
@@ -161,16 +161,6 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
         ) : null}
       </div>
 
-      {section.missingData.length > 0 ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-amber-900">Missing data</p>
-          <ul className="mt-2 list-disc pl-5 text-sm text-amber-900">
-            {section.missingData.map((field) => (
-              <li key={field}>{field}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </section>
   )
 }

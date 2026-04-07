@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { HelpLabel } from '@/components/shared/HelpLabel'
+import { MetricValue } from '@/components/shared/MetricValue'
 import { getActivityScore, formatHours, formatPercentage } from '@/lib/activity/score-config'
 import { type ActivityWindowDays, type AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildActivitySections, getActivityWindowOptions } from '@/lib/activity/view-model'
@@ -77,19 +78,19 @@ export function ActivityView({ results }: ActivityViewProps) {
                   {section.cards.map((card) => (
                     <div key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{card.title}</p>
-                      {card.value ? <p className="mt-1 text-lg font-semibold text-slate-900">{card.value}</p> : null}
+                      {card.value ? <p className="mt-1 text-lg"><MetricValue value={card.value} /></p> : null}
                       {card.lines ? (
                         <dl className="mt-3 space-y-2">
                           {card.lines.map((line) => (
                             <div key={line.label} className="flex items-baseline justify-between gap-4">
                               <dt className="text-sm text-slate-600">{line.label}</dt>
-                              <dd className="text-base font-semibold text-slate-900">{line.value}</dd>
+                              <dd className="text-base"><MetricValue value={line.value} /></dd>
                             </div>
                           ))}
                           {card.title === 'Pull requests' ? (
                             <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2">
                               <dt className="text-sm text-slate-600">Median time to merge</dt>
-                              <dd className="text-base font-semibold text-slate-900">{formatHours(section.metrics.medianTimeToMergeHours)}</dd>
+                              <dd className="text-base"><MetricValue value={formatHours(section.metrics.medianTimeToMergeHours)} /></dd>
                             </div>
                           ) : null}
                           {card.title === 'Issues' ? (
@@ -98,11 +99,11 @@ export function ActivityView({ results }: ActivityViewProps) {
                                 <dt className="text-sm text-slate-600">
                                   <HelpLabel label="Stale issue ratio" helpText={staleIssueTooltip} />
                                 </dt>
-                                <dd className="text-base font-semibold text-slate-900">{formatPercentage(section.metrics.staleIssueRatio)}</dd>
+                                <dd className="text-base"><MetricValue value={formatPercentage(section.metrics.staleIssueRatio)} /></dd>
                               </div>
                               <div className="flex items-baseline justify-between gap-4">
                                 <dt className="text-sm text-slate-600">Median time to close</dt>
-                                <dd className="text-base font-semibold text-slate-900">{formatHours(section.metrics.medianTimeToCloseHours)}</dd>
+                                <dd className="text-base"><MetricValue value={formatHours(section.metrics.medianTimeToCloseHours)} /></dd>
                               </div>
                             </>
                           ) : null}
@@ -112,21 +113,6 @@ export function ActivityView({ results }: ActivityViewProps) {
                     </div>
                   ))}
                 </div>
-                {section.missingDataCallout ? (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-amber-800">{section.missingDataCallout.title}</p>
-                    {section.missingDataCallout.details.map((detail) => (
-                      <p key={detail} className="mt-1 text-sm text-amber-900">
-                        {detail}
-                      </p>
-                    ))}
-                    {score.missingInputs.length > 0 ? (
-                      <p className="mt-2 text-sm text-amber-900">
-                        Activity score is waiting on: {score.missingInputs.join(', ')}.
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
                 <ActivityScoreHelp score={score} />
               </>
             )

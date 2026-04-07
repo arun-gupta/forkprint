@@ -25,6 +25,37 @@ describe('MetricCard', () => {
     expect(screen.queryByText('Not scored yet')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /missing data/i })).not.toBeInTheDocument()
   })
+
+  it('renders em-dash in muted style for unavailable summary stats', () => {
+    const card = buildMetricCardViewModels([
+      buildResult({ stars: 'unavailable', forks: 'unavailable', watchers: 'unavailable' }),
+    ])[0]!
+
+    const { container } = render(<MetricCard card={card} />)
+
+    const dashes = Array.from(container.querySelectorAll('span')).filter((el) => el.textContent === '—')
+    expect(dashes.length).toBeGreaterThanOrEqual(3)
+    dashes.forEach((dash) => {
+      expect(dash.className).toContain('text-slate-400')
+      expect(dash.className).not.toContain('text-slate-900')
+    })
+  })
+
+  it('renders zero in standard bold style distinct from em-dash', () => {
+    const card = buildMetricCardViewModels([
+      buildResult({ stars: 0, forks: 0, watchers: 0 }),
+    ])[0]!
+
+    render(<MetricCard card={card} />)
+
+    const zeros = screen.getAllByText('0')
+    expect(zeros.length).toBeGreaterThanOrEqual(3)
+    zeros.forEach((zero) => {
+      expect(zero.className).toContain('font-semibold')
+      expect(zero.className).toContain('text-slate-900')
+      expect(zero.className).not.toContain('text-slate-400')
+    })
+  })
 })
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {

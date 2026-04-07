@@ -98,7 +98,7 @@ export function ComparisonTable({
                             ) : cell.status === 'neutral' && cell.repo === anchorRepo ? (
                               <p className="text-sm font-medium text-sky-700">Anchor baseline</p>
                             ) : null}
-                            <p className="text-xs uppercase tracking-wide text-slate-500">{cell.displayValue}</p>
+                            <p className={`text-xs uppercase tracking-wide ${cell.displayValue === '—' ? 'text-slate-400' : 'text-slate-500'}`}>{cell.displayValue}</p>
                           </div>
                         </td>
                       ))}

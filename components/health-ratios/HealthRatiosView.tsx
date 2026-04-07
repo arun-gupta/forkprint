@@ -90,9 +90,9 @@ export function HealthRatiosView({ results }: HealthRatiosViewProps) {
                         return (
                           <td
                             key={`${row.id}-${result.repo}`}
-                            className={`border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 ${
+                            className={`border border-slate-200 bg-slate-50 px-3 py-3 text-sm ${
                               index === categoryRows.length - 1 ? 'rounded-r-xl' : 'border-r-0'
-                            }`}
+                            } ${(cell?.displayValue ?? '—') === '—' ? 'text-slate-400' : 'text-slate-700'}`}
                           >
                             {cell?.displayValue ?? '—'}
                           </td>

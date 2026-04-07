@@ -17,10 +17,6 @@ export interface ActivitySectionViewModel {
   repo: string
   cards: ActivityCardViewModel[]
   metrics: ReturnType<typeof getWindowMetrics>
-  missingDataCallout?: {
-    title: string
-    details: string[]
-  }
 }
 
 export function getActivityWindowOptions() {
@@ -38,7 +34,6 @@ export function buildActivitySections(results: AnalysisResult[], windowDays: Act
       repo: result.repo,
       cards: buildCards(metrics),
       metrics,
-      missingDataCallout: buildMissingDataCallout(metrics, windowDays),
     }
   })
 }
@@ -96,42 +91,17 @@ function getWindowMetrics(result: AnalysisResult, windowDays: ActivityWindowDays
   )
 }
 
-function buildMissingDataCallout(metrics: ReturnType<typeof getWindowMetrics>, windowDays: ActivityWindowDays) {
-  const unavailableMetricLabels = [
-    { label: 'Commits', value: metrics.commits },
-    { label: 'PRs opened', value: metrics.prsOpened },
-    { label: 'PRs merged', value: metrics.prsMerged },
-    { label: 'Issues opened', value: metrics.issuesOpened },
-    { label: 'Issues closed', value: metrics.issuesClosed },
-    { label: 'Releases', value: metrics.releases },
-    { label: 'Stale issue ratio', value: metrics.staleIssueRatio },
-    { label: 'Median time to merge', value: metrics.medianTimeToMergeHours },
-    { label: 'Median time to close', value: metrics.medianTimeToCloseHours },
-  ]
-    .filter((entry) => entry.value === 'unavailable')
-    .map((entry) => entry.label)
-
-  if (unavailableMetricLabels.length === 0) {
-    return undefined
-  }
-
-  return {
-    title: 'Missing data',
-    details: [`Unavailable in selected ${formatWindowLabel(windowDays)} window: ${unavailableMetricLabels.join(', ')}.`],
-  }
-}
-
 function formatMetric(value: number | Unavailable) {
   if (typeof value === 'number') {
     return new Intl.NumberFormat('en-US').format(value)
   }
 
-  return value
+  return '—'
 }
 
 function formatRatio(numerator: number | Unavailable, denominator: number | Unavailable) {
   if (typeof numerator !== 'number' || typeof denominator !== 'number' || denominator <= 0) {
-    return 'unavailable'
+    return '—'
   }
 
   return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format((numerator / denominator) * 100)}%`
@@ -150,6 +120,3 @@ function formatRatioDetail(
   return `${formatMetric(numerator)} ${numeratorLabel} / ${formatMetric(denominator)} ${denominatorLabel}`
 }
 
-function formatWindowLabel(windowDays: ActivityWindowDays) {
-  return windowDays === 365 ? '12 months' : `${windowDays}d`
-}

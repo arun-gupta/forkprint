@@ -106,7 +106,7 @@ describe('SustainabilityPane', () => {
         /Single-vendor dependency ratio\. 68.0% of experimentally attributed recent commits are attributable to the largest guessed public organization\. Lower is generally healthier/i,
       ),
     ).toBeInTheDocument()
-    expect(screen.getByText(/missing data/i)).toBeInTheDocument()
+    expect(screen.queryByText(/^Missing data$/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/grouped areas/i)).not.toBeInTheDocument()
 
@@ -136,7 +136,7 @@ describe('SustainabilityPane', () => {
     expect(screen.queryByText('meta')).not.toBeInTheDocument()
   })
 
-  it('hides the missing-data panel when no fields are missing', () => {
+  it('does not render a missing-data panel', () => {
     render(
       <SustainabilityPane
         section={{

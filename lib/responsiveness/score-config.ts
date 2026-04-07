@@ -273,7 +273,7 @@ function formatWindowLabel(windowDays: ActivityWindowDays) {
 
 export function formatPercentage(value: number | Unavailable, maximumFractionDigits = 1) {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   return `${new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value * 100)}%`
@@ -281,7 +281,7 @@ export function formatPercentage(value: number | Unavailable, maximumFractionDig
 
 export function formatHours(value: number | Unavailable) {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   if (value < 24) {
@@ -293,7 +293,7 @@ export function formatHours(value: number | Unavailable) {
 
 export function formatCount(value: number | Unavailable, maximumFractionDigits = 0) {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)

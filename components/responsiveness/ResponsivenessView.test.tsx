@@ -237,9 +237,9 @@ describe('ResponsivenessView', () => {
     )
 
     const view = screen.getByRole('region', { name: /responsiveness view/i })
-    expect(within(view).getAllByText('unavailable').length).toBeGreaterThan(0)
-    expect(within(view).getByText(/^missing data$/i)).toBeInTheDocument()
-    expect(within(view).getByText(/responsiveness score is waiting on:/i)).toBeInTheDocument()
+    expect(within(view).getAllByText('—').length).toBeGreaterThan(0)
+    expect(within(view).queryByText(/^missing data$/i)).not.toBeInTheDocument()
+    expect(within(view).queryByText('unavailable')).not.toBeInTheDocument()
   })
 
   it('shows threshold details on demand', async () => {

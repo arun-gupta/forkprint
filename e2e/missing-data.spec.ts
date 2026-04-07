@@ -1,57 +1,98 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
-import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
-import { ComparisonView } from './ComparisonView'
+import { expect, test } from '@playwright/test'
 
-describe('ComparisonView', () => {
-  it('renders the comparison controls and grouped sections', () => {
-    render(<ComparisonView results={[buildResult('facebook/react'), buildResult('nvidia/topograph')]} />)
+test.describe('P1-F12 Missing Data & Accuracy', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
 
-    expect(screen.getByRole('region', { name: /comparison view/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/anchor repo/i)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument()
+    if ((await page.getByLabel(/github personal access token/i).count()) > 0) {
+      await page.getByLabel(/github personal access token/i).fill('ghp_example')
+    }
   })
 
-  it('renders unavailable comparison cells as a muted em dash', () => {
-    const { container } = render(
-      <ComparisonView results={[buildResult('facebook/react', { totalContributors: 'unavailable' }), buildResult('nvidia/topograph')]} />,
-    )
+  test('renders em dash for unavailable metrics and never shows raw unavailable string', async ({ page }) => {
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [
+            buildResult('facebook/react', {
+              releases12mo: 'unavailable',
+              totalContributors: 'unavailable',
+              maintainerCount: 'unavailable',
+              missingFields: ['releases12mo', 'totalContributors'],
+            }),
+          ],
+          failures: [],
+          rateLimit: null,
+        }),
+      })
+    })
 
-    const mutedDashCells = Array.from(container.querySelectorAll('p')).filter(
-      (p) => p.textContent?.trim() === '—' && p.className.includes('text-slate-400'),
-    )
-    expect(mutedDashCells.length).toBeGreaterThan(0)
+    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
+    await page.getByRole('button', { name: /analyze/i }).click()
+
+    // No raw "unavailable" string visible anywhere on the page
+    await expect(page.getByText('unavailable')).toHaveCount(0)
+
+    // Em dash appears somewhere on the page for the missing fields
+    const dashElements = page.locator('text=—')
+    await expect(dashElements.first()).toBeVisible()
   })
 
-  it('lets the user toggle the median column', async () => {
-    render(<ComparisonView results={[buildResult('facebook/react'), buildResult('nvidia/topograph')]} />)
+  test('renders em dash in Metric Cards for unavailable releases', async ({ page }) => {
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [buildResult('facebook/react', { releases12mo: 'unavailable', missingFields: ['releases12mo'] })],
+          failures: [],
+          rateLimit: null,
+        }),
+      })
+    })
 
-    expect(screen.getAllByRole('button', { name: /median/i }).length).toBeGreaterThan(0)
-    await userEvent.click(screen.getByRole('checkbox', { name: /show median column/i }))
-    expect(screen.queryAllByRole('button', { name: /median/i })).toHaveLength(0)
+    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
+    await page.getByRole('button', { name: /analyze/i }).click()
+
+    const overview = page.getByRole('region', { name: /metric cards overview/i })
+    await expect(overview).not.toContainText('unavailable')
   })
 
-  it('lets the user disable a section', async () => {
-    render(<ComparisonView results={[buildResult('facebook/react'), buildResult('nvidia/topograph')]} />)
+  test('renders em dash in Activity view for unavailable metrics', async ({ page }) => {
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [buildResult('facebook/react', { missingFields: [] })],
+          failures: [],
+          rateLimit: null,
+        }),
+      })
+    })
 
-    await userEvent.click(screen.getByRole('button', { name: /sections & attributes/i }))
-    await userEvent.click(screen.getAllByRole('checkbox', { name: 'Activity' })[0]!)
-    expect(screen.queryByRole('heading', { name: 'Activity' })).not.toBeInTheDocument()
+    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
+    await page.getByRole('button', { name: /analyze/i }).click()
+
+    await page.getByRole('tab', { name: 'Activity' }).click()
+
+    const activityView = page.getByRole('region', { name: /activity view/i })
+    await expect(activityView).not.toContainText('unavailable')
   })
 })
 
-function buildResult(repo: string, overrides: Partial<AnalysisResult> = {}): AnalysisResult {
+function buildResult(repo: string, overrides: Record<string, unknown>) {
   return {
     repo,
     name: repo.split('/')[1] ?? repo,
     description: 'Repo description',
     createdAt: '2013-05-24T16:15:54Z',
     primaryLanguage: 'TypeScript',
-    stars: repo === 'facebook/react' ? 200 : 120,
-    forks: repo === 'facebook/react' ? 40 : 12,
-    watchers: repo === 'facebook/react' ? 20 : 6,
+    stars: 100,
+    forks: 25,
+    watchers: 10,
     commits30d: 7,
     commits90d: 18,
     releases12mo: 6,
@@ -73,14 +114,14 @@ function buildResult(repo: string, overrides: Partial<AnalysisResult> = {}): Ana
     activityMetricsByWindow: {
       30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
       60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
-      90: { commits: 18, prsOpened: repo === 'facebook/react' ? 10 : 8, prsMerged: repo === 'facebook/react' ? 8 : 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: repo === 'facebook/react' ? 0.2 : 0.35, medianTimeToMergeHours: repo === 'facebook/react' ? 24 : 50, medianTimeToCloseHours: 36 },
+      90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
       180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
       365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
     },
     responsivenessMetricsByWindow: {
       30: { issueFirstResponseMedianHours: 12, issueFirstResponseP90Hours: 48, prFirstReviewMedianHours: 24, prFirstReviewP90Hours: 72, issueResolutionMedianHours: 36, issueResolutionP90Hours: 96, prMergeMedianHours: 24, prMergeP90Hours: 72, issueResolutionRate: 0.8, contributorResponseRate: 0.7, botResponseRatio: 0.1, humanResponseRatio: 0.8, staleIssueRatio: 0.1, stalePrRatio: 0.05, prReviewDepth: 3, issuesClosedWithoutCommentRatio: 0.2, openIssueCount: 10, openPullRequestCount: 5 },
       60: { issueFirstResponseMedianHours: 14, issueFirstResponseP90Hours: 50, prFirstReviewMedianHours: 28, prFirstReviewP90Hours: 78, issueResolutionMedianHours: 40, issueResolutionP90Hours: 102, prMergeMedianHours: 28, prMergeP90Hours: 78, issueResolutionRate: 0.82, contributorResponseRate: 0.72, botResponseRatio: 0.12, humanResponseRatio: 0.78, staleIssueRatio: 0.12, stalePrRatio: 0.07, prReviewDepth: 3.2, issuesClosedWithoutCommentRatio: 0.22, openIssueCount: 11, openPullRequestCount: 6 },
-      90: { issueFirstResponseMedianHours: repo === 'facebook/react' ? 16 : 24, issueFirstResponseP90Hours: 52, prFirstReviewMedianHours: 30, prFirstReviewP90Hours: 80, issueResolutionMedianHours: 44, issueResolutionP90Hours: 108, prMergeMedianHours: repo === 'facebook/react' ? 30 : 50, prMergeP90Hours: 80, issueResolutionRate: repo === 'facebook/react' ? 0.84 : 0.62, contributorResponseRate: 0.74, botResponseRatio: 0.15, humanResponseRatio: 0.75, staleIssueRatio: 0.14, stalePrRatio: repo === 'facebook/react' ? 0.08 : 0.3, prReviewDepth: 3.4, issuesClosedWithoutCommentRatio: 0.24, openIssueCount: 12, openPullRequestCount: 7 },
+      90: { issueFirstResponseMedianHours: 16, issueFirstResponseP90Hours: 52, prFirstReviewMedianHours: 30, prFirstReviewP90Hours: 80, issueResolutionMedianHours: 44, issueResolutionP90Hours: 108, prMergeMedianHours: 30, prMergeP90Hours: 80, issueResolutionRate: 0.84, contributorResponseRate: 0.74, botResponseRatio: 0.15, humanResponseRatio: 0.75, staleIssueRatio: 0.14, stalePrRatio: 0.08, prReviewDepth: 3.4, issuesClosedWithoutCommentRatio: 0.24, openIssueCount: 12, openPullRequestCount: 7 },
       180: { issueFirstResponseMedianHours: 18, issueFirstResponseP90Hours: 56, prFirstReviewMedianHours: 34, prFirstReviewP90Hours: 84, issueResolutionMedianHours: 48, issueResolutionP90Hours: 114, prMergeMedianHours: 34, prMergeP90Hours: 84, issueResolutionRate: 0.86, contributorResponseRate: 0.76, botResponseRatio: 0.16, humanResponseRatio: 0.74, staleIssueRatio: 0.16, stalePrRatio: 0.09, prReviewDepth: 3.6, issuesClosedWithoutCommentRatio: 0.26, openIssueCount: 13, openPullRequestCount: 8 },
       365: { issueFirstResponseMedianHours: 20, issueFirstResponseP90Hours: 60, prFirstReviewMedianHours: 36, prFirstReviewP90Hours: 90, issueResolutionMedianHours: 52, issueResolutionP90Hours: 120, prMergeMedianHours: 36, prMergeP90Hours: 90, issueResolutionRate: 0.88, contributorResponseRate: 0.78, botResponseRatio: 0.18, humanResponseRatio: 0.72, staleIssueRatio: 0.18, stalePrRatio: 0.1, prReviewDepth: 3.8, issuesClosedWithoutCommentRatio: 0.28, openIssueCount: 14, openPullRequestCount: 9 },
     },

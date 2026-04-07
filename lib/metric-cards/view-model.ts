@@ -58,10 +58,10 @@ function formatMetric(value: number | 'unavailable') {
     return new Intl.NumberFormat('en-US').format(value)
   }
 
-  return value
+  return '—'
 }
 
-function formatText(value: string | 'unavailable', fallback = 'unavailable') {
+function formatText(value: string | 'unavailable', fallback = '—') {
   if (value === 'unavailable' || value.trim().length === 0) {
     return fallback
   }
@@ -71,7 +71,7 @@ function formatText(value: string | 'unavailable', fallback = 'unavailable') {
 
 function formatDate(value: string | 'unavailable') {
   if (value === 'unavailable') {
-    return value
+    return '—'
   }
 
   const date = new Date(value)

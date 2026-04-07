@@ -209,4 +209,9 @@ describe('responsiveness score-config', () => {
     expect(formatHours(12)).toBe('12.0h')
     expect(formatHours(48)).toBe('2.0d')
   })
+
+  it('returns em-dash for unavailable inputs', () => {
+    expect(formatPercentage('unavailable')).toBe('—')
+    expect(formatHours('unavailable')).toBe('—')
+  })
 })

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { HelpLabel } from '@/components/shared/HelpLabel'
+import { MetricValue } from '@/components/shared/MetricValue'
 import { type ActivityWindowDays, type AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildResponsivenessSections, getResponsivenessWindowOptions } from '@/lib/responsiveness/view-model'
 import { ResponsivenessScoreHelp } from './ResponsivenessScoreHelp'
@@ -72,29 +73,13 @@ export function ResponsivenessView({ results }: ResponsivenessViewProps) {
                       <dt className="text-sm text-slate-600">
                         <HelpLabel label={metric.label} helpText={metric.helpText} />
                       </dt>
-                      <dd className="text-base font-semibold text-slate-900">{metric.value}</dd>
+                      <dd className="text-base"><MetricValue value={metric.value} /></dd>
                     </div>
                   ))}
                 </dl>
               </div>
             ))}
           </div>
-
-          {section.missingDataCallout ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-amber-800">{section.missingDataCallout.title}</p>
-              {section.missingDataCallout.details.map((detail) => (
-                <p key={detail} className="mt-1 text-sm text-amber-900">
-                  {detail}
-                </p>
-              ))}
-              {section.score.missingInputs.length > 0 ? (
-                <p className="mt-2 text-sm text-amber-900">
-                  Responsiveness score is waiting on: {section.score.missingInputs.join(', ')}.
-                </p>
-              ) : null}
-            </div>
-          ) : null}
 
           <ResponsivenessScoreHelp score={section.score} />
         </article>
