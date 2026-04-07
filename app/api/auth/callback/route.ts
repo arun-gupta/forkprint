@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const code = url.searchParams.get('code')
   const state = url.searchParams.get('state')
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const { origin } = new URL(request.url)
+  const appUrl = origin
 
   // Handle user denial or GitHub error
   if (error) {
