@@ -41,6 +41,14 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setInputMode(mode)
   }
 
+  function handleReset() {
+    setAnalysisResponse(null)
+    setAnalyzedRepos([])
+    setOrgInventoryResponse(null)
+    setSubmissionError(null)
+    setResultsResetKey((k) => k + 1)
+  }
+
   useEffect(() => {
     if (!analysisResponse?.diagnostics?.length) {
       return
@@ -269,6 +277,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     <ResultsShell
       resetKey={resultsResetKey}
       initialActiveTab="overview"
+      onReset={handleReset}
       analysisPanel={analysisPanel}
       toolbar={exportToolbar}
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
