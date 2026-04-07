@@ -52,11 +52,19 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('## facebook/react')
   })
 
-  it('includes Activity, Sustainability, and Responsiveness sections', () => {
+  it('includes Overview, Contributors, Activity, and Responsiveness sections in tab order', () => {
     const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('### Overview')
+    expect(md).toContain('### Contributors')
     expect(md).toContain('### Activity')
-    expect(md).toContain('### Sustainability')
     expect(md).toContain('### Responsiveness')
+    const overviewPos = md.indexOf('### Overview')
+    const contributorsPos = md.indexOf('### Contributors')
+    const activityPos = md.indexOf('### Activity')
+    const responsivenessPos = md.indexOf('### Responsiveness')
+    expect(overviewPos).toBeLessThan(contributorsPos)
+    expect(contributorsPos).toBeLessThan(activityPos)
+    expect(activityPos).toBeLessThan(responsivenessPos)
   })
 
   it('includes detailed activity metrics', () => {
