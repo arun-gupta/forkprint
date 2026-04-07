@@ -2,71 +2,37 @@
 
 **Purpose**: Sign-off before opening the PR  
 **Feature**: [spec.md](../spec.md)  
-**Signed off by**: <!-- GitHub username -->  
-**Date**: <!-- YYYY-MM-DD -->
+**Signed off by**: arun-gupta  
+**Date**: 2026-04-06
 
 ---
 
 ## Setup
 
-- [ ] App is running locally (`npm run dev`)
-- [ ] Signed in via GitHub OAuth
+- [X] App is running locally (`npm run dev`)
+- [X] Signed in via GitHub OAuth
 
 ---
 
-## US1 — Inline Unavailable Marking on MetricCard
+## Visual Spot-Check (real browser, real data)
 
-Analyze a repo known to have missing fields (e.g. a private-fork repo where releases are unavailable).
-
-- [ ] Stars, forks, or watchers that are unavailable display `"—"` (not the word "unavailable")
-- [ ] The `"—"` is visually muted compared to numeric values (lighter color)
-- [ ] A metric with value `0` displays `"0"` and is visually distinct from `"—"`
-- [ ] No bold `"unavailable"` string appears anywhere in the metric card
-
----
-
-## US2 — Consistent `"—"` Across All Views
-
-Using the same repo result, check each tab:
+Analyze any public repository with real data (e.g. `nvidia/topograph` or `facebook/react`).
 
 ### Overview tab
-- [ ] All unavailable metric card stats show muted `"—"`
-- [ ] No amber "Missing data" callout panel appears anywhere on the overview
+- [X] The word "unavailable" does not appear anywhere on screen
 
 ### Activity tab
-- [ ] Unavailable metric rows show `"—"` inline at the field
-- [ ] No amber "Unavailable in selected window" callout panel appears
-- [ ] Score tooltip (ActivityScoreHelp) still works if score inputs are missing
+- [X] The word "unavailable" does not appear anywhere on screen
+- [X] Expanding the score help tooltip (ActivityScoreHelp) works and closes cleanly
 
 ### Responsiveness tab
-- [ ] Unavailable metric rows show `"—"` inline
-- [ ] No amber "Unavailable responsiveness inputs" callout panel appears
-- [ ] Score tooltip (ResponsivenessScoreHelp) still works
+- [X] The word "unavailable" does not appear anywhere on screen
+- [X] Expanding the score help tooltip (ResponsivenessScoreHelp) works and closes cleanly
 
 ### Contributors tab
-- [ ] Empty bar chart state shows `"—"` in muted style (not "unavailable" prose)
-- [ ] No amber "Missing data" panel at the bottom of SustainabilityPane
-
-### Health Ratios tab
-- [ ] Unavailable ratio cells display `"—"` in muted slate color (not white/default)
-- [ ] Non-unavailable cells display normally
-
-### Comparison tab
-- [ ] Unavailable comparison cells display `"—"` in muted slate color
-- [ ] Non-unavailable cells display normally
+- [X] Elephant Factor and Single-vendor dependency ratio show `"—"` (not "unavailable") when org attribution has no data (e.g. `nvidia/topograph`)
 
 ---
 
-## US3 — Analyzer Enforcement
-
-- [ ] `npm test` passes with zero failures
-- [ ] No field in `AnalysisResult` is set to a numeric value when the API response was missing that field (verified via test output)
-
----
-
-## Build & Quality
-
-- [ ] `npm test` passes
-- [ ] `npm run test:e2e` passes
-- [ ] `npm run lint` is clean
-- [ ] `npm run build` succeeds with no errors
+> Inline `"—"` rendering, muted styling, absence of amber callout panels, zero vs dash distinction,
+> and all build/lint/test gates are covered by automated tests and do not require manual verification.
