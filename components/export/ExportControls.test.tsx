@@ -91,7 +91,7 @@ describe('ExportControls — enabled state (with results)', () => {
     const { triggerDownload } = await import('@/lib/export/json-export')
     render(<ExportControls analysisResponse={MINIMAL_RESPONSE} analyzedRepos={['facebook/react']} />)
     await userEvent.click(screen.getByRole('button', { name: /download markdown/i }))
-    expect(buildMarkdownExport).toHaveBeenCalledWith(MINIMAL_RESPONSE)
+    expect(buildMarkdownExport).toHaveBeenCalledWith(MINIMAL_RESPONSE, ['facebook/react'])
     expect(triggerDownload).toHaveBeenCalled()
   })
 })

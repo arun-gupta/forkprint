@@ -123,9 +123,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     />
   )
 
-  const exportToolbar = (
+  const exportToolbar = analysisResponse ? (
     <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
-  )
+  ) : null
 
   const orgInventoryTabs: ResultTabDefinition[] = [
     {

@@ -57,6 +57,19 @@ describe('buildJsonExport', () => {
     expect(parsed.rateLimit?.remaining).toBe(4000)
   })
 
+  it('includes computed scores for each repo', async () => {
+    const result = buildJsonExport(MINIMAL_RESPONSE)
+    const text = await result.blob.text()
+    const parsed = JSON.parse(text) as { results: Array<{ scores: { activity: { value: string }; sustainability: { value: string }; responsiveness: { value: string } } }> }
+    const scores = parsed.results[0].scores
+    expect(scores).toBeDefined()
+    expect(scores.activity).toHaveProperty('value')
+    expect(scores.activity).toHaveProperty('tone')
+    expect(scores.activity).toHaveProperty('description')
+    expect(scores.sustainability).toHaveProperty('value')
+    expect(scores.responsiveness).toHaveProperty('value')
+  })
+
   it('preserves "unavailable" string values verbatim', async () => {
     const result = buildJsonExport(MINIMAL_RESPONSE)
     const text = await result.blob.text()

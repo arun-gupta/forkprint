@@ -8,19 +8,13 @@ test.describe('P1-F13 Export', () => {
     await expect(page.getByRole('button', { name: /download markdown/i })).toHaveCount(0)
   })
 
-  test('export controls are visible after simulated sign-in', async ({ page }) => {
-    // Simulate post-OAuth session via fragment
+  test('export controls are not visible before analysis', async ({ page }) => {
+    // Simulate post-OAuth session via fragment — no analysis run yet
     await page.goto('/#token=gho_test_token&username=test-user')
     await expect(page.getByText('test-user')).toBeVisible()
-    await expect(page.getByRole('button', { name: /download json/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /download markdown/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /copy link/i })).toBeVisible()
-  })
-
-  test('Download JSON button is disabled before analysis', async ({ page }) => {
-    await page.goto('/#token=gho_test_token&username=test-user')
-    await expect(page.getByRole('button', { name: /download json/i })).toBeDisabled()
-    await expect(page.getByRole('button', { name: /download markdown/i })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /download json/i })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /download markdown/i })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /copy link/i })).toHaveCount(0)
   })
 
   test('repo input is pre-populated when ?repos= query param is present in the same session', async ({ page }) => {
@@ -39,8 +33,8 @@ test.describe('P1-F13 Export', () => {
     await expect(textarea).toBeVisible()
   })
 
-  test('Copy link button is always enabled (even before analysis)', async ({ page }) => {
+  test('Copy link button is not visible before analysis', async ({ page }) => {
     await page.goto('/#token=gho_test_token&username=test-user')
-    await expect(page.getByRole('button', { name: /copy link/i })).toBeEnabled()
+    await expect(page.getByRole('button', { name: /copy link/i })).toHaveCount(0)
   })
 })

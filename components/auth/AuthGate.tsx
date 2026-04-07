@@ -27,8 +27,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
     if (token && username) {
       signIn({ token, username })
-      // Clear the fragment from the URL
-      router.replace('/', { scroll: false })
+      // Restore any query params saved before the OAuth redirect (e.g. ?repos=...)
+      const savedSearch = sessionStorage.getItem('oauth_return_search') ?? ''
+      sessionStorage.removeItem('oauth_return_search')
+      router.replace(`/${savedSearch}`, { scroll: false })
     }
   }, [router, signIn])
 

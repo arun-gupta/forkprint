@@ -1,8 +1,28 @@
-import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
+import type { AnalysisResult, AnalyzeResponse } from '@/lib/analyzer/analysis-result'
+import { getActivityScore } from '@/lib/activity/score-config'
+import { getSustainabilityScore } from '@/lib/contributors/score-config'
+import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 
 export interface JsonExportResult {
   blob: Blob
   filename: string
+}
+
+interface RepoScores {
+  activity: { value: string; tone: string; description: string }
+  sustainability: { value: string; tone: string; description: string }
+  responsiveness: { value: string; tone: string; description: string }
+}
+
+function computeScores(result: AnalysisResult): RepoScores {
+  const activity = getActivityScore(result)
+  const sustainability = getSustainabilityScore(result)
+  const responsiveness = getResponsivenessScore(result)
+  return {
+    activity: { value: String(activity.value), tone: activity.tone, description: activity.description },
+    sustainability: { value: String(sustainability.value), tone: sustainability.tone, description: sustainability.description },
+    responsiveness: { value: String(responsiveness.value), tone: responsiveness.tone, description: responsiveness.description },
+  }
 }
 
 function buildTimestamp(): string {
@@ -17,7 +37,14 @@ function buildTimestamp(): string {
 }
 
 export function buildJsonExport(response: AnalyzeResponse): JsonExportResult {
-  const json = JSON.stringify(response, null, 2)
+  const enriched = {
+    ...response,
+    results: response.results.map((result) => ({
+      ...result,
+      scores: computeScores(result),
+    })),
+  }
+  const json = JSON.stringify(enriched, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const filename = `repopulse-${buildTimestamp()}.json`
   return { blob, filename }

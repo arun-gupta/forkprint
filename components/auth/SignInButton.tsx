@@ -1,7 +1,19 @@
+'use client'
+
 export function SignInButton() {
+  function handleClick() {
+    if (typeof window === 'undefined') return
+    if (window.location.search) {
+      sessionStorage.setItem('oauth_return_search', window.location.search)
+    } else {
+      sessionStorage.removeItem('oauth_return_search')
+    }
+  }
+
   return (
     <a
       href="/api/auth/login"
+      onClick={handleClick}
       className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
     >
       <svg height="16" viewBox="0 0 16 16" width="16" aria-hidden="true" fill="currentColor">

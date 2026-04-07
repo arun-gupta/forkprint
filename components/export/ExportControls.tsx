@@ -25,7 +25,7 @@ export function ExportControls({ analysisResponse, analyzedRepos }: ExportContro
 
   function handleDownloadMarkdown() {
     if (!analysisResponse) return
-    const result = buildMarkdownExport(analysisResponse)
+    const result = buildMarkdownExport(analysisResponse, analyzedRepos)
     triggerDownload(result)
   }
 

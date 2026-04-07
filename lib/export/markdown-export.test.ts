@@ -44,7 +44,7 @@ describe('buildMarkdownReport', () => {
 
   it('includes a generated timestamp', () => {
     const md = buildMarkdownReport(MINIMAL_RESPONSE)
-    expect(md).toMatch(/Generated: \d{4}-\d{2}-\d{2}T/)
+    expect(md).toMatch(/\*\*Generated:\*\* \d{4}-\d{2}-\d{2}T/)
   })
 
   it('has one ## section per analyzed repo', () => {
@@ -57,6 +57,38 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('### Activity')
     expect(md).toContain('### Sustainability')
     expect(md).toContain('### Responsiveness')
+  })
+
+  it('includes detailed activity metrics', () => {
+    const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('Commits (30 days)')
+    expect(md).toContain('Commits (90 days)')
+    expect(md).toContain('PR merge rate')
+    expect(md).toContain('Issue closure rate')
+    expect(md).toContain('Median time to merge')
+    expect(md).toContain('Releases (12 months)')
+  })
+
+  it('includes detailed sustainability metrics', () => {
+    const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('Total contributors')
+    expect(md).toContain('Unique commit authors')
+    expect(md).toContain('Top 20% contributor share')
+  })
+
+  it('includes all responsiveness panes', () => {
+    const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('Issue & PR response time')
+    expect(md).toContain('Resolution metrics')
+    expect(md).toContain('Maintainer activity signals')
+    expect(md).toContain('Volume & backlog health')
+    expect(md).toContain('Engagement quality signals')
+  })
+
+  it('includes detailed repo metadata', () => {
+    const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('Forks')
+    expect(md).toContain('Watchers')
   })
 
   it('renders "unavailable" values as N/A', () => {
