@@ -132,14 +132,15 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('Watchers')
   })
 
-  it('renders "unavailable" values as N/A', () => {
+  it('renders "unavailable" values as —', () => {
     const response: AnalyzeResponse = {
       ...MINIMAL_RESPONSE,
       results: [{ repo: 'foo/bar', ...RESULT_BASE, stars: 'unavailable', primaryLanguage: 'unavailable' }],
     }
     const md = buildMarkdownReport(response)
-    expect(md).toContain('N/A')
+    expect(md).toContain('—')
     expect(md).not.toContain(': unavailable')
+    expect(md).not.toContain('N/A')
   })
 
   it('produces one section per repo when multiple repos analyzed', () => {
