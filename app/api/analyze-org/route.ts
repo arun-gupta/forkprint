@@ -8,10 +8,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'A GitHub organization is required.' }, { status: 400 })
     }
 
-    const token = process.env.GITHUB_TOKEN ?? body.token
+    const token = body.token
 
     if (!token) {
-      return Response.json({ error: 'A GitHub token is required.' }, { status: 401 })
+      return Response.json({ error: 'Authentication required.' }, { status: 401 })
     }
 
     const response = await analyzeOrgInventory({

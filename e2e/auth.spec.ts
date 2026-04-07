@@ -1,45 +1,46 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('P1-F02 GitHub PAT Authentication', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      window.localStorage.clear()
-    })
+test.describe('P1-F14 GitHub OAuth Authentication', () => {
+  test('shows sign-in prompt when unauthenticated', async ({ page }) => {
     await page.goto('/')
+    await expect(page.getByRole('link', { name: /sign in with github/i })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: /repository list/i })).toHaveCount(0)
   })
 
-  test('stores a PAT and reloads it on the next visit', async ({ page }) => {
-    if ((await page.getByLabel(/github personal access token/i).count()) === 0) {
-      test.skip(true, 'This scenario requires the PAT field to be visible')
-    }
-
-    await page.getByLabel(/github personal access token/i).fill('ghp_example')
-    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
-    await page.getByRole('button', { name: /analyze/i }).click()
-
-    await page.reload()
-
-    await expect(page.getByLabel(/github personal access token/i)).toHaveValue('ghp_example')
-    await expect(page.getByText(/public_repo/i)).toBeVisible()
+  test('sign-in link points to the OAuth login route', async ({ page }) => {
+    await page.goto('/')
+    const link = page.getByRole('link', { name: /sign in with github/i })
+    await expect(link).toHaveAttribute('href', '/api/auth/login')
   })
 
-  test('blocks submission when no PAT is available', async ({ page }) => {
-    if ((await page.getByLabel(/github personal access token/i).count()) === 0) {
-      test.skip(true, 'This scenario requires the PAT field to be visible')
-    }
+  test('reads token from URL fragment and shows app after OAuth callback', async ({ page }) => {
+    // Simulate what happens after the OAuth callback redirects to /#token=...&username=...
+    await page.goto('/#token=gho_test_token&username=test-user')
 
-    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
-    await page.getByRole('button', { name: /analyze/i }).click()
+    // AuthGate reads the fragment and calls signIn — app shell becomes visible
+    await expect(page.getByText('test-user')).toBeVisible()
+    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: /repository list/i })).toBeVisible()
 
-    await expect(page.getByTestId('token-error')).toBeVisible()
+    // Fragment should be cleared from the URL
+    await expect(page).toHaveURL('/')
   })
 
-  test('hides the PAT field when a server token is configured', async ({ page }) => {
-    test.skip(!process.env.GITHUB_TOKEN, 'This scenario requires GITHUB_TOKEN to be set for the app process')
+  test('sign-out clears session and returns to sign-in prompt', async ({ page }) => {
+    await page.goto('/#token=gho_test_token&username=test-user')
+    await expect(page.getByText('test-user')).toBeVisible()
 
-    await expect(page.getByLabel(/github personal access token/i)).toHaveCount(0)
-    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
-    await page.getByRole('button', { name: /analyze/i }).click()
-    await expect(page.getByTestId('repo-error')).toHaveCount(0)
+    await page.getByRole('button', { name: /sign out/i }).click()
+
+    await expect(page.getByRole('link', { name: /sign in with github/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /sign out/i })).toHaveCount(0)
+  })
+
+  test('shows error message when auth_error query param is present', async ({ page }) => {
+    await page.goto('/?auth_error=access_denied')
+
+    await expect(page.getByText(/sign-in failed/i)).toBeVisible()
+    await expect(page.getByText(/access denied/i)).toBeVisible()
+    await expect(page.getByRole('link', { name: /sign in with github/i })).toBeVisible()
   })
 })

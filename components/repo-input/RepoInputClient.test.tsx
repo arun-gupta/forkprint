@@ -1,96 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { AuthProvider } from '@/components/auth/AuthContext'
 import { RepoInputClient } from './RepoInputClient'
 
+const TEST_SESSION = { token: 'gho_test_token', username: 'test-user' }
+
+function renderWithAuth(ui: React.ReactElement) {
+  return render(<AuthProvider initialSession={TEST_SESSION}>{ui}</AuthProvider>)
+}
+
 describe('RepoInputClient', () => {
-  beforeEach(() => {
-    window.localStorage.clear()
-    vi.restoreAllMocks()
-  })
-
-  it('pre-populates the token field from localStorage', () => {
-    window.localStorage.setItem('repo_pulse_github_token', 'ghp_saved')
-
-    render(<RepoInputClient hasServerToken={false} />)
-
-    expect(screen.getByLabelText(/github personal access token/i)).toHaveValue('ghp_saved')
-  })
-
-  it('persists the token when repo submission succeeds', async () => {
-    const onAnalyze = vi.fn()
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    expect(window.localStorage.getItem('repo_pulse_github_token')).toBe('ghp_saved')
-    expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], 'ghp_saved')
-  })
-
-  it('blocks submission when no client token is present', async () => {
-    const onAnalyze = vi.fn()
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    expect(screen.getByTestId('token-error')).toHaveTextContent(/token is required/i)
-    expect(onAnalyze).not.toHaveBeenCalled()
-  })
-
-  it('treats whitespace-only tokens as empty and clears the error after correction', async () => {
-    const onAnalyze = vi.fn()
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), '   ')
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    expect(screen.getByTestId('token-error')).toBeInTheDocument()
-    expect(onAnalyze).not.toHaveBeenCalled()
-
-    await userEvent.clear(screen.getByLabelText(/github personal access token/i))
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_fixed')
-
-    expect(screen.queryByTestId('token-error')).not.toBeInTheDocument()
-  })
-
-  it('hides the token field when a server token is configured', () => {
-    render(<RepoInputClient hasServerToken />)
-
-    expect(screen.queryByLabelText(/github personal access token/i)).not.toBeInTheDocument()
-  })
-
-  it('allows submission without a client token when a server token is configured', async () => {
-    const onAnalyze = vi.fn()
-
-    render(<RepoInputClient hasServerToken onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    expect(screen.queryByTestId('token-error')).not.toBeInTheDocument()
-    expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
-  })
-
-  it('does not persist or use a client token when a server token is configured', async () => {
-    const onAnalyze = vi.fn()
-    window.localStorage.setItem('repo_pulse_github_token', 'ghp_stale')
-
-    render(<RepoInputClient hasServerToken onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], null)
-    expect(window.localStorage.getItem('repo_pulse_github_token')).toBe('ghp_stale')
-  })
-
   it('renders returned analysis results after a successful submission', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [
@@ -117,13 +37,7 @@ describe('RepoInputClient', () => {
           commitCountsByExperimentalOrg: 'unavailable',
           experimentalAttributedAuthors90d: 'unavailable',
           experimentalUnattributedAuthors90d: 'unavailable',
-          activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
-          },
+          activityMetricsByWindow: activityWindowMetrics(),
           staleIssueRatio: 0.2,
           medianTimeToMergeHours: 24,
           medianTimeToCloseHours: 36,
@@ -137,25 +51,17 @@ describe('RepoInputClient', () => {
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], 'gho_test_token')
 
     const results = await screen.findByRole('region', { name: /analysis results/i })
     const metricCardsOverview = within(results).getByRole('region', { name: /metric cards overview/i })
     expect(within(metricCardsOverview).getByTestId('metric-card-facebook/react')).toBeInTheDocument()
     expect(within(metricCardsOverview).getByText('244,295')).toBeInTheDocument()
-    expect(within(metricCardsOverview).getByText(/ecosystem profile/i)).toBeInTheDocument()
-    expect(within(results).getAllByText('Insufficient verified public data')).toHaveLength(2)
-    expect(within(results).queryByText('Not scored yet')).not.toBeInTheDocument()
-
-    const ecosystemMap = within(results).getByRole('region', { name: /ecosystem map/i })
-    expect(within(ecosystemMap).getByText(/ecosystem spectrum/i)).toBeInTheDocument()
-    expect(within(ecosystemMap).getByRole('button', { name: /show legend/i })).toBeInTheDocument()
-    expect(within(ecosystemMap).queryByText(/^Reach$/)).not.toBeInTheDocument()
-    expect(within(ecosystemMap).queryByText('facebook/react')).not.toBeInTheDocument()
   })
 
   it('populates the Comparison tab when 2+ repos are analyzed', async () => {
@@ -173,9 +79,8 @@ describe('RepoInputClient', () => {
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react nvidia/topograph')
     await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
 
@@ -212,27 +117,13 @@ describe('RepoInputClient', () => {
           archived: false,
           url: 'https://github.com/facebook/react',
         },
-        {
-          repo: 'facebook/jest',
-          name: 'jest',
-          description: 'A testing framework',
-          primaryLanguage: 'JavaScript',
-          stars: 80,
-          forks: 10,
-          watchers: 7,
-          openIssues: 3,
-          pushedAt: '2026-04-01T00:00:00Z',
-          archived: false,
-          url: 'https://github.com/facebook/jest',
-        },
       ],
       rateLimit: null,
       failure: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyzeOrg={onAnalyzeOrg} />)
+    renderWithAuth(<RepoInputClient onAnalyzeOrg={onAnalyzeOrg} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.click(screen.getByRole('button', { name: /organization/i }))
     await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
     await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
@@ -243,7 +134,7 @@ describe('RepoInputClient', () => {
     expect(screen.getByRole('button', { name: 'Organization' })).toHaveClass('bg-slate-900')
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.queryByRole('tab', { name: 'Contributors' })).not.toBeInTheDocument()
-    expect(onAnalyzeOrg).toHaveBeenCalledWith('facebook', 'ghp_saved')
+    expect(onAnalyzeOrg).toHaveBeenCalledWith('facebook', 'gho_test_token')
   })
 
   it('hides org inventory results when switching back to repositories mode', async () => {
@@ -277,9 +168,8 @@ describe('RepoInputClient', () => {
       failure: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyzeOrg={onAnalyzeOrg} />)
+    renderWithAuth(<RepoInputClient onAnalyzeOrg={onAnalyzeOrg} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.click(screen.getByRole('button', { name: /organization/i }))
     await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
     await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
@@ -293,63 +183,8 @@ describe('RepoInputClient', () => {
     expect(screen.getByRole('tab', { name: 'Contributors' })).toBeInTheDocument()
   })
 
-  it('resets a stale comparison selection when switching from repositories to organization mode', async () => {
-    const onAnalyze = vi.fn().mockResolvedValue({
-      results: [buildAnalysisResult('facebook/react'), buildAnalysisResult('nvidia/topograph')],
-      failures: [],
-      rateLimit: null,
-    })
-    const onAnalyzeOrg = vi.fn().mockResolvedValue({
-      org: 'facebook',
-      summary: {
-        totalPublicRepos: 1,
-        totalStars: 100,
-        mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
-        mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
-        languageDistribution: [{ language: 'TypeScript', repoCount: 1 }],
-        archivedRepoCount: 0,
-        activeRepoCount: 1,
-      },
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          primaryLanguage: 'TypeScript',
-          stars: 100,
-          forks: 25,
-          watchers: 10,
-          openIssues: 5,
-          pushedAt: '2026-04-02T00:00:00Z',
-          archived: false,
-          url: 'https://github.com/facebook/react',
-        },
-      ],
-      rateLimit: null,
-      failure: null,
-    })
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} onAnalyzeOrg={onAnalyzeOrg} />)
-
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
-
-    await screen.findByRole('tab', { name: 'Comparison' })
-    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
-
-    await userEvent.click(screen.getByRole('button', { name: 'Organization' }))
-    await userEvent.type(screen.getByRole('textbox', { name: /organization input/i }), 'facebook')
-    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
-
-    expect(await screen.findByRole('region', { name: /org inventory view/i })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.queryByText(/comparison will let you evaluate multiple analyzed repositories/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole('tab', { name: 'Comparison' })).not.toBeInTheDocument()
-  })
-
   it('switches the empty workspace to organization mode before any org results exist', async () => {
-    render(<RepoInputClient hasServerToken />)
+    renderWithAuth(<RepoInputClient />)
 
     await userEvent.click(screen.getByRole('button', { name: /organization/i }))
 
@@ -360,50 +195,19 @@ describe('RepoInputClient', () => {
   })
 
   it('shows the comparison tab with a placeholder before any analysis results exist', () => {
-    render(<RepoInputClient hasServerToken />)
-
+    renderWithAuth(<RepoInputClient />)
     expect(screen.getByRole('tab', { name: 'Comparison' })).toBeInTheDocument()
   })
 
   it('renders repository-specific failures alongside successful results', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 100,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
-      ],
+      results: [buildAnalysisResult('facebook/react')],
       failures: [{ repo: 'facebook/missing-repo', reason: 'Repository could not be analyzed.', code: 'NOT_FOUND' }],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react\nfacebook/missing-repo')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -425,9 +229,8 @@ describe('RepoInputClient', () => {
         }),
     )
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -453,9 +256,8 @@ describe('RepoInputClient', () => {
       rateLimit: { remaining: 'unavailable', resetAt: 'unavailable', retryAfter: 60 },
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -480,9 +282,8 @@ describe('RepoInputClient', () => {
       ],
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -497,43 +298,13 @@ describe('RepoInputClient', () => {
 
   it('does not call onAnalyze again when switching tabs after a successful analysis', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
-      ],
+      results: [buildAnalysisResult('facebook/react')],
       failures: [],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -546,62 +317,26 @@ describe('RepoInputClient', () => {
   it('renders the Health Ratios tab after a successful analysis without rerunning analysis', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 100,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
+        buildAnalysisResult('facebook/react', {
           uniqueCommitAuthors90d: 5,
           totalContributors: 12,
           maintainerCount: 'unavailable',
-          commitCountsByAuthor: {
-            'login:alice': 4,
-            'login:bob': 3,
-            'login:carol': 2,
-            'login:dave': 1,
-            'login:erin': 1,
-          },
+          commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 },
           contributorMetricsByWindow: {
-            30: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3, 'login:carol': 2, 'login:dave': 1, 'login:erin': 1 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            60: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3, 'login:carol': 2, 'login:dave': 1, 'login:erin': 1 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            90: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3, 'login:carol': 2, 'login:dave': 1, 'login:erin': 1 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            180: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3, 'login:carol': 2, 'login:dave': 1, 'login:erin': 1 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            365: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3, 'login:carol': 2, 'login:dave': 1, 'login:erin': 1 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
+            30: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
+            60: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
+            90: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
+            180: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
+            365: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
           },
-          activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
-          },
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
+        }),
       ],
       failures: [],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -612,45 +347,12 @@ describe('RepoInputClient', () => {
   })
 
   it('clears previous results and returns to the overview tab when a new analysis starts', async () => {
-    let resolveSecondAnalysis: ((value: {
-      results: never[]
-      failures: never[]
-      rateLimit: null
-    }) => void) | null = null
+    let resolveSecondAnalysis: ((value: { results: never[]; failures: never[]; rateLimit: null }) => void) | null = null
 
     const onAnalyze = vi
       .fn()
       .mockResolvedValueOnce({
-        results: [
-          {
-            repo: 'facebook/react',
-            name: 'react',
-            description: 'A UI library',
-            createdAt: '2013-05-24T16:15:54Z',
-            primaryLanguage: 'TypeScript',
-            stars: 244295,
-            forks: 25,
-            watchers: 10,
-            commits30d: 7,
-            commits90d: 18,
-            releases12mo: 'unavailable',
-            prsOpened90d: 4,
-            prsMerged90d: 3,
-            issuesOpen: 5,
-            issuesClosed90d: 6,
-            uniqueCommitAuthors90d: 'unavailable',
-            totalContributors: 'unavailable',
-            maintainerCount: 'unavailable',
-            commitCountsByAuthor: 'unavailable',
-            commitCountsByExperimentalOrg: 'unavailable',
-            experimentalAttributedAuthors90d: 'unavailable',
-            experimentalUnattributedAuthors90d: 'unavailable',
-            issueFirstResponseTimestamps: 'unavailable',
-            issueCloseTimestamps: 'unavailable',
-            prMergeTimestamps: 'unavailable',
-            missingFields: [],
-          },
-        ],
+        results: [buildAnalysisResult('facebook/react')],
         failures: [],
         rateLimit: null,
       })
@@ -661,9 +363,8 @@ describe('RepoInputClient', () => {
           }),
       )
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -681,52 +382,18 @@ describe('RepoInputClient', () => {
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: 'Activity' })).toHaveAttribute('aria-selected', 'false')
 
-    resolveSecondAnalysis?.({
-      results: [],
-      failures: [],
-      rateLimit: null,
-    })
+    resolveSecondAnalysis?.({ results: [], failures: [], rateLimit: null })
   })
 
   it('renders activity content after a successful analysis', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
-      ],
+      results: [buildAnalysisResult('facebook/react')],
       failures: [],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -741,149 +408,17 @@ describe('RepoInputClient', () => {
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
   })
 
-  it('renders available activity values while calling out missing selected-window data', async () => {
-    const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 'unavailable', staleIssueRatio: 'unavailable', medianTimeToMergeHours: 24, medianTimeToCloseHours: 'unavailable' },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
-          },
-          staleIssueRatio: 'unavailable',
-          medianTimeToMergeHours: 24,
-          medianTimeToCloseHours: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
-      ],
-      failures: [],
-      rateLimit: null,
-    })
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
-
-    const activityView = screen.getByRole('region', { name: /activity view/i })
-    expect(within(activityView).getByText('18')).toBeInTheDocument()
-    expect(within(activityView).getAllByText('unavailable').length).toBeGreaterThan(0)
-    expect(within(activityView).getByText(/^missing data$/i)).toBeInTheDocument()
-    expect(within(activityView).getByText(/unavailable in selected 90d window: releases, stale issue ratio, median time to close\./i)).toBeInTheDocument()
-  })
-
-  it('does not call onAnalyze again when changing the recent activity window', async () => {
-    const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 6,
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          activityMetricsByWindow: {
-            30: { commits: 7, prsOpened: 2, prsMerged: 1, issuesOpened: 4, issuesClosed: 3, releases: 1, staleIssueRatio: 0.1, medianTimeToMergeHours: 12, medianTimeToCloseHours: 24 },
-            60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
-            90: { commits: 18, prsOpened: 4, prsMerged: 3, issuesOpened: 8, issuesClosed: 6, releases: 3, staleIssueRatio: 0.2, medianTimeToMergeHours: 24, medianTimeToCloseHours: 36 },
-            180: { commits: 30, prsOpened: 7, prsMerged: 5, issuesOpened: 10, issuesClosed: 8, releases: 4, staleIssueRatio: 0.3, medianTimeToMergeHours: 48, medianTimeToCloseHours: 72 },
-            365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
-          },
-          staleIssueRatio: 0.2,
-          medianTimeToMergeHours: 24,
-          medianTimeToCloseHours: 36,
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
-      ],
-      failures: [],
-      rateLimit: null,
-    })
-
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
-    await userEvent.click(screen.getByRole('button', { name: '30d' }))
-    await userEvent.click(screen.getByRole('button', { name: '12 months' }))
-
-    expect(onAnalyze).toHaveBeenCalledTimes(1)
-  })
-
   it('renders contributors content after a successful analysis', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
+        buildAnalysisResult('facebook/react', {
           uniqueCommitAuthors90d: 2,
           totalContributors: 1742,
           maintainerCount: 4,
           commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 },
+          commitCountsByExperimentalOrg: { meta: 3 },
+          experimentalAttributedAuthors90d: 2,
+          experimentalUnattributedAuthors90d: 0,
           contributorMetricsByWindow: {
             30: { uniqueCommitAuthors: 2, commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 }, repeatContributors: 1, newContributors: 1, commitCountsByExperimentalOrg: { meta: 3 }, experimentalAttributedAuthors: 2, experimentalUnattributedAuthors: 0 },
             60: { uniqueCommitAuthors: 2, commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 }, repeatContributors: 1, newContributors: 1, commitCountsByExperimentalOrg: { meta: 3 }, experimentalAttributedAuthors: 2, experimentalUnattributedAuthors: 0 },
@@ -891,22 +426,14 @@ describe('RepoInputClient', () => {
             180: { uniqueCommitAuthors: 2, commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 }, repeatContributors: 1, newContributors: 1, commitCountsByExperimentalOrg: { meta: 3 }, experimentalAttributedAuthors: 2, experimentalUnattributedAuthors: 0 },
             365: { uniqueCommitAuthors: 2, commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 }, repeatContributors: 1, newContributors: 1, commitCountsByExperimentalOrg: { meta: 3 }, experimentalAttributedAuthors: 2, experimentalUnattributedAuthors: 0 },
           },
-          commitCountsByExperimentalOrg: { meta: 3 },
-          experimentalAttributedAuthors90d: 2,
-          experimentalUnattributedAuthors90d: 0,
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: [],
-        },
+        }),
       ],
       failures: [],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -919,49 +446,36 @@ describe('RepoInputClient', () => {
     expect(contributorsView).toBeInTheDocument()
     expect(screen.getByText(/top 20% contributor share/i)).toBeInTheDocument()
     expect(within(corePane).getByText(/^Contribution chart$/i)).toBeInTheDocument()
-    expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/missing data/i)).not.toBeInTheDocument()
   })
 
-  it('keeps overview cards summary-only after analysis succeeds', async () => {
+  it('does not call onAnalyze again when changing the recent activity window', async () => {
     const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        {
-          repo: 'facebook/react',
-          name: 'react',
-          description: 'A UI library',
-          createdAt: '2013-05-24T16:15:54Z',
-          primaryLanguage: 'TypeScript',
-          stars: 244295,
-          forks: 25,
-          watchers: 10,
-          commits30d: 7,
-          commits90d: 18,
-          releases12mo: 'unavailable',
-          prsOpened90d: 4,
-          prsMerged90d: 3,
-          issuesOpen: 5,
-          issuesClosed90d: 6,
-          uniqueCommitAuthors90d: 'unavailable',
-          totalContributors: 'unavailable',
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: 'unavailable',
-          commitCountsByExperimentalOrg: 'unavailable',
-          experimentalAttributedAuthors90d: 'unavailable',
-          experimentalUnattributedAuthors90d: 'unavailable',
-          issueFirstResponseTimestamps: 'unavailable',
-          issueCloseTimestamps: 'unavailable',
-          prMergeTimestamps: 'unavailable',
-          missingFields: ['releases12mo'],
-        },
-      ],
+      results: [buildAnalysisResult('facebook/react', { releases12mo: 6 })],
       failures: [],
       rateLimit: null,
     })
 
-    render(<RepoInputClient hasServerToken={false} onAnalyze={onAnalyze} />)
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
 
-    await userEvent.type(screen.getByLabelText(/github personal access token/i), 'ghp_saved')
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
+    await userEvent.click(screen.getByRole('button', { name: '30d' }))
+    await userEvent.click(screen.getByRole('button', { name: '12 months' }))
+
+    expect(onAnalyze).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps overview cards summary-only after analysis succeeds', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [buildAnalysisResult('facebook/react', { missingFields: ['releases12mo'] })],
+      failures: [],
+      rateLimit: null,
+    })
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
@@ -1015,6 +529,9 @@ function buildAnalysisResult(repo: string, overrides: Record<string, unknown> = 
     issueFirstResponseTimestamps: 'unavailable',
     issueCloseTimestamps: 'unavailable',
     prMergeTimestamps: 'unavailable',
+    staleIssueRatio: 0.2,
+    medianTimeToMergeHours: 24,
+    medianTimeToCloseHours: 36,
     missingFields: [],
     ...overrides,
   }

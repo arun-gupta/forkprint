@@ -12,13 +12,14 @@ This document is the canonical product definition for RepoPulse. It is the sourc
 
 ## Roadmap
 
-RepoPulse is built in three phases. Phase 1 architectural decisions must not block Phases 2 or 3.
+RepoPulse is built in four phases. Phase 1 architectural decisions must not block Phases 2, 3, or 4.
 
 - **Phase 1** — Web app (Next.js / Vercel): interactive dashboard for on-demand repo analysis
 - **Phase 2** — GitHub Action: scheduled or triggered analysis with artifact output and threshold alerting
 - **Phase 3** — MCP Server: exposes analysis as a tool callable by AI assistants (Claude, Cursor, etc.)
+- **Phase 4** — GitLab support: port the analyzer, data fetching, and auth layers to work with GitLab in addition to GitHub, across all delivery phases (P1, P2, P3)
 
-The core analysis logic is shared across all three phases via a framework-agnostic analyzer module. No phase duplicates it.
+The core analysis logic is shared across all phases via a framework-agnostic analyzer module. No phase duplicates it. Phase 4 introduces a provider abstraction so GitHub and GitLab data sources are interchangeable.
 
 ---
 
@@ -498,22 +499,24 @@ The UI makes data gaps explicit and never hides them.
 
 #### `[P1-F14]` GitHub OAuth Authentication
 
-User can authenticate with GitHub via OAuth instead of manually entering a PAT.
+User authenticates with GitHub via OAuth. OAuth replaces the PAT input and the server-side `GITHUB_TOKEN` — each user's own OAuth token is used for all API calls, distributing rate limit consumption across users rather than sharing a single server quota.
 
 **Acceptance criteria**
 - "Sign in with GitHub" button initiates the OAuth flow using a registered GitHub OAuth App
-- OAuth access token is stored in `localStorage` — same storage contract as PAT
+- OAuth access token is stored in `localStorage`
 - OAuth token grants the same repository read access expected by the analyzer
 - After successful OAuth login, the token input field is replaced with a signed-in indicator showing the GitHub username
 - User can sign out, which clears the stored OAuth token from `localStorage`
-- If a server-side `GITHUB_TOKEN` is configured, the OAuth flow is hidden (same behavior as P1-F02)
+- OAuth is required to use the app — unauthenticated access is not supported
 - `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are stored as environment variables — never committed, never sent to the client
 - OAuth callback is handled server-side; the access token is never exposed in the URL
+- Server-side `GITHUB_TOKEN` environment variable is removed — no longer needed
+- PAT input field is removed from the UI
 
 **Out of scope**
 - Multi-account or org-level OAuth management
 - Token refresh / long-lived session management (Phase 1 is stateless)
-- Replacing PAT support — PAT and OAuth coexist; PAT remains available for users who prefer it
+- Coexistence with PAT — PAT support is fully replaced by OAuth
 
 ---
 

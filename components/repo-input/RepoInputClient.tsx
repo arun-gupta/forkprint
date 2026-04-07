@@ -10,22 +10,19 @@ import { HealthRatiosView } from '@/components/health-ratios/HealthRatiosView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { ResponsivenessView } from '@/components/responsiveness/ResponsivenessView'
-import { TokenInput } from '@/components/token-input/TokenInput'
+import { useAuth } from '@/components/auth/AuthContext'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
-import { readToken, writeToken } from '@/lib/token-storage'
 import { RepoInputForm } from './RepoInputForm'
 
 interface RepoInputClientProps {
-  hasServerToken: boolean
-  onAnalyze?: (repos: string[], token: string | null) => Promise<AnalyzeResponse> | AnalyzeResponse | void
-  onAnalyzeOrg?: (org: string, token: string | null) => Promise<OrgInventoryResponse> | OrgInventoryResponse | void
+  onAnalyze?: (repos: string[], token: string) => Promise<AnalyzeResponse> | AnalyzeResponse | void
+  onAnalyzeOrg?: (org: string, token: string) => Promise<OrgInventoryResponse> | OrgInventoryResponse | void
 }
 
-export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
-  const [token, setToken] = useState(() => (hasServerToken ? '' : readToken() ?? ''))
-  const [tokenError, setTokenError] = useState<string | null>(null)
+export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
+  const { session } = useAuth()
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
   const [orgInventoryResponse, setOrgInventoryResponse] = useState<OrgInventoryResponse | null>(null)
   const [submissionError, setSubmissionError] = useState<string | null>(null)
@@ -56,15 +53,8 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
   }, [analysisResponse])
 
   async function handleSubmit(repos: string[]) {
-    const trimmedToken = token.trim()
+    if (!session?.token) return
 
-    if (!hasServerToken && !trimmedToken) {
-      writeToken(token)
-      setTokenError('A GitHub Personal Access Token is required to continue.')
-      return
-    }
-
-    setTokenError(null)
     setSubmissionError(null)
     setAnalysisResponse(null)
     setOrgInventoryResponse(null)
@@ -73,14 +63,10 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
     setLoadingRepos(repos)
     setLoadingOrg(null)
 
-    if (!hasServerToken) {
-      writeToken(token)
-    }
-
     try {
       const response = onAnalyze
-        ? await onAnalyze(repos, hasServerToken ? null : trimmedToken)
-        : await submitAnalysisRequest(repos, hasServerToken ? null : trimmedToken)
+        ? await onAnalyze(repos, session.token)
+        : await submitAnalysisRequest(repos, session.token)
 
       if (response) {
         setAnalysisResponse(response)
@@ -94,15 +80,8 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
   }
 
   async function handleOrgSubmit(org: string) {
-    const trimmedToken = token.trim()
+    if (!session?.token) return
 
-    if (!hasServerToken && !trimmedToken) {
-      writeToken(token)
-      setTokenError('A GitHub Personal Access Token is required to continue.')
-      return
-    }
-
-    setTokenError(null)
     setSubmissionError(null)
     setAnalysisResponse(null)
     setOrgInventoryResponse(null)
@@ -111,14 +90,10 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
     setLoadingRepos([])
     setLoadingOrg(org)
 
-    if (!hasServerToken) {
-      writeToken(token)
-    }
-
     try {
       const response = onAnalyzeOrg
-        ? await onAnalyzeOrg(org, hasServerToken ? null : trimmedToken)
-        : await submitOrgInventoryRequest(org, hasServerToken ? null : trimmedToken)
+        ? await onAnalyzeOrg(org, session.token)
+        : await submitOrgInventoryRequest(org, session.token)
 
       if (response) {
         setOrgInventoryResponse(response)
@@ -132,24 +107,12 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
   }
 
   const analysisPanel = (
-    <div className="space-y-6">
-      {!hasServerToken ? (
-        <TokenInput
-          initialValue={token}
-          error={tokenError}
-          onChange={(value) => {
-            setToken(value)
-            setTokenError(null)
-          }}
-        />
-      ) : null}
-      <RepoInputForm
-        mode={inputMode}
-        onModeChange={handleModeChange}
-        onSubmitRepos={handleSubmit}
-        onSubmitOrg={handleOrgSubmit}
-      />
-    </div>
+    <RepoInputForm
+      mode={inputMode}
+      onModeChange={handleModeChange}
+      onSubmitRepos={handleSubmit}
+      onSubmitOrg={handleOrgSubmit}
+    />
   )
 
   const orgInventoryTabs: ResultTabDefinition[] = [
@@ -222,8 +185,8 @@ export function RepoInputClient({ hasServerToken, onAnalyze, onAnalyzeOrg }: Rep
               <li key={repo}>{repo}</li>
             ))}
           </ul>
-          </section>
-        ) : null}
+        </section>
+      ) : null}
       {loadingOrg ? (
         <section aria-label="Org inventory loading state" className="rounded border border-blue-200 bg-blue-50 p-4">
           <h2 className="font-semibold text-blue-900">Loading org inventory for:</h2>
@@ -363,67 +326,39 @@ function formatDisplayValue(value: number | string) {
   if (typeof value === 'number') {
     return new Intl.NumberFormat('en-US').format(value)
   }
-
   return value
 }
 
 function formatRateLimitReset(value: string) {
-  if (value === 'unavailable') {
-    return value
-  }
-
+  if (value === 'unavailable') return value
   const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
 function formatRetryAfter(value: number | string) {
-  if (typeof value !== 'number') {
-    return value
-  }
-
+  if (typeof value !== 'number') return value
   return `${new Intl.NumberFormat('en-US').format(value)}s`
 }
 
-async function submitAnalysisRequest(repos: string[], token: string | null): Promise<AnalyzeResponse> {
+async function submitAnalysisRequest(repos: string[], token: string): Promise<AnalyzeResponse> {
   const response = await fetch('/api/analyze', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repos, token }),
   })
-
   const payload = (await response.json()) as AnalyzeResponse & { error?: string }
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? 'Analysis request failed.')
-  }
-
+  if (!response.ok) throw new Error(payload.error ?? 'Analysis request failed.')
   return payload
 }
 
-async function submitOrgInventoryRequest(org: string, token: string | null): Promise<OrgInventoryResponse> {
+async function submitOrgInventoryRequest(org: string, token: string): Promise<OrgInventoryResponse> {
   const response = await fetch('/api/analyze-org', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ org, token }),
   })
-
   const payload = (await response.json()) as OrgInventoryResponse & { error?: string }
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? 'Organization inventory request failed.')
-  }
-
+  if (!response.ok) throw new Error(payload.error ?? 'Organization inventory request failed.')
   return payload
 }

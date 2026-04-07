@@ -76,7 +76,7 @@ This is the planned implementation order for Phase 1. It may differ from the fea
 | 11 | P1-F11 | Health Ratios | ✅ Done |
 | 12 | P1-F16 | Org-Level Repo Inventory | ✅ Done |
 | 13 | P1-F06 | Repo Comparison | ✅ Done |
-| 14 | P1-F14 | GitHub OAuth Authentication | — |
+| 14 | P1-F14 | GitHub OAuth Authentication | ✅ Done |
 | 15 | P1-F13 | Export | — |
 | 16 | P1-F12 | Missing Data & Accuracy | — |
 
@@ -95,9 +95,11 @@ npm run build
 
 ---
 
-## Phase 2 and Phase 3
+## Phase 2, Phase 3, and Phase 4
 
 When Phase 1 is complete and deployed, run the same loop for each Phase 2 feature (`P2-F01`, `P2-F02`), then Phase 3 (`P3-F01`, `P3-F02`). The analyzer module must not be modified to accommodate Phase 2 or 3 — only wrapped.
+
+Phase 4 ports the application to support GitLab in addition to GitHub. It introduces a provider abstraction layer (GitHub and GitLab implement the same interface) so the analyzer, delivery phases, and UI remain unchanged. Phase 4 begins only after Phase 3 is complete.
 
 ---
 
