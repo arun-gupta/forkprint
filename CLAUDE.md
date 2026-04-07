@@ -22,6 +22,9 @@ Command definitions are available in `.claude/commands/`.
 
 These command definitions live in `.claude/commands/`.
 
+## PR Merge Rule
+Never merge a PR without the user explicitly confirming that every item in the PR test plan is checked. Do not infer confirmation from phrases like "manual check confirmed" if any checkbox remains unchecked — ask explicitly before merging.
+
 ## On Ambiguity
 If a spec is missing, incomplete, or conflicts with the constitution — 
 stop and ask. Do not infer. Do not proceed.
