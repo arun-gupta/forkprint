@@ -4,6 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { RepoInputClient } from './RepoInputClient'
 
+const mockUseSearchParams = vi.fn(() => new URLSearchParams())
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => mockUseSearchParams(),
+}))
+
 const TEST_SESSION = { token: 'gho_test_token', username: 'test-user' }
 
 function renderWithAuth(ui: React.ReactElement) {
@@ -546,3 +552,19 @@ function activityWindowMetrics(overrides: Record<string, unknown> = {}) {
     365: { commits: 55, prsOpened: 12, prsMerged: 9, issuesOpened: 16, issuesClosed: 13, releases: 6, staleIssueRatio: 0.4, medianTimeToMergeHours: 96, medianTimeToCloseHours: 144 },
   }
 }
+
+describe('RepoInputClient — shareable URL pre-population', () => {
+  it('pre-populates the repo textarea when ?repos= query param is present', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('repos=facebook%2Freact%2Cvercel%2Fnext.js'))
+    renderWithAuth(<RepoInputClient />)
+    const textarea = screen.getByRole('textbox', { name: /repository list/i })
+    expect(textarea).toHaveValue('facebook/react\nvercel/next.js')
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+  })
+
+  it('leaves repo textarea empty when no ?repos= param is present', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+    renderWithAuth(<RepoInputClient />)
+    expect(screen.getByRole('textbox', { name: /repository list/i })).toHaveValue('')
+  })
+})

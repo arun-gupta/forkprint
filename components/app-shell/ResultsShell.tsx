@@ -17,6 +17,7 @@ interface ResultsShellProps {
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
   resetKey?: number
+  toolbar?: React.ReactNode
 }
 
 export function ResultsShell({
@@ -30,6 +31,7 @@ export function ResultsShell({
   tabs = resultTabs,
   initialActiveTab = 'overview',
   resetKey,
+  toolbar,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>(initialActiveTab)
 
@@ -74,6 +76,7 @@ export function ResultsShell({
           </section>
 
           <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} />
             <div className="mt-6">
               {currentActiveTab === 'overview' ? overview : null}

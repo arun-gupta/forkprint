@@ -1,6 +1,6 @@
 # RepoPulse
 
-RepoPulse is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and compare repositories side by side in a web dashboard. Export is still on the roadmap.
+RepoPulse is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and compare repositories side by side in a web dashboard. Results can be exported as JSON or Markdown, or shared via a shareable URL.
 
 Live in action: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 

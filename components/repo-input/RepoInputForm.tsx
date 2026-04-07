@@ -9,6 +9,7 @@ interface RepoInputFormProps {
   onSubmitOrg: (org: string) => void
   mode?: 'repos' | 'org'
   onModeChange?: (mode: 'repos' | 'org') => void
+  initialRepoValue?: string
 }
 
 export function RepoInputForm({
@@ -16,9 +17,10 @@ export function RepoInputForm({
   onSubmitOrg,
   mode: controlledMode,
   onModeChange,
+  initialRepoValue = '',
 }: RepoInputFormProps) {
   const [uncontrolledMode, setUncontrolledMode] = useState<'repos' | 'org'>('repos')
-  const [repoValue, setRepoValue] = useState('')
+  const [repoValue, setRepoValue] = useState(initialRepoValue)
   const [orgValue, setOrgValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const mode = controlledMode ?? uncontrolledMode

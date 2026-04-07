@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
@@ -10,10 +11,12 @@ import { HealthRatiosView } from '@/components/health-ratios/HealthRatiosView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { ResponsivenessView } from '@/components/responsiveness/ResponsivenessView'
+import { ExportControls } from '@/components/export/ExportControls'
 import { useAuth } from '@/components/auth/AuthContext'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
+import { decodeRepos } from '@/lib/export/shareable-url'
 import { RepoInputForm } from './RepoInputForm'
 
 interface RepoInputClientProps {
@@ -23,7 +26,10 @@ interface RepoInputClientProps {
 
 export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
   const { session } = useAuth()
+  const searchParams = useSearchParams()
+  const initialRepoValue = decodeRepos(searchParams.toString()).join('\n')
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
+  const [analyzedRepos, setAnalyzedRepos] = useState<string[]>([])
   const [orgInventoryResponse, setOrgInventoryResponse] = useState<OrgInventoryResponse | null>(null)
   const [submissionError, setSubmissionError] = useState<string | null>(null)
   const [loadingRepos, setLoadingRepos] = useState<string[]>([])
@@ -70,6 +76,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
       if (response) {
         setAnalysisResponse(response)
+        setAnalyzedRepos(repos)
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Analysis request failed.'
@@ -112,8 +119,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       onModeChange={handleModeChange}
       onSubmitRepos={handleSubmit}
       onSubmitOrg={handleOrgSubmit}
+      initialRepoValue={initialRepoValue}
     />
   )
+
+  const exportToolbar = analysisResponse ? (
+    <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
+  ) : null
 
   const orgInventoryTabs: ResultTabDefinition[] = [
     {
@@ -258,6 +270,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       resetKey={resultsResetKey}
       initialActiveTab="overview"
       analysisPanel={analysisPanel}
+      toolbar={exportToolbar}
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
       overview={overviewContent}
       contributors={
