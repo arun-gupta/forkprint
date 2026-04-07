@@ -4,6 +4,7 @@ import { buildComparisonSections } from '@/lib/comparison/view-model'
 import { limitComparedResults } from '@/lib/comparison/view-model'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
+import { buildSpectrumProfile } from '@/lib/ecosystem-map/classification'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
 import { formatHours, formatPercentage, getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { encodeRepos } from '@/lib/export/shareable-url'
@@ -14,24 +15,39 @@ export interface MarkdownExportResult {
 }
 
 function fmt(value: unknown): string {
-  if (value === 'unavailable' || value === null || value === undefined) return 'N/A'
+  if (value === 'unavailable' || value === null || value === undefined) return '—'
   if (typeof value === 'number') return new Intl.NumberFormat('en-US').format(value)
   return String(value)
 }
 
 function fmtHours(value: unknown): string {
-  if (value === 'unavailable' || value === null || value === undefined) return 'N/A'
+  if (value === 'unavailable' || value === null || value === undefined) return '—'
   return formatHours(value as number | 'unavailable')
 }
 
 function fmtPct(value: unknown): string {
-  if (value === 'unavailable' || value === null || value === undefined) return 'N/A'
+  if (value === 'unavailable' || value === null || value === undefined) return '—'
   return formatPercentage(value as number | 'unavailable')
 }
 
 function fmtRatio(numerator: number | 'unavailable', denominator: number | 'unavailable'): string {
-  if (typeof numerator !== 'number' || typeof denominator !== 'number' || denominator <= 0) return 'N/A'
+  if (typeof numerator !== 'number' || typeof denominator !== 'number' || denominator <= 0) return '—'
   return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format((numerator / denominator) * 100)}%`
+}
+
+function formatCreatedAt(value: string | 'unavailable'): string | null {
+  if (value === 'unavailable') return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date)
+}
+
+function mdTable(rows: [string, string][]): string {
+  const lines = ['| Metric | Value |', '| --- | --- |']
+  for (const [label, value] of rows) {
+    lines.push(`| ${label} | ${value} |`)
+  }
+  return lines.join('\n')
 }
 
 function getResponsivenessMetrics(result: AnalysisResult): ResponsivenessMetrics {
@@ -86,98 +102,180 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
 
   const githubUrl = `https://github.com/${result.repo}`
 
+  // Per-repo header
   const lines: string[] = [
     `## ${result.repo}`,
     '',
-    `- **GitHub**: [${result.repo}](${githubUrl})`,
-    ...(appUrl ? [`- **Analysis**: [View in RepoPulse](${appUrl})`] : []),
+  ]
+  if (result.description && result.description !== 'unavailable') {
+    lines.push(result.description, '')
+  }
+  lines.push(
+    `**GitHub**: [${result.repo}](${githubUrl})` + (appUrl ? ` | **RepoPulse**: [View analysis](${appUrl})` : ''),
     '',
-    '### Overview',
+  )
+
+  // Overview section — mirrors the web Overview tab layout
+  const spectrumProfile = buildSpectrumProfile(result)
+  const createdLabel = formatCreatedAt(result.createdAt)
+
+  lines.push('### Overview', '')
+  if (createdLabel) lines.push(`**Created**: ${createdLabel}`, '')
+
+  if (spectrumProfile) {
+    lines.push(
+      '#### Ecosystem Profile',
+      '',
+      '| Dimension | Tier | Detail |',
+      '| --- | --- | --- |',
+      `| Reach | ${spectrumProfile.reachTier} | — |`,
+      `| Engagement | ${spectrumProfile.engagementTier} | ${spectrumProfile.forkRateLabel} fork rate |`,
+      `| Attention | ${spectrumProfile.attentionTier} | ${spectrumProfile.watcherRateLabel} watcher rate |`,
+      '',
+    )
+  }
+
+  lines.push(
+    mdTable([
+      ['Stars', fmt(result.stars)],
+      ['Forks', fmt(result.forks)],
+      ['Watchers', fmt(result.watchers)],
+      ['Primary language', fmt(result.primaryLanguage)],
+    ]),
     '',
-    `- **Stars**: ${fmt(result.stars)}`,
-    `- **Forks**: ${fmt(result.forks)}`,
-    `- **Watchers**: ${fmt(result.watchers)}`,
-    `- **Primary language**: ${fmt(result.primaryLanguage)}`,
-    `- **Description**: ${fmt(result.description)}`,
-    `- **Created**: ${fmt(result.createdAt)}`,
+    '| Score | Value |',
+    '| --- | --- |',
+    `| Sustainability | ${sustainability.value} |`,
+    `| Activity | ${activity.value} |`,
+    `| Responsiveness | ${responsiveness.value} |`,
     '',
+  )
+
+  // Contributors section (contains Sustainability score)
+  const typesOfContributions = contributors?.sustainabilityMetrics.find((m) => m.label === 'Types of contributions')?.value
+  lines.push(
     '### Contributors',
     '',
-    `- **Score**: ${sustainability.value}`,
-    `- **Total contributors**: ${fmt(result.totalContributors)}`,
-    `- **Unique commit authors (90 days)**: ${fmt(result.uniqueCommitAuthors90d)}`,
-    `- **Repeat contributors (90 days)**: ${fmt(result.contributorMetricsByWindow?.[90]?.repeatContributors ?? 'unavailable')}`,
-    `- **New contributors (90 days)**: ${fmt(result.contributorMetricsByWindow?.[90]?.newContributors ?? 'unavailable')}`,
-    `- **Maintainer count**: ${fmt(result.maintainerCount)}`,
-    `- **Top 20% contributor share**: ${fmtPct(sustainability.concentration)}`,
-    ...(contributors ? contributors.sustainabilityMetrics
-      .filter((m) => m.label === 'Types of contributions')
-      .map((m) => `- **Types of contributions**: ${m.value}`) : []),
-    ...(contributors?.experimentalMetrics.length
-      ? [
-          '',
-          '#### Experimental (heuristic org attribution)',
-          '',
-          ...contributors.experimentalMetrics.map((m) => `- **${m.label}**: ${m.value}`),
-        ]
-      : []),
+    `**Sustainability score**: ${sustainability.value}`,
     '',
+    mdTable([
+      ['Total contributors', fmt(result.totalContributors)],
+      ['Unique commit authors (90 days)', fmt(result.uniqueCommitAuthors90d)],
+      ['Repeat contributors (90 days)', fmt(result.contributorMetricsByWindow?.[90]?.repeatContributors ?? 'unavailable')],
+      ['New contributors (90 days)', fmt(result.contributorMetricsByWindow?.[90]?.newContributors ?? 'unavailable')],
+      ['Maintainer count', fmt(result.maintainerCount)],
+      ['Top 20% contributor share', fmtPct(sustainability.concentration)],
+      ...(typesOfContributions ? [['Types of contributions', typesOfContributions] as [string, string]] : []),
+    ]),
+    '',
+  )
+
+  if (contributors?.experimentalMetrics.length) {
+    lines.push(
+      '> **Experimental (heuristic org attribution)**',
+      '>',
+      '> Heuristic public-org attribution may be incomplete or inaccurate.',
+      '>',
+      ...contributors.experimentalMetrics.map((m) => `> | ${m.label} | ${m.value} |`).flatMap((row, i) =>
+        i === 0 ? ['> | Metric | Value |', '> | --- | --- |', row] : [row]
+      ),
+      '',
+    )
+  }
+
+  // Activity section with grouped tables
+  lines.push(
     '### Activity',
     '',
-    `- **Score**: ${activity.value}`,
-    `- **Commits (30 days)**: ${fmt(result.commits30d)}`,
-    `- **Commits (90 days)**: ${fmt(result.commits90d)}`,
-    `- **PRs opened (90 days)**: ${fmt(prsOpened)}`,
-    `- **PRs merged (90 days)**: ${fmt(prsMerged)}`,
-    `- **PR merge rate**: ${fmtRatio(prsMerged, prsOpened)}`,
-    `- **Issues opened (90 days)**: ${fmt(issuesOpened)}`,
-    `- **Issues closed (90 days)**: ${fmt(issuesClosed)}`,
-    `- **Issue closure rate**: ${fmtRatio(issuesClosed, issuesOpened)}`,
-    `- **Stale issue ratio**: ${fmtPct(staleIssueRatio)}`,
-    `- **Median time to merge**: ${fmtHours(medianMergeHours)}`,
-    `- **Median time to close**: ${fmtHours(medianCloseHours)}`,
-    `- **Releases (12 months)**: ${fmt(releases)}`,
+    `**Score**: ${activity.value}`,
     '',
+    '#### Commits',
+    '',
+    mdTable([
+      ['Commits (30 days)', fmt(result.commits30d)],
+      ['Commits (90 days)', fmt(result.commits90d)],
+    ]),
+    '',
+    '#### Pull requests',
+    '',
+    mdTable([
+      ['PRs opened (90 days)', fmt(prsOpened)],
+      ['PRs merged (90 days)', fmt(prsMerged)],
+      ['PR merge rate', fmtRatio(prsMerged, prsOpened)],
+      ['Median time to merge', fmtHours(medianMergeHours)],
+    ]),
+    '',
+    '#### Issues',
+    '',
+    mdTable([
+      ['Issues opened (90 days)', fmt(issuesOpened)],
+      ['Issues closed (90 days)', fmt(issuesClosed)],
+      ['Issue closure rate', fmtRatio(issuesClosed, issuesOpened)],
+      ['Stale issue ratio', fmtPct(staleIssueRatio)],
+      ['Median time to close', fmtHours(medianCloseHours)],
+    ]),
+    '',
+    '#### Releases',
+    '',
+    mdTable([
+      ['Releases (12 months)', fmt(releases)],
+    ]),
+    '',
+  )
+
+  // Responsiveness section with grouped tables
+  lines.push(
     '### Responsiveness',
     '',
-    `- **Score**: ${responsiveness.value}`,
+    `**Score**: ${responsiveness.value}`,
     '',
     '#### Issue & PR response time',
     '',
-    `- **Issue first response (median)**: ${fmtHours(rm.issueFirstResponseMedianHours)}`,
-    `- **Issue first response (p90)**: ${fmtHours(rm.issueFirstResponseP90Hours)}`,
-    `- **PR first review (median)**: ${fmtHours(rm.prFirstReviewMedianHours)}`,
-    `- **PR first review (p90)**: ${fmtHours(rm.prFirstReviewP90Hours)}`,
+    mdTable([
+      ['Issue first response (median)', fmtHours(rm.issueFirstResponseMedianHours)],
+      ['Issue first response (p90)', fmtHours(rm.issueFirstResponseP90Hours)],
+      ['PR first review (median)', fmtHours(rm.prFirstReviewMedianHours)],
+      ['PR first review (p90)', fmtHours(rm.prFirstReviewP90Hours)],
+    ]),
     '',
     '#### Resolution metrics',
     '',
-    `- **Issue resolution duration (median)**: ${fmtHours(rm.issueResolutionMedianHours)}`,
-    `- **Issue resolution duration (p90)**: ${fmtHours(rm.issueResolutionP90Hours)}`,
-    `- **PR merge duration (median)**: ${fmtHours(rm.prMergeMedianHours)}`,
-    `- **PR merge duration (p90)**: ${fmtHours(rm.prMergeP90Hours)}`,
-    `- **Issue resolution rate**: ${fmtPct(rm.issueResolutionRate)}`,
+    mdTable([
+      ['Issue resolution duration (median)', fmtHours(rm.issueResolutionMedianHours)],
+      ['Issue resolution duration (p90)', fmtHours(rm.issueResolutionP90Hours)],
+      ['PR merge duration (median)', fmtHours(rm.prMergeMedianHours)],
+      ['PR merge duration (p90)', fmtHours(rm.prMergeP90Hours)],
+      ['Issue resolution rate', fmtPct(rm.issueResolutionRate)],
+    ]),
     '',
     '#### Maintainer activity signals',
     '',
-    `- **Contributor response rate**: ${fmtPct(rm.contributorResponseRate)}`,
-    `- **Human first-response ratio**: ${fmtPct(rm.humanResponseRatio)}`,
-    `- **Bot first-response ratio**: ${fmtPct(rm.botResponseRatio)}`,
+    mdTable([
+      ['Contributor response rate', fmtPct(rm.contributorResponseRate)],
+      ['Human first-response ratio', fmtPct(rm.humanResponseRatio)],
+      ['Bot first-response ratio', fmtPct(rm.botResponseRatio)],
+    ]),
     '',
     '#### Volume & backlog health',
     '',
-    `- **Open issues**: ${fmt(rm.openIssueCount)}`,
-    `- **Open PR backlog**: ${fmt(rm.openPullRequestCount)}`,
-    `- **Stale issue ratio**: ${fmtPct(rm.staleIssueRatio)}`,
-    `- **Stale PR ratio**: ${fmtPct(rm.stalePrRatio)}`,
+    mdTable([
+      ['Open issues', fmt(rm.openIssueCount)],
+      ['Open PR backlog', fmt(rm.openPullRequestCount)],
+      ['Stale issue ratio', fmtPct(rm.staleIssueRatio)],
+      ['Stale PR ratio', fmtPct(rm.stalePrRatio)],
+    ]),
     '',
     '#### Engagement quality signals',
     '',
-    `- **PR review depth**: ${fmt(rm.prReviewDepth)}`,
-    `- **Issues closed without comment**: ${fmtPct(rm.issuesClosedWithoutCommentRatio)}`,
+    mdTable([
+      ['PR review depth', fmt(rm.prReviewDepth)],
+      ['Issues closed without comment', fmtPct(rm.issuesClosedWithoutCommentRatio)],
+    ]),
     '',
-    '### Health Ratios',
-    '',
-  ]
+  )
+
+  // Health Ratios section with tables per category
+  lines.push('### Health Ratios', '')
 
   const ratiosByCategory = new Map<string, typeof healthRatioRows>()
   for (const row of healthRatioRows) {
@@ -187,19 +285,23 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
   }
   for (const [category, rows] of ratiosByCategory) {
     const categoryLabel = HEALTH_RATIO_CATEGORY_LABELS[category] ?? category
-    lines.push(`#### ${categoryLabel}`, '')
-    for (const row of rows) {
-      const cell = row.cells[0]
-      lines.push(`- **${row.label}**: ${cell ? cell.displayValue : '—'}`)
-    }
-    lines.push('')
+    lines.push(
+      `#### ${categoryLabel}`,
+      '',
+      mdTable(rows.map((row) => {
+        const cell = row.cells[0]
+        return [row.label, cell ? cell.displayValue : '—']
+      })),
+      '',
+    )
   }
 
   if (result.missingFields.length > 0) {
-    lines.push('', '### Missing Data', '')
+    lines.push('### Missing Data', '')
     for (const field of result.missingFields) {
       lines.push(`- ${field}`)
     }
+    lines.push('')
   }
 
   return lines.join('\n')
