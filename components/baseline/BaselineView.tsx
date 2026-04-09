@@ -63,46 +63,50 @@ const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof Bracke
   {
     title: 'Overview',
     metrics: [
-      { key: 'stars', label: 'Stars' },
-      { key: 'forks', label: 'Forks' },
-      { key: 'watchers', label: 'Watchers' },
-      { key: 'forkRate', label: 'Fork rate (engagement)' },
-      { key: 'watcherRate', label: 'Watcher rate (attention)' },
+      { key: 'stars', label: 'Reach (stars)' },
+      { key: 'watcherRate', label: 'Attention (watcher rate)' },
+      { key: 'forkRate', label: 'Engagement (fork rate)' },
     ],
   },
   {
-    title: 'Contributors',
+    title: 'Contributors / Sustainability',
     metrics: [
-      { key: 'topContributorShare', label: 'Top contributor share' },
-      { key: 'contributorResponseRate', label: 'Contributor response rate' },
-      { key: 'humanResponseRatio', label: 'Human response ratio' },
-      { key: 'botResponseRatio', label: 'Bot response ratio' },
+      { key: 'topContributorShare', label: 'Top 20% contributor commit share' },
     ],
   },
   {
     title: 'Activity',
     metrics: [
-      { key: 'prMergeRate', label: 'PR merge rate' },
-      { key: 'issueClosureRate', label: 'Issue closure rate' },
-      { key: 'staleIssueRatio', label: 'Stale issue ratio' },
-      { key: 'stalePrRatio', label: 'Stale PR ratio' },
-      { key: 'medianTimeToMergeHours', label: 'Median time to merge' },
-      { key: 'medianTimeToCloseHours', label: 'Median time to close' },
+      { key: 'prMergeRate', label: 'PR — Merge rate' },
+      { key: 'medianTimeToMergeHours', label: 'PR — Median time to merge' },
+      { key: 'issueClosureRate', label: 'Issue — Closure rate' },
+      { key: 'medianTimeToCloseHours', label: 'Issue — Median time to close' },
     ],
   },
   {
     title: 'Responsiveness',
     metrics: [
-      { key: 'issueFirstResponseMedianHours', label: 'Issue first response (median)' },
-      { key: 'issueFirstResponseP90Hours', label: 'Issue first response (p90)' },
-      { key: 'prFirstReviewMedianHours', label: 'PR first review (median)' },
-      { key: 'prFirstReviewP90Hours', label: 'PR first review (p90)' },
-      { key: 'issueResolutionMedianHours', label: 'Issue resolution (median)' },
-      { key: 'issueResolutionP90Hours', label: 'Issue resolution (p90)' },
-      { key: 'prMergeMedianHours', label: 'PR merge duration (median)' },
-      { key: 'prMergeP90Hours', label: 'PR merge duration (p90)' },
-      { key: 'prReviewDepth', label: 'PR review depth' },
-      { key: 'issuesClosedWithoutCommentRatio', label: 'Issues closed without comment' },
+      // Response time
+      { key: 'issueFirstResponseMedianHours', label: 'Response — Issue first response (median)' },
+      { key: 'issueFirstResponseP90Hours', label: 'Response — Issue first response (p90)' },
+      { key: 'prFirstReviewMedianHours', label: 'Response — PR first review (median)' },
+      { key: 'prFirstReviewP90Hours', label: 'Response — PR first review (p90)' },
+      // Resolution
+      { key: 'issueResolutionMedianHours', label: 'Resolution — Issue duration (median)' },
+      { key: 'issueResolutionP90Hours', label: 'Resolution — Issue duration (p90)' },
+      { key: 'prMergeMedianHours', label: 'Resolution — PR merge duration (median)' },
+      { key: 'prMergeP90Hours', label: 'Resolution — PR merge duration (p90)' },
+      { key: 'issueResolutionRate', label: 'Resolution — Issue resolution rate' },
+      // Maintainer signals
+      { key: 'contributorResponseRate', label: 'Maintainer — Contributor response rate' },
+      { key: 'humanResponseRatio', label: 'Maintainer — Human first-response ratio' },
+      { key: 'botResponseRatio', label: 'Maintainer — Bot first-response ratio' },
+      // Backlog health
+      { key: 'staleIssueRatio', label: 'Backlog — Stale issue ratio' },
+      { key: 'stalePrRatio', label: 'Backlog — Stale PR ratio' },
+      // Engagement quality
+      { key: 'prReviewDepth', label: 'Quality — PR review depth' },
+      { key: 'issuesClosedWithoutCommentRatio', label: 'Quality — Issues closed without comment' },
     ],
   },
 ]
