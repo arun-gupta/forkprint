@@ -11,7 +11,8 @@ export default function BaselinePage() {
       <header className="w-full bg-sky-900 text-white">
         <div className="mx-auto flex max-w-5xl items-start justify-between gap-4 px-4 py-5">
           <div>
-            <a href="/" className="hover:opacity-80 transition-opacity">
+            <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <img src="/repo-pulse-banner.png" alt="" className="h-8 w-8 rounded object-cover" aria-hidden="true" />
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </a>
             <p className="mt-1 text-sm text-sky-100 md:text-base">Scoring Baseline</p>

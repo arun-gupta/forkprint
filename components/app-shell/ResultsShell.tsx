@@ -65,9 +65,10 @@ export function ResultsShell({
               type="button"
               onClick={onReset}
               aria-label="RepoPulse — return to home"
-              className="text-left hover:opacity-80 transition-opacity disabled:cursor-default"
+              className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity disabled:cursor-default"
               disabled={!onReset}
             >
+              <img src="/repo-pulse-banner.png" alt="" className="h-8 w-8 rounded object-cover" aria-hidden="true" />
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </button>
             <p className="mt-1 text-sm text-sky-100 md:text-base">
