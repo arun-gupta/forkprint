@@ -239,8 +239,18 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
   }
 `
 
-export const REPO_RESPONSIVENESS_QUERY = `
-  query RepoResponsiveness(
+// ─── Two-pass responsiveness queries ─────────────────────────────────────────
+//
+// Pass 1: Lightweight metadata — fetches issues/PRs with timestamps, author,
+// comment/review counts, and node IDs. No nested comment/review nodes.
+// This stays well under GitHub's RESOURCE_LIMITS_EXCEEDED threshold even for
+// very large repos like kubernetes/kubernetes.
+//
+// Pass 2: Targeted detail — uses node IDs from pass 1 to fetch comment/review
+// nodes only for the items that need them. Batched in groups of 10.
+
+export const REPO_RESPONSIVENESS_METADATA_QUERY = `
+  query RepoResponsivenessMetadata(
     $issuesCreated365Query: String!
     $issuesClosed365Query: String!
     $prsCreated365Query: String!
@@ -254,18 +264,13 @@ export const REPO_RESPONSIVENESS_QUERY = `
     recentCreatedIssues: search(query: $issuesCreated365Query, type: ISSUE, first: 100) {
       nodes {
         ... on Issue {
+          id
           createdAt
           author {
             login
           }
-          comments(first: 20) {
+          comments {
             totalCount
-            nodes {
-              createdAt
-              author {
-                login
-              }
-            }
           }
         }
       }
@@ -273,19 +278,14 @@ export const REPO_RESPONSIVENESS_QUERY = `
     recentClosedIssues: search(query: $issuesClosed365Query, type: ISSUE, first: 100) {
       nodes {
         ... on Issue {
+          id
           createdAt
           closedAt
           author {
             login
           }
-          comments(first: 20) {
+          comments {
             totalCount
-            nodes {
-              createdAt
-              author {
-                login
-              }
-            }
           }
         }
       }
@@ -293,27 +293,16 @@ export const REPO_RESPONSIVENESS_QUERY = `
     recentCreatedPullRequests: search(query: $prsCreated365Query, type: ISSUE, first: 100) {
       nodes {
         ... on PullRequest {
+          id
           createdAt
           author {
             login
           }
-          comments(first: 20) {
+          comments {
             totalCount
-            nodes {
-              createdAt
-              author {
-                login
-              }
-            }
           }
-          reviews(first: 20) {
+          reviews {
             totalCount
-            nodes {
-              createdAt
-              author {
-                login
-              }
-            }
           }
         }
       }
@@ -347,3 +336,52 @@ export const REPO_RESPONSIVENESS_QUERY = `
     }
   }
 `
+
+/**
+ * Builds a pass-2 detail query to fetch comments/reviews for specific nodes.
+ * Uses aliases (node0, node1, ...) to batch multiple node lookups in one query.
+ */
+export function buildResponsivenessDetailQuery(
+  nodeIds: Array<{ id: string; type: 'issue' | 'pr' }>,
+): string {
+  const aliases = nodeIds.map((item, i) => {
+    const commentFragment = `
+      comments(first: 20) {
+        totalCount
+        nodes {
+          createdAt
+          author { login }
+        }
+      }`
+    const reviewFragment = item.type === 'pr' ? `
+      reviews(first: 20) {
+        totalCount
+        nodes {
+          createdAt
+          author { login }
+        }
+      }` : ''
+
+    return `
+      node${i}: node(id: ${JSON.stringify(item.id)}) {
+        ... on Issue {
+          id
+          createdAt
+          author { login }
+          ${commentFragment}
+        }
+        ... on PullRequest {
+          id
+          createdAt
+          author { login }
+          ${commentFragment}
+          ${reviewFragment}
+        }
+      }`
+  }).join('\n')
+
+  return `{
+    ${aliases}
+    rateLimit { remaining resetAt }
+  }`
+}

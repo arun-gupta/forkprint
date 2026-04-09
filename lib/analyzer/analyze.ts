@@ -15,7 +15,7 @@ import type {
 import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
-import { REPO_ACTIVITY_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_QUERY } from './queries'
+import { REPO_ACTIVITY_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 
 interface RepoOverviewResponse {
   repository: {
@@ -123,6 +123,44 @@ interface ResponsivenessPullRequestNode {
     totalCount: number
     nodes: SearchReviewNode[]
   }
+}
+
+// Pass 1 metadata types — no nested comment/review nodes
+interface MetadataIssueNode {
+  id: string
+  createdAt: string
+  closedAt?: string | null
+  author: SearchActorNode | null
+  comments: { totalCount: number }
+}
+
+interface MetadataPullRequestNode {
+  id: string
+  createdAt: string
+  author: SearchActorNode | null
+  comments: { totalCount: number }
+  reviews: { totalCount: number }
+}
+
+interface RepoResponsivenessMetadataResponse {
+  recentCreatedIssues: { nodes: MetadataIssueNode[] }
+  recentClosedIssues: { nodes: MetadataIssueNode[] }
+  recentCreatedPullRequests: { nodes: MetadataPullRequestNode[] }
+  recentMergedPullRequests: { nodes: Array<{ createdAt: string; mergedAt: string | null }> }
+  staleOpenPullRequests30: { issueCount: number }
+  staleOpenPullRequests60: { issueCount: number }
+  staleOpenPullRequests90: { issueCount: number }
+  staleOpenPullRequests180: { issueCount: number }
+  staleOpenPullRequests365: { issueCount: number }
+}
+
+// Pass 2 detail node — returned by node() queries
+interface DetailNode {
+  id: string
+  createdAt: string
+  author: SearchActorNode | null
+  comments?: { totalCount: number; nodes: SearchCommentNode[] }
+  reviews?: { totalCount: number; nodes: SearchReviewNode[] }
 }
 
 interface RepoResponsivenessResponse {
@@ -291,31 +329,22 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       })
       latestRateLimit = activity.rateLimit ?? latestRateLimit
 
-      const responsiveness =
-        (await Promise.resolve(
-          queryGitHubGraphQL<RepoResponsivenessResponse>(input.token, REPO_RESPONSIVENESS_QUERY, {
-            issuesCreated365Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since365),
-            issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
-            prsCreated365Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since365),
-            prsMerged365Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since365),
-            stalePrs30Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore30),
-            stalePrs60Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore60),
-            stalePrs90Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore90),
-            stalePrs180Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore180),
-            stalePrs365Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore365),
-          }),
-        ).catch((error) => {
-          latestRateLimit = extractRateLimitFromError(error) ?? latestRateLimit
-          diagnostics.push(buildDiagnostic(repo, 'github-graphql:responsiveness', error))
-
-          return {
-            data: createUnavailableResponsivenessResponse(),
-            rateLimit: extractRateLimitFromError(error),
-          }
-        })) ?? {
-          data: createUnavailableResponsivenessResponse(),
-          rateLimit: null,
-        }
+      const responsiveness = await fetchResponsivenessTwoPass(
+        input.token,
+        {
+          issuesCreated365Query: buildSearchQuery(repoSearch, 'is:issue', 'created', since365),
+          issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
+          prsCreated365Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since365),
+          prsMerged365Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since365),
+          stalePrs30Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore30),
+          stalePrs60Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore60),
+          stalePrs90Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore90),
+          stalePrs180Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore180),
+          stalePrs365Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore365),
+        },
+        diagnostics,
+        repo,
+      )
       latestRateLimit = responsiveness.rateLimit ?? latestRateLimit
 
       const contributorCount = await fetchContributorCount(input.token, owner, name).catch((error) => {
@@ -536,6 +565,136 @@ function buildOpenIssuesOlderThanQuery(repoSearch: string, before: Date) {
 
 function buildOpenPullRequestsOlderThanQuery(repoSearch: string, before: Date) {
   return `repo:${repoSearch} is:pr is:open created:<${before.toISOString().slice(0, 10)}`
+}
+
+// ─── Two-pass responsiveness fetch ───────────────────────────────────────────
+
+const DETAIL_BATCH_SIZE = 10
+
+async function fetchResponsivenessTwoPass(
+  token: string,
+  variables: Record<string, string>,
+  diagnostics: Array<{ repo: string; source: string; message: string }>,
+  repo: string,
+): Promise<{ data: RepoResponsivenessResponse; rateLimit: RateLimitState | null }> {
+  // Pass 1: Lightweight metadata query
+  const metadataResult = await queryGitHubGraphQL<RepoResponsivenessMetadataResponse>(
+    token,
+    REPO_RESPONSIVENESS_METADATA_QUERY,
+    variables,
+  ).catch((error) => {
+    diagnostics.push(buildDiagnostic(repo, 'github-graphql:responsiveness-metadata', error))
+    return null
+  })
+
+  if (!metadataResult) {
+    return { data: createUnavailableResponsivenessResponse(), rateLimit: null }
+  }
+
+  const metadata = metadataResult.data
+
+  // Collect node IDs that need detail fetching (issues with comments, PRs with comments/reviews)
+  const detailRequests: Array<{ id: string; type: 'issue' | 'pr' }> = []
+
+  for (const issue of metadata.recentCreatedIssues?.nodes ?? []) {
+    if (issue?.id && issue.comments?.totalCount > 0) {
+      detailRequests.push({ id: issue.id, type: 'issue' })
+    }
+  }
+  for (const issue of metadata.recentClosedIssues?.nodes ?? []) {
+    if (issue?.id && issue.comments?.totalCount > 0) {
+      detailRequests.push({ id: issue.id, type: 'issue' })
+    }
+  }
+  for (const pr of metadata.recentCreatedPullRequests?.nodes ?? []) {
+    if (pr?.id && (pr.comments?.totalCount > 0 || pr.reviews?.totalCount > 0)) {
+      detailRequests.push({ id: pr.id, type: 'pr' })
+    }
+  }
+
+  // Deduplicate by id
+  const seen = new Set<string>()
+  const uniqueRequests = detailRequests.filter((r) => {
+    if (seen.has(r.id)) return false
+    seen.add(r.id)
+    return true
+  })
+
+  // Pass 2: Fetch comment/review details in batches
+  const detailMap = new Map<string, DetailNode>()
+  let latestRateLimit = metadataResult.rateLimit
+
+  for (let i = 0; i < uniqueRequests.length; i += DETAIL_BATCH_SIZE) {
+    const batch = uniqueRequests.slice(i, i + DETAIL_BATCH_SIZE)
+    const detailQuery = buildResponsivenessDetailQuery(batch)
+
+    const detailResult = await queryGitHubGraphQL<Record<string, DetailNode | null>>(
+      token,
+      detailQuery,
+      {},
+    ).catch((error) => {
+      diagnostics.push(buildDiagnostic(repo, 'github-graphql:responsiveness-detail', error))
+      return null
+    })
+
+    if (detailResult) {
+      latestRateLimit = detailResult.rateLimit ?? latestRateLimit
+      for (let j = 0; j < batch.length; j++) {
+        const node = detailResult.data[`node${j}`]
+        if (node?.id) {
+          detailMap.set(node.id, node)
+        }
+      }
+    }
+  }
+
+  // Merge metadata + details into the full response shape
+  const response = mergeResponsivenessData(metadata, detailMap)
+
+  return { data: response, rateLimit: latestRateLimit }
+}
+
+function mergeResponsivenessData(
+  metadata: RepoResponsivenessMetadataResponse,
+  detailMap: Map<string, DetailNode>,
+): RepoResponsivenessResponse {
+  function enrichIssue(meta: MetadataIssueNode): ResponsivenessIssueNode {
+    const detail = detailMap.get(meta.id)
+    return {
+      createdAt: meta.createdAt,
+      closedAt: meta.closedAt,
+      author: meta.author,
+      comments: detail?.comments ?? { totalCount: meta.comments.totalCount, nodes: [] },
+    }
+  }
+
+  function enrichPR(meta: MetadataPullRequestNode): ResponsivenessPullRequestNode {
+    const detail = detailMap.get(meta.id)
+    return {
+      createdAt: meta.createdAt,
+      author: meta.author,
+      comments: detail?.comments ?? { totalCount: meta.comments.totalCount, nodes: [] },
+      reviews: detail?.reviews ?? { totalCount: meta.reviews.totalCount, nodes: [] },
+    }
+  }
+
+  return {
+    recentCreatedIssues: {
+      nodes: (metadata.recentCreatedIssues?.nodes ?? []).filter(Boolean).map(enrichIssue),
+    },
+    recentClosedIssues: {
+      nodes: (metadata.recentClosedIssues?.nodes ?? []).filter(Boolean).map(enrichIssue),
+    },
+    recentCreatedPullRequests: {
+      nodes: (metadata.recentCreatedPullRequests?.nodes ?? []).filter(Boolean).map(enrichPR),
+    },
+    recentMergedPullRequests: metadata.recentMergedPullRequests,
+    staleOpenPullRequests30: metadata.staleOpenPullRequests30,
+    staleOpenPullRequests60: metadata.staleOpenPullRequests60,
+    staleOpenPullRequests90: metadata.staleOpenPullRequests90,
+    staleOpenPullRequests180: metadata.staleOpenPullRequests180,
+    staleOpenPullRequests365: metadata.staleOpenPullRequests365,
+  }
 }
 
 function createUnavailableResponsivenessResponse(): RepoResponsivenessResponse {

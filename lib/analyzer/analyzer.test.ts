@@ -87,6 +87,22 @@ describe('analyze', () => {
         },
         rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
+      // Responsiveness metadata query (pass 1) — empty for this test
+      .mockResolvedValueOnce({
+        data: {
+          recentCreatedIssues: { nodes: [] },
+          recentClosedIssues: { nodes: [] },
+          recentCreatedPullRequests: { nodes: [] },
+          recentMergedPullRequests: { nodes: [] },
+          staleOpenPullRequests30: { issueCount: 0 },
+          staleOpenPullRequests60: { issueCount: 0 },
+          staleOpenPullRequests90: { issueCount: 0 },
+          staleOpenPullRequests180: { issueCount: 0 },
+          staleOpenPullRequests365: { issueCount: 0 },
+          rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
+        },
+        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
 
     const result = await analyze({
       repos: ['facebook/react'],
@@ -311,46 +327,23 @@ describe('analyze', () => {
         },
         rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
+      // Responsiveness pass 1: metadata (no nested comment/review nodes)
       .mockResolvedValueOnce({
         data: {
           recentCreatedIssues: {
             nodes: [
-              {
-                createdAt: '2026-03-10T00:00:00Z',
-                author: { login: 'alice' },
-                comments: {
-                  totalCount: 1,
-                  nodes: [{ createdAt: '2026-03-10T06:00:00Z', author: { login: 'bob' } }],
-                },
-              },
-              {
-                createdAt: '2026-03-11T00:00:00Z',
-                author: { login: 'carol' },
-                comments: { totalCount: 0, nodes: [] },
-              },
+              { id: 'issue-1', createdAt: '2026-03-10T00:00:00Z', author: { login: 'alice' }, comments: { totalCount: 1 } },
+              { id: 'issue-2', createdAt: '2026-03-11T00:00:00Z', author: { login: 'carol' }, comments: { totalCount: 0 } },
             ],
           },
           recentClosedIssues: {
             nodes: [
-              {
-                createdAt: '2026-03-03T00:00:00Z',
-                closedAt: '2026-03-05T00:00:00Z',
-                author: { login: 'alice' },
-                comments: { totalCount: 0, nodes: [] },
-              },
+              { id: 'issue-3', createdAt: '2026-03-03T00:00:00Z', closedAt: '2026-03-05T00:00:00Z', author: { login: 'alice' }, comments: { totalCount: 0 } },
             ],
           },
           recentCreatedPullRequests: {
             nodes: [
-              {
-                createdAt: '2026-03-12T00:00:00Z',
-                author: { login: 'dave' },
-                comments: { totalCount: 0, nodes: [] },
-                reviews: {
-                  totalCount: 2,
-                  nodes: [{ createdAt: '2026-03-12T12:00:00Z', author: { login: 'erin' } }],
-                },
-              },
+              { id: 'pr-1', createdAt: '2026-03-12T00:00:00Z', author: { login: 'dave' }, comments: { totalCount: 0 }, reviews: { totalCount: 2 } },
             ],
           },
           recentMergedPullRequests: {
@@ -361,8 +354,29 @@ describe('analyze', () => {
           staleOpenPullRequests90: { issueCount: 1 },
           staleOpenPullRequests180: { issueCount: 1 },
           staleOpenPullRequests365: { issueCount: 1 },
+          rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
         },
         rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      // Responsiveness pass 2: detail query for nodes with comments/reviews
+      .mockResolvedValueOnce({
+        data: {
+          node0: {
+            id: 'issue-1',
+            createdAt: '2026-03-10T00:00:00Z',
+            author: { login: 'alice' },
+            comments: { totalCount: 1, nodes: [{ createdAt: '2026-03-10T06:00:00Z', author: { login: 'bob' } }] },
+          },
+          node1: {
+            id: 'pr-1',
+            createdAt: '2026-03-12T00:00:00Z',
+            author: { login: 'dave' },
+            comments: { totalCount: 0, nodes: [] },
+            reviews: { totalCount: 2, nodes: [{ createdAt: '2026-03-12T12:00:00Z', author: { login: 'erin' } }] },
+          },
+          rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z' },
+        },
+        rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
