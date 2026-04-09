@@ -36,10 +36,10 @@ const CHECKPOINT_PATH = 'scripts/calibrate-checkpoint.json'
 const OUTPUT_PATH = 'lib/scoring/calibration-data.json'
 
 const BRACKETS = {
-  emerging:    { min: 1,     max: 99,   label: 'Emerging (<100 stars)' },
-  growing:     { min: 100,   max: 999,  label: 'Growing (100–999 stars)' },
-  established: { min: 1000,  max: 9999, label: 'Established (1k–10k stars)' },
-  popular:     { min: 10000, max: null, label: 'Popular (10k+ stars)' },
+  emerging:    { min: 10,    max: 99,   pushedAfter: '2025-01-01', label: 'Emerging (10–99 stars)' },
+  growing:     { min: 100,   max: 999,  pushedAfter: '2024-10-01', label: 'Growing (100–999 stars)' },
+  established: { min: 1000,  max: 9999, pushedAfter: '2024-10-01', label: 'Established (1k–10k stars)' },
+  popular:     { min: 10000, max: null, pushedAfter: '2024-10-01', label: 'Popular (10k+ stars)' },
 } as const
 
 type BracketKey = keyof typeof BRACKETS
@@ -154,9 +154,10 @@ async function fetchSearchPage(
 }
 
 async function sampleRepos(bracket: (typeof BRACKETS)[BracketKey], target: number): Promise<string[]> {
-  const starsQuery = bracket.max
+  const starsFilter = bracket.max
     ? `stars:${bracket.min}..${bracket.max}`
     : `stars:>=${bracket.min}`
+  const starsQuery = `${starsFilter} fork:false archived:false pushed:>${bracket.pushedAfter}`
 
   const repos = new Set<string>()
   // Use multiple sort strategies to diversify the sample
