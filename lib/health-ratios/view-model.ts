@@ -65,7 +65,7 @@ export function buildHealthRatioRows(
         value,
         displayValue:
           definition.id === 'pr-merge-rate'
-            ? getMergeRateGuidance(windowMetrics?.prsMerged ?? 'unavailable', windowMetrics?.prsOpened ?? 'unavailable').tableDisplayValue
+            ? getMergeRateGuidance(windowMetrics?.prsMerged ?? 'unavailable', windowMetrics?.prsOpened ?? 'unavailable', result.stars).tableDisplayValue
             : formatHealthRatio(value),
       }
     }),

@@ -20,7 +20,7 @@ describe('MetricCard', () => {
     expect(screen.getByText('244,295')).toBeInTheDocument()
     expect(screen.getByText('50,872')).toBeInTheDocument()
     expect(screen.getByText('6,660')).toBeInTheDocument()
-    expect(screen.getAllByText('High')).toHaveLength(2)
+    expect(screen.getAllByText(/Top \d+%|Bottom \d+%/).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
     expect(screen.queryByText('Not scored yet')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /missing data/i })).not.toBeInTheDocument()

@@ -124,8 +124,8 @@ describe('EcosystemMap', () => {
     await userEvent.click(within(region).getByRole('button', { name: /show legend/i }))
 
     expect(within(region).getByText(/Exceptional 100k\+/i)).toBeInTheDocument()
-    expect(within(region).getByText(/Exceptional 25%\+/i)).toBeInTheDocument()
-    expect(within(region).getByText(/Exceptional 2.5%\+/i)).toBeInTheDocument()
+    expect(within(region).getByText(/Exceptional 31\.1%\+/i)).toBeInTheDocument()
+    expect(within(region).getByText(/Exceptional 2\.5%\+/i)).toBeInTheDocument()
   })
 
   it('hides the legend rows again after collapsing', async () => {

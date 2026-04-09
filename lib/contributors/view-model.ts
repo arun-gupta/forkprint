@@ -48,7 +48,7 @@ export function buildContributorsViewModels(
   return results.map((result) => {
     const windowMetrics = getContributorWindowMetrics(result, windowDays)
     const filteredCommitCountsByAuthor = filterCommitCountsByAuthorBots(windowMetrics.commitCountsByAuthor, includeBots)
-    const sustainabilityScore = getSustainabilityScoreFromCommitCounts(filteredCommitCountsByAuthor)
+    const sustainabilityScore = getSustainabilityScoreFromCommitCounts(filteredCommitCountsByAuthor, result.stars)
     const concentration = computeContributionConcentration(filteredCommitCountsByAuthor)
     const repeatContributors = computeRepeatContributors(filteredCommitCountsByAuthor)
     const activeContributors = getActiveContributorCount(filteredCommitCountsByAuthor)

@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import type { ActivityScoreDefinition } from '@/lib/activity/score-config'
+import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 
 interface ActivityScoreHelpProps {
   score: ActivityScoreDefinition
 }
 
 export function ActivityScoreHelp({ score }: ActivityScoreHelpProps) {
-  const [showThresholds, setShowThresholds] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -19,27 +20,34 @@ export function ActivityScoreHelp({ score }: ActivityScoreHelpProps) {
         </div>
         <button
           type="button"
-          onClick={() => setShowThresholds((current) => !current)}
+          onClick={() => setShowDetails((current) => !current)}
           className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-          aria-pressed={showThresholds}
+          aria-pressed={showDetails}
         >
-          {showThresholds ? 'Hide thresholds' : 'Show thresholds'}
+          {showDetails ? 'Hide details' : 'Show details'}
         </button>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {score.weightedFactors.map((factor) => (
           <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
             <span className="font-semibold text-slate-900">{factor.label}</span> <span>{factor.weightLabel}</span>
+            {factor.percentile !== undefined ? (
+              <span className="ml-1 text-slate-500">({formatPercentileLabel(factor.percentile)})</span>
+            ) : null}
           </div>
         ))}
       </div>
-      {showThresholds ? (
-        <div className="mt-3 grid gap-2 md:grid-cols-3">
-          {score.thresholds.map((threshold) => (
-            <div key={threshold.label} className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{threshold.label}</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">{threshold.rule}</p>
-              <p className="mt-1 text-xs leading-relaxed text-slate-600">{threshold.description}</p>
+      {showDetails ? (
+        <div className="mt-3 grid gap-2 md:grid-cols-1">
+          {score.weightedFactors.map((factor) => (
+            <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{factor.label} ({factor.weightLabel})</p>
+                {factor.percentile !== undefined ? (
+                  <p className="text-sm font-semibold text-slate-900">{formatPercentileLabel(factor.percentile)}</p>
+                ) : null}
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">{factor.description}</p>
             </div>
           ))}
         </div>

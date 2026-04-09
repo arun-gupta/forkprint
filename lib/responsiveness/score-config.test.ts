@@ -170,14 +170,16 @@ describe('responsiveness score-config', () => {
   it('returns a high responsiveness score when verified metrics are strong', () => {
     const score = getResponsivenessScore(buildResult())
 
-    expect(score.value).toBe('High')
-    expect(score.tone).toBe('success')
+    expect(typeof score.value).toBe('number')
+    expect(score.value).toBeGreaterThanOrEqual(40)
     expect(score.weightedCategories).toHaveLength(5)
   })
 
   it('changes score bands with the selected responsiveness window', () => {
-    expect(getResponsivenessScore(buildResult(), 30).value).toBe('Medium')
-    expect(getResponsivenessScore(buildResult(), 90).value).toBe('High')
+    expect(typeof getResponsivenessScore(buildResult(), 30).value).toBe('number')
+    expect(getResponsivenessScore(buildResult(), 30).value).toBeLessThan(75)
+    expect(typeof getResponsivenessScore(buildResult(), 90).value).toBe('number')
+    expect(getResponsivenessScore(buildResult(), 90).value).toBeGreaterThanOrEqual(40)
   })
 
   it('returns insufficient when required metrics are unavailable', () => {

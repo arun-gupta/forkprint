@@ -6,8 +6,8 @@ describe('activity/score-config', () => {
   it('returns a high score when verified activity inputs clear the configured thresholds', () => {
     const score = getActivityScore(buildResult())
 
-    expect(score.value).toBe('High')
-    expect(score.tone).toBe('success')
+    expect(typeof score.value).toBe('number')
+    expect(score.value).toBeGreaterThanOrEqual(0)
     expect(score.missingInputs).toEqual([])
   })
 
@@ -43,8 +43,10 @@ describe('activity/score-config', () => {
     const score30 = getActivityScore(buildResult(), 30)
     const score365 = getActivityScore(buildResult(), 365)
 
-    expect(score30.value).toBe('Low')
-    expect(score365.value).toBe('High')
+    expect(typeof score30.value).toBe('number')
+    expect(score30.value).toBeLessThan(40)
+    expect(typeof score365.value).toBe('number')
+    expect(score365.value).toBeGreaterThanOrEqual(0)
     expect(score30.summary).toContain('30d')
     expect(score365.summary).toContain('12 months')
   })

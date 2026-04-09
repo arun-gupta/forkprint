@@ -28,8 +28,8 @@ describe('contributors/score-config', () => {
       }),
     )
 
-    expect(score.value).toBe('High')
-    expect(score.tone).toBe('success')
+    expect(typeof score.value).toBe('number')
+    expect(score.value).toBeGreaterThanOrEqual(40)
   })
 
   it('returns insufficient data when contributor distribution cannot be verified', () => {

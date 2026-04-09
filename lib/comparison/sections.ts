@@ -1,7 +1,9 @@
 import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import { getMergeRateGuidance } from '@/lib/activity/merge-rate-guidance'
 import { computeContributionConcentration, getSustainabilityScore, formatPercentage as formatContributorPercentage } from '@/lib/contributors/score-config'
+import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
+import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 
 export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'health-ratios'
 export type ComparisonAttributeId =
@@ -68,12 +70,6 @@ function formatDurationHours(value: number | Unavailable) {
   return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}h`
 }
 
-function formatScoreLabel(value: number | Unavailable, labels: { high: string; medium: string; low: string }) {
-  if (value === 'unavailable') return '—'
-  if (value >= 2) return labels.high
-  if (value >= 1) return labels.medium
-  return labels.low
-}
 
 function getContributorWindowMetrics(result: AnalysisResult) {
   return result.contributorMetricsByWindow?.[90]
@@ -184,17 +180,18 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         id: 'sustainability-score',
         sectionId: 'contributors',
         label: 'Sustainability score',
-        helpText: 'Derived sustainability score from contributor concentration.',
+        helpText: 'Derived sustainability score from contributor concentration, as a percentile within the star bracket.',
         direction: 'higher-is-better',
-        valueType: 'label',
+        valueType: 'number',
         getValue: (result) => {
           const score = getSustainabilityScore(result)
-          if (score.value === 'High') return 2
-          if (score.value === 'Medium') return 1
-          if (score.value === 'Low') return 0
-          return 'unavailable'
+          if (typeof score.value !== 'number') return 'unavailable'
+          return score.value
         },
-        formatValue: (value) => formatScoreLabel(value, { high: 'High', medium: 'Medium', low: 'Low' }),
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return formatPercentileLabel(value as number)
+        },
       },
       {
         id: 'repeat-contributor-ratio',
@@ -253,7 +250,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         formatValue: (value, result) => {
           if (!result) return formatPercentage(value)
           const metrics = getActivityWindowMetrics(result)
-          return getMergeRateGuidance(metrics?.prsMerged ?? 'unavailable', metrics?.prsOpened ?? 'unavailable').tableDisplayValue
+          return getMergeRateGuidance(metrics?.prsMerged ?? 'unavailable', metrics?.prsOpened ?? 'unavailable', result.stars).tableDisplayValue
         },
       },
       {
@@ -340,21 +337,18 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         id: 'responsiveness-score',
         sectionId: 'responsiveness',
         label: 'Responsiveness score',
-        helpText: 'Derived responsiveness score based on response-time, backlog-health, and engagement signals.',
+        helpText: 'Derived responsiveness score based on response-time, backlog-health, and engagement signals, as a percentile within the star bracket.',
         direction: 'higher-is-better',
-        valueType: 'label',
+        valueType: 'number',
         getValue: (result) => {
-          const metrics = getResponsivenessWindowMetrics(result)
-          if (!metrics) return 'unavailable'
-          // Reuse deterministic score-like ordering for comparison.
-          if (metrics.issueFirstResponseMedianHours === 'unavailable') return 'unavailable'
-          const rate = metrics.issueResolutionRate
-          if (rate === 'unavailable') return 'unavailable'
-          if (rate >= 0.9) return 2
-          if (rate >= 0.65) return 1
-          return 0
+          const score = getResponsivenessScore(result)
+          if (typeof score.value !== 'number') return 'unavailable'
+          return score.value
         },
-        formatValue: (value) => formatScoreLabel(value, { high: 'High', medium: 'Medium', low: 'Low' }),
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return formatPercentileLabel(value as number)
+        },
       },
     ],
   },

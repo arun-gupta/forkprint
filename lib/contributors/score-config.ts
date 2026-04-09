@@ -1,74 +1,73 @@
 import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { getCalibrationForStars } from '@/lib/scoring/config-loader'
+import { formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface SustainabilityScoreDefinition {
   value: ScoreValue
   tone: ScoreTone
   description: string
+  percentile: number
+  bracketLabel: string
   concentration: number | Unavailable
   topContributorCount: number | Unavailable
   contributorCount: number | Unavailable
 }
 
-export interface SustainabilityThreshold {
-  maxTopContributorShare: number
-  value: Extract<ScoreValue, 'High' | 'Medium' | 'Low'>
-  tone: Exclude<ScoreTone, 'neutral'>
-  description: string
-}
-
-const SUSTAINABILITY_BAND_DEFINITIONS = [
-  { tone: 'success' as const, value: 'High' as const, description: 'Contributor activity is broadly distributed across the most active authors.' },
-  { tone: 'warning' as const, value: 'Medium' as const, description: 'Contributor activity is somewhat concentrated and may indicate moderate resilience risk.' },
-  { tone: 'danger' as const, value: 'Low' as const, description: 'Contributor activity is highly concentrated, suggesting low resilience if key authors step away.' },
-]
-
-function getSustainabilityThresholds(stars: number | 'unavailable'): SustainabilityThreshold[] {
-  const cal = getCalibrationForStars(stars)
-  return [
-    { maxTopContributorShare: cal.topContributorShare.p25, ...SUSTAINABILITY_BAND_DEFINITIONS[0]! },
-    { maxTopContributorShare: cal.topContributorShare.p75, ...SUSTAINABILITY_BAND_DEFINITIONS[1]! },
-    { maxTopContributorShare: Number.POSITIVE_INFINITY,    ...SUSTAINABILITY_BAND_DEFINITIONS[2]! },
-  ]
-}
-
-// Exported for use in UI help surfaces — uses established bracket as display representative.
-export const SUSTAINABILITY_THRESHOLDS: SustainabilityThreshold[] = getSustainabilityThresholds(1000)
-
 const INSUFFICIENT_SCORE: SustainabilityScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
   description: 'RepoPulse cannot verify enough contributor-distribution data to score sustainability yet.',
+  percentile: 0,
+  bracketLabel: '',
   concentration: 'unavailable',
   topContributorCount: 'unavailable',
   contributorCount: 'unavailable',
 }
 
 export function getSustainabilityScore(result: AnalysisResult): SustainabilityScoreDefinition {
-  const thresholds = getSustainabilityThresholds(result.stars)
-  return getSustainabilityScoreFromCommitCounts(result.commitCountsByAuthor, thresholds)
+  const cal = getCalibrationForStars(result.stars)
+  const bracketLabel = getBracketLabel(result.stars)
+  const concentration = getContributionConcentrationDetails(result.commitCountsByAuthor)
+
+  if (concentration === 'unavailable') {
+    return INSUFFICIENT_SCORE
+  }
+
+  // Inverted: lower concentration = higher percentile (better sustainability)
+  const percentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
+
+  return {
+    value: percentile,
+    tone: percentileToTone(percentile),
+    description: `Contributor concentration ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
+    percentile,
+    bracketLabel,
+    concentration: concentration.share,
+    topContributorCount: concentration.topContributorCount,
+    contributorCount: concentration.contributorCount,
+  }
 }
 
 export function getSustainabilityScoreFromCommitCounts(
   commitCountsByAuthor: Record<string, number> | Unavailable,
-  thresholds: SustainabilityThreshold[] = SUSTAINABILITY_THRESHOLDS,
+  stars: number | Unavailable = 'unavailable',
 ): SustainabilityScoreDefinition {
+  const cal = getCalibrationForStars(stars)
+  const bracketLabel = getBracketLabel(stars)
   const concentration = getContributionConcentrationDetails(commitCountsByAuthor)
 
   if (concentration === 'unavailable') {
     return INSUFFICIENT_SCORE
   }
 
-  const threshold = thresholds.find((candidate) => concentration.share <= candidate.maxTopContributorShare)
-  if (!threshold) {
-    return INSUFFICIENT_SCORE
-  }
+  const percentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
 
   return {
-    value: threshold.value,
-    tone: threshold.tone,
-    description: threshold.description,
+    value: percentile,
+    tone: percentileToTone(percentile),
+    description: `Contributor concentration ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
+    percentile,
+    bracketLabel,
     concentration: concentration.share,
     topContributorCount: concentration.topContributorCount,
     contributorCount: concentration.contributorCount,
@@ -127,3 +126,4 @@ export function formatPercentage(value: number | Unavailable) {
 
   return `${(value * 100).toFixed(1)}%`
 }
+

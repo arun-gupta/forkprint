@@ -7,7 +7,7 @@ describe('health-ratios/view-model', () => {
     const rows = buildHealthRatioRows([buildResult()])
 
     expect(rows.find((row) => row.id === 'fork-rate')?.cells[0]?.displayValue).toBe('25.0%')
-    expect(rows.find((row) => row.id === 'pr-merge-rate')?.cells[0]?.displayValue).toBe('75.0% · Strong')
+    expect(rows.find((row) => row.id === 'pr-merge-rate')?.cells[0]?.displayValue).toMatch(/75\.0% \((Top|Bottom) \d+%\)/)
     expect(rows.find((row) => row.id === 'repeat-contributor-ratio')?.cells[0]?.displayValue).toBe('25.0%')
     expect(rows.find((row) => row.id === 'new-contributor-ratio')?.cells[0]?.displayValue).toBe('16.7%')
   })

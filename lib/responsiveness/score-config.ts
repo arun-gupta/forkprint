@@ -1,30 +1,21 @@
 import { ACTIVITY_WINDOW_DAYS, type ActivityWindowDays, type AnalysisResult, type ResponsivenessMetrics, type Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { type BracketCalibration, getCalibrationForStars } from '@/lib/scoring/config-loader'
+import { type BracketCalibration, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ResponsivenessScoreDefinition {
   value: ScoreValue
   tone: ScoreTone
   description: string
   summary: string
+  percentile: number
+  bracketLabel: string
   weightedCategories: Array<{
     label: string
     weightLabel: string
     description: string
-  }>
-  thresholds: Array<{
-    label: Extract<ScoreValue, 'High' | 'Medium' | 'Low'>
-    rule: string
-    description: string
+    percentile?: number
   }>
   missingInputs: string[]
-}
-
-interface ResponsivenessBandDefinition {
-  minScore: number
-  value: Extract<ScoreValue, 'High' | 'Medium' | 'Low'>
-  tone: Exclude<ScoreTone, 'neutral'>
-  description: string
 }
 
 interface WeightedCategoryDefinition {
@@ -67,56 +58,18 @@ const RESPONSIVENESS_CATEGORIES: WeightedCategoryDefinition[] = [
   },
 ]
 
-const RESPONSIVENESS_SCORE_BANDS: ResponsivenessBandDefinition[] = [
-  {
-    minScore: 80,
-    value: 'High',
-    tone: 'success',
-    description: 'Verified response and resolution signals are fast, engaged, and consistently healthy.',
-  },
-  {
-    minScore: 60,
-    value: 'Medium',
-    tone: 'warning',
-    description: 'Responsiveness is meaningful but uneven, with slower outliers or weaker engagement signals.',
-  },
-  {
-    minScore: 0,
-    value: 'Low',
-    tone: 'danger',
-    description: 'Verified responsiveness signals are slow, stale, or weak relative to the configured thresholds.',
-  },
-]
-
-const RESPONSIVENESS_THRESHOLDS: ResponsivenessScoreDefinition['thresholds'] = [
-  {
-    label: 'High',
-    rule: 'Weighted score >= 80',
-    description: 'Fast response times, healthy resolution flow, low stale backlog, and engaged human participation.',
-  },
-  {
-    label: 'Medium',
-    rule: 'Weighted score >= 60 and < 80',
-    description: 'Mixed but still meaningful responsiveness, with some slower or less engaged signals.',
-  },
-  {
-    label: 'Low',
-    rule: 'Weighted score < 60',
-    description: 'Slow or weak responsiveness relative to the configured thresholds.',
-  },
-]
-
 const INSUFFICIENT_SCORE: ResponsivenessScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
   description: 'RepoPulse cannot verify enough public issue and pull-request event history to score this repository yet.',
   summary: 'Verified responsiveness inputs are incomplete.',
+  percentile: 0,
+  bracketLabel: '',
   weightedCategories: RESPONSIVENESS_CATEGORIES.map((category) => ({
     label: category.label,
     weightLabel: `${category.weight}%`,
     description: category.description,
   })),
-  thresholds: RESPONSIVENESS_THRESHOLDS,
   missingInputs: [],
 }
 
@@ -136,26 +89,39 @@ export function getResponsivenessScore(result: AnalysisResult, windowDays: Activ
   }
 
   const cal = getCalibrationForStars(result.stars)
-  const weightedScore =
-    evaluateResponseTime(metrics, cal) * 0.3 +
-    evaluateResolution(metrics, cal) * 0.25 +
-    evaluateMaintainerSignals(metrics, cal) * 0.15 +
-    evaluateBacklogHealth(metrics, cal) * 0.15 +
-    evaluateEngagementQuality(metrics, cal) * 0.15
+  const bracketLabel = getBracketLabel(result.stars)
 
-  const band = RESPONSIVENESS_SCORE_BANDS.find((candidate) => weightedScore >= candidate.minScore) ?? RESPONSIVENESS_SCORE_BANDS.at(-1)!
+  const subPercentiles = {
+    responseTime: evaluateResponseTime(metrics, cal),
+    resolution: evaluateResolution(metrics, cal),
+    maintainerSignals: evaluateMaintainerSignals(metrics, cal),
+    backlogHealth: evaluateBacklogHealth(metrics, cal),
+    engagementQuality: evaluateEngagementQuality(metrics, cal),
+  }
+
+  const compositePercentile = Math.round(
+    subPercentiles.responseTime * 0.3 +
+    subPercentiles.resolution * 0.25 +
+    subPercentiles.maintainerSignals * 0.15 +
+    subPercentiles.backlogHealth * 0.15 +
+    subPercentiles.engagementQuality * 0.15,
+  )
+
+  const percentile = Math.min(99, Math.max(0, compositePercentile))
 
   return {
-    value: band.value,
-    tone: band.tone,
-    description: band.description,
-    summary: `Responsiveness combines response-time, resolution, maintainer activity, backlog health, and engagement quality signals for the selected ${formatWindowLabel(windowDays)} window using shared thresholds.`,
+    value: percentile,
+    tone: percentileToTone(percentile),
+    description: `This repo's responsiveness ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
+    summary: `Responsiveness combines response-time, resolution, maintainer activity, backlog health, and engagement quality signals for the selected ${formatWindowLabel(windowDays)} window, scored relative to ${bracketLabel} repositories.`,
+    percentile,
+    bracketLabel,
     weightedCategories: RESPONSIVENESS_CATEGORIES.map((category) => ({
       label: category.label,
       weightLabel: `${category.weight}%`,
       description: category.description,
+      percentile: subPercentiles[category.key],
     })),
-    thresholds: RESPONSIVENESS_THRESHOLDS,
     missingInputs: [],
   }
 }
@@ -194,109 +160,79 @@ function getMissingResponsivenessInputs(metrics?: ResponsivenessMetrics) {
   return missing
 }
 
-function evaluateResponseTime(metrics: ResponsivenessMetrics, cal: BracketCalibration) {
-  const issueScore = scoreDurationPair(metrics.issueFirstResponseMedianHours, metrics.issueFirstResponseP90Hours, cal.issueFirstResponseMedianHours.p25, cal.issueFirstResponseMedianHours.p75)
-  const prScore = scoreDurationPair(metrics.prFirstReviewMedianHours, metrics.prFirstReviewP90Hours, cal.prFirstReviewMedianHours.p25, cal.prFirstReviewMedianHours.p75)
-  return (issueScore + prScore) / 2
+function evaluateResponseTime(metrics: ResponsivenessMetrics, cal: BracketCalibration): number {
+  const issueMedian = interpolateDuration(metrics.issueFirstResponseMedianHours, cal.issueFirstResponseMedianHours)
+  const issueP90 = interpolateDuration(metrics.issueFirstResponseP90Hours, cal.issueFirstResponseP90Hours)
+  const prMedian = interpolateDuration(metrics.prFirstReviewMedianHours, cal.prFirstReviewMedianHours)
+  const prP90 = interpolateDuration(metrics.prFirstReviewP90Hours, cal.prFirstReviewP90Hours)
+  return Math.round((issueMedian + issueP90 + prMedian + prP90) / 4)
 }
 
-function evaluateResolution(metrics: ResponsivenessMetrics, cal: BracketCalibration) {
-  const issueResolutionScore = scoreDurationPair(metrics.issueResolutionMedianHours, metrics.issueResolutionP90Hours, cal.issueResolutionMedianHours.p25, cal.issueResolutionMedianHours.p75)
-  const prMergeScore = scoreDurationPair(metrics.prMergeMedianHours, metrics.prMergeP90Hours, cal.prMergeMedianHours.p25, cal.prMergeMedianHours.p75)
-  const flowScore = scoreRatio(metrics.issueResolutionRate, cal.issueResolutionRate.p75, cal.issueResolutionRate.p25)
-  return (issueResolutionScore + prMergeScore + flowScore) / 3
+function evaluateResolution(metrics: ResponsivenessMetrics, cal: BracketCalibration): number {
+  const issueResolution = interpolateDuration(metrics.issueResolutionMedianHours, cal.issueResolutionMedianHours)
+  const prMerge = interpolateDuration(metrics.prMergeMedianHours, cal.prMergeMedianHours)
+  const flowScore = interpolateRatio(metrics.issueResolutionRate, cal.issueResolutionRate)
+  return Math.round((issueResolution + prMerge + flowScore) / 3)
 }
 
-function evaluateMaintainerSignals(metrics: ResponsivenessMetrics, cal: BracketCalibration) {
-  const responseCoverage = scoreRatio(metrics.contributorResponseRate, cal.contributorResponseRate.p75, cal.contributorResponseRate.p25)
-  const humanBias = scoreRatio(metrics.humanResponseRatio, cal.humanResponseRatio.p75, cal.humanResponseRatio.p25)
-  const botPenalty = inverseScoreRatio(metrics.botResponseRatio, cal.botResponseRatio.p25, cal.botResponseRatio.p75)
-  return (responseCoverage + humanBias + botPenalty) / 3
+function evaluateMaintainerSignals(metrics: ResponsivenessMetrics, cal: BracketCalibration): number {
+  const responseCoverage = interpolateRatio(metrics.contributorResponseRate, cal.contributorResponseRate)
+  const humanBias = interpolateRatio(metrics.humanResponseRatio, cal.humanResponseRatio)
+  const botPenalty = interpolateInverseRatio(metrics.botResponseRatio, cal.botResponseRatio)
+  return Math.round((responseCoverage + humanBias + botPenalty) / 3)
 }
 
-function evaluateBacklogHealth(metrics: ResponsivenessMetrics, cal: BracketCalibration) {
-  const staleIssues = inverseScoreRatio(metrics.staleIssueRatio, cal.staleIssueRatio.p25, cal.staleIssueRatio.p75)
-  const stalePrs = inverseScoreRatio(metrics.stalePrRatio, cal.stalePrRatio.p25, cal.stalePrRatio.p75)
-  return (staleIssues + stalePrs) / 2
+function evaluateBacklogHealth(metrics: ResponsivenessMetrics, cal: BracketCalibration): number {
+  const staleIssues = interpolateInverseRatio(metrics.staleIssueRatio, cal.staleIssueRatio)
+  const stalePrs = interpolateInverseRatio(metrics.stalePrRatio, cal.stalePrRatio)
+  return Math.round((staleIssues + stalePrs) / 2)
 }
 
-function evaluateEngagementQuality(metrics: ResponsivenessMetrics, cal: BracketCalibration) {
-  const reviewDepth = scoreRatio(metrics.prReviewDepth, cal.prReviewDepth.p75, cal.prReviewDepth.p25)
-  const issuesClosedSilently = inverseScoreRatio(metrics.issuesClosedWithoutCommentRatio, cal.issuesClosedWithoutCommentRatio.p25, cal.issuesClosedWithoutCommentRatio.p75)
-  return (reviewDepth + issuesClosedSilently) / 2
+function evaluateEngagementQuality(metrics: ResponsivenessMetrics, cal: BracketCalibration): number {
+  const reviewDepth = interpolateRatio(metrics.prReviewDepth, cal.prReviewDepth)
+  const issuesClosedSilently = interpolateInverseRatio(metrics.issuesClosedWithoutCommentRatio, cal.issuesClosedWithoutCommentRatio)
+  return Math.round((reviewDepth + issuesClosedSilently) / 2)
 }
 
-function scoreDurationPair(
-  medianHours: number | Unavailable,
-  p90Hours: number | Unavailable,
-  strongMedianThreshold: number,
-  mediumMedianThreshold: number,
-) {
-  if (!isVerifiedNumber(medianHours) || !isVerifiedNumber(p90Hours)) {
-    return 0
-  }
-
-  if (medianHours <= strongMedianThreshold && p90Hours <= mediumMedianThreshold) {
-    return 100
-  }
-  if (medianHours <= mediumMedianThreshold && p90Hours <= mediumMedianThreshold * 2) {
-    return 70
-  }
-  return 40
+/** Duration metric: lower is better → inverted percentile. */
+function interpolateDuration(value: number | Unavailable, ps: import('@/lib/scoring/config-loader').PercentileSet): number {
+  if (!isVerifiedNumber(value)) return 0
+  return interpolatePercentile(value, ps, true)
 }
 
-function scoreRatio(value: number | Unavailable, strongThreshold: number, mediumThreshold: number) {
-  if (!isVerifiedNumber(value)) {
-    return 0
-  }
-
-  if (value >= strongThreshold) return 100
-  if (value >= mediumThreshold) return 70
-  return 40
+/** Ratio metric: higher is better → normal percentile. */
+function interpolateRatio(value: number | Unavailable, ps: import('@/lib/scoring/config-loader').PercentileSet): number {
+  if (!isVerifiedNumber(value)) return 0
+  return interpolatePercentile(value, ps)
 }
 
-function inverseScoreRatio(value: number | Unavailable, strongThreshold: number, mediumThreshold: number) {
-  if (!isVerifiedNumber(value)) {
-    return 0
-  }
-
-  if (value <= strongThreshold) return 100
-  if (value <= mediumThreshold) return 70
-  return 40
+/** Inverse ratio metric: lower is better → inverted percentile. */
+function interpolateInverseRatio(value: number | Unavailable, ps: import('@/lib/scoring/config-loader').PercentileSet): number {
+  if (!isVerifiedNumber(value)) return 0
+  return interpolatePercentile(value, ps, true)
 }
 
-function isVerifiedNumber(value: number | Unavailable | undefined): value is number {
-  return typeof value === 'number' && !Number.isNaN(value)
+export function formatPercentage(value: number | Unavailable, maximumFractionDigits = 1) {
+  if (value === 'unavailable') return '—'
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value * 100)}%`
+}
+
+export function formatHours(value: number | Unavailable) {
+  if (value === 'unavailable') return '—'
+  if (value < 24) return `${value.toFixed(1)}h`
+  return `${(value / 24).toFixed(1)}d`
+}
+
+export function formatCount(value: number | Unavailable, maximumFractionDigits = 0) {
+  if (value === 'unavailable') return '—'
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)
 }
 
 function formatWindowLabel(windowDays: ActivityWindowDays) {
   return windowDays === 365 ? '12 months' : `${windowDays}d`
 }
 
-export function formatPercentage(value: number | Unavailable, maximumFractionDigits = 1) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
-  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value * 100)}%`
+function isVerifiedNumber(value: number | Unavailable | undefined): value is number {
+  return typeof value === 'number' && !Number.isNaN(value)
 }
 
-export function formatHours(value: number | Unavailable) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
-  if (value < 24) {
-    return `${value.toFixed(1)}h`
-  }
-
-  return `${(value / 24).toFixed(1)}d`
-}
-
-export function formatCount(value: number | Unavailable, maximumFractionDigits = 0) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)
-}

@@ -12,9 +12,9 @@ export interface JsonExportResult {
 }
 
 interface RepoScores {
-  activity: { value: string; tone: string; description: string }
-  sustainability: { value: string; tone: string; description: string }
-  responsiveness: { value: string; tone: string; description: string }
+  activity: { value: number | string; tone: string; description: string }
+  sustainability: { value: number | string; tone: string; description: string }
+  responsiveness: { value: number | string; tone: string; description: string }
 }
 
 function computeScores(result: AnalysisResult): RepoScores {
@@ -22,9 +22,9 @@ function computeScores(result: AnalysisResult): RepoScores {
   const sustainability = getSustainabilityScore(result)
   const responsiveness = getResponsivenessScore(result)
   return {
-    activity: { value: String(activity.value), tone: activity.tone, description: activity.description },
-    sustainability: { value: String(sustainability.value), tone: sustainability.tone, description: sustainability.description },
-    responsiveness: { value: String(responsiveness.value), tone: responsiveness.tone, description: responsiveness.description },
+    activity: { value: activity.value, tone: activity.tone, description: activity.description },
+    sustainability: { value: sustainability.value, tone: sustainability.tone, description: sustainability.description },
+    responsiveness: { value: responsiveness.value, tone: responsiveness.tone, description: responsiveness.description },
   }
 }
 

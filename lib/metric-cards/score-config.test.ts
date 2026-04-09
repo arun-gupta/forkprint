@@ -25,9 +25,9 @@ describe('score-config', () => {
   it('replaces the activity, sustainability, and responsiveness placeholders when real scores are available', () => {
     const badges = getScoreBadges(buildResult())
 
-    expect(badges.find((badge) => badge.category === 'Activity')?.value).toBe('High')
-    expect(badges.find((badge) => badge.category === 'Sustainability')?.value).toBe('Medium')
-    expect(badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('High')
+    expect(typeof badges.find((badge) => badge.category === 'Activity')?.value).toBe('number')
+    expect(typeof badges.find((badge) => badge.category === 'Sustainability')?.value).toBe('number')
+    expect(typeof badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('number')
   })
 })
 

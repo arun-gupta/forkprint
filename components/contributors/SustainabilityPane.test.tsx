@@ -11,9 +11,11 @@ describe('SustainabilityPane', () => {
           repo: 'facebook/react',
           coreMetrics: [],
           sustainabilityScore: {
-            value: 'Medium',
+            value: 45,
             tone: 'warning',
-            description: 'Contributor activity is somewhat concentrated and may indicate moderate resilience risk.',
+            description: 'Contributor concentration ranks at the 45th percentile among Growing (100–999 stars) repositories.',
+            percentile: 45,
+            bracketLabel: 'Growing (100–999 stars)',
             concentration: 0.625,
             topContributorCount: 1,
             contributorCount: 5,
@@ -58,11 +60,8 @@ describe('SustainabilityPane', () => {
     )
 
     expect(screen.getByText(/how is this scored/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /show thresholds/i })).toBeInTheDocument()
-    expect(screen.getByText(/^High$/i)).toBeInTheDocument()
-    expect(screen.getByText(/^<= 50%$/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/^Medium$/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/^<= 75%$/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show details/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/45th percentile/i).length).toBeGreaterThan(0)
     expect(screen.queryByText(/broadly distributed across the most active authors/i)).not.toBeInTheDocument()
     expect(screen.getByText('Top 20% contributor share')).toBeInTheDocument()
     expect(screen.getByText('62.5%')).toBeInTheDocument()
@@ -110,10 +109,10 @@ describe('SustainabilityPane', () => {
     expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/grouped areas/i)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /show thresholds/i }))
+    await userEvent.click(screen.getByRole('button', { name: /show details/i }))
 
-    expect(screen.getByRole('button', { name: /hide thresholds/i })).toBeInTheDocument()
-    expect(screen.getByText(/broadly distributed across the most active authors/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide details/i })).toBeInTheDocument()
+    expect(screen.getByText(/top-20% contributor share/i)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /show chart/i }))
 
@@ -143,9 +142,11 @@ describe('SustainabilityPane', () => {
           repo: 'facebook/react',
           coreMetrics: [],
           sustainabilityScore: {
-            value: 'High',
+            value: 82,
             tone: 'success',
-            description: 'Contributor activity is broadly distributed across the most active authors.',
+            description: 'Contributor concentration ranks at the 82nd percentile among Growing (100–999 stars) repositories.',
+            percentile: 82,
+            bracketLabel: 'Growing (100–999 stars)',
             concentration: 0.4,
             topContributorCount: 1,
             contributorCount: 5,

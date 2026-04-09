@@ -32,14 +32,14 @@ export function buildActivitySections(results: AnalysisResult[], windowDays: Act
 
     return {
       repo: result.repo,
-      cards: buildCards(metrics),
+      cards: buildCards(metrics, result.stars),
       metrics,
     }
   })
 }
 
-function buildCards(metrics: ReturnType<typeof getWindowMetrics>): ActivityCardViewModel[] {
-  const mergeRateGuidance = getMergeRateGuidance(metrics.prsMerged, metrics.prsOpened)
+function buildCards(metrics: ReturnType<typeof getWindowMetrics>, stars: number | import('@/lib/analyzer/analysis-result').Unavailable = 'unavailable'): ActivityCardViewModel[] {
+  const mergeRateGuidance = getMergeRateGuidance(metrics.prsMerged, metrics.prsOpened, stars)
 
   return [
     {
@@ -52,10 +52,10 @@ function buildCards(metrics: ReturnType<typeof getWindowMetrics>): ActivityCardV
         { label: 'Opened', value: formatMetric(metrics.prsOpened) },
         { label: 'Merged', value: formatMetric(metrics.prsMerged) },
         { label: 'Merge rate', value: mergeRateGuidance.percentage },
-        { label: 'Assessment', value: mergeRateGuidance.bandLabel },
+        { label: 'Ranking', value: mergeRateGuidance.percentileLabel },
       ],
       detail:
-        mergeRateGuidance.band === 'unavailable'
+        mergeRateGuidance.ratio === 'unavailable'
           ? undefined
           : `${mergeRateGuidance.summary} ${mergeRateGuidance.recommendation}`,
     },

@@ -1,7 +1,7 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { AttentionTier, EngagementTier, ReachTier } from '@/lib/ecosystem-map/spectrum-config'
 
-export type ScoreValue = 'High' | 'Medium' | 'Low' | 'Not scored yet' | 'Insufficient verified public data'
+export type ScoreValue = number | 'Not scored yet' | 'Insufficient verified public data'
 export type ScoreTone = 'success' | 'warning' | 'danger' | 'neutral'
 export type ScoreCategory = 'Activity' | 'Sustainability' | 'Responsiveness'
 

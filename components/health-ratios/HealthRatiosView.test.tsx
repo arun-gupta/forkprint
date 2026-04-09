@@ -17,7 +17,7 @@ describe('HealthRatiosView', () => {
     expect(within(region).getByText('Fork rate')).toBeInTheDocument()
     expect(within(region).getByText('Repeat contributor ratio')).toBeInTheDocument()
     expect(within(region).getAllByText('25.0%').length).toBeGreaterThan(0)
-    expect(within(region).getByText('75.0% · Strong')).toBeInTheDocument()
+    expect(within(region).getByText(/75\.0%.*(?:Top|Bottom) \d+%/)).toBeInTheDocument()
   })
 
   it('sorts repository rows by the selected ratio column', async () => {

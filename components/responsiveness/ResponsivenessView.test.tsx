@@ -177,7 +177,7 @@ describe('ResponsivenessView', () => {
     expect(within(view).getByText('vercel/next.js')).toBeInTheDocument()
     expect(within(view).getAllByText(/issue & pr response time/i).length).toBeGreaterThanOrEqual(2)
     expect(within(view).getAllByText(/volume & backlog health/i).length).toBeGreaterThanOrEqual(2)
-    expect(within(view).getAllByText(/^high$/i).length).toBeGreaterThan(0)
+    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
     expect(within(view).getAllByText('8.0h').length).toBeGreaterThan(0)
   })
 
@@ -242,15 +242,15 @@ describe('ResponsivenessView', () => {
     expect(within(view).queryByText('unavailable')).not.toBeInTheDocument()
   })
 
-  it('shows threshold details on demand', async () => {
+  it('shows sub-category details on demand', async () => {
     render(<ResponsivenessView results={[buildResult()]} />)
 
     expect(screen.getByText(/how is responsiveness scored/i)).toBeInTheDocument()
-    expect(screen.queryByText(/weighted score >= 80/i)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /show thresholds/i }))
+    await userEvent.click(screen.getByRole('button', { name: /show details/i }))
 
-    expect(screen.getByText(/weighted score >= 80/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide details/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/Issue & PR response time/i).length).toBeGreaterThan(0)
   })
 
   it('switches the recent responsiveness window locally', async () => {
@@ -258,20 +258,20 @@ describe('ResponsivenessView', () => {
 
     const view = screen.getByRole('region', { name: /responsiveness view/i })
     expect(within(view).getByText('4.0h')).toBeInTheDocument()
-    expect(within(view).getByText(/^high$/i)).toBeInTheDocument()
+    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '30d' }))
 
     expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(view).getByText('1.5d')).toBeInTheDocument()
     expect(within(view).getAllByText('45%').length).toBeGreaterThan(0)
-    expect(within(view).getByText(/^medium$/i)).toBeInTheDocument()
+    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '12 months' }))
 
     expect(screen.getByRole('button', { name: '12 months' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(view).getByText('8.0h')).toBeInTheDocument()
     expect(within(view).getAllByText('22%').length).toBeGreaterThan(0)
-    expect(within(view).getByText(/^high$/i)).toBeInTheDocument()
+    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
   })
 })

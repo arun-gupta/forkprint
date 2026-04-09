@@ -57,12 +57,12 @@ describe('ActivityView', () => {
     expect(within(activityView).getAllByText(/^pull requests$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText(/^issues$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText(/^merge rate$/i)).toHaveLength(2)
-    expect(within(activityView).getAllByText(/^assessment$/i)).toHaveLength(2)
+    expect(within(activityView).getAllByText(/^ranking$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText(/^closure rate$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText('18')).toHaveLength(2)
-    expect(within(activityView).getAllByText(/^strong$/i).length).toBeGreaterThan(0)
-    expect(within(activityView).getAllByText(/healthy merge throughput relative to incoming PR volume/i).length).toBeGreaterThan(0)
-    expect(within(activityView).getAllByText(/^high$/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/merge/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
     expect(within(activityView).getAllByText(/stale issue ratio/i).length).toBeGreaterThan(0)
   })
 
@@ -92,16 +92,15 @@ describe('ActivityView', () => {
     expect(within(activityView).queryByText('unavailable')).not.toBeInTheDocument()
   })
 
-  it('shows activity score help and threshold details on demand', async () => {
+  it('shows activity score help and sub-factor details on demand', async () => {
     render(<ActivityView results={[buildResult()]} />)
 
     expect(screen.getByText(/how is activity scored/i)).toBeInTheDocument()
-    expect(screen.queryByText(/weighted score >= 80/i)).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /show thresholds/i }))
+    await userEvent.click(screen.getByRole('button', { name: /show details/i }))
 
-    expect(screen.getByRole('button', { name: /hide thresholds/i })).toBeInTheDocument()
-    expect(screen.getByText(/weighted score >= 80/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide details/i })).toBeInTheDocument()
+    expect(screen.getAllByText(/PR flow/i).length).toBeGreaterThan(0)
   })
 
   it('switches the recent activity window locally', async () => {
@@ -110,7 +109,7 @@ describe('ActivityView', () => {
     const activityView = screen.getByRole('region', { name: /activity view/i })
     expect(within(activityView).getByText(/^commits$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('18')).toBeInTheDocument()
-    expect(within(activityView).getByText(/^high$/i)).toBeInTheDocument()
+    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '30d' }))
 
@@ -118,11 +117,10 @@ describe('ActivityView', () => {
     expect(within(activityView).getByText(/^commits$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('3')).toBeInTheDocument()
     expect(within(activityView).getByText('20.0%')).toBeInTheDocument()
-    expect(within(activityView).getByText(/^weak$/i)).toBeInTheDocument()
-    expect(within(activityView).getByText(/many opened prs are not reaching merge/i)).toBeInTheDocument()
+    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getByText(/prs are not reaching merge/i)).toBeInTheDocument()
     expect(within(activityView).getByText('10.0d')).toBeInTheDocument()
     expect(within(activityView).getByText('20.0d')).toBeInTheDocument()
-    expect(within(activityView).getByText(/^low$/i)).toBeInTheDocument()
     expect(within(activityView).getByText(/selected 30d window/i)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: '12 months' }))
@@ -131,10 +129,9 @@ describe('ActivityView', () => {
     expect(within(activityView).getByText(/^releases$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('6')).toBeInTheDocument()
     expect(within(activityView).getByText('75.0%')).toBeInTheDocument()
-    expect(within(activityView).getByText(/^strong$/i)).toBeInTheDocument()
+    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
     expect(within(activityView).getByText('4.0d')).toBeInTheDocument()
     expect(within(activityView).getByText('6.0d')).toBeInTheDocument()
-    expect(within(activityView).getByText(/^medium$/i)).toBeInTheDocument()
     expect(within(activityView).getByText(/selected 12 months window/i)).toBeInTheDocument()
   })
 })

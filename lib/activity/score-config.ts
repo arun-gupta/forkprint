@@ -1,30 +1,21 @@
 import type { ActivityWindowDays, AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { type BracketCalibration, getCalibrationForStars } from '@/lib/scoring/config-loader'
+import { type BracketCalibration, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ActivityScoreDefinition {
   value: ScoreValue
   tone: ScoreTone
   description: string
   summary: string
+  percentile: number
+  bracketLabel: string
   weightedFactors: Array<{
     label: string
     weightLabel: string
     description: string
-  }>
-  thresholds: Array<{
-    label: Extract<ScoreValue, 'High' | 'Medium' | 'Low'>
-    rule: string
-    description: string
+    percentile?: number
   }>
   missingInputs: string[]
-}
-
-interface ActivityBandDefinition {
-  minScore: number
-  value: Extract<ScoreValue, 'High' | 'Medium' | 'Low'>
-  tone: Exclude<ScoreTone, 'neutral'>
-  description: string
 }
 
 interface ActivityFactorDefinition {
@@ -67,56 +58,18 @@ const ACTIVITY_FACTORS: ActivityFactorDefinition[] = [
   },
 ]
 
-const ACTIVITY_SCORE_BANDS: ActivityBandDefinition[] = [
-  {
-    minScore: 80,
-    value: 'High',
-    tone: 'success',
-    description: 'Recent activity is strong, flow is healthy, and verified public delivery signals look consistently active.',
-  },
-  {
-    minScore: 60,
-    value: 'Medium',
-    tone: 'warning',
-    description: 'Meaningful activity is present, but flow, cadence, or completion speed is uneven.',
-  },
-  {
-    minScore: 0,
-    value: 'Low',
-    tone: 'danger',
-    description: 'Recent activity or delivery flow is weak compared with the configured thresholds.',
-  },
-]
-
-const ACTIVITY_THRESHOLDS: ActivityScoreDefinition['thresholds'] = [
-  {
-    label: 'High',
-    rule: 'Weighted score >= 80',
-    description: 'Healthy recent commit volume, strong flow ratios, active releases, and faster merge/close times.',
-  },
-  {
-    label: 'Medium',
-    rule: 'Weighted score >= 60 and < 80',
-    description: 'Moderate recent activity with uneven but still meaningful delivery flow.',
-  },
-  {
-    label: 'Low',
-    rule: 'Weighted score < 60',
-    description: 'Recent verified activity or delivery flow is weak relative to the configured scoring bands.',
-  },
-]
-
 const INSUFFICIENT_SCORE: ActivityScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
   description: 'RepoPulse cannot verify enough recent activity and delivery-flow data to score this repository yet.',
   summary: 'Verified recent-flow inputs are incomplete.',
+  percentile: 0,
+  bracketLabel: '',
   weightedFactors: ACTIVITY_FACTORS.map((factor) => ({
     label: factor.label,
     weightLabel: `${factor.weight}%`,
     description: factor.description,
   })),
-  thresholds: ACTIVITY_THRESHOLDS,
   missingInputs: [],
 }
 
@@ -141,26 +94,39 @@ export function getActivityScore(result: AnalysisResult, windowDays: ActivityWin
   }
 
   const cal = getCalibrationForStars(result.stars)
-  const weightedScore =
-    evaluatePrFlow(metrics.prsMerged, metrics.prsOpened, cal) * 0.25 +
-    evaluateIssueFlow(metrics.issuesClosed, metrics.issuesOpened, metrics.staleIssueRatio, cal) * 0.2 +
-    evaluateCompletionSpeed(metrics.medianTimeToMergeHours, metrics.medianTimeToCloseHours, cal) * 0.15 +
-    evaluateSustainedActivity(metrics.commits, windowDays) * 0.25 +
-    evaluateReleaseCadence(metrics.releases, windowDays) * 0.15
+  const bracketLabel = getBracketLabel(result.stars)
 
-  const band = ACTIVITY_SCORE_BANDS.find((candidate) => weightedScore >= candidate.minScore) ?? ACTIVITY_SCORE_BANDS.at(-1)!
+  const subPercentiles = {
+    prFlow: evaluatePrFlow(metrics.prsMerged, metrics.prsOpened, cal),
+    issueFlow: evaluateIssueFlow(metrics.issuesClosed, metrics.issuesOpened, metrics.staleIssueRatio, cal),
+    completionSpeed: evaluateCompletionSpeed(metrics.medianTimeToMergeHours, metrics.medianTimeToCloseHours, cal),
+    sustainedActivity: evaluateSustainedActivity(metrics.commits, windowDays),
+    releaseCadence: evaluateReleaseCadence(metrics.releases, windowDays),
+  }
+
+  const compositePercentile = Math.round(
+    subPercentiles.prFlow * 0.25 +
+    subPercentiles.issueFlow * 0.2 +
+    subPercentiles.completionSpeed * 0.15 +
+    subPercentiles.sustainedActivity * 0.25 +
+    subPercentiles.releaseCadence * 0.15,
+  )
+
+  const percentile = Math.min(99, Math.max(0, compositePercentile))
 
   return {
-    value: band.value,
-    tone: band.tone,
-    description: band.description,
-    summary: `Activity combines PR flow, issue flow, completion speed, sustained activity, and release cadence for the selected ${formatWindowLabel(windowDays)} window using shared thresholds.`,
+    value: percentile,
+    tone: percentileToTone(percentile),
+    description: `This repo's activity ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
+    summary: `Activity combines PR flow, issue flow, completion speed, sustained activity, and release cadence for the selected ${formatWindowLabel(windowDays)} window, scored relative to ${bracketLabel} repositories.`,
+    percentile,
+    bracketLabel,
     weightedFactors: ACTIVITY_FACTORS.map((factor) => ({
       label: factor.label,
       weightLabel: `${factor.weight}%`,
       description: factor.description,
+      percentile: subPercentiles[factor.key],
     })),
-    thresholds: ACTIVITY_THRESHOLDS,
     missingInputs: [],
   }
 }
@@ -201,43 +167,45 @@ function getMissingActivityScoreInputs(result: AnalysisResult, windowDays: Activ
   return missing
 }
 
-function evaluatePrFlow(merged: number | Unavailable, opened: number | Unavailable, cal: BracketCalibration) {
+function evaluatePrFlow(merged: number | Unavailable, opened: number | Unavailable, cal: BracketCalibration): number {
   const rate = ratio(merged, opened)
   if (rate === 'unavailable') return 0
-  if (rate >= cal.prMergeRate.p75) return 100
-  if (rate >= cal.prMergeRate.p25) return 70
-  return 40
+  return interpolatePercentile(rate, cal.prMergeRate)
 }
 
-function evaluateIssueFlow(closed: number | Unavailable, opened: number | Unavailable, staleIssueRatio: number | Unavailable, cal: BracketCalibration) {
+function evaluateIssueFlow(closed: number | Unavailable, opened: number | Unavailable, staleIssueRatio: number | Unavailable, cal: BracketCalibration): number {
   const closureRate = ratio(closed, opened)
   if (closureRate === 'unavailable' || staleIssueRatio === 'unavailable') return 0
-  if (closureRate >= cal.issueClosureRate.p75 && staleIssueRatio <= cal.staleIssueRatio.p50) return 100
-  if (closureRate >= cal.issueClosureRate.p25 && staleIssueRatio <= cal.staleIssueRatio.p75) return 70
-  return 40
+  const closurePercentile = interpolatePercentile(closureRate, cal.issueClosureRate)
+  const stalePercentile = interpolatePercentile(staleIssueRatio, cal.staleIssueRatio, true)
+  return Math.round((closurePercentile + stalePercentile) / 2)
 }
 
-function evaluateCompletionSpeed(medianMergeHours: number | Unavailable, medianCloseHours: number | Unavailable, cal: BracketCalibration) {
+function evaluateCompletionSpeed(medianMergeHours: number | Unavailable, medianCloseHours: number | Unavailable, cal: BracketCalibration): number {
   if (medianMergeHours === 'unavailable' || medianCloseHours === 'unavailable') return 0
-  if (medianMergeHours <= cal.medianTimeToMergeHours.p75 && medianCloseHours <= cal.medianTimeToCloseHours.p75) return 100
-  if (medianMergeHours <= cal.medianTimeToMergeHours.p90 && medianCloseHours <= cal.medianTimeToCloseHours.p90) return 70
-  return 40
+  const mergePercentile = interpolatePercentile(medianMergeHours, cal.medianTimeToMergeHours, true)
+  const closePercentile = interpolatePercentile(medianCloseHours, cal.medianTimeToCloseHours, true)
+  return Math.round((mergePercentile + closePercentile) / 2)
 }
 
-function evaluateSustainedActivity(commits: number | Unavailable, windowDays: ActivityWindowDays) {
+function evaluateSustainedActivity(commits: number | Unavailable, windowDays: ActivityWindowDays): number {
   if (commits === 'unavailable') return 0
   const commitsPer30Days = commits / (windowDays / 30)
-  if (commitsPer30Days >= 20) return 100
-  if (commitsPer30Days >= 5) return 70
-  return 40
+  // Linear approximation pending calibration data for commit rates
+  if (commitsPer30Days >= 20) return 99
+  if (commitsPer30Days <= 0) return 0
+  if (commitsPer30Days >= 5) return Math.round(50 + ((commitsPer30Days - 5) / 15) * 49)
+  return Math.round((commitsPer30Days / 5) * 50)
 }
 
-function evaluateReleaseCadence(releases: number | Unavailable, windowDays: ActivityWindowDays) {
+function evaluateReleaseCadence(releases: number | Unavailable, windowDays: ActivityWindowDays): number {
   if (releases === 'unavailable') return 0
   const annualizedReleases = releases * (365 / windowDays)
-  if (annualizedReleases >= 12) return 100
-  if (annualizedReleases >= 4) return 70
-  return 40
+  // Linear approximation pending calibration data for release rates
+  if (annualizedReleases >= 12) return 99
+  if (annualizedReleases <= 0) return 0
+  if (annualizedReleases >= 4) return Math.round(50 + ((annualizedReleases - 4) / 8) * 49)
+  return Math.round((annualizedReleases / 4) * 50)
 }
 
 function formatWindowLabel(windowDays: ActivityWindowDays) {
@@ -248,7 +216,6 @@ function ratio(numerator: number | Unavailable, denominator: number | Unavailabl
   if (numerator === 'unavailable' || denominator === 'unavailable' || denominator <= 0) {
     return 'unavailable'
   }
-
   return numerator / denominator
 }
 
@@ -257,21 +224,13 @@ function isVerifiedNumber(value: number | Unavailable | undefined): value is num
 }
 
 export function formatPercentage(value: number | Unavailable) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
+  if (value === 'unavailable') return '—'
   return `${(value * 100).toFixed(1)}%`
 }
 
 export function formatHours(value: number | Unavailable) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
-  if (value < 24) {
-    return `${value.toFixed(1)}h`
-  }
-
+  if (value === 'unavailable') return '—'
+  if (value < 24) return `${value.toFixed(1)}h`
   return `${(value / 24).toFixed(1)}d`
 }
+

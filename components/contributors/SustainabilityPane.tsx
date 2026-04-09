@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { HelpLabel } from '@/components/shared/HelpLabel'
 import { MetricValue } from '@/components/shared/MetricValue'
-import { SUSTAINABILITY_THRESHOLDS } from '@/lib/contributors/score-config'
+import { formatPercentage } from '@/lib/contributors/score-config'
 import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model'
 import { ContributionBarChart } from './ContributionBarChart'
 
@@ -13,7 +13,7 @@ interface SustainabilityPaneProps {
 }
 
 export function SustainabilityPane({ section }: SustainabilityPaneProps) {
-  const [showThresholds, setShowThresholds] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
   const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
   const [showExperimentalNames, setShowExperimentalNames] = useState(true)
   const [showExperimentalNumbers, setShowExperimentalNumbers] = useState(false)
@@ -35,43 +35,25 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this scored?</p>
             <p className="mt-1 text-sm text-slate-700">
-              RepoPulse scores sustainability from recent commit concentration. Lower top-20% share means the active contributor base is more distributed.
+              RepoPulse scores sustainability from recent commit concentration, ranked as a percentile against repos in the same star bracket. Lower top-20% share means the active contributor base is more distributed.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setShowThresholds((current) => !current)}
+            onClick={() => setShowDetails((current) => !current)}
             className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
-            aria-pressed={showThresholds}
+            aria-pressed={showDetails}
           >
-            {showThresholds ? 'Hide thresholds' : 'Show thresholds'}
+            {showDetails ? 'Hide details' : 'Show details'}
           </button>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SUSTAINABILITY_THRESHOLDS.map((threshold) => (
-            <div key={threshold.value} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
-              <span className="font-semibold text-slate-900">{threshold.value}</span>{' '}
-              <span>
-                {threshold.maxTopContributorShare === Number.POSITIVE_INFINITY
-                  ? '> 75%'
-                  : `<= ${(threshold.maxTopContributorShare * 100).toFixed(0)}%`}
-              </span>
-            </div>
-          ))}
-        </div>
-        {showThresholds ? (
-          <div className="mt-3 grid gap-2 md:grid-cols-3">
-            {SUSTAINABILITY_THRESHOLDS.map((threshold) => (
-              <div key={threshold.value} className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{threshold.value}</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {threshold.maxTopContributorShare === Number.POSITIVE_INFINITY
-                    ? '> 75%'
-                    : `<= ${(threshold.maxTopContributorShare * 100).toFixed(0)}%`}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-600">{threshold.description}</p>
-              </div>
-            ))}
+        {showDetails ? (
+          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Concentration</p>
+            <p className="mt-1 text-sm text-slate-700">
+              Top-20% contributor share: {formatPercentage(section.sustainabilityScore.concentration)}
+              {section.sustainabilityScore.bracketLabel ? ` — scored relative to ${section.sustainabilityScore.bracketLabel} repositories` : ''}
+            </p>
           </div>
         ) : null}
       </div>
