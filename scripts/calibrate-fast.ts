@@ -8,12 +8,10 @@
  *   3. Multi-token round-robin — accepts GITHUB_TOKENS (comma-separated) to
  *      multiply effective rate limit. Falls back to GITHUB_TOKEN.
  *
- * Metrics NOT collected (require bot detection / maintainer identification):
- *   humanResponseRatio, botResponseRatio, contributorResponseRate,
- *   stalePrRatio, prFirstReviewP90Hours, issueResolutionMedianHours,
- *   issueResolutionP90Hours, prMergeMedianHours, prMergeP90Hours,
- *   issueResolutionRate
- *   (these fields are left as null in the output)
+ * All BracketCalibration fields are populated except:
+ *   contributorResponseRate, humanResponseRatio, botResponseRatio — require
+ *   per-account bot detection beyond login heuristics (left as zeros).
+ *   stalePrRatio — fetched via one GitHub Search API call per repo.
  *
  * Usage:
  *   npm run calibrate-fast
@@ -54,7 +52,6 @@ function nextToken(): string {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const TARGET_PER_BRACKET = 50   // minimum for p90 stability (5 anchor points)
 const BATCH_SIZE = 5             // repos per GraphQL alias query
 const PR_WINDOW_DAYS = 90
 const ISSUE_WINDOW_DAYS = 90
@@ -62,14 +59,162 @@ const STALE_DAYS = 30
 const CHECKPOINT_PATH = 'scripts/calibrate-fast-checkpoint.json'
 const OUTPUT_PATH = 'lib/scoring/calibration-data.json'
 
-const BRACKETS = {
-  emerging:    { min: 10,    max: 99,   pushedAfter: '2025-01-01', label: 'Emerging (10–99 stars)' },
-  growing:     { min: 100,   max: 999,  pushedAfter: '2024-10-01', label: 'Growing (100–999 stars)' },
-  established: { min: 1000,  max: 9999, pushedAfter: '2024-10-01', label: 'Established (1k–10k stars)' },
-  popular:     { min: 10000, max: null, pushedAfter: '2024-10-01', label: 'Popular (10k+ stars)' },
-} as const
+function monthsAgo(n: number): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() - n)
+  return d.toISOString().split('T')[0]!
+}
+
+// Each bracket is divided into strata to prevent clustering at the low end of
+// a range (e.g. 100-star repos dominating the Growing sample). Repos are
+// sampled evenly across strata — TARGET_PER_STRATUM per stratum.
+//
+// Target sample sizes per bracket (strata × TARGET_PER_STRATUM):
+//   Emerging:    3 strata × 17 = 51
+//   Growing:     4 strata × 13 = 52
+//   Established: 4 strata × 13 = 52
+//   Popular:     4 strata × 13 = 52
+//
+// All exceed the 50-repo minimum required for p90 stability.
+
+const TARGET_PER_STRATUM = 17  // adjusted per bracket below where needed
+
+interface Stratum {
+  label: string
+  min: number
+  max: number | null
+  pushedAfter: string
+  target: number
+}
+
+const BRACKETS: Record<string, { label: string; strata: Stratum[] }> = {
+  emerging: {
+    label: 'Emerging (10–99 stars)',
+    strata: [
+      { label: 'S1 (10–29)',  min: 10,  max: 29,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
+      { label: 'S2 (30–59)',  min: 30,  max: 59,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
+      { label: 'S3 (60–99)',  min: 60,  max: 99,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
+    ],
+  },
+  growing: {
+    label: 'Growing (100–999 stars)',
+    strata: [
+      { label: 'S1 (100–324)',  min: 100,  max: 324,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S2 (325–549)',  min: 325,  max: 549,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S3 (550–774)',  min: 550,  max: 774,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S4 (775–999)',  min: 775,  max: 999,  pushedAfter: monthsAgo(12), target: 13 },
+    ],
+  },
+  established: {
+    label: 'Established (1k–10k stars)',
+    strata: [
+      { label: 'S1 (1k–3k)',     min: 1000,  max: 2999,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S2 (3k–5.5k)',   min: 3000,  max: 5499,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S3 (5.5k–7.5k)', min: 5500,  max: 7499,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S4 (7.5k–10k)',  min: 7500,  max: 9999,  pushedAfter: monthsAgo(12), target: 13 },
+    ],
+  },
+  popular: {
+    label: 'Popular (10k+ stars)',
+    strata: [
+      { label: 'S1 (10k–25k)',  min: 10000,  max: 24999,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S2 (25k–65k)',  min: 25000,  max: 64999,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S3 (65k–170k)', min: 65000,  max: 169999, pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S4 (170k+)',    min: 170000, max: null,    pushedAfter: monthsAgo(12), target: 13 },
+    ],
+  },
+}
 
 type BracketKey = keyof typeof BRACKETS
+
+// ─── Client-side quality filters ─────────────────────────────────────────────
+// Mirrors the filters in list-candidates.ts to exclude non-software repos.
+
+const COLLECTION_PATTERNS = [
+  /\bawesome\b/i,
+  /\bcurated[- ]list\b/i,
+  /\bfree[- ]programming[- ]books?\b/i,
+  /\bcheatsheet\b/i,
+  /^roadmap/i,
+  /\binterview[- ](questions?|prep|university)\b/i,
+  /\bstudy[- ]plan\b/i,
+  /\blearning[- ]path\b/i,
+  /\bpublic[- ]apis?\b/i,
+  /\bsystem[- ]design[- ]primer\b/i,
+  /\bfree[- ]for[- ]dev/i,
+  /\bcurriculum\b/i,
+  /\bcookbook\b/i,
+  /\brecipes?\b/i,
+  /\bstyle[- ]?guide\b/i,
+  /\bself[- ]taught\b/i,
+  /\bhow[- ]?to[- ]?cook\b/i,
+  /\bword[- ]?lists?\b/i,
+  /\bsec[- ]?lists?\b/i,
+]
+
+const DOCS_NAME_PATTERNS = [
+  /[-_.]?docs?$/i,
+  /[-_.]?documentation$/i,
+  /[-_.]?wiki$/i,
+  /[-_.]?website$/i,
+  /[-_.]?(\.io)$/i,
+  /[-_.]?guidelines?$/i,
+  /[-_.]?writers?[- _]toolkit$/i,
+]
+
+const EXCLUDED_DESC_PATTERNS = [
+  /\b(mirrored? from|mirror of|read[- ]?only mirror|unofficial mirror|official (github )?mirror)\b/i,
+  /do not (create|open|submit) (prs?|pull requests?|issues?) here/i,
+  /^documentation (for|of)\b/i,
+  /\botp[- ]?(bot|bypass|generator)\b/i,
+  /\b2fa[- ]?(bypass|crack)\b/i,
+  /\baccount[- ]?(manager|switcher|switch)\b/i,
+  /\botp[- ]?(bomb|flood|spam)\b/i,
+  /\bactivation[- ]?scripts?\b/i,
+]
+
+const EXCLUDED_LANGUAGES = new Set([
+  'Jupyter Notebook',
+  'Adblock Filter List',
+  'TeX',
+  'YAML',
+  'Markdown',                // Pure markdown repos are collections/resources, not software
+  'DIGITAL Command Language', // Legal/admin repos (e.g. DMCA notices)
+])
+
+const MAX_PER_LANGUAGE = 3
+
+interface SearchRepoItem {
+  full_name: string
+  description: string | null
+  language: string | null
+  stargazers_count: number
+}
+
+function isGenuineSoftwareProject(repo: SearchRepoItem, starsMin: number, starsMax: number | null): boolean {
+  if (!repo.language) return false
+  if (EXCLUDED_LANGUAGES.has(repo.language)) return false
+  if (repo.stargazers_count < starsMin) return false
+  if (starsMax !== null && repo.stargazers_count > starsMax) return false
+
+  const [owner, name] = repo.full_name.split('/')
+  const repoName = name ?? ''
+  const desc = repo.description ?? ''
+  const nameAndDesc = `${repo.full_name} ${desc}`
+
+  if (owner === repoName) return false
+  for (const pattern of DOCS_NAME_PATTERNS) {
+    if (pattern.test(repoName)) return false
+  }
+  for (const pattern of EXCLUDED_DESC_PATTERNS) {
+    if (pattern.test(desc) || pattern.test(repoName)) return false
+  }
+  if (/\b(index|registry)\b/i.test(repoName) && /\b(index|registry)\b/i.test(desc)) return false
+  for (const pattern of COLLECTION_PATTERNS) {
+    if (pattern.test(nameAndDesc)) return false
+  }
+  return true
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +247,9 @@ interface RepoMetrics {
   prMergeMedianHours: number | null           // same data as medianTimeToMergeHours — aliased for scoring compat
   prMergeP90Hours: number | null
   issueResolutionRate: number | null          // same data as issueClosureRate — aliased for scoring compat
+  contributorResponseRate: number | null
+  humanResponseRatio: number | null
+  botResponseRatio: number | null
   prReviewDepth: number | null
   issuesClosedWithoutCommentRatio: number | null
   topContributorShare: number | null
@@ -114,19 +262,23 @@ interface Checkpoint {
 
 // ─── GraphQL types ────────────────────────────────────────────────────────────
 
+interface GQLTimelineNode {
+  createdAt?: string
+  author?: { login: string }
+}
+
 interface GQLPRNode {
   createdAt: string
   mergedAt: string | null
   reviews: { totalCount: number }
-  comments: { totalCount: number }
-  timelineItems: { nodes: Array<{ createdAt?: string }> }
+  timelineItems: { nodes: GQLTimelineNode[] }
 }
 
 interface GQLIssueNode {
   createdAt: string
   closedAt: string | null
   comments: { totalCount: number }
-  timelineItems: { nodes: Array<{ createdAt?: string }> }
+  timelineItems: { nodes: GQLTimelineNode[] }
 }
 
 interface GQLRepoData {
@@ -208,7 +360,7 @@ async function fetchSearchPage(
   sort: string,
   page: number,
   token: string,
-): Promise<string[]> {
+): Promise<SearchRepoItem[]> {
   const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=${sort}&per_page=100&page=${page}`
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
@@ -224,32 +376,61 @@ async function fetchSearchPage(
     throw new Error(`Search API ${res.status}: ${await res.text()}`)
   }
 
-  const body = (await res.json()) as { items: Array<{ full_name: string }> }
-  return body.items.map((i) => i.full_name)
+  const body = (await res.json()) as { items: SearchRepoItem[] }
+  return body.items
 }
 
-async function sampleRepos(
-  bracket: (typeof BRACKETS)[BracketKey],
-  target: number,
+async function sampleStratum(
+  stratum: Stratum,
+  seen: Set<string>,
+  langCount: Map<string, number>,
 ): Promise<string[]> {
-  const starsFilter = bracket.max
-    ? `stars:${bracket.min}..${bracket.max}`
-    : `stars:>=${bracket.min}`
-  const query = `${starsFilter} fork:false archived:false pushed:>${bracket.pushedAfter}`
-  const repos = new Set<string>()
+  const starsFilter = stratum.max
+    ? `stars:${stratum.min}..${stratum.max}`
+    : `stars:>=${stratum.min}`
+  const query = `${starsFilter} fork:false archived:false pushed:>${stratum.pushedAfter}`
+  const accepted: string[] = []
   const sorts = ['updated', 'created', 'stars']
 
   for (const sort of sorts) {
-    if (repos.size >= target) break
-    for (let page = 1; page <= 10 && repos.size < target; page++) {
-      const names = await fetchSearchPage(query, sort, page, nextToken())
-      if (names.length === 0) break
-      names.forEach((n) => repos.add(n))
+    if (accepted.length >= stratum.target) break
+    for (let page = 1; page <= 10 && accepted.length < stratum.target; page++) {
+      const items = await fetchSearchPage(query, sort, page, nextToken())
+      if (items.length === 0) break
+
+      for (const repo of items) {
+        if (accepted.length >= stratum.target) break
+        if (seen.has(repo.full_name)) continue
+        if (!isGenuineSoftwareProject(repo, stratum.min, stratum.max)) continue
+
+        const lang = repo.language!
+        if ((langCount.get(lang) ?? 0) >= MAX_PER_LANGUAGE) continue
+
+        seen.add(repo.full_name)
+        langCount.set(lang, (langCount.get(lang) ?? 0) + 1)
+        accepted.push(repo.full_name)
+      }
+
       await sleep(600)
     }
   }
 
-  return [...repos].slice(0, target)
+  return accepted
+}
+
+async function sampleBracket(bracket: { label: string; strata: Stratum[] }): Promise<string[]> {
+  const all: string[] = []
+  const seen = new Set<string>()
+  const langCount = new Map<string, number>()
+
+  for (const stratum of bracket.strata) {
+    console.log(`  Stratum ${stratum.label} — target ${stratum.target}`)
+    const repos = await sampleStratum(stratum, seen, langCount)
+    all.push(...repos)
+    console.log(`    → ${repos.length} sampled`)
+    await sleep(500)
+  }
+  return all
 }
 
 // ─── GraphQL batch fetcher ─────────────────────────────────────────────────────
@@ -278,7 +459,6 @@ function buildBatchQuery(repos: string[]): string {
             createdAt
             mergedAt
             reviews { totalCount }
-            comments { totalCount }
             timelineItems(first: 1, itemTypes: [PULL_REQUEST_REVIEW, ISSUE_COMMENT]) {
               nodes {
                 ... on PullRequestReview { createdAt }
@@ -298,7 +478,7 @@ function buildBatchQuery(repos: string[]): string {
             comments { totalCount }
             timelineItems(first: 1, itemTypes: [ISSUE_COMMENT]) {
               nodes {
-                ... on IssueComment { createdAt }
+                ... on IssueComment { createdAt author { login } }
               }
             }
           }
@@ -364,9 +544,57 @@ async function fetchTopContributorShare(fullName: string, token: string): Promis
   return null
 }
 
+// ─── Bot detection ────────────────────────────────────────────────────────────
+
+// Known bot logins and suffix patterns. Covers GitHub Apps (login ends in
+// [bot]), Dependabot, Renovate, and other common automation accounts.
+const KNOWN_BOTS = new Set([
+  'dependabot', 'renovate', 'renovate-bot', 'github-actions',
+  'semantic-release-bot', 'allcontributors', 'stale', 'codecov-commenter',
+  'coveralls', 'snyk-bot', 'greenkeeper', 'imgbot',
+])
+
+function isBot(login: string): boolean {
+  const lower = login.toLowerCase()
+  return lower.endsWith('[bot]') || KNOWN_BOTS.has(lower)
+}
+
+// ─── REST: stale PR count ─────────────────────────────────────────────────────
+
+// Returns the count of open PRs not updated since STALE_CUTOFF.
+// Uses GitHub Search API: is:pr is:open repo:owner/name updated:<date
+async function fetchStalePrCount(fullName: string, token: string): Promise<number | null> {
+  const cutoffDate = STALE_CUTOFF.split('T')[0]! // YYYY-MM-DD
+  const q = `is:pr is:open repo:${fullName} updated:<${cutoffDate}`
+  const url = `https://api.github.com/search/issues?q=${encodeURIComponent(q)}&per_page=1`
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' },
+    })
+
+    if (res.status === 403 || res.status === 429) {
+      const wait = Number(res.headers.get('Retry-After') ?? '30')
+      console.log(`    Search rate limited. Waiting ${wait}s...`)
+      await sleep(wait * 1000)
+      continue
+    }
+    if (!res.ok) return null
+
+    const body = (await res.json()) as { total_count: number }
+    return body.total_count
+  }
+  return null
+}
+
 // ─── Metrics computation ──────────────────────────────────────────────────────
 
-function computeMetrics(fullName: string, data: GQLRepoData, topContributorShare: number | null): RepoMetrics {
+function computeMetrics(
+  fullName: string,
+  data: GQLRepoData,
+  topContributorShare: number | null,
+  stalePrCount: number | null,
+): RepoMetrics {
   const stars = data.stargazerCount
   const forks = data.forkCount
   const watchers = data.watchers.totalCount
@@ -450,6 +678,30 @@ function computeMetrics(fullName: string, data: GQLRepoData, topContributorShare
       ? recentIssues.filter((i) => i.comments.totalCount === 0).length / recentIssues.length
       : null
 
+  // Stale PR ratio: open PRs not updated in STALE_DAYS / total open PRs
+  const stalePrRatio =
+    stalePrCount !== null && data.openPRs.totalCount > 0
+      ? stalePrCount / data.openPRs.totalCount
+      : null
+
+  // Bot detection on closed issues — classify first responder as bot or human.
+  // Bot heuristic: login ends in [bot] or is a known automation account.
+  const issuesWithFirstResponder = recentIssues.filter(
+    (i) => i.timelineItems.nodes[0]?.author?.login,
+  )
+  const botFirstResponses = issuesWithFirstResponder.filter((i) =>
+    isBot(i.timelineItems.nodes[0]!.author!.login),
+  )
+  const n = issuesWithFirstResponder.length
+  const botResponseRatio = n > 0 ? botFirstResponses.length / n : null
+  const humanResponseRatio = n > 0 ? (n - botFirstResponses.length) / n : null
+
+  // Contributor response rate: fraction of closed issues that received any comment
+  const contributorResponseRate =
+    recentIssues.length > 0
+      ? recentIssues.filter((i) => i.comments.totalCount > 0).length / recentIssues.length
+      : null
+
   return {
     repo: fullName,
     stars,
@@ -460,7 +712,7 @@ function computeMetrics(fullName: string, data: GQLRepoData, topContributorShare
     prMergeRate,
     issueClosureRate,
     staleIssueRatio,
-    stalePrRatio: null,              // not computable without per-repo search queries
+    stalePrRatio,
     medianTimeToMergeHours,
     medianTimeToCloseHours,
     issueFirstResponseMedianHours,
@@ -472,6 +724,9 @@ function computeMetrics(fullName: string, data: GQLRepoData, topContributorShare
     prMergeMedianHours: medianTimeToMergeHours,           // same metric, aliased
     prMergeP90Hours: mergeP90Hours,
     issueResolutionRate: issueClosureRate,                 // same metric, aliased
+    contributorResponseRate,
+    humanResponseRatio,
+    botResponseRatio,
     prReviewDepth,
     issuesClosedWithoutCommentRatio,
     topContributorShare,
@@ -497,10 +752,13 @@ async function processBatch(repos: string[]): Promise<RepoMetrics[]> {
     }
 
     try {
-      const topContributorShare = await fetchTopContributorShare(fullName, nextToken())
+      const [topContributorShare, stalePrCount] = await Promise.all([
+        fetchTopContributorShare(fullName, nextToken()),
+        fetchStalePrCount(fullName, nextToken()),
+      ])
       await sleep(200)
 
-      const metrics = computeMetrics(fullName, repoData, topContributorShare)
+      const metrics = computeMetrics(fullName, repoData, topContributorShare, stalePrCount)
       results.push(metrics)
       console.log(`  ✓ ${fullName} (${metrics.stars} stars)`)
     } catch (err) {
@@ -542,20 +800,63 @@ function computeBracketCalibration(results: RepoMetrics[]) {
     prMergeMedianHours:              percentiles(collect(results, 'prMergeMedianHours')),
     prMergeP90Hours:                 percentiles(collect(results, 'prMergeP90Hours')),
     issueResolutionRate:             percentiles(collect(results, 'issueResolutionRate')),
-    // Bot detection metrics — not computable without maintainer identification.
-    // Scoring functions that use these will fall back to 0 (no contribution to score).
-    contributorResponseRate:         { p25: 0, p50: 0, p75: 0, p90: 0 },
-    humanResponseRatio:              { p25: 0, p50: 0, p75: 0, p90: 0 },
-    botResponseRatio:                { p25: 0, p50: 0, p75: 0, p90: 0 },
+    contributorResponseRate:         percentiles(collect(results, 'contributorResponseRate')),
+    humanResponseRatio:              percentiles(collect(results, 'humanResponseRatio')),
+    botResponseRatio:                percentiles(collect(results, 'botResponseRatio')),
     prReviewDepth:                   percentiles(collect(results, 'prReviewDepth')),
     issuesClosedWithoutCommentRatio: percentiles(collect(results, 'issuesClosedWithoutCommentRatio')),
     topContributorShare:             percentiles(collect(results, 'topContributorShare')),
   }
 }
 
+// ─── Dry-run support ─────────────────────────────────────────────────────────
+
+const DRY_RUN = process.argv.includes('--dry-run')
+const REPOS_OUTPUT_PATH = 'scripts/calibrate-fast-repos.md'
+
+function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
+  const lines: string[] = [
+    '# Calibration Repos (dry-run)',
+    '',
+    `Generated: ${new Date().toISOString().split('T')[0]}`,
+    '',
+  ]
+
+  let total = 0
+  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
+    const bracket = BRACKETS[bracketKey]
+    const repos = sampledRepos[bracketKey]
+    total += repos.length
+
+    lines.push(`## ${bracket.label} (${repos.length} repos)`)
+    lines.push('')
+
+    for (const repo of repos) {
+      lines.push(`- [${repo}](https://github.com/${repo})`)
+    }
+    lines.push('')
+  }
+
+  lines.push(`---`)
+  lines.push(`**Total: ${total} repos**`)
+  lines.push('')
+  lines.push('To proceed with full calibration using these repos, run:')
+  lines.push('```')
+  lines.push('npm run calibrate-fast')
+  lines.push('```')
+  lines.push('The checkpoint already contains the sampled repos — the full run will skip re-sampling.')
+
+  writeFileSync(REPOS_OUTPUT_PATH, lines.join('\n'))
+  console.log(`\nRepo list written to ${REPOS_OUTPUT_PATH}`)
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
+  if (DRY_RUN) {
+    console.log('DRY RUN — sampling repos only, no metrics will be fetched\n')
+  }
+
   const checkpoint = loadCheckpoint()
 
   for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
@@ -564,13 +865,16 @@ async function main() {
 
     // Sample repos if not already done
     if (checkpoint.sampledRepos[bracketKey].length === 0) {
-      console.log(`Sampling ${TARGET_PER_BRACKET} repos...`)
-      checkpoint.sampledRepos[bracketKey] = await sampleRepos(bracket, TARGET_PER_BRACKET)
+      const totalTarget = bracket.strata.reduce((s, t) => s + t.target, 0)
+      console.log(`Sampling across ${bracket.strata.length} strata (target ${totalTarget})...`)
+      checkpoint.sampledRepos[bracketKey] = await sampleBracket(bracket)
       saveCheckpoint(checkpoint)
       console.log(`Sampled ${checkpoint.sampledRepos[bracketKey].length} repos`)
     } else {
       console.log(`Using ${checkpoint.sampledRepos[bracketKey].length} repos from checkpoint`)
     }
+
+    if (DRY_RUN) continue
 
     const analyzed = new Set(checkpoint.results[bracketKey].map((r) => r.repo))
     const remaining = checkpoint.sampledRepos[bracketKey].filter((r) => !analyzed.has(r))
@@ -589,6 +893,14 @@ async function main() {
     }
 
     console.log(`Bracket complete: ${checkpoint.results[bracketKey].length} results`)
+  }
+
+  if (DRY_RUN) {
+    writeDryRunReport(checkpoint.sampledRepos)
+    const total = Object.values(checkpoint.sampledRepos).reduce((s, r) => s + r.length, 0)
+    console.log(`\nDry run complete: ${total} repos sampled across ${Object.keys(BRACKETS).length} brackets`)
+    console.log('Checkpoint saved — run `npm run calibrate-fast` to fetch metrics for these repos')
+    return
   }
 
   // Compute and write calibration data

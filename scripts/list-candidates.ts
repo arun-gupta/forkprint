@@ -24,11 +24,17 @@ if (!TOKEN) {
 const CANDIDATES_PER_BRACKET = 20
 const OUTPUT_PATH = 'scripts/calibration-candidates.md'
 
+function monthsAgo(n: number): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() - n)
+  return d.toISOString().split('T')[0]!
+}
+
 // Sub-ranges for established bracket to ensure diversity across 1k–10k
 const ESTABLISHED_SUB_RANGES = [
-  { stars: 'stars:1000..2999',  pushedAfter: '2024-10-01', label: 'low' },
-  { stars: 'stars:3000..5999',  pushedAfter: '2024-10-01', label: 'mid' },
-  { stars: 'stars:6000..9999',  pushedAfter: '2024-10-01', label: 'high' },
+  { stars: 'stars:1000..2999',  pushedAfter: monthsAgo(12), label: 'low' },
+  { stars: 'stars:3000..5999',  pushedAfter: monthsAgo(12), label: 'mid' },
+  { stars: 'stars:6000..9999',  pushedAfter: monthsAgo(12), label: 'high' },
 ]
 
 const BRACKETS = [
@@ -38,7 +44,7 @@ const BRACKETS = [
     starsFilter: 'stars:10..99',
     starsMin: 10,
     starsMax: 99,
-    pushedAfter: '2025-01-01',
+    pushedAfter: monthsAgo(12),
     fetchCount: 80, // over-fetch so we have enough after filtering
   },
   {
@@ -47,7 +53,7 @@ const BRACKETS = [
     starsFilter: 'stars:100..999',
     starsMin: 100,
     starsMax: 999,
-    pushedAfter: '2024-10-01',
+    pushedAfter: monthsAgo(12),
     fetchCount: 80,
   },
   {
@@ -56,7 +62,7 @@ const BRACKETS = [
     starsFilter: null, // uses sub-ranges instead
     starsMin: 1000,
     starsMax: 9999,
-    pushedAfter: '2024-10-01',
+    pushedAfter: monthsAgo(12),
     fetchCount: 40, // per sub-range
   },
   {
@@ -65,7 +71,7 @@ const BRACKETS = [
     starsFilter: 'stars:>=10000',
     starsMin: 10000,
     starsMax: null,
-    pushedAfter: '2024-10-01',
+    pushedAfter: monthsAgo(12),
     fetchCount: 100, // over-fetch heavily — many will be filtered out
     sorts: ['updated', 'created', 'stars'], // updated-first avoids artificially inflated star counts
   },
@@ -83,6 +89,15 @@ const COLLECTION_PATTERNS = [
   /\blearning[- ]path\b/i,
   /\bpublic[- ]apis?\b/i,
   /\bsystem[- ]design[- ]primer\b/i,
+  /\bfree[- ]for[- ]dev/i,
+  /\bcurriculum\b/i,
+  /\bcookbook\b/i,
+  /\brecipes?\b/i,
+  /\bstyle[- ]?guide\b/i,
+  /\bself[- ]taught\b/i,
+  /\bhow[- ]?to[- ]?cook\b/i,
+  /\bword[- ]?lists?\b/i,
+  /\bsec[- ]?lists?\b/i,
 ]
 
 // Repo name suffixes/patterns that indicate documentation sites (not software)
@@ -103,7 +118,9 @@ const EXCLUDED_DESC_PATTERNS = [
   /^documentation (for|of)\b/i,
   /\botp[- ]?(bot|bypass|generator)\b/i,
   /\b2fa[- ]?(bypass|crack)\b/i,
-  /\baccount[- ]?(manager|switcher|switch)\b/i, // credential-cycling tools
+  /\baccount[- ]?(manager|switcher|switch)\b/i,
+  /\botp[- ]?(bomb|flood|spam)\b/i,
+  /\bactivation[- ]?scripts?\b/i,
 ]
 
 // Languages that are not genuine software projects (notebooks, filter lists, etc.)
@@ -111,7 +128,9 @@ const EXCLUDED_LANGUAGES = new Set([
   'Jupyter Notebook',
   'Adblock Filter List',
   'TeX',
-  'YAML',   // usually config/data repos, not software
+  'YAML',
+  'Markdown',
+  'DIGITAL Command Language',
 ])
 
 const MAX_PER_LANGUAGE = 3  // max repos with the same primary language per bracket
@@ -151,7 +170,7 @@ function isGenuineSoftwareProject(repo: RepoItem, starsMin: number, starsMax: nu
 
   // Exclude by description patterns (mirrors, bypass tools, account cyclers, etc.)
   for (const pattern of EXCLUDED_DESC_PATTERNS) {
-    if (pattern.test(desc)) return false
+    if (pattern.test(desc) || pattern.test(repoName)) return false
   }
 
   // Exclude index/registry repos

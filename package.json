@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "calibrate": "tsx scripts/calibrate.ts",
     "list-candidates": "tsx scripts/list-candidates.ts",
-    "calibrate-fast": "tsx scripts/calibrate-fast.ts"
+    "calibrate-fast": "tsx scripts/calibrate-fast.ts",
+    "calibrate-fast:dry-run": "tsx scripts/calibrate-fast.ts --dry-run"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
