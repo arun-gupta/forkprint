@@ -1,128 +1,648 @@
 {
-  "generated": "placeholder",
-  "source": "placeholder — run npm run calibrate to generate real data",
+  "generated": "2026-04-09",
+  "source": "GitHub Search API + lightweight GraphQL",
   "sampleSizes": {
-    "emerging": 0,
-    "growing": 0,
-    "established": 0,
-    "popular": 0
+    "emerging": 51,
+    "growing": 52,
+    "established": 52,
+    "popular": 47
   },
   "brackets": {
     "emerging": {
-      "sampleSize": 0,
-      "stars":                            { "p25": 3,     "p50": 12,    "p75": 45,    "p90": 78    },
-      "forks":                            { "p25": 0,     "p50": 1,     "p75": 5,     "p90": 15    },
-      "watchers":                         { "p25": 0,     "p50": 1,     "p75": 3,     "p90": 8     },
-      "forkRate":                         { "p25": 0.08,  "p50": 0.15,  "p75": 0.25,  "p90": 0.35  },
-      "watcherRate":                      { "p25": 0.005, "p50": 0.015, "p75": 0.025, "p90": 0.04  },
-      "prMergeRate":                      { "p25": 0.35,  "p50": 0.5,   "p75": 0.6,   "p90": 0.85  },
-      "issueClosureRate":                 { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "staleIssueRatio":                  { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "stalePrRatio":                     { "p25": 0.05,  "p50": 0.15,  "p75": 0.3,   "p90": 0.5   },
-      "medianTimeToMergeHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "medianTimeToCloseHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseMedianHours":    { "p25": 4,     "p50": 24,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseP90Hours":       { "p25": 24,    "p50": 168,   "p75": 336,   "p90": 1440  },
-      "prFirstReviewMedianHours":         { "p25": 48,    "p50": 96,    "p75": 240,   "p90": 720   },
-      "prFirstReviewP90Hours":            { "p25": 96,    "p50": 240,   "p75": 480,   "p90": 1440  },
-      "issueResolutionMedianHours":       { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "issueResolutionP90Hours":          { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "prMergeMedianHours":               { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "prMergeP90Hours":                  { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "issueResolutionRate":              { "p25": 0.65,  "p50": 0.8,   "p75": 0.9,   "p90": 1.0   },
-      "contributorResponseRate":          { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "humanResponseRatio":               { "p25": 0.4,   "p50": 0.55,  "p75": 0.7,   "p90": 0.9   },
-      "botResponseRatio":                 { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "prReviewDepth":                    { "p25": 0.75,  "p50": 1.0,   "p75": 1.5,   "p90": 3.0   },
-      "issuesClosedWithoutCommentRatio":  { "p25": 0.05,  "p50": 0.15,  "p75": 0.35,  "p90": 0.6   },
-      "topContributorShare":              { "p25": 0.5,   "p50": 0.65,  "p75": 0.75,  "p90": 0.95  }
+      "sampleSize": 51,
+      "stars": {
+        "p25": 23,
+        "p50": 42,
+        "p75": 69,
+        "p90": 80
+      },
+      "forks": {
+        "p25": 3,
+        "p50": 9,
+        "p75": 23,
+        "p90": 43
+      },
+      "watchers": {
+        "p25": 1,
+        "p50": 3,
+        "p75": 7,
+        "p90": 16
+      },
+      "forkRate": {
+        "p25": 0.091,
+        "p50": 0.254,
+        "p75": 0.538,
+        "p90": 0.96
+      },
+      "watcherRate": {
+        "p25": 0.039,
+        "p50": 0.071,
+        "p75": 0.188,
+        "p90": 0.471
+      },
+      "prMergeRate": {
+        "p25": 0.73,
+        "p50": 0.962,
+        "p75": 1,
+        "p90": 1
+      },
+      "issueClosureRate": {
+        "p25": 0.045,
+        "p50": 0.5,
+        "p75": 0.926,
+        "p90": 1
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0.833,
+        "p75": 1,
+        "p90": 1
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0.286,
+        "p75": 0.636,
+        "p90": 1
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0.202,
+        "p50": 1.391,
+        "p75": 25.893,
+        "p90": 117.823
+      },
+      "medianTimeToCloseHours": {
+        "p25": 16.528,
+        "p50": 174.879,
+        "p75": 844.364,
+        "p90": 15834.851
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 5.241,
+        "p50": 51.249,
+        "p75": 289.553,
+        "p90": 3497.962
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 36.107,
+        "p50": 121.889,
+        "p75": 3637.487,
+        "p90": 6819.228
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0.023,
+        "p50": 0.222,
+        "p75": 17.055,
+        "p90": 34.82
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0.221,
+        "p50": 3.274,
+        "p75": 80.464,
+        "p90": 365.314
+      },
+      "issueResolutionMedianHours": {
+        "p25": 16.528,
+        "p50": 174.879,
+        "p75": 844.364,
+        "p90": 15834.851
+      },
+      "issueResolutionP90Hours": {
+        "p25": 54.051,
+        "p50": 574.489,
+        "p75": 6623.586,
+        "p90": 26444.256
+      },
+      "prMergeMedianHours": {
+        "p25": 0.202,
+        "p50": 1.391,
+        "p75": 25.893,
+        "p90": 117.823
+      },
+      "prMergeP90Hours": {
+        "p25": 7.911,
+        "p50": 54.098,
+        "p75": 192.925,
+        "p90": 939.213
+      },
+      "issueResolutionRate": {
+        "p25": 0.045,
+        "p50": 0.5,
+        "p75": 0.926,
+        "p90": 1
+      },
+      "contributorResponseRate": {
+        "p25": 0.5,
+        "p50": 1,
+        "p75": 1,
+        "p90": 1
+      },
+      "humanResponseRatio": {
+        "p25": 1,
+        "p50": 1,
+        "p75": 1,
+        "p90": 1
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0.333,
+        "p75": 1.171,
+        "p90": 1.667
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.5,
+        "p90": 1
+      },
+      "topContributorShare": {
+        "p25": 0.483,
+        "p50": 0.595,
+        "p75": 0.803,
+        "p90": 0.997
+      }
     },
     "growing": {
-      "sampleSize": 0,
-      "stars":                            { "p25": 150,   "p50": 350,   "p75": 700,   "p90": 900   },
-      "forks":                            { "p25": 5,     "p50": 20,    "p75": 60,    "p90": 150   },
-      "watchers":                         { "p25": 1,     "p50": 5,     "p75": 15,    "p90": 40    },
-      "forkRate":                         { "p25": 0.08,  "p50": 0.15,  "p75": 0.25,  "p90": 0.35  },
-      "watcherRate":                      { "p25": 0.005, "p50": 0.015, "p75": 0.025, "p90": 0.04  },
-      "prMergeRate":                      { "p25": 0.35,  "p50": 0.5,   "p75": 0.6,   "p90": 0.85  },
-      "issueClosureRate":                 { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "staleIssueRatio":                  { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "stalePrRatio":                     { "p25": 0.05,  "p50": 0.15,  "p75": 0.3,   "p90": 0.5   },
-      "medianTimeToMergeHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "medianTimeToCloseHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseMedianHours":    { "p25": 4,     "p50": 24,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseP90Hours":       { "p25": 24,    "p50": 168,   "p75": 336,   "p90": 1440  },
-      "prFirstReviewMedianHours":         { "p25": 48,    "p50": 96,    "p75": 240,   "p90": 720   },
-      "prFirstReviewP90Hours":            { "p25": 96,    "p50": 240,   "p75": 480,   "p90": 1440  },
-      "issueResolutionMedianHours":       { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "issueResolutionP90Hours":          { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "prMergeMedianHours":               { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "prMergeP90Hours":                  { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "issueResolutionRate":              { "p25": 0.65,  "p50": 0.8,   "p75": 0.9,   "p90": 1.0   },
-      "contributorResponseRate":          { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "humanResponseRatio":               { "p25": 0.4,   "p50": 0.55,  "p75": 0.7,   "p90": 0.9   },
-      "botResponseRatio":                 { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "prReviewDepth":                    { "p25": 0.75,  "p50": 1.0,   "p75": 1.5,   "p90": 3.0   },
-      "issuesClosedWithoutCommentRatio":  { "p25": 0.05,  "p50": 0.15,  "p75": 0.35,  "p90": 0.6   },
-      "topContributorShare":              { "p25": 0.5,   "p50": 0.65,  "p75": 0.75,  "p90": 0.95  }
+      "sampleSize": 52,
+      "stars": {
+        "p25": 323,
+        "p50": 516,
+        "p75": 754,
+        "p90": 891
+      },
+      "forks": {
+        "p25": 27,
+        "p50": 80,
+        "p75": 180,
+        "p90": 592
+      },
+      "watchers": {
+        "p25": 4,
+        "p50": 10,
+        "p75": 31,
+        "p90": 58
+      },
+      "forkRate": {
+        "p25": 0.076,
+        "p50": 0.143,
+        "p75": 0.363,
+        "p90": 1.231
+      },
+      "watcherRate": {
+        "p25": 0.012,
+        "p50": 0.025,
+        "p75": 0.046,
+        "p90": 0.085
+      },
+      "prMergeRate": {
+        "p25": 0.161,
+        "p50": 0.736,
+        "p75": 0.957,
+        "p90": 1
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.341,
+        "p90": 0.786
+      },
+      "staleIssueRatio": {
+        "p25": 0.5,
+        "p50": 0.846,
+        "p75": 0.962,
+        "p90": 1
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0.25,
+        "p75": 0.749,
+        "p90": 1
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0.697,
+        "p50": 2.723,
+        "p75": 15.654,
+        "p90": 68.993
+      },
+      "medianTimeToCloseHours": {
+        "p25": 5.347,
+        "p50": 81.367,
+        "p75": 341.578,
+        "p90": 2663.856
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 2.128,
+        "p50": 14.103,
+        "p75": 47.444,
+        "p90": 1698.782
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 86.517,
+        "p50": 452.45,
+        "p75": 1698.782,
+        "p90": 8231.029
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0.007,
+        "p50": 0.168,
+        "p75": 1.609,
+        "p90": 6.57
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0.099,
+        "p50": 1.733,
+        "p75": 39.741,
+        "p90": 106.857
+      },
+      "issueResolutionMedianHours": {
+        "p25": 5.347,
+        "p50": 81.367,
+        "p75": 341.578,
+        "p90": 2663.856
+      },
+      "issueResolutionP90Hours": {
+        "p25": 22.225,
+        "p50": 452.45,
+        "p75": 5637.765,
+        "p90": 13746.861
+      },
+      "prMergeMedianHours": {
+        "p25": 0.697,
+        "p50": 2.723,
+        "p75": 15.654,
+        "p90": 68.993
+      },
+      "prMergeP90Hours": {
+        "p25": 15.227,
+        "p50": 38.308,
+        "p75": 347.169,
+        "p90": 525.315
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.341,
+        "p90": 0.786
+      },
+      "contributorResponseRate": {
+        "p25": 0.355,
+        "p50": 0.857,
+        "p75": 1,
+        "p90": 1
+      },
+      "humanResponseRatio": {
+        "p25": 1,
+        "p50": 1,
+        "p75": 1,
+        "p90": 1
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0.545,
+        "p75": 2.27,
+        "p90": 4.71
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0.1,
+        "p75": 0.596,
+        "p90": 1
+      },
+      "topContributorShare": {
+        "p25": 0.082,
+        "p50": 0.282,
+        "p75": 0.809,
+        "p90": 0.984
+      }
     },
     "established": {
-      "sampleSize": 0,
-      "stars":                            { "p25": 1500,  "p50": 3500,  "p75": 7000,  "p90": 9000  },
-      "forks":                            { "p25": 100,   "p50": 350,   "p75": 900,   "p90": 2000  },
-      "watchers":                         { "p25": 20,    "p50": 80,    "p75": 250,   "p90": 600   },
-      "forkRate":                         { "p25": 0.08,  "p50": 0.15,  "p75": 0.25,  "p90": 0.35  },
-      "watcherRate":                      { "p25": 0.005, "p50": 0.015, "p75": 0.025, "p90": 0.04  },
-      "prMergeRate":                      { "p25": 0.35,  "p50": 0.5,   "p75": 0.6,   "p90": 0.85  },
-      "issueClosureRate":                 { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "staleIssueRatio":                  { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "stalePrRatio":                     { "p25": 0.05,  "p50": 0.15,  "p75": 0.3,   "p90": 0.5   },
-      "medianTimeToMergeHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "medianTimeToCloseHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseMedianHours":    { "p25": 4,     "p50": 24,    "p75": 168,   "p90": 720   },
-      "issueFirstResponseP90Hours":       { "p25": 24,    "p50": 168,   "p75": 336,   "p90": 1440  },
-      "prFirstReviewMedianHours":         { "p25": 48,    "p50": 96,    "p75": 240,   "p90": 720   },
-      "prFirstReviewP90Hours":            { "p25": 96,    "p50": 240,   "p75": 480,   "p90": 1440  },
-      "issueResolutionMedianHours":       { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "issueResolutionP90Hours":          { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "prMergeMedianHours":               { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880  },
-      "prMergeP90Hours":                  { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640  },
-      "issueResolutionRate":              { "p25": 0.65,  "p50": 0.8,   "p75": 0.9,   "p90": 1.0   },
-      "contributorResponseRate":          { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95  },
-      "humanResponseRatio":               { "p25": 0.4,   "p50": 0.55,  "p75": 0.7,   "p90": 0.9   },
-      "botResponseRatio":                 { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75  },
-      "prReviewDepth":                    { "p25": 0.75,  "p50": 1.0,   "p75": 1.5,   "p90": 3.0   },
-      "issuesClosedWithoutCommentRatio":  { "p25": 0.05,  "p50": 0.15,  "p75": 0.35,  "p90": 0.6   },
-      "topContributorShare":              { "p25": 0.5,   "p50": 0.65,  "p75": 0.75,  "p90": 0.95  }
+      "sampleSize": 52,
+      "stars": {
+        "p25": 2999,
+        "p50": 4669,
+        "p75": 7147,
+        "p90": 8759
+      },
+      "forks": {
+        "p25": 294,
+        "p50": 851,
+        "p75": 1458,
+        "p90": 3026
+      },
+      "watchers": {
+        "p25": 35,
+        "p50": 69,
+        "p75": 135,
+        "p90": 196
+      },
+      "forkRate": {
+        "p25": 0.082,
+        "p50": 0.159,
+        "p75": 0.311,
+        "p90": 0.628
+      },
+      "watcherRate": {
+        "p25": 0.008,
+        "p50": 0.015,
+        "p75": 0.025,
+        "p90": 0.048
+      },
+      "prMergeRate": {
+        "p25": 0.437,
+        "p50": 0.602,
+        "p75": 0.821,
+        "p90": 0.935
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.041,
+        "p90": 0.431
+      },
+      "staleIssueRatio": {
+        "p25": 0.715,
+        "p50": 0.864,
+        "p75": 0.955,
+        "p90": 0.984
+      },
+      "stalePrRatio": {
+        "p25": 0.302,
+        "p50": 0.52,
+        "p75": 0.7,
+        "p90": 0.844
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0.487,
+        "p50": 10.352,
+        "p75": 28.912,
+        "p90": 88.765
+      },
+      "medianTimeToCloseHours": {
+        "p25": 85.155,
+        "p50": 227.976,
+        "p75": 1979.491,
+        "p90": 16225.281
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0.127,
+        "p50": 4.572,
+        "p75": 85.155,
+        "p90": 116.185
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 2.409,
+        "p50": 359.809,
+        "p75": 5878.688,
+        "p90": 11238.377
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0.023,
+        "p50": 0.175,
+        "p75": 1.591,
+        "p90": 2.755
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 2.049,
+        "p50": 13.485,
+        "p75": 36.187,
+        "p90": 276.245
+      },
+      "issueResolutionMedianHours": {
+        "p25": 85.155,
+        "p50": 227.976,
+        "p75": 1979.491,
+        "p90": 16225.281
+      },
+      "issueResolutionP90Hours": {
+        "p25": 358.429,
+        "p50": 5394.763,
+        "p75": 23498.502,
+        "p90": 34631.693
+      },
+      "prMergeMedianHours": {
+        "p25": 0.487,
+        "p50": 10.352,
+        "p75": 28.912,
+        "p90": 88.765
+      },
+      "prMergeP90Hours": {
+        "p25": 71.773,
+        "p50": 189.748,
+        "p75": 549.1,
+        "p90": 1974.346
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.041,
+        "p90": 0.431
+      },
+      "contributorResponseRate": {
+        "p25": 0.5,
+        "p50": 0.878,
+        "p75": 1,
+        "p90": 1
+      },
+      "humanResponseRatio": {
+        "p25": 0.896,
+        "p50": 1,
+        "p75": 1,
+        "p90": 1
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.104,
+        "p90": 0.788
+      },
+      "prReviewDepth": {
+        "p25": 0.847,
+        "p50": 1.5,
+        "p75": 3.18,
+        "p90": 5.02
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0.111,
+        "p75": 0.5,
+        "p90": 0.52
+      },
+      "topContributorShare": {
+        "p25": 0.125,
+        "p50": 0.223,
+        "p75": 0.315,
+        "p90": 0.674
+      }
     },
     "popular": {
-      "sampleSize": 0,
-      "stars":                            { "p25": 15000, "p50": 35000, "p75": 80000, "p90": 200000 },
-      "forks":                            { "p25": 800,   "p50": 3000,  "p75": 10000, "p90": 30000  },
-      "watchers":                         { "p25": 200,   "p50": 800,   "p75": 3000,  "p90": 10000  },
-      "forkRate":                         { "p25": 0.08,  "p50": 0.15,  "p75": 0.25,  "p90": 0.35   },
-      "watcherRate":                      { "p25": 0.005, "p50": 0.015, "p75": 0.025, "p90": 0.04   },
-      "prMergeRate":                      { "p25": 0.35,  "p50": 0.5,   "p75": 0.6,   "p90": 0.85   },
-      "issueClosureRate":                 { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95   },
-      "staleIssueRatio":                  { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75   },
-      "stalePrRatio":                     { "p25": 0.05,  "p50": 0.15,  "p75": 0.3,   "p90": 0.5    },
-      "medianTimeToMergeHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720    },
-      "medianTimeToCloseHours":           { "p25": 24,    "p50": 72,    "p75": 168,   "p90": 720    },
-      "issueFirstResponseMedianHours":    { "p25": 4,     "p50": 24,    "p75": 168,   "p90": 720    },
-      "issueFirstResponseP90Hours":       { "p25": 24,    "p50": 168,   "p75": 336,   "p90": 1440   },
-      "prFirstReviewMedianHours":         { "p25": 48,    "p50": 96,    "p75": 240,   "p90": 720    },
-      "prFirstReviewP90Hours":            { "p25": 96,    "p50": 240,   "p75": 480,   "p90": 1440   },
-      "issueResolutionMedianHours":       { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880   },
-      "issueResolutionP90Hours":          { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640   },
-      "prMergeMedianHours":               { "p25": 168,   "p50": 336,   "p75": 720,   "p90": 2880   },
-      "prMergeP90Hours":                  { "p25": 336,   "p50": 720,   "p75": 2160,  "p90": 8640   },
-      "issueResolutionRate":              { "p25": 0.65,  "p50": 0.8,   "p75": 0.9,   "p90": 1.0    },
-      "contributorResponseRate":          { "p25": 0.5,   "p50": 0.65,  "p75": 0.8,   "p90": 0.95   },
-      "humanResponseRatio":               { "p25": 0.4,   "p50": 0.55,  "p75": 0.7,   "p90": 0.9    },
-      "botResponseRatio":                 { "p25": 0.1,   "p50": 0.25,  "p75": 0.5,   "p90": 0.75   },
-      "prReviewDepth":                    { "p25": 0.75,  "p50": 1.0,   "p75": 1.5,   "p90": 3.0    },
-      "issuesClosedWithoutCommentRatio":  { "p25": 0.05,  "p50": 0.15,  "p75": 0.35,  "p90": 0.6    },
-      "topContributorShare":              { "p25": 0.5,   "p50": 0.65,  "p75": 0.75,  "p90": 0.95   }
+      "sampleSize": 47,
+      "stars": {
+        "p25": 21947,
+        "p50": 37817,
+        "p75": 88935,
+        "p90": 133373
+      },
+      "forks": {
+        "p25": 1884,
+        "p50": 7867,
+        "p75": 16809,
+        "p90": 30833
+      },
+      "watchers": {
+        "p25": 278,
+        "p50": 590,
+        "p75": 1504,
+        "p90": 2955
+      },
+      "forkRate": {
+        "p25": 0.079,
+        "p50": 0.134,
+        "p75": 0.268,
+        "p90": 0.445
+      },
+      "watcherRate": {
+        "p25": 0.007,
+        "p50": 0.014,
+        "p75": 0.026,
+        "p90": 0.036
+      },
+      "prMergeRate": {
+        "p25": 0.039,
+        "p50": 0.282,
+        "p75": 0.573,
+        "p90": 0.826
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.006,
+        "p90": 0.09
+      },
+      "staleIssueRatio": {
+        "p25": 0.743,
+        "p50": 0.907,
+        "p75": 0.958,
+        "p90": 0.987
+      },
+      "stalePrRatio": {
+        "p25": 0.226,
+        "p50": 0.541,
+        "p75": 0.746,
+        "p90": 0.88
+      },
+      "medianTimeToMergeHours": {
+        "p25": 3.805,
+        "p50": 17.834,
+        "p75": 44.527,
+        "p90": 81.191
+      },
+      "medianTimeToCloseHours": {
+        "p25": 83.564,
+        "p50": 585.589,
+        "p75": 1949.859,
+        "p90": 20081.045
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0.296,
+        "p50": 12.54,
+        "p75": 21.698,
+        "p90": 31.086
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 24.431,
+        "p50": 889.552,
+        "p75": 1460.063,
+        "p90": 8865.949
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0.006,
+        "p50": 0.032,
+        "p75": 1.301,
+        "p90": 8.901
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0.062,
+        "p50": 0.431,
+        "p75": 27.904,
+        "p90": 148.203
+      },
+      "issueResolutionMedianHours": {
+        "p25": 83.564,
+        "p50": 585.589,
+        "p75": 1949.859,
+        "p90": 20081.045
+      },
+      "issueResolutionP90Hours": {
+        "p25": 1949.859,
+        "p50": 10265.359,
+        "p75": 38447.652,
+        "p90": 44421.515
+      },
+      "prMergeMedianHours": {
+        "p25": 3.805,
+        "p50": 17.834,
+        "p75": 44.527,
+        "p90": 81.191
+      },
+      "prMergeP90Hours": {
+        "p25": 83.665,
+        "p50": 223.123,
+        "p75": 593.22,
+        "p90": 912.283
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.006,
+        "p90": 0.09
+      },
+      "contributorResponseRate": {
+        "p25": 0.875,
+        "p50": 0.928,
+        "p75": 0.959,
+        "p90": 1
+      },
+      "humanResponseRatio": {
+        "p25": 0.978,
+        "p50": 1,
+        "p75": 1,
+        "p90": 1
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0.022,
+        "p90": 0.541
+      },
+      "prReviewDepth": {
+        "p25": 1,
+        "p50": 2.25,
+        "p75": 3.378,
+        "p90": 6.69
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0.041,
+        "p50": 0.072,
+        "p75": 0.125,
+        "p90": 0.2
+      },
+      "topContributorShare": {
+        "p25": 0.107,
+        "p50": 0.16,
+        "p75": 0.274,
+        "p90": 0.43
+      }
     }
   }
 }

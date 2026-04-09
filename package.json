@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "calibrate": "tsx scripts/calibrate.ts"
+    "calibrate": "tsx scripts/calibrate.ts",
+    "calibrate:dry-run": "tsx scripts/calibrate.ts --dry-run",
+    "calibrate:legacy": "tsx scripts/calibrate-legacy.ts",
+    "list-candidates": "tsx scripts/list-candidates.ts"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
