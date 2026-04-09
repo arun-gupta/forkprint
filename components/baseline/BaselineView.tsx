@@ -61,12 +61,22 @@ interface MetricRow {
 
 const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof BracketCalibration; label: string }> }> = [
   {
-    title: 'Ecosystem',
+    title: 'Overview',
     metrics: [
       { key: 'stars', label: 'Stars' },
       { key: 'forks', label: 'Forks' },
-      { key: 'forkRate', label: 'Fork rate' },
-      { key: 'watcherRate', label: 'Watcher rate' },
+      { key: 'watchers', label: 'Watchers' },
+      { key: 'forkRate', label: 'Fork rate (engagement)' },
+      { key: 'watcherRate', label: 'Watcher rate (attention)' },
+    ],
+  },
+  {
+    title: 'Contributors',
+    metrics: [
+      { key: 'topContributorShare', label: 'Top contributor share' },
+      { key: 'contributorResponseRate', label: 'Contributor response rate' },
+      { key: 'humanResponseRatio', label: 'Human response ratio' },
+      { key: 'botResponseRatio', label: 'Bot response ratio' },
     ],
   },
   {
@@ -87,16 +97,12 @@ const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof Bracke
       { key: 'issueFirstResponseP90Hours', label: 'Issue first response (p90)' },
       { key: 'prFirstReviewMedianHours', label: 'PR first review (median)' },
       { key: 'prFirstReviewP90Hours', label: 'PR first review (p90)' },
-      { key: 'contributorResponseRate', label: 'Contributor response rate' },
-      { key: 'humanResponseRatio', label: 'Human response ratio' },
+      { key: 'issueResolutionMedianHours', label: 'Issue resolution (median)' },
+      { key: 'issueResolutionP90Hours', label: 'Issue resolution (p90)' },
+      { key: 'prMergeMedianHours', label: 'PR merge duration (median)' },
+      { key: 'prMergeP90Hours', label: 'PR merge duration (p90)' },
       { key: 'prReviewDepth', label: 'PR review depth' },
       { key: 'issuesClosedWithoutCommentRatio', label: 'Issues closed without comment' },
-    ],
-  },
-  {
-    title: 'Sustainability',
-    metrics: [
-      { key: 'topContributorShare', label: 'Top contributor share' },
     ],
   },
 ]
