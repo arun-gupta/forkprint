@@ -67,7 +67,7 @@ describe('RepoInputClient', () => {
     const results = await screen.findByRole('region', { name: /analysis results/i })
     const metricCardsOverview = within(results).getByRole('region', { name: /metric cards overview/i })
     expect(within(metricCardsOverview).getByTestId('metric-card-facebook/react')).toBeInTheDocument()
-    expect(within(metricCardsOverview).getByText('244,295')).toBeInTheDocument()
+    expect(within(metricCardsOverview).getByText(/244,295 stars/)).toBeInTheDocument()
   })
 
   it('populates the Comparison tab when 2+ repos are analyzed', async () => {
