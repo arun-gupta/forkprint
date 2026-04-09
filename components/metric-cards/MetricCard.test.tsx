@@ -5,56 +5,51 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { MetricCard } from './MetricCard'
 
 describe('MetricCard', () => {
-  it('renders summary metrics, ecosystem profile, and score badges', () => {
+  it('renders unified scorecard with all 6 dimensions', () => {
     const card = buildMetricCardViewModels([buildResult()])[0]!
 
     render(<MetricCard card={card} />)
 
     expect(screen.getByText('facebook/react')).toBeInTheDocument()
-    expect(screen.getByText(/ecosystem profile/i)).toBeInTheDocument()
+    expect(screen.getByText(/scorecard/i)).toBeInTheDocument()
+
+    // All 6 dimensions present
     expect(screen.getByText(/^Reach$/)).toBeInTheDocument()
-    expect(screen.getByText(/^Engagement$/)).toBeInTheDocument()
     expect(screen.getByText(/^Attention$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Engagement$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Responsiveness$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Sustainability$/)).toBeInTheDocument()
+
+    // Supporting details inline
+    expect(screen.getByText(/244,295 stars/)).toBeInTheDocument()
     expect(screen.getByText(/20.8% fork rate/i)).toBeInTheDocument()
     expect(screen.getByText(/2.7% watcher rate/i)).toBeInTheDocument()
-    expect(screen.getByText('244,295')).toBeInTheDocument()
-    expect(screen.getByText('50,872')).toBeInTheDocument()
-    expect(screen.getByText('6,660')).toBeInTheDocument()
-    expect(screen.getAllByText(/Top \d+%|Bottom \d+%/).length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
-    expect(screen.queryByText('Not scored yet')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /missing data/i })).not.toBeInTheDocument()
+
+    // Percentile labels present
+    expect(screen.getAllByText(/Top \d+%|Bottom \d+%/).length).toBeGreaterThanOrEqual(3)
   })
 
-  it('renders em-dash in muted style for unavailable summary stats', () => {
+  it('shows insufficient data label for scores without data', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+
+    render(<MetricCard card={card} />)
+
+    // Sustainability has no commit data → insufficient
+    expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
+  })
+
+  it('handles unavailable ecosystem metrics gracefully', () => {
     const card = buildMetricCardViewModels([
       buildResult({ stars: 'unavailable', forks: 'unavailable', watchers: 'unavailable' }),
     ])[0]!
 
-    const { container } = render(<MetricCard card={card} />)
-
-    const dashes = Array.from(container.querySelectorAll('span')).filter((el) => el.textContent === '—')
-    expect(dashes.length).toBeGreaterThanOrEqual(3)
-    dashes.forEach((dash) => {
-      expect(dash.className).toContain('text-slate-400')
-      expect(dash.className).not.toContain('text-slate-900')
-    })
-  })
-
-  it('renders zero in standard bold style distinct from em-dash', () => {
-    const card = buildMetricCardViewModels([
-      buildResult({ stars: 0, forks: 0, watchers: 0 }),
-    ])[0]!
-
     render(<MetricCard card={card} />)
 
-    const zeros = screen.getAllByText('0')
-    expect(zeros.length).toBeGreaterThanOrEqual(3)
-    zeros.forEach((zero) => {
-      expect(zero.className).toContain('font-semibold')
-      expect(zero.className).toContain('text-slate-900')
-      expect(zero.className).not.toContain('text-slate-400')
-    })
+    // No ecosystem profile rows when data is unavailable
+    expect(screen.queryByText(/^Reach$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Engagement$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Attention$/)).not.toBeInTheDocument()
   })
 })
 
