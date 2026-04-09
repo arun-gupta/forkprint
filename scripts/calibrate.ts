@@ -866,21 +866,85 @@ function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
   console.log(`\nRepo list written to ${REPOS_OUTPUT_PATH}`)
 }
 
+// ─── Repo list reader ────────────────────────────────────────────────────────
+
+/**
+ * Parses docs/calibrate-repos.md to extract the definitive repo list per bracket.
+ * Returns null if the file doesn't exist (triggers fresh sampling).
+ */
+function readRepoListFile(): Record<BracketKey, string[]> | null {
+  if (!existsSync(REPOS_OUTPUT_PATH)) return null
+
+  const content = readFileSync(REPOS_OUTPUT_PATH, 'utf8')
+  const result: Record<BracketKey, string[]> = { emerging: [], growing: [], established: [], popular: [] }
+
+  const bracketPatterns: Array<{ key: BracketKey; pattern: RegExp }> = [
+    { key: 'emerging', pattern: /^## Emerging/i },
+    { key: 'growing', pattern: /^## Growing/i },
+    { key: 'established', pattern: /^## Established/i },
+    { key: 'popular', pattern: /^## Popular/i },
+  ]
+
+  let currentBracket: BracketKey | null = null
+
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+
+    // Check for bracket headers
+    for (const { key, pattern } of bracketPatterns) {
+      if (pattern.test(trimmed)) {
+        currentBracket = key
+        break
+      }
+    }
+
+    // Parse repo lines: "- [owner/repo](url)" or "- owner/repo"
+    if (currentBracket && trimmed.startsWith('- ')) {
+      const match = trimmed.match(/^- \[([^\]]+)\]/) ?? trimmed.match(/^- (.+)/)
+      if (match?.[1]) {
+        const repo = match[1].trim()
+        if (repo.includes('/') && !repo.startsWith('http')) {
+          result[currentBracket].push(repo)
+        }
+      }
+    }
+  }
+
+  const total = Object.values(result).reduce((s, repos) => s + repos.length, 0)
+  if (total === 0) return null
+
+  return result
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
   if (DRY_RUN) {
-    console.log('DRY RUN — sampling repos only, no metrics will be fetched\n')
+    console.log('DRY RUN — sampling repos from GitHub Search, writing to', REPOS_OUTPUT_PATH, '\n')
   }
 
   const checkpoint = loadCheckpoint()
+
+  // Full runs use the definitive repo list from docs/calibrate-repos.md.
+  // Dry runs always re-sample from GitHub Search API.
+  const repoList = DRY_RUN ? null : readRepoListFile()
+  if (repoList && !DRY_RUN) {
+    const total = Object.values(repoList).reduce((s, repos) => s + repos.length, 0)
+    console.log(`Using definitive repo list from ${REPOS_OUTPUT_PATH} (${total} repos)`)
+  }
 
   for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
     const bracket = BRACKETS[bracketKey]
     console.log(`\n── ${bracket.label} ──`)
 
-    // Sample repos if not already done
-    if (checkpoint.sampledRepos[bracketKey].length === 0) {
+    // Determine repo list for this bracket
+    if (repoList && !DRY_RUN) {
+      // Full run: use repos from the definitive list file
+      checkpoint.sampledRepos[bracketKey] = repoList[bracketKey]
+      saveCheckpoint(checkpoint)
+      console.log(`Loaded ${checkpoint.sampledRepos[bracketKey].length} repos from ${REPOS_OUTPUT_PATH}`)
+    } else if (checkpoint.sampledRepos[bracketKey].length === 0) {
+      // Dry run or no list file: sample from GitHub Search
       const totalTarget = bracket.strata.reduce((s, t) => s + t.target, 0)
       console.log(`Sampling across ${bracket.strata.length} strata (target ${totalTarget})...`)
       checkpoint.sampledRepos[bracketKey] = await sampleBracket(bracket)

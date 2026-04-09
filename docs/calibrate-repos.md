@@ -166,7 +166,7 @@ Generated: 2026-04-09
 - [WebAssembly/binaryen](https://github.com/WebAssembly/binaryen)
 - [firebase/flutterfire](https://github.com/firebase/flutterfire)
 
-## Popular (10k+ stars) (43 repos)
+## Popular (10k+ stars) (52 repos)
 
 - [facebook/flow](https://github.com/facebook/flow)
 - [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
@@ -211,9 +211,18 @@ Generated: 2026-04-09
 - [twbs/bootstrap](https://github.com/twbs/bootstrap)
 - [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes)
 - [pytorch/pytorch](https://github.com/pytorch/pytorch)
+- [openai/codex](https://github.com/openai/codex)
+- [anthropics/skills](https://github.com/anthropics/skills)
+- [google/leveldb](https://github.com/google/leveldb)
+- [aws/aws-cli](https://github.com/aws/aws-cli)
+- [spring-projects/spring-framework](https://github.com/spring-projects/spring-framework)
+- [facebook/react](https://github.com/facebook/react)
+- [django/django](https://github.com/django/django)
+- [docker/compose](https://github.com/docker/compose)
+- [grafana/grafana](https://github.com/grafana/grafana)
 
 ---
-**Total: 198 repos**
+**Total: 207 repos**
 
 To proceed with full calibration using these repos, run:
 ```
