@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { getCalibrationMeta } from '@/lib/scoring/config-loader'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import type { ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
@@ -36,6 +37,14 @@ export function ResultsShell({
   onReset,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>(initialActiveTab)
+
+  const calibrationMeta = getCalibrationMeta()
+  const isStale = useMemo(() => {
+    const generated = new Date(calibrationMeta.generated)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+    return generated < sixMonthsAgo
+  }, [calibrationMeta.generated])
 
   useEffect(() => {
     setActiveTab(initialActiveTab)
@@ -88,6 +97,11 @@ export function ResultsShell({
       </header>
 
       <div className="mx-auto max-w-5xl px-4 py-6">
+        {isStale ? (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">
+            Scores calibrated against GitHub data from {calibrationMeta.generated}. A more recent calibration is recommended.
+          </div>
+        ) : null}
         <section className="space-y-6">
           <section aria-label="Analysis panel" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             {analysisPanel}

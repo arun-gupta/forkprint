@@ -87,7 +87,7 @@ function ProfileMetric({
   )
 }
 
-function percentileToneClass(percentile: number, hue: 'sky' | 'violet') {
+function percentileToneClass(percentile: number, hue: 'emerald' | 'sky' | 'violet') {
   if (percentile >= 75) return `bg-${hue}-300 text-${hue}-950`
   if (percentile >= 50) return `bg-${hue}-200 text-${hue}-900`
   if (percentile >= 25) return `bg-${hue}-100 text-${hue}-800`
