@@ -126,11 +126,11 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     lines.push(
       '#### Ecosystem Profile',
       '',
-      '| Dimension | Tier | Detail |',
+      '| Dimension | Ranking | Detail |',
       '| --- | --- | --- |',
-      `| Reach | ${spectrumProfile.reachTier} | — |`,
-      `| Engagement | ${spectrumProfile.engagementTier} | ${spectrumProfile.forkRateLabel} fork rate |`,
-      `| Attention | ${spectrumProfile.attentionTier} | ${spectrumProfile.watcherRateLabel} watcher rate |`,
+      `| Reach | ${spectrumProfile.reachLabel} | — |`,
+      `| Engagement | ${spectrumProfile.engagementLabel} | ${spectrumProfile.forkRateLabel} fork rate |`,
+      `| Attention | ${spectrumProfile.attentionLabel} | ${spectrumProfile.watcherRateLabel} watcher rate |`,
       '',
     )
   }

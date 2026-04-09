@@ -88,7 +88,7 @@ describe('EcosystemMap', () => {
     expect(within(region).getAllByText(/^Attention$/).length).toBeGreaterThan(0)
   })
 
-  it('shows band guidance without per-repo rate pills for a single repo', async () => {
+  it('shows percentile-based legend guidance for a single repo', async () => {
     render(
       <EcosystemMap
         results={[
@@ -105,13 +105,13 @@ describe('EcosystemMap', () => {
     const region = screen.getByRole('region', { name: /ecosystem map/i })
     await userEvent.click(within(region).getByRole('button', { name: /show legend/i }))
 
-    expect(within(region).queryByText(/20.8% fork rate/i)).not.toBeInTheDocument()
-    expect(within(region).queryByText(/2.7% watcher rate/i)).not.toBeInTheDocument()
+    expect(within(region).getByText(/^Reach$/)).toBeInTheDocument()
     expect(within(region).getByText(/^Builder engagement$/)).toBeInTheDocument()
-    expect(within(region).getByText(/^fork rate$/i)).toBeInTheDocument()
+    expect(within(region).getByText(/^Attention$/)).toBeInTheDocument()
+    expect(within(region).getAllByText(/percentile/i).length).toBeGreaterThan(0)
   })
 
-  it('shows band tiers in the legend', async () => {
+  it('shows dimension descriptions in the legend', async () => {
     render(
       <EcosystemMap
         results={[
@@ -123,9 +123,9 @@ describe('EcosystemMap', () => {
     const region = screen.getByRole('region', { name: /ecosystem map/i })
     await userEvent.click(within(region).getByRole('button', { name: /show legend/i }))
 
-    expect(within(region).getByText(/Exceptional 100k\+/i)).toBeInTheDocument()
-    expect(within(region).getByText(/Exceptional 31\.1%\+/i)).toBeInTheDocument()
-    expect(within(region).getByText(/Exceptional 2\.5%\+/i)).toBeInTheDocument()
+    expect(within(region).getByText(/stars/)).toBeInTheDocument()
+    expect(within(region).getByText(/fork rate/)).toBeInTheDocument()
+    expect(within(region).getByText(/watcher rate/)).toBeInTheDocument()
   })
 
   it('hides the legend rows again after collapsing', async () => {

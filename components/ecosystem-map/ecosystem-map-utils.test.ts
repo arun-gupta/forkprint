@@ -71,12 +71,15 @@ describe('ecosystem map helpers', () => {
     )
 
     expect(profile).toMatchObject({
-      reachTier: 'Exceptional',
-      engagementTier: 'Exceptional',
-      attentionTier: 'Exceptional',
       forkRateLabel: '35.2%',
       watcherRateLabel: '2.6%',
     })
+    expect(typeof profile!.reachPercentile).toBe('number')
+    expect(typeof profile!.engagementPercentile).toBe('number')
+    expect(typeof profile!.attentionPercentile).toBe('number')
+    expect(profile!.reachLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(profile!.engagementLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(profile!.attentionLabel).toMatch(/Top \d+%|Bottom \d+%/)
   })
 })
 

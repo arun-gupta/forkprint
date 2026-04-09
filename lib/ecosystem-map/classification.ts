@@ -1,18 +1,13 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
-import {
-  ATTENTION_BANDS,
-  BUILDER_ENGAGEMENT_BANDS,
-  REACH_BANDS,
-  type AttentionTier,
-  type EngagementTier,
-  type ReachTier,
-  classifyFromBands,
-} from './spectrum-config'
+import { getCalibrationForStars, interpolatePercentile, formatPercentileLabel } from '@/lib/scoring/config-loader'
 
 export interface EcosystemSpectrumProfile {
-  reachTier: ReachTier
-  engagementTier: EngagementTier
-  attentionTier: AttentionTier
+  reachPercentile: number
+  reachLabel: string
+  engagementPercentile: number
+  engagementLabel: string
+  attentionPercentile: number
+  attentionLabel: string
   forkRate: number
   watcherRate: number
   forkRateLabel: string
@@ -31,11 +26,19 @@ export function buildSpectrumProfile(result: AnalysisResult): EcosystemSpectrumP
 
   const forkRate = (result.forks / result.stars) * 100
   const watcherRate = (result.watchers / result.stars) * 100
+  const cal = getCalibrationForStars(result.stars)
+
+  const reachPercentile = interpolatePercentile(result.stars, cal.stars)
+  const engagementPercentile = interpolatePercentile(result.forks / result.stars, cal.forkRate)
+  const attentionPercentile = interpolatePercentile(result.watchers / result.stars, cal.watcherRate)
 
   return {
-    reachTier: classifyFromBands(result.stars, REACH_BANDS),
-    engagementTier: classifyFromBands(forkRate, BUILDER_ENGAGEMENT_BANDS),
-    attentionTier: classifyFromBands(watcherRate, ATTENTION_BANDS),
+    reachPercentile,
+    reachLabel: formatPercentileLabel(reachPercentile),
+    engagementPercentile,
+    engagementLabel: formatPercentileLabel(engagementPercentile),
+    attentionPercentile,
+    attentionLabel: formatPercentileLabel(attentionPercentile),
     forkRate,
     watcherRate,
     forkRateLabel: formatRateLabel(forkRate),

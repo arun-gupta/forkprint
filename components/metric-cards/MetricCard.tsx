@@ -22,18 +22,18 @@ export function MetricCard({ card }: MetricCardProps) {
         <div className="mt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Ecosystem profile</p>
           <div className="mt-2 grid gap-2 md:grid-cols-3">
-            <ProfileMetric label="Reach" value={card.profile.reachTier} toneClass={reachTierClass(card.profile.reachTier)} />
-            <ProfileMetric
-              label="Engagement"
-              value={card.profile.engagementTier}
-              detail={`${card.profile.forkRateLabel} fork rate`}
-              toneClass={engagementTierClass(card.profile.engagementTier)}
-            />
+            <ProfileMetric label="Reach" value={card.profile.reachLabel} toneClass={percentileToneClass(card.profile.reachPercentile, 'emerald')} />
             <ProfileMetric
               label="Attention"
-              value={card.profile.attentionTier}
+              value={card.profile.attentionLabel}
               detail={`${card.profile.watcherRateLabel} watcher rate`}
-              toneClass={attentionTierClass(card.profile.attentionTier)}
+              toneClass={percentileToneClass(card.profile.attentionPercentile, 'violet')}
+            />
+            <ProfileMetric
+              label="Engagement"
+              value={card.profile.engagementLabel}
+              detail={`${card.profile.forkRateLabel} fork rate`}
+              toneClass={percentileToneClass(card.profile.engagementPercentile, 'sky')}
             />
           </div>
         </div>
@@ -87,41 +87,9 @@ function ProfileMetric({
   )
 }
 
-function reachTierClass(tier: string) {
-  switch (tier) {
-    case 'Exceptional':
-      return 'bg-emerald-100 text-emerald-800'
-    case 'Strong':
-      return 'bg-emerald-200 text-emerald-900'
-    case 'Growing':
-      return 'bg-emerald-50 text-emerald-700'
-    default:
-      return 'bg-slate-100 text-slate-700'
-  }
-}
-
-function engagementTierClass(tier: string) {
-  switch (tier) {
-    case 'Exceptional':
-      return 'bg-sky-300 text-sky-950'
-    case 'Strong':
-      return 'bg-sky-200 text-sky-900'
-    case 'Healthy':
-      return 'bg-sky-100 text-sky-800'
-    default:
-      return 'bg-slate-100 text-slate-700'
-  }
-}
-
-function attentionTierClass(tier: string) {
-  switch (tier) {
-    case 'Exceptional':
-      return 'bg-violet-300 text-violet-950'
-    case 'Strong':
-      return 'bg-violet-200 text-violet-900'
-    case 'Active':
-      return 'bg-violet-100 text-violet-800'
-    default:
-      return 'bg-slate-100 text-slate-700'
-  }
+function percentileToneClass(percentile: number, hue: 'sky' | 'violet') {
+  if (percentile >= 75) return `bg-${hue}-300 text-${hue}-950`
+  if (percentile >= 50) return `bg-${hue}-200 text-${hue}-900`
+  if (percentile >= 25) return `bg-${hue}-100 text-${hue}-800`
+  return 'bg-slate-100 text-slate-700'
 }
