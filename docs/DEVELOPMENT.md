@@ -95,11 +95,61 @@ npm run build
 
 ---
 
-## Phase 2, Phase 3, and Phase 4
+## Phase 2 feature order
 
-When Phase 1 is complete and deployed, run the same loop for each Phase 2 feature (`P2-F01`, `P2-F02`), then Phase 3 (`P3-F01`, `P3-F02`). The analyzer module must not be modified to accommodate Phase 2 or 3 — only wrapped.
+Phase 2 adds new scoring buckets to the health score. Requirements specs live in the linked GitHub issues — not in PRODUCT.md. See [Spec Ownership](PRODUCT.md#spec-ownership) for the rationale.
+
+| # | Feature ID | Feature | Issues | Status |
+|---|---|---|---|---|
+| 1 | P2-F01 | Documentation scoring | #66, #67 | |
+| 2 | P2-F02 | Security scoring | #68, #71 | |
+| 3 | P2-F03 | Community scoring | #70 | |
+| 4 | P2-F04 | Release health scoring | #69 | |
+| 5 | P2-F05 | Development cadence | #73 | |
+| 6 | P2-F06 | Project maturity | #74 | |
+
+## Phase 3 feature order
+
+Phase 3 delivers the OSS Health Score through additional channels, wrapping the shared analyzer module without duplicating logic.
+
+| # | Feature ID | Feature | Issues | Status |
+|---|---|---|---|---|
+| 1 | P3-F01 | GitHub Action | — | |
+| 2 | P3-F02 | MCP Server | — | |
+| 3 | P3-F03 | Embeddable badge | #72 | |
+| 4 | P3-F04 | CLI tool | #82 | |
+| 5 | P3-F05 | PR comment bot | #83 | |
+| 6 | P3-F06 | VS Code extension | #84 | |
+| 7 | P3-F07 | Webhook receiver | #85 | |
+
+## Phase 4
 
 Phase 4 ports the application to support GitLab in addition to GitHub. It introduces a provider abstraction layer (GitHub and GitLab implement the same interface) so the analyzer, delivery phases, and UI remain unchanged. Phase 4 begins only after Phase 3 is complete.
+
+## Feature development flow (Phase 2+)
+
+For Phase 2 and beyond, the requirements spec for each feature lives in its GitHub issue. The SpecKit workflow reads the issue as input:
+
+```
+GitHub Issue (requirements spec)
+  │  Acceptance criteria, signals, scoring approach, open questions
+  │
+  ▼
+/speckit.specify (reads issue as input)
+  │  Generates specs/NNN-feature-name/ with TypeScript contracts
+  │
+  ▼
+/speckit.plan → /speckit.tasks → /speckit.implement
+  │  Plan, break down, build
+  │
+  ▼
+PR with test plan → merge
+  │  Mark feature as ✅ Done in the table above
+```
+
+**Key distinction:** The GitHub issue defines *what and why* (requirements). SpecKit generates *how* (TypeScript interfaces, view props, data flow contracts). They are not duplicates — the issue is the input, the spec file is the output.
+
+This replaces the Phase 1 pattern where PRODUCT.md contained inline acceptance criteria for every feature. Phase 1 specs are frozen in PRODUCT.md as a historical record.
 
 ---
 

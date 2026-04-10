@@ -1,7 +1,7 @@
 # RepoPulse — Product Definition
 
 **Repo**: `arun-gupta/repo-pulse`  
-**Description**: OSS Health Score — measures the health of open source projects with percentile-based scoring calibrated against 200+ GitHub repositories. Produces a composite health score from Activity, Responsiveness, and Sustainability dimensions with actionable recommendations.  
+**Description**: OSS Health Score — measures the health of open source projects with percentile-based scoring calibrated against 1600+ GitHub repositories. Produces a composite health score from Activity, Responsiveness, and Sustainability dimensions with actionable recommendations.  
 **Phase 1 Platform**: Next.js deployed on Vercel  
 **Phase 1 Data Layer**: Next.js API Routes  
 **Development Methodology**: SpecKit / Specification-Driven Development (SDD)
@@ -14,39 +14,19 @@ This document is the canonical product definition for RepoPulse. It is the sourc
 
 ### Phase 1 — Web app + core scoring ✅
 
-Interactive Next.js dashboard on Vercel with OSS Health Score from three scoring buckets (Activity, Responsiveness, Sustainability), percentile-based scoring calibrated against 200+ repos, and actionable recommendations.
+Interactive Next.js dashboard on Vercel with OSS Health Score from three scoring buckets (Activity, Responsiveness, Sustainability), percentile-based scoring calibrated against 1600+ repos, and actionable recommendations.
 
 ### Phase 2 — Expand scoring dimensions
 
-Add new scoring buckets to the health score. Each bucket adds a new dimension with its own percentile-based score, and the composite weights are rebalanced.
-
-| Dimension | Planned Weight | What it evaluates | Issues |
-|-----------|---------------|-------------------|--------|
-| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates | #66, #67 |
-| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure | #68, #71 |
-| Community | 10% | Discussions, templates, CODEOWNERS, governance | #70 |
-| Release Health | 5% | Frequency, semver compliance, release notes | #69 |
+Add new scoring buckets (Documentation, Security, Community, Release Health, Development Cadence, Project Maturity) to the health score. Requirements specs live in linked GitHub issues.
 
 ### Phase 3 — Integrations
 
-The core analysis logic is shared via a framework-agnostic analyzer module. These extensions wrap the same analyzer without duplicating logic.
-
-| Feature | Description | Issues |
-|---------|-------------|--------|
-| GitHub Action | Scheduled analysis with threshold alerting | — |
-| MCP Server | Expose analysis as a tool for AI assistants (Claude, Cursor) | — |
-| Embeddable badge | Health score SVG badge for READMEs | #72 |
+Deliver the OSS Health Score through additional channels (GitHub Action, MCP Server, CLI, badge, PR bot, VS Code extension, webhooks), wrapping the shared analyzer module.
 
 ### Phase 4 — Git provider support
 
-A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms.
-
-| Provider | Status |
-|----------|--------|
-| GitHub | ✅ Supported |
-| GitLab | Planned |
-| Bitbucket | Future |
-| Gitea | Future |
+Provider abstraction layer for GitLab, Bitbucket, and Gitea support alongside GitHub.
 
 ---
 
@@ -64,7 +44,7 @@ A provider abstraction layer allows the analyzer to work with multiple Git hosti
 
 ## OSS Health Score
 
-RepoPulse computes a composite **OSS Health Score** from weighted scoring buckets. Each bucket produces a percentile score (0–99) relative to repos in the same star bracket, calibrated against 200+ real GitHub repositories.
+RepoPulse computes a composite **OSS Health Score** from weighted scoring buckets. Each bucket produces a percentile score (0–99) relative to repos in the same star bracket, calibrated against 1600+ real GitHub repositories.
 
 ### Implemented buckets
 
@@ -76,14 +56,7 @@ RepoPulse computes a composite **OSS Health Score** from weighted scoring bucket
 
 ### Planned buckets (Phase 2)
 
-| Bucket | Planned Weight | What it will measure | Issues |
-|---|---|---|---|
-| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates | #66, #67 |
-| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure | #68, #71 |
-| Community | 10% | Discussions, templates, CODEOWNERS, governance | #70 |
-| Release Health | 5% | Frequency, semver compliance, release notes | #69 |
-
-Weights are rebalanced as new buckets are added.
+See [Phase 2 roadmap](#phase-2--expand-scoring-dimensions) for the full list. Weights are rebalanced as new buckets are added.
 
 ### Ecosystem profile
 
@@ -436,10 +409,12 @@ The Contributors workspace measures the depth and distribution of contributor ac
 - The `Sustainability` pane also includes:
   - maintainer or owner count from supported public repository files such as `OWNERS`, `OWNERS.alias`, `MAINTAINERS`, `MAINTAINERS.md`, `.github/CODEOWNERS`, or `GOVERNANCE.md`
   - observed types of contributions from verified recent repository activity
-- The `Sustainability` pane includes an `Experimental` subsection for:
-  - Elephant Factor (best-effort heuristic using public GitHub org visibility)
-  - single-vendor dependency ratio (best-effort heuristic using public GitHub org visibility)
-  - explicit warning that these two estimates may be incomplete or inaccurate
+- The `Sustainability` pane includes an `Organization Affiliation` subsection for:
+  - Elephant Factor (verified public GitHub organization membership)
+  - single-vendor dependency ratio (verified public GitHub organization membership)
+  - organization contribution chart showing all public org memberships per contributor
+  - explicit "Unaffiliated" category for contributors without public org membership
+  - transparency callout: affiliations reflect current membership at analysis time, not historical employment
 - Resilience score — High / Medium / Low — derived from contribution dynamics data; assigned only when concentration data is verifiable
 - Scoring logic: high contribution concentration = fragile; moderate concentration = moderate; distributed contributors = strong, with insufficient verified public data blocking the score when contributor-distribution evidence is incomplete
 - All thresholds defined in config, not hardcoded in logic
@@ -591,126 +566,82 @@ Users can take analysis results out of the UI in standard formats.
 
 ### Phase 2 — Expand scoring dimensions
 
-Phase 2 adds new scoring buckets to the OSS Health Score. Each bucket produces a percentile score and is weighted into the composite health score. Feature specs will be created as each bucket is implemented.
+Phase 2 adds new scoring buckets to the OSS Health Score. Each bucket produces a percentile score and is weighted into the composite health score. Requirements specs live in the linked GitHub issues — see [Spec ownership](#spec-ownership) below.
 
-| Feature ID | Feature | Description | Issues |
-|---|---|---|---|
-| P2-F01 | Documentation scoring | Evaluate README, CONTRIBUTING, LICENSE, SECURITY, templates | #66, #67 |
-| P2-F02 | Security scoring | Dependency updates, branch protection, CI/CD, vulnerability disclosure | #68, #71 |
-| P2-F03 | Community scoring | Discussions, templates, CODEOWNERS, governance | #70 |
-| P2-F04 | Release health scoring | Frequency, semver compliance, release notes | #69 |
-| P2-F05 | Development cadence | Commit regularity, active weeks ratio, longest gap | #73 |
-| P2-F06 | Project maturity | Age-normalized metrics, growth trajectory | #74 |
-
----
+| Feature ID | Feature | Issues |
+|---|---|---|
+| P2-F01 | Documentation scoring | #66, #67 |
+| P2-F02 | Security scoring | #68, #71 |
+| P2-F03 | Community scoring | #70 |
+| P2-F04 | Release health scoring | #69 |
+| P2-F05 | Development cadence | #73 |
+| P2-F06 | Project maturity | #74 |
 
 ### Phase 3 — Integrations
 
 These features deliver the OSS Health Score through additional channels, wrapping the shared analyzer module without duplicating logic.
 
-| Feature ID | Feature | Description |
+| Feature ID | Feature | Issues |
 |---|---|---|
-| P3-F01 | GitHub Action | Scheduled analysis with threshold alerting |
-| P3-F02 | MCP Server | AI assistant integration (Claude, Cursor) |
-| P3-F03 | Embeddable badge | Health score SVG badge for READMEs |
-| P3-F04 | CLI tool | `npx repopulse owner/repo` for terminal and CI/CD pipelines |
-| P3-F05 | PR comment bot | Auto-comment health score on new pull requests |
-| P3-F06 | VS Code extension | Health score in the editor sidebar for the current repo |
-| P3-F07 | Webhook receiver | Trigger analysis on push, release, or PR events |
-
----
-
-#### `[P3-F01]` GitHub Action — Scheduled Analysis & Alerting
-
-RepoPulse runs as a GitHub Action on a schedule or manual trigger, with optional threshold alerting.
-
-**Key capabilities**
-- `schedule` (cron) and `workflow_dispatch` triggers
-- JSON artifact output and Markdown job summary
-- Opens a GitHub Issue when health score drops below a configured threshold
-- `GITHUB_TOKEN` from the action's built-in secret
-
----
-
-#### `[P3-F02]` MCP Server — AI Assistant Integration
-
-RepoPulse exposes repo health analysis as an MCP tool callable by AI assistants.
-
-**Key capabilities**
-- `analyze_repo` tool accepting `repos: string[]`
-- Returns typed `AnalysisResult` matching the shared analyzer contract
-- Usable from Claude, Cursor, or any MCP-compatible AI assistant
-- Deployable as standalone Node.js process or Vercel serverless function
-
----
-
-#### `[P3-F03]` Embeddable Badge
-
-Health score badge for repository READMEs: `![RepoPulse](https://repopulse.dev/api/badge/owner/repo)`
-
----
-
-#### `[P3-F04]` CLI Tool
-
-Command-line interface for terminal usage and CI/CD pipelines.
-
-**Key capabilities**
-- `npx repopulse owner/repo` — zero-install analysis
-- JSON and Markdown output formats
-- Exit code reflects health score threshold (for CI gating)
-- Wraps the shared analyzer module
-
----
-
-#### `[P3-F05]` PR Comment Bot
-
-Automatically comments the OSS Health Score on new pull requests.
-
-**Key capabilities**
-- GitHub App or Action that posts a health score summary on each new PR
-- Shows how the PR's target repo scores across all dimensions
-- Highlights recommendations for weak areas
-- Configurable: opt-in per repo, threshold for commenting
-
----
-
-#### `[P3-F06]` VS Code Extension
-
-Health score visible in the editor sidebar for the current repository.
-
-**Key capabilities**
-- Detects the current repo from the workspace's git remote
-- Displays health score and dimension breakdown in a sidebar panel
-- Click-through to the full web dashboard
-- Refresh on demand or on workspace open
-
----
-
-#### `[P3-F07]` Webhook Receiver
-
-Trigger analysis on repository events for real-time health monitoring.
-
-**Key capabilities**
-- Accepts GitHub webhook events (push, release, pull_request)
-- Runs analysis on the target repo
-- Posts results to a configured destination (Slack, issue, dashboard)
-- Configurable event filters and cooldown period
-
----
+| P3-F01 | GitHub Action | — |
+| P3-F02 | MCP Server | — |
+| P3-F03 | Embeddable badge | #72 |
+| P3-F04 | CLI tool | #82 |
+| P3-F05 | PR comment bot | #83 |
+| P3-F06 | VS Code extension | #84 |
+| P3-F07 | Webhook receiver | #85 |
 
 ### Phase 4 — Git provider support
 
 A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms.
 
----
+| Provider | Status |
+|----------|--------|
+| GitHub | Supported |
+| GitLab | Planned |
+| Bitbucket | Future |
+| Gitea | Future |
 
 ### Future / Backlog
 
 - **Historical trending** — store snapshots over time, chart metric trajectory per repo
-- **Webhook mode** — trigger analysis on push or release events
 - **Bus Factor** — contributor risk beyond concentration ratio
+- **Inside-out maintainer practices audit** — #99
 
 ---
+
+## Spec Ownership
+
+Phase 1 features are shipped. Their requirements specs are frozen in this document (the `[P1-F__]` sections above). For Phase 2 and beyond, requirements specs live in GitHub issues — not in this document. This avoids duplication and keeps active specs where discussion happens.
+
+### Document responsibilities
+
+| Document | Owns | Contains |
+|----------|------|----------|
+| **PRODUCT.md** (this file) | Product vision, architecture, API contract, accuracy policy | Phase 1 specs (shipped, frozen). Phase 2+ summary tables with issue links |
+| **GitHub Issues** | Phase 2+ requirements specs | Acceptance criteria, signals, scoring approach, open questions |
+| **DEVELOPMENT.md** | Implementation sequencing, workflow, DoD | Feature order tables for each phase, SpecKit loop instructions |
+| **SpecKit specs** (`specs/NNN-*/`) | Technical contracts | TypeScript interfaces, view props, data flow — generated during implementation |
+
+### Feature development flow
+
+```
+GitHub Issue (requirements spec)
+  │  "What to build, why, acceptance criteria"
+  │
+  ▼
+/speckit.specify (reads issue as input)
+  │  Generates specs/NNN-feature-name/ with technical contracts
+  │
+  ▼
+/speckit.plan → /speckit.tasks → /speckit.implement
+  │  Plan, break down, build
+  │
+  ▼
+PR with test plan → merge
+```
+
+The GitHub issue is the **input** to `/speckit.specify`, not a duplicate of its output. The issue defines *what and why*; SpecKit generates *how* (TypeScript interfaces, view props, data flow contracts).
 
 ## Development Workflow
 
