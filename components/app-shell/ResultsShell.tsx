@@ -72,7 +72,7 @@ export function ResultsShell({
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </button>
             <p className="mt-1 text-sm text-sky-100 md:text-base">
-              CHAOSS-aligned GitHub health analyzer for repository analysis and organization inventory browsing.
+              OSS Health Score — percentile-based scoring for open source projects.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export function ResultsShell({
               href="/baseline"
               className="rounded-full border border-sky-700 bg-sky-950/25 px-3 py-2 text-xs font-medium text-sky-50 transition hover:border-sky-400 hover:bg-sky-950/40 hover:text-white"
             >
-              Scoring Baseline
+              Scoring Methodology
             </a>
             <a
               href="https://github.com/arun-gupta/repo-pulse"

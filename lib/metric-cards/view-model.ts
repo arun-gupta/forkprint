@@ -1,6 +1,7 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
 import { getScoreBadges, type ScoreBadgeDefinition } from './score-config'
+import { getHealthScore, type HealthScoreDefinition } from '@/lib/scoring/health-score'
 
 export interface MetricCardViewModel {
   repo: string
@@ -15,6 +16,7 @@ export interface MetricCardViewModel {
   missingFields: string[]
   profile: ReturnType<typeof buildEcosystemRows>[number]['profile']
   scoreBadges: ScoreBadgeDefinition[]
+  healthScore: HealthScoreDefinition
 }
 
 export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCardViewModel[] {
@@ -49,6 +51,7 @@ export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCard
       missingFields: result.missingFields,
       profile: ecosystemRow?.profile ?? null,
       scoreBadges: getScoreBadges(result),
+      healthScore: getHealthScore(result),
     }
   })
 }

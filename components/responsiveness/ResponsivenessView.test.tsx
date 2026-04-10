@@ -177,7 +177,7 @@ describe('ResponsivenessView', () => {
     expect(within(view).getByText('vercel/next.js')).toBeInTheDocument()
     expect(within(view).getAllByText(/issue & pr response time/i).length).toBeGreaterThanOrEqual(2)
     expect(within(view).getAllByText(/volume & backlog health/i).length).toBeGreaterThanOrEqual(2)
-    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(view).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
     expect(within(view).getAllByText(/8\.0h/).length).toBeGreaterThan(0)
   })
 
@@ -258,20 +258,20 @@ describe('ResponsivenessView', () => {
 
     const view = screen.getByRole('region', { name: /responsiveness view/i })
     expect(within(view).getByText(/4\.0h/)).toBeInTheDocument()
-    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(view).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '30d' }))
 
     expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(view).getByText(/1\.5d/)).toBeInTheDocument()
     expect(within(view).getAllByText(/45%/).length).toBeGreaterThan(0)
-    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(view).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '12 months' }))
 
     expect(screen.getByRole('button', { name: '12 months' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(view).getByText(/8\.0h/)).toBeInTheDocument()
     expect(within(view).getAllByText(/22%/).length).toBeGreaterThan(0)
-    expect(within(view).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(view).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
   })
 })

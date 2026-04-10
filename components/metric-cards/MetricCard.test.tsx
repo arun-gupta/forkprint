@@ -11,7 +11,7 @@ describe('MetricCard', () => {
     render(<MetricCard card={card} />)
 
     expect(screen.getByText('facebook/react')).toBeInTheDocument()
-    expect(screen.getByText(/scorecard/i)).toBeInTheDocument()
+    expect(screen.getByText(/oss health score/i)).toBeInTheDocument()
 
     // All 6 dimensions present
     expect(screen.getByText(/^Reach$/)).toBeInTheDocument()
@@ -27,7 +27,7 @@ describe('MetricCard', () => {
     expect(screen.getByText(/2.7% watcher rate/i)).toBeInTheDocument()
 
     // Percentile labels present
-    expect(screen.getAllByText(/Top \d+%|Bottom \d+%/).length).toBeGreaterThanOrEqual(3)
+    expect(screen.getAllByText(/\d+\w{2} percentile/).length).toBeGreaterThanOrEqual(3)
   })
 
   it('shows insufficient data label for scores without data', () => {

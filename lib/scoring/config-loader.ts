@@ -149,16 +149,23 @@ export function interpolatePercentile(value: number, ps: PercentileSet, inverted
   return 99
 }
 
-/**
- * Formats a percentile with directional wording:
- *   p >= 50 → "Top X%" (e.g. 72 → "Top 28%")
- *   p < 50  → "Bottom X%" (e.g. 1 → "Bottom 1%")
- */
+/** Formats a percentile as "47th percentile" with correct ordinal suffix. */
 export function formatPercentileLabel(p: number): string {
   const n = Math.round(p)
-  if (n >= 50) return `Top ${100 - n}%`
-  return `Bottom ${n}%`
+  const lastTwo = n % 100
+  let suffix = 'th'
+  if (lastTwo < 11 || lastTwo > 13) {
+    switch (n % 10) {
+      case 1: suffix = 'st'; break
+      case 2: suffix = 'nd'; break
+      case 3: suffix = 'rd'; break
+    }
+  }
+  return `${n}${suffix} percentile`
 }
+
+/** @deprecated Use formatPercentileLabel instead */
+export const formatPercentileOrdinal = formatPercentileLabel
 
 /** Maps a percentile to a ScoreTone for UI coloring. */
 export function percentileToTone(p: number): import('@/specs/008-metric-cards/contracts/metric-card-props').ScoreTone {

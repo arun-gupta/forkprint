@@ -21,7 +21,7 @@ describe('buildMetricCardViewModels', () => {
     expect(card.createdAtLabel).toBe('May 24, 2013')
     expect(card.primaryLanguage).toBe('—')
     expect(typeof card.profile?.reachPercentile).toBe('number')
-    expect(card.profile?.reachLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(card.profile?.reachLabel).toMatch(/\d+\w{2} percentile/)
     expect(card.scoreBadges).toHaveLength(3)
     expect(card.scoreBadges.find((badge) => badge.category === 'Sustainability')?.value).toBe('Insufficient verified public data')
     expect(card.details.find((detail) => detail.label === 'Releases (12mo)')?.value).toBe('—')

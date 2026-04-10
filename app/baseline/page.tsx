@@ -1,8 +1,8 @@
 import { BaselineView } from '@/components/baseline/BaselineView'
 
 export const metadata = {
-  title: 'Scoring Baseline — RepoPulse',
-  description: 'Calibration thresholds and percentile distributions used for RepoPulse scoring.',
+  title: 'Scoring Methodology — RepoPulse',
+  description: 'How RepoPulse computes the OSS Health Score — calibration thresholds and percentile distributions.',
 }
 
 export default function BaselinePage() {
@@ -15,7 +15,7 @@ export default function BaselinePage() {
               <img src="/repo-pulse-banner.png" alt="" className="h-8 w-8 rounded object-cover" aria-hidden="true" />
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </a>
-            <p className="mt-1 text-sm text-sky-100 md:text-base">Scoring Baseline</p>
+            <p className="mt-1 text-sm text-sky-100 md:text-base">Scoring Methodology</p>
           </div>
           <a
             href="/"

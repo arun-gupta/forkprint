@@ -77,9 +77,9 @@ describe('ecosystem map helpers', () => {
     expect(typeof profile!.reachPercentile).toBe('number')
     expect(typeof profile!.engagementPercentile).toBe('number')
     expect(typeof profile!.attentionPercentile).toBe('number')
-    expect(profile!.reachLabel).toMatch(/Top \d+%|Bottom \d+%/)
-    expect(profile!.engagementLabel).toMatch(/Top \d+%|Bottom \d+%/)
-    expect(profile!.attentionLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(profile!.reachLabel).toMatch(/\d+\w{2} percentile/)
+    expect(profile!.engagementLabel).toMatch(/\d+\w{2} percentile/)
+    expect(profile!.attentionLabel).toMatch(/\d+\w{2} percentile/)
   })
 })
 

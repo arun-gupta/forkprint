@@ -60,9 +60,9 @@ describe('ActivityView', () => {
     expect(within(activityView).getAllByText(/^ranking$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText(/^closure rate$/i)).toHaveLength(2)
     expect(within(activityView).getAllByText('18')).toHaveLength(2)
-    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
     expect(within(activityView).getAllByText(/merge/i).length).toBeGreaterThan(0)
-    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
     expect(within(activityView).getAllByText(/stale issue ratio/i).length).toBeGreaterThan(0)
   })
 
@@ -109,7 +109,7 @@ describe('ActivityView', () => {
     const activityView = screen.getByRole('region', { name: /activity view/i })
     expect(within(activityView).getByText(/^commits$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('18')).toBeInTheDocument()
-    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
 
     await userEvent.click(screen.getByRole('button', { name: '30d' }))
 
@@ -117,7 +117,7 @@ describe('ActivityView', () => {
     expect(within(activityView).getByText(/^commits$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('3')).toBeInTheDocument()
     expect(within(activityView).getByText('20.0%')).toBeInTheDocument()
-    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
     expect(within(activityView).getByText(/prs are not reaching merge/i)).toBeInTheDocument()
     expect(within(activityView).getByText('10.0d')).toBeInTheDocument()
     expect(within(activityView).getByText('20.0d')).toBeInTheDocument()
@@ -129,7 +129,7 @@ describe('ActivityView', () => {
     expect(within(activityView).getByText(/^releases$/i)).toBeInTheDocument()
     expect(within(activityView).getByText('6')).toBeInTheDocument()
     expect(within(activityView).getByText('75.0%')).toBeInTheDocument()
-    expect(within(activityView).getAllByText(/Top \d+%|Bottom \d+%/i).length).toBeGreaterThan(0)
+    expect(within(activityView).getAllByText(/\d+\w{2} percentile/i).length).toBeGreaterThan(0)
     expect(within(activityView).getByText('4.0d')).toBeInTheDocument()
     expect(within(activityView).getByText('6.0d')).toBeInTheDocument()
     expect(within(activityView).getByText(/selected 12 months window/i)).toBeInTheDocument()

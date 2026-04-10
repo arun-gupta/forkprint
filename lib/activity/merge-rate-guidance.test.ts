@@ -6,16 +6,16 @@ describe('activity/merge-rate-guidance', () => {
     const guidance = getMergeRateGuidance(7, 10)
 
     expect(guidance.percentile).toBeGreaterThanOrEqual(0)
-    expect(guidance.percentileLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(guidance.percentileLabel).toMatch(/\d+\w{2} percentile/)
     expect(guidance.tableDisplayValue).toMatch(/70\.0%/)
-    expect(guidance.tableDisplayValue).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(guidance.tableDisplayValue).toMatch(/\d+\w{2} percentile/)
   })
 
   it('classifies mixed merge throughput from 40% to 69.9%', () => {
     const guidance = getMergeRateGuidance(2, 4)
 
     expect(guidance.percentile).toBeGreaterThanOrEqual(0)
-    expect(guidance.percentileLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(guidance.percentileLabel).toMatch(/\d+\w{2} percentile/)
     expect(guidance.summary).toBeDefined()
   })
 
@@ -23,7 +23,7 @@ describe('activity/merge-rate-guidance', () => {
     const guidance = getMergeRateGuidance(1, 5)
 
     expect(guidance.percentile).toBeGreaterThanOrEqual(0)
-    expect(guidance.percentileLabel).toMatch(/Top \d+%|Bottom \d+%/)
+    expect(guidance.percentileLabel).toMatch(/\d+\w{2} percentile/)
     expect(guidance.recommendation).toMatch(/reduce pr backlog/i)
   })
 

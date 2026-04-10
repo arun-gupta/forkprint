@@ -28,6 +28,8 @@ export function MetricCard({ card }: MetricCardProps) {
     })
   }
 
+  const hs = card.healthScore
+
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm" data-testid={`metric-card-${card.repo}`}>
       <div className="flex items-baseline justify-between">
@@ -35,11 +37,32 @@ export function MetricCard({ card }: MetricCardProps) {
         <p className="text-xs text-slate-400">Created: {card.createdAtLabel}</p>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-1.5">
+      <div className={`mt-3 flex items-center justify-between rounded-lg border px-3 py-2 ${scoreToneClass(hs.tone)}`} title={`Composite health score from Activity (36%), Responsiveness (36%), and Sustainability (28%) — scored relative to ${hs.bracketLabel} repositories.`}>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide">OSS Health Score</p>
+          {hs.bracketLabel ? <p className="text-[10px] opacity-60">{hs.bracketLabel}</p> : null}
+        </div>
+        <p className="text-lg font-bold">{hs.label}</p>
+      </div>
+
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
         {cells.map((cell) => (
           <ScorecardCell key={cell.label} {...cell} />
         ))}
       </div>
+
+      {hs.recommendations.length > 0 ? (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-amber-800">Recommendations</p>
+          <ul className="mt-1.5 space-y-1">
+            {hs.recommendations.map((rec, i) => (
+              <li key={i} className="text-xs text-amber-900">
+                <span className="font-medium">{rec.bucket}:</span> {rec.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </article>
   )
 }

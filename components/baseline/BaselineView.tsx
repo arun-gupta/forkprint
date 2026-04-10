@@ -129,8 +129,23 @@ export function BaselineView() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-900">OSS Health Score</h3>
+        <p className="mt-2 text-sm text-sky-800">
+          The composite health score is computed from three weighted buckets:
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Activity 36%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Responsiveness 36%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Sustainability 28%</span>
+        </div>
+        <p className="mt-2 text-xs text-sky-700">
+          Each bucket produces a percentile score relative to repos in the same star bracket. The weighted average becomes the overall health score.
+        </p>
+      </section>
+
       <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Scoring Baseline</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Scoring Methodology</h3>
         <p className="mt-1 text-sm text-slate-600">
           Percentile thresholds derived from sampling real GitHub repositories. All RepoPulse scores are computed relative to these distributions.
         </p>

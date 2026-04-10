@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RepoPulse — Measure the health of your open source projects",
-  description: "CHAOSS-aligned GitHub health analyzer for repository analysis, percentile-based scoring, and organization inventory browsing.",
+  title: "RepoPulse — OSS Health Score",
+  description: "Measure the health of your open source projects with percentile-based scoring calibrated against 200+ GitHub repositories.",
 };
 
 export default function RootLayout({

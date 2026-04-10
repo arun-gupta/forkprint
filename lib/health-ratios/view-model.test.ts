@@ -6,10 +6,10 @@ describe('health-ratios/view-model', () => {
   it('builds grouped ratio rows from verified result inputs', () => {
     const rows = buildHealthRatioRows([buildResult()])
 
-    expect(rows.find((row) => row.id === 'fork-rate')?.cells[0]?.displayValue).toMatch(/25\.0% \((Top|Bottom) \d+%\)/)
-    expect(rows.find((row) => row.id === 'pr-merge-rate')?.cells[0]?.displayValue).toMatch(/75\.0% \((Top|Bottom) \d+%\)/)
-    expect(rows.find((row) => row.id === 'repeat-contributor-ratio')?.cells[0]?.displayValue).toMatch(/25\.0% \((Top|Bottom) \d+%\)/)
-    expect(rows.find((row) => row.id === 'new-contributor-ratio')?.cells[0]?.displayValue).toMatch(/16\.7% \((Top|Bottom) \d+%\)/)
+    expect(rows.find((row) => row.id === 'fork-rate')?.cells[0]?.displayValue).toMatch(/25\.0% \(\d+\w{2} percentile\)/)
+    expect(rows.find((row) => row.id === 'pr-merge-rate')?.cells[0]?.displayValue).toMatch(/75\.0% \(\d+\w{2} percentile\)/)
+    expect(rows.find((row) => row.id === 'repeat-contributor-ratio')?.cells[0]?.displayValue).toMatch(/25\.0% \(\d+\w{2} percentile\)/)
+    expect(rows.find((row) => row.id === 'new-contributor-ratio')?.cells[0]?.displayValue).toMatch(/16\.7% \(\d+\w{2} percentile\)/)
   })
 
   it('sorts unavailable values after numeric values', () => {
