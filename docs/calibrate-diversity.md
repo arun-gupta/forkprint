@@ -115,23 +115,6 @@ Cap: 15 per bracket for popular languages (JavaScript, TypeScript, Python, Java,
 
 ---
 
-### Language distribution by bracket
-
-```mermaid
----
-config:
-  theme: neutral
----
-xychart-beta
-  title "Top 8 Languages — Repos per Bracket"
-  x-axis ["Python", "TS", "Go", "C++", "Java", "JS", "Rust", "C#"]
-  y-axis "Repos" 0 --> 60
-  bar "Emerging" [27, 28, 16, 16, 16, 21, 18, 17]
-  bar "Growing" [27, 24, 20, 20, 16, 17, 19, 13]
-  bar "Established" [29, 24, 18, 21, 21, 17, 19, 16]
-  bar "Popular" [54, 51, 51, 31, 29, 26, 21, 8]
-```
-
 ---
 
 ## Emerging (10–99 stars) (400 repos)
