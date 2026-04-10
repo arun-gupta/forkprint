@@ -56,19 +56,20 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deploym
 
 ## Roadmap
 
-### Scoring dimensions
+### Phase 1 — Web app + core scoring ✅
 
-| Status | Dimension | Description |
-|--------|-----------|-------------|
-| ✅ | Activity | PR throughput, issue flow, commit cadence, releases |
-| ✅ | Responsiveness | Response times, resolution speed, backlog health |
-| ✅ | Sustainability | Contributor concentration, repeat/new ratios |
-| Planned | Documentation | README, CONTRIBUTING, LICENSE, SECURITY, templates |
-| Planned | Security | Dependency updates, branch protection, CI/CD |
-| Planned | Community | Discussions, templates, CODEOWNERS, governance |
-| Planned | Release Health | Frequency, semver compliance, release notes |
+Interactive dashboard with OSS Health Score from Activity, Responsiveness, and Sustainability.
 
-### Extensibility
+### Phase 2 — Expand scoring dimensions
+
+| Dimension | Description |
+|-----------|-------------|
+| Documentation | README, CONTRIBUTING, LICENSE, SECURITY, templates |
+| Security | Dependency updates, branch protection, CI/CD |
+| Community | Discussions, templates, CODEOWNERS, governance |
+| Release Health | Frequency, semver compliance, release notes |
+
+### Phase 3 — Extensibility
 
 | Feature | Description |
 |---------|-------------|
@@ -76,7 +77,7 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deploym
 | MCP Server | Expose analysis as a tool for AI assistants (Claude, Cursor) |
 | Embeddable badge | Health score badge for repository READMEs |
 
-### Git provider support
+### Phase 4 — Git provider support
 
 | Provider | Status |
 |----------|--------|

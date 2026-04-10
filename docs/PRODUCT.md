@@ -12,36 +12,34 @@ This document is the canonical product definition for RepoPulse. It is the sourc
 
 ## Roadmap
 
-### Scoring dimensions
+### Phase 1 — Web app + core scoring ✅
 
-RepoPulse's health score evolves by adding new scoring buckets. Each bucket adds a new dimension to the composite health score.
+Interactive Next.js dashboard on Vercel with OSS Health Score from three scoring buckets (Activity, Responsiveness, Sustainability), percentile-based scoring calibrated against 200+ repos, and actionable recommendations.
 
-| Status | Dimension | Weight | Issues |
-|--------|-----------|--------|--------|
-| ✅ Done | Activity | 36% | — |
-| ✅ Done | Responsiveness | 36% | — |
-| ✅ Done | Sustainability | 28% | — |
-| Planned | Documentation | 15% | #66, #67 |
-| Planned | Security | 15% | #68, #71 |
-| Planned | Community | 10% | #70 |
-| Planned | Release Health | 5% | #69 |
+### Phase 2 — Expand scoring dimensions
 
-Weights are rebalanced as new buckets are added.
+Add new scoring buckets to the health score. Each bucket adds a new dimension with its own percentile-based score, and the composite weights are rebalanced.
 
-### Extensibility
+| Dimension | Planned Weight | What it evaluates | Issues |
+|-----------|---------------|-------------------|--------|
+| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates | #66, #67 |
+| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure | #68, #71 |
+| Community | 10% | Discussions, templates, CODEOWNERS, governance | #70 |
+| Release Health | 5% | Frequency, semver compliance, release notes | #69 |
+
+### Phase 3 — Extensibility
 
 The core analysis logic is shared via a framework-agnostic analyzer module. These extensions wrap the same analyzer without duplicating logic.
 
-| Feature | Description | Status |
+| Feature | Description | Issues |
 |---------|-------------|--------|
-| Web app | Next.js / Vercel interactive dashboard | ✅ Done |
-| GitHub Action | Scheduled analysis with threshold alerting | Planned |
-| MCP Server | Expose analysis as a tool for AI assistants | Planned |
-| Embeddable badge | Health score SVG badge for READMEs | Planned (#72) |
+| GitHub Action | Scheduled analysis with threshold alerting | — |
+| MCP Server | Expose analysis as a tool for AI assistants (Claude, Cursor) | — |
+| Embeddable badge | Health score SVG badge for READMEs | #72 |
 
-### Git provider support
+### Phase 4 — Git provider support
 
-A provider abstraction layer will allow the analyzer to work with multiple Git hosting platforms.
+A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms.
 
 | Provider | Status |
 |----------|--------|
@@ -68,7 +66,7 @@ A provider abstraction layer will allow the analyzer to work with multiple Git h
 
 RepoPulse computes a composite **OSS Health Score** from weighted scoring buckets. Each bucket produces a percentile score (0–99) relative to repos in the same star bracket, calibrated against 200+ real GitHub repositories.
 
-### Current buckets (Phase 1)
+### Implemented buckets
 
 | Bucket | Weight | What it measures | Derived from |
 |---|---|---|---|
@@ -76,16 +74,16 @@ RepoPulse computes a composite **OSS Health Score** from weighted scoring bucket
 | Responsiveness | 36% | Response times, resolution speed, maintainer signals, backlog health, engagement quality | Weighted composite of 5 sub-scores |
 | Sustainability | 28% | Contributor concentration (top 20% commit share) | Inverted percentile of concentration ratio |
 
-### Planned buckets
+### Planned buckets (Phase 2)
 
-| Bucket | Planned Weight | What it will measure |
-|---|---|---|
-| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates (#66) |
-| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure (#68) |
-| Community | 10% | Discussions, templates, CODEOWNERS, governance (#70) |
-| Release Health | 5% | Frequency, semver compliance, release notes (#69) |
+| Bucket | Planned Weight | What it will measure | Issues |
+|---|---|---|---|
+| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates | #66, #67 |
+| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure | #68, #71 |
+| Community | 10% | Discussions, templates, CODEOWNERS, governance | #70 |
+| Release Health | 5% | Frequency, semver compliance, release notes | #69 |
 
-Weights will be rebalanced as new buckets are added.
+Weights are rebalanced as new buckets are added.
 
 ### Ecosystem profile
 
@@ -591,7 +589,7 @@ Users can take analysis results out of the UI in standard formats.
 
 ---
 
-### Extensibility features
+### Phase 3 — Extensibility features
 
 These features wrap the shared analyzer module without duplicating logic.
 
@@ -627,9 +625,9 @@ Health score badge for repository READMEs: `![RepoPulse](https://repopulse.dev/a
 
 ---
 
-### Git provider support
+### Phase 4 — Git provider support
 
-A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms. GitHub is supported; GitLab, Bitbucket, and Gitea are planned.
+A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms.
 
 ---
 
