@@ -76,7 +76,7 @@ RepoPulse computes a composite **OSS Health Score** from weighted scoring bucket
 | Responsiveness | 36% | Response times, resolution speed, maintainer signals, backlog health, engagement quality | Weighted composite of 5 sub-scores |
 | Sustainability | 28% | Contributor concentration (top 20% commit share) | Inverted percentile of concentration ratio |
 
-### Planned buckets (Phase 2+)
+### Planned buckets
 
 | Bucket | Planned Weight | What it will measure |
 |---|---|---|
