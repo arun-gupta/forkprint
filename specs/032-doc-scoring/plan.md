@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add a Documentation scoring bucket to the OSS Health Score. Checks 6 key documentation files via GitHub Community Profile API (1 REST call) and README content API (1 REST call), plus CHANGELOG via GraphQL. Produces a percentile score calibrated against repos in the same star bracket. Missing items generate actionable recommendations surfaced in a new Documentation tab and a unified Recommendations tab.
+Add a Documentation scoring bucket to the OSS Health Score. Checks 6 key documentation files and README content entirely via GraphQL `object()` aliases — zero additional API calls. Produces a percentile score calibrated against repos in the same star bracket. Missing items generate actionable recommendations surfaced in a new Documentation tab and a unified Recommendations tab.
 
 ## Technical Context
 
@@ -15,8 +15,8 @@ Add a Documentation scoring bucket to the OSS Health Score. Checks 6 key documen
 **Testing**: Vitest + React Testing Library (unit/component), Playwright (E2E)
 **Target Platform**: Vercel (web)
 **Project Type**: Web application
-**Performance Goals**: Documentation checks add no more than 2 seconds to analysis time
-**Constraints**: 2 additional REST calls per repo; must work within existing rate limit budget
+**Performance Goals**: Documentation checks add no measurable latency (bundled into existing GraphQL query)
+**Constraints**: Zero additional API calls; all checks via GraphQL `object()` aliases in existing overview query
 **Scale/Scope**: 1604 calibration repos, per-request analysis of 1-4 repos
 
 ## Constitution Check
@@ -27,7 +27,7 @@ Add a Documentation scoring bucket to the OSS Health Score. Checks 6 key documen
 |------|--------|-------|
 | I. Technology Stack | PASS | Uses existing Next.js/Tailwind/Vitest stack. No new dependencies. |
 | II. Accuracy Policy | PASS | File presence is binary (exists/not). README sections detected from actual content. No estimation. |
-| III. Data Source Rules | PASS | Uses GitHub REST API (community/profile, readme) as supplement where GraphQL cannot reach. OAuth token used. |
+| III. Data Source Rules | PASS | All data via GraphQL — no additional REST calls. OAuth token used. |
 | IV. Analyzer Module Boundary | PASS | Documentation logic lives in `lib/documentation/` and `lib/analyzer/` — framework-agnostic. |
 | V. CHAOSS Alignment | NOTE | Documentation is a new scoring dimension not in the original 4 CHAOSS categories. Constitution Section V says "No new CHAOSS categories... without amending." Documentation scoring is an OSS Health Score bucket, not a new CHAOSS category — it extends the composite health score. Constitution amendment may be needed if this is considered a new CHAOSS category. |
 | VI. Scoring Thresholds | PASS | Weights defined in config (`score-config.ts`), not hardcoded. |
@@ -64,10 +64,9 @@ lib/
 │   ├── view-model.ts            # View model for Documentation tab
 │   └── view-model.test.ts       # Tests
 ├── analyzer/
-│   ├── analyze.ts               # MODIFIED: add documentation fetch calls
+│   ├── analyze.ts               # MODIFIED: extract documentation results from GraphQL response
 │   ├── analysis-result.ts       # MODIFIED: add documentationResult field
-│   ├── queries.ts               # MODIFIED: add CHANGELOG object() aliases
-│   └── github-rest.ts           # MODIFIED: add fetchCommunityProfile, fetchReadmeContent
+│   └── queries.ts               # MODIFIED: add file object() aliases + licenseInfo to overview query
 ├── scoring/
 │   ├── health-score.ts          # MODIFIED: rebalance weights, remove percentile gate
 │   └── config-loader.ts         # MODIFIED: add documentation calibration data

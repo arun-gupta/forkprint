@@ -11,16 +11,15 @@ Adds a Documentation scoring bucket to the OSS Health Score. It checks for 6 key
 - `lib/documentation/view-model.ts` — View model for Documentation tab
 - `lib/documentation/view-model.test.ts` — Tests
 - `lib/documentation/score-config.test.ts` — Tests
-- `lib/analyzer/github-rest-docs.ts` — Community profile + README fetch
 - `components/documentation/DocumentationView.tsx` — Documentation tab
 - `components/documentation/DocumentationView.test.tsx` — Tests
 - `components/recommendations/RecommendationsView.tsx` — Unified recommendations tab
 - `components/recommendations/RecommendationsView.test.tsx` — Tests
 
 ### Modified files
-- `lib/analyzer/analyze.ts` — Add documentation fetch calls
+- `lib/analyzer/analyze.ts` — Extract documentation results from GraphQL response
 - `lib/analyzer/analysis-result.ts` — Add `documentationResult` to `AnalysisResult`
-- `lib/analyzer/queries.ts` — Add CHANGELOG `object()` aliases to overview query
+- `lib/analyzer/queries.ts` — Add file `object()` aliases and `licenseInfo` to overview query
 - `lib/scoring/health-score.ts` — Rebalance weights (30/30/25/15), remove 50th percentile gate, generate doc recommendations
 - `lib/scoring/config-loader.ts` — Add documentation calibration data
 - `components/metric-cards/MetricCard.tsx` — Add Documentation score badge
@@ -34,9 +33,7 @@ Adds a Documentation scoring bucket to the OSS Health Score. It checks for 6 key
 
 ```
 analyze()
-  ├── fetchCommunityProfile(token, owner, name)     → 5 file checks (1 REST call)
-  ├── fetchReadmeContent(token, owner, name)         → README content for section detection (1 REST call)
-  └── GraphQL overview query (existing)              → CHANGELOG variants via object() (0 extra calls)
+  └── GraphQL overview query (extended)              → all file checks + README content + licenseInfo (0 extra calls)
   │
   ▼
 AnalysisResult.documentationResult
