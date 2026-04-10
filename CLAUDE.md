@@ -32,3 +32,10 @@ stop and ask. Do not infer. Do not proceed.
 
 ## Signoff Metadata
 When filling manual checklist signoff or similar metadata, use the authenticated GitHub username when it can be verified locally. Do not infer identity from the filesystem path alone. If no verified username is available, leave the field blank or ask the user.
+
+## Active Technologies
+- TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library (032-doc-scoring)
+- N/A (stateless) (032-doc-scoring)
+
+## Recent Changes
+- 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library
