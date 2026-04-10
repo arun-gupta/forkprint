@@ -80,19 +80,17 @@ function monthsAgo(n: number): string {
   return d.toISOString().split('T')[0]!
 }
 
-// Each bracket is divided into strata to prevent clustering at the low end of
-// a range (e.g. 100-star repos dominating the Growing sample). Repos are
-// sampled evenly across strata — TARGET_PER_STRATUM per stratum.
+// Each bracket is divided into strata with proportional targets — denser strata
+// (more repos in the population) get higher targets. This reflects the actual
+// GitHub population distribution where far more repos exist at the low end.
 //
-// Target sample sizes per bracket (strata × TARGET_PER_STRATUM):
-//   Emerging:    3 strata × 17 = 51
-//   Growing:     4 strata × 13 = 52
-//   Established: 4 strata × 13 = 52
-//   Popular:     4 strata × 13 = 52
+// Target sample sizes per bracket:
+//   Emerging:    4 strata, 200 total (60+50+45+45)
+//   Growing:     5 strata, 200 total (55+45+40+35+25)
+//   Established: 5 strata, 200 total (55+45+40+35+25)
+//   Popular:     5 strata, 195 total (60+50+40+30+15)
 //
-// All exceed the 50-repo minimum required for p90 stability.
-
-const TARGET_PER_STRATUM = 17  // adjusted per bracket below where needed
+// Grand total: ~795 repos
 
 interface Stratum {
   label: string
@@ -106,36 +104,40 @@ const BRACKETS: Record<string, { label: string; strata: Stratum[] }> = {
   emerging: {
     label: 'Emerging (10–99 stars)',
     strata: [
-      { label: 'S1 (10–29)',  min: 10,  max: 29,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
-      { label: 'S2 (30–59)',  min: 30,  max: 59,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
-      { label: 'S3 (60–99)',  min: 60,  max: 99,  pushedAfter: monthsAgo(12), target: TARGET_PER_STRATUM },
+      { label: 'S1 (10–19)',   min: 10,  max: 19,  pushedAfter: monthsAgo(12), target: 115 },
+      { label: 'S2 (20–34)',   min: 20,  max: 34,  pushedAfter: monthsAgo(12), target: 100 },
+      { label: 'S3 (35–54)',   min: 35,  max: 54,  pushedAfter: monthsAgo(12), target: 90 },
+      { label: 'S4 (55–99)',   min: 55,  max: 99,  pushedAfter: monthsAgo(12), target: 85 },
     ],
   },
   growing: {
     label: 'Growing (100–999 stars)',
     strata: [
-      { label: 'S1 (100–324)',  min: 100,  max: 324,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S2 (325–549)',  min: 325,  max: 549,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S3 (550–774)',  min: 550,  max: 774,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S4 (775–999)',  min: 775,  max: 999,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S1 (100–199)',  min: 100,  max: 199,  pushedAfter: monthsAgo(12), target: 105 },
+      { label: 'S2 (200–349)',  min: 200,  max: 349,  pushedAfter: monthsAgo(12), target: 85 },
+      { label: 'S3 (350–549)',  min: 350,  max: 549,  pushedAfter: monthsAgo(12), target: 78 },
+      { label: 'S4 (550–749)',  min: 550,  max: 749,  pushedAfter: monthsAgo(12), target: 68 },
+      { label: 'S5 (750–999)',  min: 750,  max: 999,  pushedAfter: monthsAgo(12), target: 54 },
     ],
   },
   established: {
     label: 'Established (1k–10k stars)',
     strata: [
-      { label: 'S1 (1k–3k)',     min: 1000,  max: 2999,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S2 (3k–5.5k)',   min: 3000,  max: 5499,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S3 (5.5k–7.5k)', min: 5500,  max: 7499,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S4 (7.5k–10k)',  min: 7500,  max: 9999,  pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S1 (1k–2k)',    min: 1000,  max: 1999,  pushedAfter: monthsAgo(12), target: 105 },
+      { label: 'S2 (2k–3.5k)',  min: 2000,  max: 3499,  pushedAfter: monthsAgo(12), target: 85 },
+      { label: 'S3 (3.5k–5k)',  min: 3500,  max: 4999,  pushedAfter: monthsAgo(12), target: 78 },
+      { label: 'S4 (5k–7k)',    min: 5000,  max: 6999,  pushedAfter: monthsAgo(12), target: 68 },
+      { label: 'S5 (7k–10k)',   min: 7000,  max: 9999,  pushedAfter: monthsAgo(12), target: 54 },
     ],
   },
   popular: {
     label: 'Popular (10k+ stars)',
     strata: [
-      { label: 'S1 (10k–25k)',  min: 10000,  max: 24999,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S2 (25k–65k)',  min: 25000,  max: 64999,  pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S3 (65k–170k)', min: 65000,  max: 169999, pushedAfter: monthsAgo(12), target: 13 },
-      { label: 'S4 (170k+)',    min: 170000, max: null,    pushedAfter: monthsAgo(12), target: 13 },
+      { label: 'S1 (10k–20k)',   min: 10000,   max: 19999,  pushedAfter: monthsAgo(12), target: 115 },
+      { label: 'S2 (20k–40k)',   min: 20000,   max: 39999,  pushedAfter: monthsAgo(12), target: 95 },
+      { label: 'S3 (40k–80k)',   min: 40000,   max: 79999,  pushedAfter: monthsAgo(12), target: 80 },
+      { label: 'S4 (80k–170k)',  min: 80000,   max: 169999, pushedAfter: monthsAgo(12), target: 60 },
+      { label: 'S5 (170k+)',     min: 170000,  max: null,    pushedAfter: monthsAgo(12), target: 40 },
     ],
   },
 }
@@ -197,7 +199,20 @@ const EXCLUDED_LANGUAGES = new Set([
   'DIGITAL Command Language', // Legal/admin repos (e.g. DMCA notices)
 ])
 
-const MAX_PER_LANGUAGE = 3
+// Dynamic language cap — popular languages get higher limits to reflect
+// GitHub's natural distribution while still preventing domination.
+const POPULAR_LANGUAGES = new Set([
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'Go', 'Rust', 'C++', 'C#',
+])
+const MAX_PER_POPULAR_LANGUAGE = 15
+const MAX_PER_OTHER_LANGUAGE = 8
+
+function maxForLanguage(lang: string): number {
+  return POPULAR_LANGUAGES.has(lang) ? MAX_PER_POPULAR_LANGUAGE : MAX_PER_OTHER_LANGUAGE
+}
+
+// Org diversity cap — prevents any single org from dominating a bracket.
+const MAX_PER_ORG = 5
 
 interface SearchRepoItem {
   full_name: string
@@ -422,6 +437,7 @@ async function sampleStratum(
   stratum: Stratum,
   seen: Set<string>,
   langCount: Map<string, number>,
+  orgCount: Map<string, number>,
 ): Promise<string[]> {
   const starsFilter = stratum.max
     ? `stars:${stratum.min}..${stratum.max}`
@@ -442,10 +458,14 @@ async function sampleStratum(
         if (!isGenuineSoftwareProject(repo, stratum.min, stratum.max)) continue
 
         const lang = repo.language!
-        if ((langCount.get(lang) ?? 0) >= MAX_PER_LANGUAGE) continue
+        if ((langCount.get(lang) ?? 0) >= maxForLanguage(lang)) continue
+
+        const org = repo.full_name.split('/')[0]!
+        if ((orgCount.get(org) ?? 0) >= MAX_PER_ORG) continue
 
         seen.add(repo.full_name)
         langCount.set(lang, (langCount.get(lang) ?? 0) + 1)
+        orgCount.set(org, (orgCount.get(org) ?? 0) + 1)
         accepted.push(repo.full_name)
       }
 
@@ -456,14 +476,15 @@ async function sampleStratum(
   return accepted
 }
 
-async function sampleBracket(bracket: { label: string; strata: Stratum[] }): Promise<string[]> {
+async function sampleBracket(bracket: { label: string; strata: Stratum[] }, excludeRepos?: Set<string>): Promise<string[]> {
   const all: string[] = []
-  const seen = new Set<string>()
+  const seen = new Set<string>(excludeRepos ?? [])
   const langCount = new Map<string, number>()
+  const orgCount = new Map<string, number>()
 
   for (const stratum of bracket.strata) {
     console.log(`  Stratum ${stratum.label} — target ${stratum.target}`)
-    const repos = await sampleStratum(stratum, seen, langCount)
+    const repos = await sampleStratum(stratum, seen, langCount, orgCount)
     all.push(...repos)
     console.log(`    → ${repos.length} sampled`)
     await sleep(500)
@@ -889,6 +910,191 @@ function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
   console.log(`\nRepo list written to ${REPOS_OUTPUT_PATH}`)
 }
 
+const DIVERSITY_REPORT_PATH = 'docs/calibrate-diversity.md'
+
+async function writeDiversityReport(sampledRepos: Record<BracketKey, string[]>) {
+  const lines: string[] = [
+    '# Calibration Diversity Report',
+    '',
+    `Generated: ${new Date().toISOString().split('T')[0]}`,
+    '',
+    'This report is auto-generated by `npm run calibrate:dry-run` to provide transparency into the composition of the calibration sample.',
+    '',
+  ]
+
+  let grandTotal = 0
+  const globalOrgs = new Map<string, number>()
+
+  // Fetch languages for all repos
+  console.log('Fetching languages for diversity report...')
+  const repoLanguages = new Map<string, string>()
+  const allRepos = Object.values(sampledRepos).flat()
+  for (let i = 0; i < allRepos.length; i += 5) {
+    const batch = allRepos.slice(i, i + 5)
+    await Promise.all(batch.map(async (repo) => {
+      try {
+        const res = await fetchWithRetry(`https://api.github.com/repos/${repo}`, {
+          headers: { Authorization: `Bearer ${nextToken()}`, Accept: 'application/vnd.github+json' },
+        })
+        if (res.ok) {
+          const data = (await res.json()) as { language: string | null }
+          repoLanguages.set(repo, data.language ?? 'None')
+        }
+      } catch {
+        repoLanguages.set(repo, 'Unknown')
+      }
+    }))
+    if ((i + 5) % 100 < 5) console.log(`  ${Math.min(i + 5, allRepos.length)}/${allRepos.length}...`)
+    await sleep(200)
+  }
+  console.log(`  Languages fetched for ${repoLanguages.size} repos`)
+
+  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
+    const bracket = BRACKETS[bracketKey]
+    const repos = sampledRepos[bracketKey]
+    grandTotal += repos.length
+
+    lines.push(`## ${bracket.label} (${repos.length} repos)`)
+    lines.push('')
+
+    // Org distribution
+    const orgs = new Map<string, number>()
+    for (const repo of repos) {
+      const org = repo.split('/')[0]!
+      orgs.set(org, (orgs.get(org) ?? 0) + 1)
+      globalOrgs.set(org, (globalOrgs.get(org) ?? 0) + 1)
+    }
+
+    const sortedOrgs = [...orgs.entries()].sort((a, b) => b[1] - a[1])
+    const multiRepoOrgs = sortedOrgs.filter(([, count]) => count >= 2)
+    const singleRepoCount = sortedOrgs.filter(([, count]) => count === 1).length
+
+    lines.push(`### Organization diversity`)
+    lines.push('')
+    lines.push(`- **${orgs.size}** unique organizations`)
+    lines.push(`- **${singleRepoCount}** single-repo orgs`)
+    if (multiRepoOrgs.length > 0) {
+      lines.push(`- **${multiRepoOrgs.length}** orgs with 2+ repos:`)
+      for (const [org, count] of multiRepoOrgs) {
+        lines.push(`  - ${org}: ${count}`)
+      }
+    }
+    lines.push('')
+
+    // Language distribution for this bracket
+    const bracketLangs = new Map<string, number>()
+    for (const repo of repos) {
+      const lang = repoLanguages.get(repo) ?? 'Unknown'
+      bracketLangs.set(lang, (bracketLangs.get(lang) ?? 0) + 1)
+    }
+    const sortedLangs = [...bracketLangs.entries()].sort((a, b) => b[1] - a[1])
+    lines.push(`### Language distribution`)
+    lines.push('')
+    lines.push(`**${bracketLangs.size}** unique languages`)
+    lines.push('')
+    lines.push('| Language | Repos | % |')
+    lines.push('|----------|-------|---|')
+    for (const [lang, count] of sortedLangs.slice(0, 10)) {
+      lines.push(`| ${lang} | ${count} | ${(count / repos.length * 100).toFixed(1)}% |`)
+    }
+    const othersCount = sortedLangs.slice(10).reduce((s, [, c]) => s + c, 0)
+    if (othersCount > 0) {
+      lines.push(`| *Others* | *${othersCount}* | *${(othersCount / repos.length * 100).toFixed(1)}%* |`)
+    }
+    lines.push('')
+
+  }
+
+  // Global summary — insert at the TOP of the report, after the header
+  const summary: string[] = []
+
+  // Bracket distribution
+  // Compute global language stats first for the header
+  const globalLangs = new Map<string, number>()
+  for (const [, lang] of repoLanguages) {
+    globalLangs.set(lang, (globalLangs.get(lang) ?? 0) + 1)
+  }
+  const sortedGlobalLangs = [...globalLangs.entries()].sort((a, b) => b[1] - a[1])
+
+  summary.push(`## Summary: ${grandTotal} repos · ${globalOrgs.size} orgs · ${globalLangs.size} languages · ${Object.keys(BRACKETS).length} brackets`)
+  summary.push('')
+  summary.push('### Sample size')
+  summary.push('')
+  summary.push('| Bracket | Repos |')
+  summary.push('|---------|-------|')
+  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
+    const bracket = BRACKETS[bracketKey]
+    const count = sampledRepos[bracketKey].length
+    summary.push(`| ${bracket.label} | ${count} |`)
+  }
+  summary.push(`| **Total** | **${grandTotal}** |`)
+  summary.push('')
+
+  // Top orgs
+  const topGlobalOrgs = [...globalOrgs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)
+  summary.push('### Organization diversity')
+  summary.push('')
+  summary.push(`**${globalOrgs.size}** unique organizations across all brackets.`)
+  summary.push('')
+  summary.push('| Organization | Repos |')
+  summary.push('|-------------|-------|')
+  for (const [org, count] of topGlobalOrgs) {
+    summary.push(`| ${org} | ${count} |`)
+  }
+  summary.push('')
+
+  // Strata targets
+  summary.push('### Strata targets')
+  summary.push('')
+  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
+    const bracket = BRACKETS[bracketKey]
+    summary.push(`**${bracket.label}**: ${bracket.strata.map((s) => `${s.label} (${s.target})`).join(' · ')}`)
+    summary.push('')
+  }
+
+  summary.push('**Why 4 vs 5 strata?** Emerging (10–99 stars) uses 4 strata because the range spans only 90 stars — a narrow range where a 5th stratum would create sub-ranges too small to be meaningful. Growing, Established, and Popular each span one or more orders of magnitude and use 5 strata for finer coverage.')
+  summary.push('')
+  summary.push('**Why are strata targets unequal?** Targets are proportional to GitHub\'s population density within each range. Lower strata (e.g., 10–19 stars) have vastly more repos in the population than upper strata (e.g., 170k+ stars), so they receive higher targets. This ensures the sample reflects the natural distribution rather than over-representing the sparse high end. Some strata may fall short of target when language or organization diversity caps limit the available pool.')
+  summary.push('')
+
+  // Language diversity summary
+  summary.push('### Language diversity')
+  summary.push('')
+  summary.push(`**${globalLangs.size}** unique languages across all brackets.`)
+  summary.push('')
+  summary.push('| Language | Repos | % |')
+  summary.push('|----------|-------|---|')
+  for (const [lang, count] of sortedGlobalLangs.slice(0, 15)) {
+    summary.push(`| ${lang} | ${count} | ${(count / grandTotal * 100).toFixed(1)}% |`)
+  }
+  const globalOthers = sortedGlobalLangs.slice(15).reduce((s, [, c]) => s + c, 0)
+  if (globalOthers > 0) {
+    summary.push(`| *Others* | *${globalOthers}* | *${(globalOthers / grandTotal * 100).toFixed(1)}%* |`)
+  }
+  summary.push('')
+  summary.push(`Cap: ${MAX_PER_POPULAR_LANGUAGE} per bracket for popular languages (${[...POPULAR_LANGUAGES].join(', ')}), ${MAX_PER_OTHER_LANGUAGE} for others.`)
+  summary.push('')
+
+  // Sampling rules
+  summary.push('### Sampling rules')
+  summary.push('')
+  summary.push(`- **Language cap**: ${MAX_PER_POPULAR_LANGUAGE} repos per bracket for popular languages, ${MAX_PER_OTHER_LANGUAGE} for others`)
+  summary.push(`- **Organization cap**: ${MAX_PER_ORG} repos per organization per bracket`)
+  summary.push('- **Pushed within**: 12 months (rolling window computed at runtime)')
+  summary.push('- **Excluded**: forks, archived repos, profile READMEs, documentation sites, mirrors, collections/lists, bypass tools')
+  summary.push('')
+  summary.push('---')
+  summary.push('')
+
+  // Insert summary after the header (line index 5 = after "Generated" and blank line)
+  const headerEnd = lines.findIndex((l) => l.startsWith('## '))
+  lines.splice(headerEnd, 0, ...summary)
+  lines.push('')
+
+  writeFileSync(DIVERSITY_REPORT_PATH, lines.join('\n'))
+  console.log(`Diversity report written to ${DIVERSITY_REPORT_PATH}`)
+}
+
 // ─── Repo list reader ────────────────────────────────────────────────────────
 
 /**
@@ -943,41 +1149,56 @@ function readRepoListFile(): Record<BracketKey, string[]> | null {
 
 async function main() {
   if (DRY_RUN) {
-    console.log('DRY RUN — sampling repos from GitHub Search, writing to', REPOS_OUTPUT_PATH, '\n')
+    console.log('DRY RUN — preserving existing repos, sampling new ones to fill targets\n')
   }
 
   const checkpoint = loadCheckpoint()
 
-  // Full runs use the definitive repo list from docs/calibrate-repos.md.
-  // Dry runs always re-sample from GitHub Search API.
-  const repoList = DRY_RUN ? null : readRepoListFile()
-  if (repoList && !DRY_RUN) {
-    const total = Object.values(repoList).reduce((s, repos) => s + repos.length, 0)
-    console.log(`Using definitive repo list from ${REPOS_OUTPUT_PATH} (${total} repos)`)
+  // Both dry runs and full runs read the existing repo list first.
+  // Dry runs then sample new repos to fill the gaps; full runs use the list as-is.
+  const existingRepoList = readRepoListFile()
+  if (existingRepoList) {
+    const total = Object.values(existingRepoList).reduce((s, repos) => s + repos.length, 0)
+    console.log(`Existing repo list: ${REPOS_OUTPUT_PATH} (${total} repos)`)
   }
 
   for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
     const bracket = BRACKETS[bracketKey]
     console.log(`\n── ${bracket.label} ──`)
 
-    // Determine repo list for this bracket
-    if (repoList && !DRY_RUN) {
-      // Full run: use repos from the definitive list file
-      checkpoint.sampledRepos[bracketKey] = repoList[bracketKey]
+    const existingRepos = existingRepoList?.[bracketKey] ?? []
+    const totalTarget = bracket.strata.reduce((s, t) => s + t.target, 0)
+
+    if (DRY_RUN) {
+      // Dry run: keep existing repos, sample new ones to fill the gap
+      const needed = Math.max(0, totalTarget - existingRepos.length)
+      if (needed > 0) {
+        console.log(`Keeping ${existingRepos.length} existing repos, sampling ${needed} more (target ${totalTarget})...`)
+        const newRepos = await sampleBracket(bracket, new Set(existingRepos))
+        const combined = [...existingRepos, ...newRepos.slice(0, needed)]
+        checkpoint.sampledRepos[bracketKey] = combined
+      } else {
+        console.log(`Already have ${existingRepos.length} repos (target ${totalTarget}) — no sampling needed`)
+        checkpoint.sampledRepos[bracketKey] = existingRepos
+      }
       saveCheckpoint(checkpoint)
-      console.log(`Loaded ${checkpoint.sampledRepos[bracketKey].length} repos from ${REPOS_OUTPUT_PATH}`)
+      console.log(`  → ${checkpoint.sampledRepos[bracketKey].length} total repos`)
+      continue
+    }
+
+    // Full run: use repos from the definitive list file
+    if (existingRepoList) {
+      checkpoint.sampledRepos[bracketKey] = existingRepos
+      saveCheckpoint(checkpoint)
+      console.log(`Loaded ${existingRepos.length} repos from ${REPOS_OUTPUT_PATH}`)
     } else if (checkpoint.sampledRepos[bracketKey].length === 0) {
-      // Dry run or no list file: sample from GitHub Search
-      const totalTarget = bracket.strata.reduce((s, t) => s + t.target, 0)
-      console.log(`Sampling across ${bracket.strata.length} strata (target ${totalTarget})...`)
+      console.log(`No repo list file found. Sampling ${totalTarget} repos...`)
       checkpoint.sampledRepos[bracketKey] = await sampleBracket(bracket)
       saveCheckpoint(checkpoint)
       console.log(`Sampled ${checkpoint.sampledRepos[bracketKey].length} repos`)
     } else {
       console.log(`Using ${checkpoint.sampledRepos[bracketKey].length} repos from checkpoint`)
     }
-
-    if (DRY_RUN) continue
 
     const analyzed = new Set(checkpoint.results[bracketKey].map((r) => r.repo))
     const remaining = checkpoint.sampledRepos[bracketKey].filter((r) => !analyzed.has(r))
@@ -1000,6 +1221,7 @@ async function main() {
 
   if (DRY_RUN) {
     writeDryRunReport(checkpoint.sampledRepos)
+    await writeDiversityReport(checkpoint.sampledRepos)
     const total = Object.values(checkpoint.sampledRepos).reduce((s, r) => s + r.length, 0)
     console.log(`\nDry run complete: ${total} repos sampled across ${Object.keys(BRACKETS).length} brackets`)
     console.log('Checkpoint saved — run `npm run calibrate` to fetch metrics for these repos')

@@ -133,7 +133,15 @@ const EXCLUDED_LANGUAGES = new Set([
   'DIGITAL Command Language',
 ])
 
-const MAX_PER_LANGUAGE = 3  // max repos with the same primary language per bracket
+const POPULAR_LANGUAGES = new Set([
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'Go', 'Rust', 'C++', 'C#',
+])
+const MAX_PER_POPULAR_LANGUAGE = 8
+const MAX_PER_OTHER_LANGUAGE = 5
+
+function maxForLanguage(lang: string): number {
+  return POPULAR_LANGUAGES.has(lang) ? MAX_PER_POPULAR_LANGUAGE : MAX_PER_OTHER_LANGUAGE
+}
 
 interface RepoItem {
   full_name: string
@@ -235,7 +243,7 @@ async function fetchCandidates(
 
       // Language diversity: cap how many repos share the same primary language
       const lang = repo.language!
-      if ((langCount.get(lang) ?? 0) >= MAX_PER_LANGUAGE) continue
+      if ((langCount.get(lang) ?? 0) >= maxForLanguage(lang)) continue
 
       langCount.set(lang, (langCount.get(lang) ?? 0) + 1)
       candidates.push(repo)
