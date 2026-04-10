@@ -22,14 +22,37 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 loadEnvConfig(process.cwd())
 
 // ─── Token pool ───────────────────────────────────────────────────────────────
+//
+// Priority: GITHUB_TOKEN_1/2/3/... (numbered) → GITHUB_TOKENS (comma-separated) → GITHUB_TOKEN (single)
 
-const rawTokens = (process.env.GITHUB_TOKENS ?? process.env.GITHUB_TOKEN ?? '')
-  .split(',')
-  .map((t) => t.trim())
-  .filter(Boolean)
+function collectTokens(): string[] {
+  // 1. Numbered: GITHUB_TOKEN_1, GITHUB_TOKEN_2, ...
+  const numbered: string[] = []
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/^GITHUB_TOKEN_\d+$/i.test(key) && value?.trim()) {
+      numbered.push(value.trim())
+    }
+  }
+  if (numbered.length > 0) return numbered
+
+  // 2. Comma-separated: GITHUB_TOKENS
+  if (process.env.GITHUB_TOKENS) {
+    const tokens = process.env.GITHUB_TOKENS.split(',').map((t) => t.trim()).filter(Boolean)
+    if (tokens.length > 0) return tokens
+  }
+
+  // 3. Single: GITHUB_TOKEN
+  if (process.env.GITHUB_TOKEN?.trim()) {
+    return [process.env.GITHUB_TOKEN.trim()]
+  }
+
+  return []
+}
+
+const rawTokens = collectTokens()
 
 if (rawTokens.length === 0) {
-  console.error('No GitHub tokens found. Set GITHUB_TOKENS or GITHUB_TOKEN in .env.local')
+  console.error('No GitHub tokens found. Set GITHUB_TOKEN_1, GITHUB_TOKEN_2, ... or GITHUB_TOKENS or GITHUB_TOKEN in .env.local')
   process.exit(1)
 }
 

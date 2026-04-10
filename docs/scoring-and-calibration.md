@@ -71,7 +71,7 @@ The calibration script (`scripts/calibrate.ts`) makes three API calls per repo:
 2. **REST contributors endpoint** — `/repos/{owner}/{name}/stats/contributors` — for `topContributorShare`. This is a separate call because contributor stats are not available via GraphQL.
 3. **Search API** — `is:pr is:open repo:{owner}/{name} updated:<DATE` with `per_page=1` — for `stalePrRatio`. Only `total_count` is needed; fetching a single result is sufficient.
 
-**Multi-token round-robin:** The script accepts `GITHUB_TOKENS` (comma-separated PATs) and round-robins across all tokens for every API call, multiplying effective rate limit capacity. Each additional token adds roughly one full token's worth of throughput.
+**Multi-token round-robin:** The script round-robins across all configured tokens for every API call, multiplying effective rate limit capacity. Each additional token adds roughly one full token's worth of throughput. Tokens can be configured as numbered env vars (`GITHUB_TOKEN_1`, `GITHUB_TOKEN_2`, ...), comma-separated (`GITHUB_TOKENS`), or a single token (`GITHUB_TOKEN`).
 
 **Retry and resilience:** All API calls are wrapped with automatic retry (up to 3 attempts with exponential backoff) for network errors (socket closures) and server errors (502, 503). Rate limit responses (403, 429) are handled by waiting for the `Retry-After` header. GraphQL responses with partial `RESOURCE_LIMITS_EXCEEDED` errors are handled gracefully — available fields are used, nulled-out fields are skipped.
 
@@ -232,10 +232,18 @@ npm run calibrate
 
 **Requirements:** Node.js 18+, at least one GitHub PAT with `public_repo` read access in `.env.local`.
 
-**Multi-token setup (recommended):** Add comma-separated PATs to `.env.local` as `GITHUB_TOKENS`. Each additional token adds roughly one full token's worth of rate limit capacity.
+**Multi-token setup (recommended):** Add PATs to `.env.local`. Each additional token adds roughly one full token's worth of rate limit capacity. 5 tokens recommended for ~800 repo calibration runs.
 
-```
-GITHUB_TOKENS=ghp_token1,ghp_token2,ghp_token3
+```bash
+# Numbered (recommended for 3+ tokens):
+GITHUB_TOKEN_1=ghp_...
+GITHUB_TOKEN_2=ghp_...
+GITHUB_TOKEN_3=ghp_...
+GITHUB_TOKEN_4=ghp_...
+GITHUB_TOKEN_5=ghp_...
+
+# Or comma-separated (single line):
+# GITHUB_TOKENS=ghp_token1,ghp_token2,ghp_token3
 ```
 
 The script checkpoints to `scripts/calibrate-checkpoint.json` after every batch. If interrupted (network errors, rate limits), re-running resumes from where it left off. Delete the checkpoint file to start fresh.
