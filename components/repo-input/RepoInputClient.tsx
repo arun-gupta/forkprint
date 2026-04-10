@@ -6,7 +6,6 @@ import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { ComparisonView } from '@/components/comparison/ComparisonView'
-import { EcosystemMap } from '@/components/ecosystem-map/EcosystemMap'
 import { HealthRatiosView } from '@/components/health-ratios/HealthRatiosView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
@@ -216,7 +215,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
           <MetricCardsOverview results={analysisResponse.results} />
-          <EcosystemMap results={analysisResponse.results} />
           {analysisResponse.failures.length > 0 ? (
             <section className="rounded border border-amber-200 bg-amber-50 p-4">
               <h2 className="font-semibold text-amber-900">Failed repositories</h2>
