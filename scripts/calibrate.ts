@@ -29,7 +29,7 @@ function collectTokens(): string[] {
   // 1. Numbered: GITHUB_TOKEN_1, GITHUB_TOKEN_2, ...
   const numbered: string[] = []
   for (const [key, value] of Object.entries(process.env)) {
-    if (/^GITHUB_TOKEN_\d+$/i.test(key) && value?.trim()) {
+    if (/^GITHUB_TOKENS?_\d+$/i.test(key) && value?.trim()) {
       numbered.push(value.trim())
     }
   }
