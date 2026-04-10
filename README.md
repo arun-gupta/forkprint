@@ -1,19 +1,42 @@
-# RepoPulse
+# RepoPulse — OSS Health Score
 
-RepoPulse is a CHAOSS-aligned GitHub repository health analyzer. The Phase 1 app lets you analyze one or more public repositories, explore an organization’s public repo inventory, and compare repositories side by side in a web dashboard. Results can be exported as JSON or Markdown, or shared via a shareable URL.
+RepoPulse measures the health of open source projects with a composite **OSS Health Score** — a single percentile-based score computed from Activity, Responsiveness, and Sustainability, calibrated against 200+ real GitHub repositories.
 
-Live in action: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
+Analyze any public repo, see exactly where it ranks, and get actionable recommendations for improvement.
 
-## Roadmap
+Live: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 
-- Phase 1: Next.js web app on Vercel for interactive repository analysis
-- Phase 2: GitHub Action for scheduled analysis and alerting
-- Phase 3: MCP server callable by tools such as Claude and Cursor
-- Phase 4: GitLab support — port the analyzer and data layer to work with GitLab in addition to GitHub
+## What it measures
 
-## Getting Started
+| Dimension | Weight | What it evaluates |
+|-----------|--------|-------------------|
+| **Activity** | 36% | PR throughput, issue flow, commit cadence, release frequency |
+| **Responsiveness** | 36% | Issue/PR response times, resolution speed, backlog health, engagement quality |
+| **Sustainability** | 28% | Contributor concentration, repeat/new contributor ratios |
 
-RepoPulse uses GitHub OAuth for authentication. Sign in with your GitHub account to analyze repositories — no personal access token needed.
+Each dimension is scored as a percentile relative to repos in the same star bracket (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
+
+### Coming soon
+
+| Dimension | What it will evaluate |
+|-----------|---------------------|
+| **Documentation** | README, CONTRIBUTING, LICENSE, SECURITY, templates |
+| **Security** | Dependency updates, branch protection, CI/CD, vulnerability disclosure |
+| **Community** | Discussions, issue/PR templates, CODEOWNERS, governance |
+| **Release Health** | Frequency, semver compliance, release notes |
+
+## Features
+
+- **OSS Health Score** — composite percentile with actionable recommendations
+- **6-dimension scorecard** — Reach, Attention, Engagement, Activity, Responsiveness, Sustainability
+- **Percentile-based scoring** — calibrated against 200+ repos across 4 star brackets
+- **Individual metric percentiles** — every metric shows where the repo ranks
+- **Multi-repo comparison** — side-by-side analysis of up to 4 repos
+- **Organization inventory** — browse and analyze repos within a GitHub org
+- **Scoring Methodology page** — full transparency into calibration data and thresholds
+- **Export** — JSON, Markdown, and shareable URL
+
+## Getting started
 
 ```bash
 npm install
@@ -31,15 +54,40 @@ GITHUB_CLIENT_SECRET=
 
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deployment instructions.
 
-## Product
+## Roadmap
 
-The complete product feature set is defined in [`docs/PRODUCT.md`](docs/PRODUCT.md).
+### Scoring dimensions
 
-The current implementation order is tracked in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md#phase-1-feature-order).
+| Status | Dimension | Description |
+|--------|-----------|-------------|
+| ✅ | Activity | PR throughput, issue flow, commit cadence, releases |
+| ✅ | Responsiveness | Response times, resolution speed, backlog health |
+| ✅ | Sustainability | Contributor concentration, repeat/new ratios |
+| Planned | Documentation | README, CONTRIBUTING, LICENSE, SECURITY, templates |
+| Planned | Security | Dependency updates, branch protection, CI/CD |
+| Planned | Community | Discussions, templates, CODEOWNERS, governance |
+| Planned | Release Health | Frequency, semver compliance, release notes |
+
+### Extensibility
+
+| Feature | Description |
+|---------|-------------|
+| GitHub Action | Scheduled analysis with threshold alerting |
+| MCP Server | Expose analysis as a tool for AI assistants (Claude, Cursor) |
+| Embeddable badge | Health score badge for repository READMEs |
+
+### Git provider support
+
+| Provider | Status |
+|----------|--------|
+| GitHub | ✅ Supported |
+| GitLab | Planned |
+| Bitbucket | Future |
+| Gitea | Future |
 
 ## Docs
 
-- Use [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the feature workflow, implementation order, current completion status, and verification commands.
-- Use [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) when running or updating the Phase 1 Vercel deployment.
-- Use [`docs/PRODUCT.md`](docs/PRODUCT.md) for the complete product feature set and feature definitions.
-- Use [`.specify/memory/constitution.md`](.specify/memory/constitution.md) for project rules and Definition of Done requirements.
+- [`docs/PRODUCT.md`](docs/PRODUCT.md) — Product definition and feature specifications
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — Development workflow, implementation order, verification commands
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Vercel deployment guide
+- [`docs/scoring-and-calibration.md`](docs/scoring-and-calibration.md) — Scoring methodology, calibration pipeline, statistical approach

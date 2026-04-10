@@ -1,7 +1,7 @@
 # RepoPulse — Product Definition
 
 **Repo**: `arun-gupta/repo-pulse`  
-**Description**: CHAOSS-aligned GitHub repository health analyzer. Accepts one or more `owner/repo` inputs, fetches real public data via the GitHub GraphQL API, and produces an interactive dashboard and raw JSON output.  
+**Description**: OSS Health Score — measures the health of open source projects with percentile-based scoring calibrated against 200+ GitHub repositories. Produces a composite health score from Activity, Responsiveness, and Sustainability dimensions with actionable recommendations.  
 **Phase 1 Platform**: Next.js deployed on Vercel  
 **Phase 1 Data Layer**: Next.js API Routes  
 **Development Methodology**: SpecKit / Specification-Driven Development (SDD)
@@ -12,14 +12,43 @@ This document is the canonical product definition for RepoPulse. It is the sourc
 
 ## Roadmap
 
-RepoPulse is built in four phases. Phase 1 architectural decisions must not block Phases 2, 3, or 4.
+### Scoring dimensions
 
-- **Phase 1** — Web app (Next.js / Vercel): interactive dashboard for on-demand repo analysis
-- **Phase 2** — GitHub Action: scheduled or triggered analysis with artifact output and threshold alerting
-- **Phase 3** — MCP Server: exposes analysis as a tool callable by AI assistants (Claude, Cursor, etc.)
-- **Phase 4** — GitLab support: port the analyzer, data fetching, and auth layers to work with GitLab in addition to GitHub, across all delivery phases (P1, P2, P3)
+RepoPulse's health score evolves by adding new scoring buckets. Each bucket adds a new dimension to the composite health score.
 
-The core analysis logic is shared across all phases via a framework-agnostic analyzer module. No phase duplicates it. Phase 4 introduces a provider abstraction so GitHub and GitLab data sources are interchangeable.
+| Status | Dimension | Weight | Issues |
+|--------|-----------|--------|--------|
+| ✅ Done | Activity | 36% | — |
+| ✅ Done | Responsiveness | 36% | — |
+| ✅ Done | Sustainability | 28% | — |
+| Planned | Documentation | 15% | #66, #67 |
+| Planned | Security | 15% | #68, #71 |
+| Planned | Community | 10% | #70 |
+| Planned | Release Health | 5% | #69 |
+
+Weights are rebalanced as new buckets are added.
+
+### Extensibility
+
+The core analysis logic is shared via a framework-agnostic analyzer module. These extensions wrap the same analyzer without duplicating logic.
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Web app | Next.js / Vercel interactive dashboard | ✅ Done |
+| GitHub Action | Scheduled analysis with threshold alerting | Planned |
+| MCP Server | Expose analysis as a tool for AI assistants | Planned |
+| Embeddable badge | Health score SVG badge for READMEs | Planned (#72) |
+
+### Git provider support
+
+A provider abstraction layer will allow the analyzer to work with multiple Git hosting platforms.
+
+| Provider | Status |
+|----------|--------|
+| GitHub | ✅ Supported |
+| GitLab | Planned |
+| Bitbucket | Future |
+| Gitea | Future |
 
 ---
 
@@ -35,16 +64,42 @@ The core analysis logic is shared across all phases via a framework-agnostic ana
 
 ---
 
-## CHAOSS Alignment
+## OSS Health Score
 
-RepoPulse groups analysis into four CHAOSS-aligned reporting dimensions. These dimensions are product-level buckets, not a claim that they are the official top-level CHAOSS metric taxonomy.
+RepoPulse computes a composite **OSS Health Score** from weighted scoring buckets. Each bucket produces a percentile score (0–99) relative to repos in the same star bracket, calibrated against 200+ real GitHub repositories.
 
-| RepoPulse Dimension | CHAOSS Basis | Feature | Derived Score |
+### Current buckets (Phase 1)
+
+| Bucket | Weight | What it measures | Derived from |
 |---|---|---|---|
-| Ecosystem | RepoPulse repo-profile layer informed by CHAOSS-style ecosystem signals | Ecosystem Map (P1-F05) | Ecosystem profile: Reach / Builder Engagement / Attention |
-| Activity | CHAOSS-aligned activity and adjacent activity-flow signals | Activity (P1-F08) | Activity score: High / Medium / Low |
-| Contributors | Contributor metrics with a dedicated Sustainability pane for resilience and organizational-risk signals | Contributors (P1-F09) | Core contributor metrics + Sustainability score |
-| Responsiveness | CHAOSS-aligned time-to-response and time-to-resolution metrics | Responsiveness (P1-F10) | Responsiveness score: High / Medium / Low |
+| Activity | 36% | PR flow, issue flow, commit cadence, completion speed, release frequency | Weighted composite of 5 sub-scores |
+| Responsiveness | 36% | Response times, resolution speed, maintainer signals, backlog health, engagement quality | Weighted composite of 5 sub-scores |
+| Sustainability | 28% | Contributor concentration (top 20% commit share) | Inverted percentile of concentration ratio |
+
+### Planned buckets (Phase 2+)
+
+| Bucket | Planned Weight | What it will measure |
+|---|---|---|
+| Documentation | 15% | README, CONTRIBUTING, LICENSE, SECURITY, templates (#66) |
+| Security | 15% | Dependency updates, branch protection, CI/CD, vulnerability disclosure (#68) |
+| Community | 10% | Discussions, templates, CODEOWNERS, governance (#70) |
+| Release Health | 5% | Frequency, semver compliance, release notes (#69) |
+
+Weights will be rebalanced as new buckets are added.
+
+### Ecosystem profile
+
+Three additional percentile dimensions are shown on the scorecard but not included in the health score composite:
+
+| Dimension | Metric | Purpose |
+|---|---|---|
+| Reach | Star count percentile | Project visibility and adoption |
+| Attention | Watcher-to-star ratio percentile | Active follower interest |
+| Engagement | Fork-to-star ratio percentile | Builder participation |
+
+### Scoring methodology
+
+All scores are percentile-based, not categorical. The scoring methodology, calibration data, and statistical approach are documented in [`docs/scoring-and-calibration.md`](scoring-and-calibration.md).
 
 Scores are assigned only when sufficient verified data exists. Otherwise: `"Insufficient verified public data"`.
 
@@ -536,85 +591,53 @@ Users can take analysis results out of the UI in standard formats.
 
 ---
 
-### Phase 2 — GitHub Action
+### Extensibility features
+
+These features wrap the shared analyzer module without duplicating logic.
 
 ---
 
-#### `[P2-F01]` Scheduled Analysis
+#### GitHub Action — Scheduled Analysis & Alerting
 
-RepoPulse runs as a GitHub Action on a schedule or manual trigger.
+RepoPulse runs as a GitHub Action on a schedule or manual trigger, with optional threshold alerting.
 
-**Acceptance criteria**
-- Action supports `schedule` (cron) and `workflow_dispatch` triggers
-- Repo list supplied as action input: multiline string or JSON array
-- Imports `analyze()` directly from the shared analyzer module — no logic duplication
-- Outputs JSON artifact uploaded to GitHub Actions artifacts
-- Optional Markdown summary posted as a GitHub Actions job summary
-- `GITHUB_TOKEN` consumed from the action's built-in secret — no extra setup for public repos
-
-**Out of scope**
-- Push or release event triggers (Future backlog)
+**Key capabilities**
+- `schedule` (cron) and `workflow_dispatch` triggers
+- JSON artifact output and Markdown job summary
+- Opens a GitHub Issue when health score drops below a configured threshold
+- `GITHUB_TOKEN` from the action's built-in secret
 
 ---
 
-#### `[P2-F02]` Threshold Alerting
-
-The action can open a GitHub Issue when health drops below a defined threshold.
-
-**Acceptance criteria**
-- Optional step: opens a GitHub Issue if any CHAOSS score falls below configured threshold
-- Issue body includes the Markdown health report
-- Threshold values sourced from the shared config — not hardcoded in the workflow
-
-**Out of scope**
-- Slack or email notifications (Future backlog)
-
----
-
-### Phase 3 — MCP Server
-
----
-
-#### `[P3-F01]` Analyze Tool
+#### MCP Server — AI Assistant Integration
 
 RepoPulse exposes repo health analysis as an MCP tool callable by AI assistants.
 
-**Acceptance criteria**
-- MCP Server exposes an `analyze_repo` tool
-- Tool accepts: `repos: string[]`, optional `token?: string`
-- Tool returns a typed `AnalysisResult` object matching the shared analyzer output contract
-- Wraps `analyze()` from the shared analyzer module — no logic duplication
+**Key capabilities**
+- `analyze_repo` tool accepting `repos: string[]`
+- Returns typed `AnalysisResult` matching the shared analyzer contract
 - Usable from Claude, Cursor, or any MCP-compatible AI assistant
-
-**Out of scope**
-- Streaming partial results during analysis
-- Tool for adjusting scoring thresholds
+- Deployable as standalone Node.js process or Vercel serverless function
 
 ---
 
-#### `[P3-F02]` Deployment & Integration Docs
+#### Embeddable Badge
 
-The MCP Server is deployable and documented for common AI assistant setups.
+Health score badge for repository READMEs: `![RepoPulse](https://repopulse.dev/api/badge/owner/repo)`
 
-**Acceptance criteria**
-- Deployable as a standalone Node.js process
-- Deployable as a Vercel serverless function
-- README section documents how to connect to Claude Desktop and Claude Code
-- `GITHUB_TOKEN` passed via environment variable — never hardcoded
+---
 
-**Out of scope**
-- GUI for configuring the MCP server
+### Git provider support
+
+A provider abstraction layer allows the analyzer to work with multiple Git hosting platforms. GitHub is supported; GitLab, Bitbucket, and Gitea are planned.
 
 ---
 
 ### Future / Backlog
 
-Not specced. Captured here so Phase 1–3 decisions don't foreclose them.
-
-- `[FUT-F01]` **Historical trending** — store snapshots over time, chart metric trajectory per repo
-- `[FUT-F03]` **CHAOSS expansion** — Bus Factor, Change Request Closure Ratio, Code Coverage metrics
-- `[FUT-F04]` **Embeddable badge** — `![RepoPulse Health](https://repo-pulse.vercel.app/badge/owner/repo)` for READMEs
-- `[FUT-F05]` **Webhook mode** — trigger analysis on push or release events via GitHub webhook
+- **Historical trending** — store snapshots over time, chart metric trajectory per repo
+- **Webhook mode** — trigger analysis on push or release events
+- **Bus Factor** — contributor risk beyond concentration ratio
 
 ---
 
