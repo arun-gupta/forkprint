@@ -132,15 +132,49 @@ export function BaselineView() {
       <section className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-sky-900">OSS Health Score</h3>
         <p className="mt-2 text-sm text-sky-800">
-          The composite health score is computed from three weighted buckets:
+          The composite health score is computed from four weighted buckets:
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
-          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Activity 36%</span>
-          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Responsiveness 36%</span>
-          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Sustainability 28%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Activity 30%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Responsiveness 30%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Sustainability 25%</span>
+          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800">Documentation 15%</span>
         </div>
         <p className="mt-2 text-xs text-sky-700">
           Each bucket produces a percentile score relative to repos in the same star bracket. The weighted average becomes the overall health score.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Documentation Scoring</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          The documentation score is a weighted composite of file presence (60%) and README quality (40%).
+        </p>
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">File presence (60%)</p>
+            <ul className="mt-2 space-y-1 text-sm text-slate-700">
+              <li>README — 25%</li>
+              <li>LICENSE — 20%</li>
+              <li>CONTRIBUTING — 15%</li>
+              <li>SECURITY — 15%</li>
+              <li>CHANGELOG — 15%</li>
+              <li>CODE_OF_CONDUCT — 10%</li>
+            </ul>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">README quality (40%)</p>
+            <ul className="mt-2 space-y-1 text-sm text-slate-700">
+              <li>Description / Overview — 25%</li>
+              <li>Installation / Setup — 25%</li>
+              <li>Usage / Examples — 25%</li>
+              <li>Contributing — 15%</li>
+              <li>License — 10%</li>
+            </ul>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Missing files and README sections generate actionable recommendations. All checks are performed via GraphQL at zero additional API cost.
         </p>
       </section>
 
