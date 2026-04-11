@@ -80,7 +80,7 @@ describe('documentation/score-config', () => {
       expect(items).toContain('code_of_conduct')
       expect(items).toContain('security')
       expect(items).toContain('changelog')
-      expect(fileRecs.find((r) => r.item === 'contributing')!.text).toContain('CONTRIBUTING')
+      expect(fileRecs.find((r) => r.item === 'contributing')!.text).toContain('contributing guidelines')
     })
 
     it('generates recommendations for each missing README section', () => {
