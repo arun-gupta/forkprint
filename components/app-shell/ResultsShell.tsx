@@ -13,6 +13,8 @@ interface ResultsShellProps {
   contributors: React.ReactNode
   activity: React.ReactNode
   responsiveness: React.ReactNode
+  documentation: React.ReactNode
+  recommendations: React.ReactNode
   healthRatios: React.ReactNode
   comparison: React.ReactNode
   tabs?: ResultTabDefinition[]
@@ -28,6 +30,8 @@ export function ResultsShell({
   contributors,
   activity,
   responsiveness,
+  documentation,
+  recommendations,
   healthRatios,
   comparison,
   tabs = resultTabs,
@@ -116,6 +120,8 @@ export function ResultsShell({
               {currentActiveTab === 'contributors' ? contributors : null}
               {currentActiveTab === 'activity' ? activity : null}
               {currentActiveTab === 'responsiveness' ? responsiveness : null}
+              {currentActiveTab === 'documentation' ? documentation : null}
+              {currentActiveTab === 'recommendations' ? recommendations : null}
               {currentActiveTab === 'health-ratios' ? healthRatios : null}
               {currentActiveTab === 'comparison' ? comparison : null}
             </div>

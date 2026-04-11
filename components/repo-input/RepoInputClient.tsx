@@ -6,7 +6,9 @@ import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { ComparisonView } from '@/components/comparison/ComparisonView'
+import { DocumentationView } from '@/components/documentation/DocumentationView'
 import { HealthRatiosView } from '@/components/health-ratios/HealthRatiosView'
+import { RecommendationsView } from '@/components/recommendations/RecommendationsView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { ResponsivenessView } from '@/components/responsiveness/ResponsivenessView'
@@ -171,6 +173,18 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
     },
     {
+      id: 'documentation',
+      label: 'Documentation',
+      status: 'implemented',
+      description: 'Documentation file presence, README quality, and improvement recommendations.',
+    },
+    {
+      id: 'recommendations',
+      label: 'Recommendations',
+      status: 'implemented',
+      description: 'Actionable recommendations across all scoring dimensions.',
+    },
+    {
       id: 'health-ratios',
       label: 'Health Ratios',
       status: 'implemented',
@@ -301,6 +315,24 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       responsiveness={
         analysisResponse ? (
           <ResponsivenessView results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          </p>
+        )
+      }
+      documentation={
+        analysisResponse ? (
+          <DocumentationView results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          </p>
+        )
+      }
+      recommendations={
+        analysisResponse ? (
+          <RecommendationsView results={analysisResponse.results} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.

@@ -12,6 +12,8 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors coming soon</div>}
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
+        documentation={<div>Documentation coming soon</div>}
+        recommendations={<div>Recommendations coming soon</div>}
         healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -34,6 +36,8 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors coming soon</div>}
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
+        documentation={<div>Documentation coming soon</div>}
+        recommendations={<div>Recommendations coming soon</div>}
         healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -51,6 +55,8 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors coming soon</div>}
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
+        documentation={<div>Documentation coming soon</div>}
+        recommendations={<div>Recommendations coming soon</div>}
         healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -72,6 +78,8 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors coming soon</div>}
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
+        documentation={<div>Documentation coming soon</div>}
+        recommendations={<div>Recommendations coming soon</div>}
         healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
