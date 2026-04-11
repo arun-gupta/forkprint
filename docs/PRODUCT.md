@@ -570,7 +570,8 @@ Phase 2 adds new scoring buckets to the OSS Health Score. Each bucket produces a
 
 | Feature ID | Feature | Issues |
 |---|---|---|
-| P2-F01 | Documentation scoring | #66, #67 |
+| P2-F01a | Documentation scoring (basic) | #66 |
+| P2-F01b | Documentation scoring (advanced) | #110, #67 |
 | P2-F02 | Security scoring | #68, #71 |
 | P2-F03 | Community scoring | #70 |
 | P2-F04 | Release health scoring | #69 |

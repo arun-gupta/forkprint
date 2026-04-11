@@ -101,12 +101,13 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 
 | # | Feature ID | Feature | Issues | Status |
 |---|---|---|---|---|
-| 1 | P2-F01 | Documentation scoring | #66, #67 | ✅ Done |
-| 2 | P2-F02 | Security scoring | #68, #71 | |
-| 3 | P2-F03 | Community scoring | #70 | |
-| 4 | P2-F04 | Release health scoring | #69 | |
-| 5 | P2-F05 | Development cadence | #73 | |
-| 6 | P2-F06 | Project maturity | #74 | |
+| 1 | P2-F01a | Documentation scoring (basic) | #66 | ✅ Done |
+| 2 | P2-F01b | Documentation scoring (advanced) | #110, #67 | |
+| 3 | P2-F02 | Security scoring | #68, #71 | |
+| 4 | P2-F03 | Community scoring | #70 | |
+| 5 | P2-F04 | Release health scoring | #69 | |
+| 6 | P2-F05 | Development cadence | #73 | |
+| 7 | P2-F06 | Project maturity | #74 | |
 
 ## Phase 3 feature order
 
