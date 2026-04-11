@@ -260,7 +260,7 @@ RepoPulse presents analysis in a stable app shell so users can submit repos once
 - A top header/banner shows the RepoPulse brand and a visible GitHub repo link
 - Repo input and Analyze action live in a stable analysis panel that remains visible above the result views
 - Successful analyses populate a tabbed result area rather than stacking every future view vertically
-- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, `Health Ratios`, and `Comparison` available as tabs
+- The shell organizes result views in a stable order with `Overview` first and domain views such as `Contributors`, `Activity`, `Responsiveness`, and `Comparison` available as tabs
 - The `Overview` tab is the first populated results tab and can absorb cross-feature summary content until later tabs deliver distinct value
 - Switching tabs does not re-submit the analysis request or trigger extra API calls
 - The shell works for single-repo and multi-repo analyses on desktop and mobile layouts
@@ -283,7 +283,7 @@ Users can compare two or more repos side by side across all health metrics.
 - Choosing `Compare` opens the results workspace directly on `Comparison` after analysis completes
 - Comparison table shows selected metrics in rows, repos in columns, with comparison-focused delta messaging highlighted more prominently than raw values
 - Comparison view uses a user-selectable anchor repo as the baseline for delta interpretation; the first mentioned successful repo is the default anchor
-- Comparison table is organized into clearly labeled sections such as Overview, Contributors, Activity, Responsiveness, and Health Ratios
+- Comparison table is organized into clearly labeled sections such as Overview, Contributors, Activity, and Responsiveness
 - Users can enable or disable entire comparison sections, with all sections enabled by default
 - Users can choose which comparison attributes are shown; all supported attributes are selected by default
 - Comparison view includes a user-selectable median column across the chosen repos; it is visible by default
@@ -291,7 +291,7 @@ Users can compare two or more repos side by side across all health metrics.
 - The UI clearly communicates the maximum of 4 compared repositories before and during analysis input
 - Metrics unavailable for one repo are shown as `—` in that column, never omitted from the row
 - Comparison is driven entirely from the already-fetched `AnalysisResult[]` — no additional API calls
-- All metric categories represented: ecosystem signals, activity, contribution dynamics, responsiveness, health ratios
+- All metric categories represented: ecosystem signals, activity, contribution dynamics, responsiveness
 - Comparison view is exportable as JSON and Markdown alongside individual repo exports
 
 **Design constraints** *(inform all upstream features)*
@@ -487,24 +487,9 @@ The analyzer measures how quickly maintainers engage with community activity.
 
 ---
 
-#### `[P1-F11]` Health Ratios
+#### `[P1-F11]` Health Ratios *(deprecated — tab removed)*
 
-Computed diagnostic ratios provide a quick cross-repo comparison surface, drawn from all four CHAOSS categories.
-
-**Acceptance criteria**
-- Ecosystem ratios: forks/stars, watches/stars
-- Activity ratios: merged PRs/opened PRs, stale issues/total open issues
-- Contributors ratios: repeat contributors/total contributors, new contributors/total contributors
-- Ratios continue to appear first in their domain-specific home views where they are easiest to interpret:
-  - ecosystem ratios remain in ecosystem and overview surfaces
-  - activity-flow ratios remain in the `Activity` tab
-  - contributor-composition ratios remain in the `Contributors` tab
-- The `Health Ratios` tab aggregates those verified ratios into a dedicated cross-repo comparison table rather than becoming the first or only place the user sees them
-- The `Health Ratios` tab groups those rollups into `Overview`, `Contributors`, and `Activity` sections so the comparison view mirrors the main workspace navigation
-- Unavailable ratios displayed as `—`, never estimated
-- Ratios grouped by CHAOSS category in the UI
-- Table is sortable by ratio value across repos
-- Ratios computed only from verified API values
+The dedicated Health Ratios tab has been removed. Its ratios are fully covered by domain-specific tabs (Overview, Contributors, Activity) and the Comparison view. The underlying ratio computation logic in `lib/health-ratios/` is retained for use by exports, contributors, and comparison features.
 
 **Out of scope**
 - Custom ratio definitions by the user

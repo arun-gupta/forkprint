@@ -26,12 +26,6 @@ export const resultTabs: ResultTabDefinition[] = [
     description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
   },
   {
-    id: 'health-ratios',
-    label: 'Health Ratios',
-    status: 'implemented',
-    description: 'Cross-repo comparison of verified ecosystem, activity, and contributor ratios.',
-  },
-  {
     id: 'comparison',
     label: 'Comparison',
     status: 'implemented',

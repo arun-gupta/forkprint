@@ -7,7 +7,6 @@ import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { ComparisonView } from '@/components/comparison/ComparisonView'
 import { DocumentationView } from '@/components/documentation/DocumentationView'
-import { HealthRatiosView } from '@/components/health-ratios/HealthRatiosView'
 import { RecommendationsView } from '@/components/recommendations/RecommendationsView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
@@ -185,12 +184,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       description: 'Actionable recommendations across all scoring dimensions.',
     },
     {
-      id: 'health-ratios',
-      label: 'Health Ratios',
-      status: 'implemented',
-      description: 'Cross-repo comparison of verified ecosystem, activity, and contributor ratios.',
-    },
-    {
       id: 'comparison' as const,
       label: 'Comparison',
       status: 'implemented' as const,
@@ -333,15 +326,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       recommendations={
         analysisResponse ? (
           <RecommendationsView results={analysisResponse.results} />
-        ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
-          </p>
-        )
-      }
-      healthRatios={
-        analysisResponse ? (
-          <HealthRatiosView results={analysisResponse.results} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.

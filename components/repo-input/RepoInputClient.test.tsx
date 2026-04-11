@@ -321,38 +321,6 @@ describe('RepoInputClient', () => {
     expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
 
-  it('renders the Health Ratios tab after a successful analysis without rerunning analysis', async () => {
-    const onAnalyze = vi.fn().mockResolvedValue({
-      results: [
-        buildAnalysisResult('facebook/react', {
-          uniqueCommitAuthors90d: 5,
-          totalContributors: 12,
-          maintainerCount: 'unavailable',
-          commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 },
-          contributorMetricsByWindow: {
-            30: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            60: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            90: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            180: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-            365: { uniqueCommitAuthors: 5, commitCountsByAuthor: { 'login:alice': 4, 'login:bob': 3 }, repeatContributors: 3, newContributors: 2, commitCountsByExperimentalOrg: 'unavailable', experimentalAttributedAuthors: 'unavailable', experimentalUnattributedAuthors: 'unavailable' },
-          },
-        }),
-      ],
-      failures: [],
-      rateLimit: null,
-    })
-
-    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
-
-    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
-    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Health Ratios' }))
-
-    expect(screen.getByRole('region', { name: /health ratios view/i })).toBeInTheDocument()
-    expect(onAnalyze).toHaveBeenCalledTimes(1)
-  })
-
   it('clears previous results and returns to the overview tab when a new analysis starts', async () => {
     let resolveSecondAnalysis: ((value: { results: never[]; failures: never[]; rateLimit: null }) => void) | null = null
 

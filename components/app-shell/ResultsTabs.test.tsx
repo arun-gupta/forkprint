@@ -8,7 +8,6 @@ const tabs: ResultTabDefinition[] = [
   { id: 'overview', label: 'Overview', status: 'implemented', description: 'Overview content' },
   { id: 'contributors', label: 'Contributors', status: 'placeholder', description: 'Contributors content' },
   { id: 'activity', label: 'Activity', status: 'placeholder', description: 'Activity content' },
-  { id: 'health-ratios', label: 'Health Ratios', status: 'implemented', description: 'Health Ratios content' },
 ]
 
 describe('ResultsTabs', () => {
@@ -28,7 +27,7 @@ describe('ResultsTabs', () => {
     render(<ResultsTabs tabs={tabs} activeTab="overview" onChange={vi.fn()} />)
 
     expect(screen.getByRole('tab', { name: 'Activity' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Health Ratios' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Health Ratios' })).not.toBeInTheDocument()
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
   })
 })

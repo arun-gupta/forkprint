@@ -14,7 +14,6 @@ describe('ResultsShell', () => {
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
-        healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
     )
@@ -38,7 +37,6 @@ describe('ResultsShell', () => {
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
-        healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
     )
@@ -57,14 +55,13 @@ describe('ResultsShell', () => {
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
-        healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
     )
 
     expect(
       screen.getByText(
-        /chaoss-aligned github health analyzer for repository analysis and organization inventory browsing/i,
+        /oss health score/i,
       ),
     ).toBeInTheDocument()
   })
@@ -80,7 +77,6 @@ describe('ResultsShell', () => {
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
-        healthRatios={<div>Health ratios coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
     )
@@ -98,7 +94,6 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
-        healthRatios={<div>Health ratios content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )
@@ -114,7 +109,6 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
-        healthRatios={<div>Health ratios content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )
@@ -133,7 +127,6 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
-        healthRatios={<div>Health ratios content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )

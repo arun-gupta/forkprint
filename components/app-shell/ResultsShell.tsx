@@ -15,7 +15,6 @@ interface ResultsShellProps {
   responsiveness: React.ReactNode
   documentation: React.ReactNode
   recommendations: React.ReactNode
-  healthRatios: React.ReactNode
   comparison: React.ReactNode
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
@@ -32,7 +31,6 @@ export function ResultsShell({
   responsiveness,
   documentation,
   recommendations,
-  healthRatios,
   comparison,
   tabs = resultTabs,
   initialActiveTab = 'overview',
@@ -122,7 +120,6 @@ export function ResultsShell({
               {currentActiveTab === 'responsiveness' ? responsiveness : null}
               {currentActiveTab === 'documentation' ? documentation : null}
               {currentActiveTab === 'recommendations' ? recommendations : null}
-              {currentActiveTab === 'health-ratios' ? healthRatios : null}
               {currentActiveTab === 'comparison' ? comparison : null}
             </div>
           </section>
