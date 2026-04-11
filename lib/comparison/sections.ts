@@ -2,10 +2,11 @@ import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result
 import { getMergeRateGuidance } from '@/lib/activity/merge-rate-guidance'
 import { computeContributionConcentration, getSustainabilityScore, formatPercentage as formatContributorPercentage } from '@/lib/contributors/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
+import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 
-export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'health-ratios'
+export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'health-ratios'
 export type ComparisonAttributeId =
   | 'stars'
   | 'forks'
@@ -28,6 +29,9 @@ export type ComparisonAttributeId =
   | 'issue-resolution-rate'
   | 'stale-pr-ratio'
   | 'responsiveness-score'
+  | 'documentation-score'
+  | 'documentation-files-found'
+  | 'documentation-readme-sections'
   | 'fork-rate-health'
   | 'repeat-contributor-ratio-health'
 
@@ -348,6 +352,63 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         formatValue: (value) => {
           if (value === 'unavailable') return '—'
           return formatPercentileLabel(value as number)
+        },
+      },
+    ],
+  },
+  {
+    id: 'documentation',
+    label: 'Documentation',
+    description: 'Compare documentation completeness across repositories.',
+    attributes: [
+      {
+        id: 'documentation-score',
+        sectionId: 'documentation',
+        label: 'Documentation score',
+        helpText: 'Weighted composite of file presence (60%) and README quality (40%), as a percentile within the star bracket.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          if (result.documentationResult === 'unavailable') return 'unavailable'
+          const score = getDocumentationScore(result.documentationResult, result.stars)
+          if (typeof score.value !== 'number') return 'unavailable'
+          return score.value
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return formatPercentileLabel(value as number)
+        },
+      },
+      {
+        id: 'documentation-files-found',
+        sectionId: 'documentation',
+        label: 'Files found',
+        helpText: 'Number of key documentation files present (out of 6: README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG).',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          if (result.documentationResult === 'unavailable') return 'unavailable'
+          return result.documentationResult.fileChecks.filter((f) => f.found).length
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return `${value} / 6`
+        },
+      },
+      {
+        id: 'documentation-readme-sections',
+        sectionId: 'documentation',
+        label: 'README sections',
+        helpText: 'Number of recommended README sections detected (out of 5: description, installation, usage, contributing, license).',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          if (result.documentationResult === 'unavailable') return 'unavailable'
+          return result.documentationResult.readmeSections.filter((s) => s.detected).length
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return `${value} / 5`
         },
       },
     ],

@@ -3,6 +3,7 @@ import { getActivityScore } from '@/lib/activity/score-config'
 import { buildComparisonSections } from '@/lib/comparison/view-model'
 import { limitComparedResults } from '@/lib/comparison/view-model'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
+import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildSpectrumProfile } from '@/lib/ecosystem-map/classification'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
@@ -148,6 +149,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     `| Sustainability | ${sustainability.value} |`,
     `| Activity | ${activity.value} |`,
     `| Responsiveness | ${responsiveness.value} |`,
+    `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.stars).value : 'unavailable'} |`,
     '',
   )
 

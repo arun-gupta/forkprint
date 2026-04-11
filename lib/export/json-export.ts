@@ -4,6 +4,7 @@ import { buildComparisonSections } from '@/lib/comparison/view-model'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
+import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 
 export interface JsonExportResult {
@@ -15,16 +16,28 @@ interface RepoScores {
   activity: { value: number | string; tone: string; description: string }
   sustainability: { value: number | string; tone: string; description: string }
   responsiveness: { value: number | string; tone: string; description: string }
+  documentation: { value: number | string; tone: string; filesFound: number; readmeSections: number } | null
 }
 
 function computeScores(result: AnalysisResult): RepoScores {
   const activity = getActivityScore(result)
   const sustainability = getSustainabilityScore(result)
   const responsiveness = getResponsivenessScore(result)
+  let documentation: RepoScores['documentation'] = null
+  if (result.documentationResult !== 'unavailable') {
+    const docScore = getDocumentationScore(result.documentationResult, result.stars)
+    documentation = {
+      value: docScore.value,
+      tone: docScore.tone,
+      filesFound: result.documentationResult.fileChecks.filter((f) => f.found).length,
+      readmeSections: result.documentationResult.readmeSections.filter((s) => s.detected).length,
+    }
+  }
   return {
     activity: { value: activity.value, tone: activity.tone, description: activity.description },
     sustainability: { value: sustainability.value, tone: sustainability.tone, description: sustainability.description },
     responsiveness: { value: responsiveness.value, tone: responsiveness.tone, description: responsiveness.description },
+    documentation,
   }
 }
 
