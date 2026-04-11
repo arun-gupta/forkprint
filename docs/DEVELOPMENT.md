@@ -101,7 +101,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 
 | # | Feature ID | Feature | Issues | Status |
 |---|---|---|---|---|
-| 1 | P2-F01 | Documentation scoring | #66, #67 | |
+| 1 | P2-F01 | Documentation scoring | #66, #67 | ✅ Done |
 | 2 | P2-F02 | Security scoring | #68, #71 | |
 | 3 | P2-F03 | Community scoring | #70 | |
 | 4 | P2-F04 | Release health scoring | #69 | |
