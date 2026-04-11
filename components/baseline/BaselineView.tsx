@@ -61,6 +61,12 @@ interface MetricRow {
 
 const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof BracketCalibration; label: string }> }> = [
   {
+    title: 'Documentation',
+    metrics: [
+      { key: 'documentationScore', label: 'Documentation completeness score' },
+    ],
+  },
+  {
     title: 'Overview',
     metrics: [
       { key: 'stars', label: 'Reach (stars)' },
@@ -233,7 +239,15 @@ export function BaselineView() {
               </thead>
               <tbody>
                 {section.metrics.map((metric) => {
-                  const ps = cal[metric.key] as PercentileSet
+                  const ps = cal[metric.key] as PercentileSet | undefined
+                  if (!ps) {
+                    return (
+                      <tr key={metric.key} className="border-b border-slate-100">
+                        <td className="py-2 pr-4 text-slate-700">{metric.label}</td>
+                        <td className="py-2 px-3 text-right font-mono text-slate-400" colSpan={4}>Calibration data pending</td>
+                      </tr>
+                    )
+                  }
                   const row = buildMetricRow(metric.key, metric.label, ps)
                   return (
                     <tr key={metric.key} className="border-b border-slate-100">
