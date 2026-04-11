@@ -16,6 +16,7 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
           key={tab.id}
           role="tab"
           type="button"
+          data-tab-id={tab.id}
           aria-selected={tab.id === activeTab}
           className={
             tab.id === activeTab

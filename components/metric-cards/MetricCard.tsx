@@ -37,7 +37,7 @@ export function MetricCard({ card }: MetricCardProps) {
         <p className="text-xs text-slate-400">Created: {card.createdAtLabel}</p>
       </div>
 
-      <div className={`mt-3 flex items-center justify-between rounded-lg border px-3 py-2 ${scoreToneClass(hs.tone)}`} title={`Composite health score from Activity (36%), Responsiveness (36%), and Sustainability (28%) — scored relative to ${hs.bracketLabel} repositories.`}>
+      <div className={`mt-3 flex items-center justify-between rounded-lg border px-3 py-2 ${scoreToneClass(hs.tone)}`} title={`Composite health score from Activity (30%), Responsiveness (30%), Sustainability (25%), and Documentation (15%) — scored relative to ${hs.bracketLabel} repositories.`}>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide">OSS Health Score</p>
           {hs.bracketLabel ? <p className="text-[10px] opacity-60">{hs.bracketLabel}</p> : null}
@@ -55,7 +55,17 @@ export function MetricCard({ card }: MetricCardProps) {
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center">
           <p className="text-xs text-slate-600">
             <span className="font-medium text-slate-800">{hs.recommendations.length} recommendation{hs.recommendations.length !== 1 ? 's' : ''}</span>
-            {' — '}see Recommendations tab for details
+            {' — '}
+            <button
+              type="button"
+              className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-800"
+              onClick={() => {
+                const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-tab-id="recommendations"]')
+                tab?.click()
+              }}
+            >
+              see Recommendations tab
+            </button>
           </p>
         </div>
       ) : null}
