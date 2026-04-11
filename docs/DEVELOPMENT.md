@@ -109,6 +109,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 6 | P2-F05 | Development cadence | #73 | |
 | 7 | P2-F06 | Project maturity | #74 | |
 | 8 | P2-F07 | Inclusive naming | #107 | |
+| 9 | P2-F08 | Licensing & Compliance | #115 | |
 
 ## Phase 3 feature order
 
