@@ -24,6 +24,7 @@ Each dimension is scored as a percentile relative to repos in the same star brac
 | **Security** | Dependency updates, branch protection, CI/CD, vulnerability disclosure |
 | **Community** | Discussions, issue/PR templates, CODEOWNERS, governance |
 | **Release Health** | Frequency, semver compliance, release notes |
+| **Inclusive Naming** | Default branch naming, inclusive terminology in repo metadata |
 
 ## Features
 
@@ -60,7 +61,7 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deploym
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 1 | Web app + core scoring (Activity, Responsiveness, Sustainability, Documentation) | ✅ Done |
-| 2 | Expand scoring dimensions (Security, Community, Release Health) | Next |
+| 2 | Expand scoring dimensions (Security, Community, Release Health, Inclusive Naming) | Next |
 | 3 | Integrations (GitHub Action, MCP Server, CLI, PR bot, VS Code, Badge, Webhook) | Planned |
 | 4 | Git provider support (GitLab, Bitbucket, Gitea) | Planned |
 
