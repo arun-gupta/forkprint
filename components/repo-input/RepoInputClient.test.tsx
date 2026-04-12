@@ -242,7 +242,7 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     const loadingState = screen.getByRole('region', { name: /analysis loading state/i })
-    expect(within(loadingState).getByText(/loading analysis for:/i)).toBeInTheDocument()
+    expect(within(loadingState).getByText(/analyzing repositories/i)).toBeInTheDocument()
     expect(within(loadingState).getByText('facebook/react')).toBeInTheDocument()
 
     resolveAnalysis?.({
