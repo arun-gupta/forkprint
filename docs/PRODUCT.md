@@ -575,13 +575,14 @@ These features deliver the OSS Health Score through additional channels, wrappin
 
 | Feature ID | Feature | Issues |
 |---|---|---|
-| P3-F01 | GitHub Action | — |
-| P3-F02 | MCP Server | — |
-| P3-F03 | Embeddable badge | #72 |
-| P3-F04 | CLI tool | #82 |
-| P3-F05 | PR comment bot | #83 |
-| P3-F06 | VS Code extension | #84 |
-| P3-F07 | Webhook receiver | #85 |
+| P3-F01 | Public REST API | #120 |
+| P3-F02 | GitHub Action | — |
+| P3-F03 | MCP Server | — |
+| P3-F04 | Embeddable badge | #72 |
+| P3-F05 | CLI tool | #82 |
+| P3-F06 | PR comment bot | #83 |
+| P3-F07 | VS Code extension | #84 |
+| P3-F08 | Webhook receiver | #85 |
 
 ### Phase 4 — Git provider support
 

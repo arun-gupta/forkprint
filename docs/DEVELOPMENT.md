@@ -121,13 +121,14 @@ Phase 3 delivers the OSS Health Score through additional channels, wrapping the 
 
 | # | Feature ID | Feature | Issues | Status |
 |---|---|---|---|---|
-| 1 | P3-F01 | GitHub Action | — | |
-| 2 | P3-F02 | MCP Server | — | |
-| 3 | P3-F03 | Embeddable badge | #72 | |
-| 4 | P3-F04 | CLI tool | #82 | |
-| 5 | P3-F05 | PR comment bot | #83 | |
-| 6 | P3-F06 | VS Code extension | #84 | |
-| 7 | P3-F07 | Webhook receiver | #85 | |
+| 1 | P3-F01 | Public REST API | #120 | |
+| 2 | P3-F02 | GitHub Action | — | |
+| 3 | P3-F03 | MCP Server | — | |
+| 4 | P3-F04 | Embeddable badge | #72 | |
+| 5 | P3-F05 | CLI tool | #82 | |
+| 6 | P3-F06 | PR comment bot | #83 | |
+| 7 | P3-F07 | VS Code extension | #84 | |
+| 8 | P3-F08 | Webhook receiver | #85 | |
 
 ## Phase 4
 
