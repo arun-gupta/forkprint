@@ -107,12 +107,13 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 4 | P2-F01b | Documentation scoring (advanced) | #110, #67 | |
 | 5 | P2-F04 | Governance & Transparency | #116 | |
 | 6 | P2-F05 | Community scoring | #70 | |
-| 7 | P2-F06 | Security scoring | #68, #71 | |
-| 8 | P2-F07 | Accessibility & Onboarding | #117 | |
-| 9 | P2-F08 | Release health scoring | #69 | |
-| 10 | P2-F09 | Development cadence | #73 | |
-| 11 | P2-F10 | Project maturity | #74 | |
-| 12 | P2-F11 | Ecosystem Reach | #118 | |
+| 7 | P2-F06 | Foundation-aware recommendations | #119 | |
+| 8 | P2-F07 | Security scoring | #68, #71 | |
+| 9 | P2-F08 | Accessibility & Onboarding | #117 | |
+| 10 | P2-F09 | Release health scoring | #69 | |
+| 11 | P2-F10 | Development cadence | #73 | |
+| 12 | P2-F11 | Project maturity | #74 | |
+| 13 | P2-F12 | Ecosystem Reach | #118 | |
 
 ## Phase 3 feature order
 
