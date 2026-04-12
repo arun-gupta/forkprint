@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
@@ -36,6 +36,31 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingOrg, setLoadingOrg] = useState<string | null>(null)
   const [resultsResetKey, setResultsResetKey] = useState(0)
   const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const isLoading = loadingRepos.length > 0 || !!loadingOrg
+
+  useEffect(() => {
+    if (isLoading) {
+      setElapsedSeconds(0)
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds((s) => s + 1)
+      }, 1000)
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+      setElapsedSeconds(0)
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [isLoading])
 
   function handleModeChange(mode: 'repos' | 'org') {
     setInputMode(mode)
@@ -205,18 +230,39 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       ) : null}
       {loadingRepos.length > 0 ? (
         <section aria-label="Analysis loading state" className="rounded border border-blue-200 bg-blue-50 p-4">
-          <h2 className="font-semibold text-blue-900">Loading analysis for:</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-blue-900">Analyzing repositories...</h2>
+            <span className="text-xs tabular-nums text-blue-700">{formatElapsedTime(elapsedSeconds)}</span>
+          </div>
           <ul className="mt-2 list-disc pl-5 text-sm text-blue-900">
             {loadingRepos.map((repo) => (
               <li key={repo}>{repo}</li>
             ))}
           </ul>
+          {elapsedSeconds >= 10 ? (
+            <p className="mt-3 text-xs text-blue-700">
+              Large repositories with extensive commit history may take longer to analyze.
+            </p>
+          ) : null}
+          {elapsedSeconds >= 30 ? (
+            <p className="mt-1 text-xs text-blue-700">
+              Still working — fetching commit history and computing contributor metrics.
+            </p>
+          ) : null}
         </section>
       ) : null}
       {loadingOrg ? (
         <section aria-label="Org inventory loading state" className="rounded border border-blue-200 bg-blue-50 p-4">
-          <h2 className="font-semibold text-blue-900">Loading org inventory for:</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-blue-900">Loading org inventory for:</h2>
+            <span className="text-xs tabular-nums text-blue-700">{formatElapsedTime(elapsedSeconds)}</span>
+          </div>
           <p className="mt-2 text-sm text-blue-900">{loadingOrg}</p>
+          {elapsedSeconds >= 10 ? (
+            <p className="mt-3 text-xs text-blue-700">
+              Large organizations with many repositories may take longer to load.
+            </p>
+          ) : null}
         </section>
       ) : null}
       {inputMode === 'repos' && analysisResponse ? (
@@ -375,6 +421,15 @@ function formatRateLimitReset(value: string) {
 function formatRetryAfter(value: number | string) {
   if (typeof value !== 'number') return value
   return `${new Intl.NumberFormat('en-US').format(value)}s`
+}
+
+function formatElapsedTime(seconds: number) {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (minutes > 0) {
+    return `${minutes}m ${String(remainingSeconds).padStart(2, '0')}s`
+  }
+  return `${seconds}s`
 }
 
 async function submitAnalysisRequest(repos: string[], token: string): Promise<AnalyzeResponse> {
