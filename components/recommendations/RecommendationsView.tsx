@@ -5,6 +5,7 @@ import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
 import type { SecurityRecommendation } from '@/lib/security/analysis-result'
 import { CATEGORY_DEFINITIONS } from '@/lib/security/recommendation-catalog'
+import { assignReferenceIds, resolveReferenceId } from '@/lib/recommendations/reference-id'
 
 interface RecommendationsViewProps {
   results: AnalysisResult[]
@@ -30,11 +31,16 @@ const SOURCE_LABELS: Record<string, string> = {
   direct_check: 'Direct check',
 }
 
-function SecurityRecommendationCard({ rec }: { rec: SecurityRecommendation }) {
+function SecurityRecommendationCard({ rec, referenceId }: { rec: SecurityRecommendation; referenceId?: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-semibold text-slate-900">{rec.title ?? rec.text}</h4>
+        <h4 className="text-sm font-semibold text-slate-900">
+          {referenceId ? (
+            <span className="mr-1.5 inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{referenceId}</span>
+          ) : null}
+          {rec.title ?? rec.text}
+        </h4>
         <div className="flex shrink-0 gap-1.5">
           {rec.riskLevel ? (
             <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${RISK_COLORS[rec.riskLevel] ?? ''}`}>
@@ -72,19 +78,25 @@ function SecurityRecommendationCard({ rec }: { rec: SecurityRecommendation }) {
 }
 
 function SecurityRecommendationsGroup({ recommendations }: { recommendations: SecurityRecommendation[] }) {
+  // Resolve catalog IDs — each rec's `item` field is the catalog key
+  const withIds = recommendations.map((rec, i) => ({
+    rec,
+    referenceId: resolveReferenceId(rec.item, 'Security', i + 1),
+  }))
+
   // Group by category
-  const groups = new Map<string, SecurityRecommendation[]>()
-  for (const rec of recommendations) {
-    const key = rec.groupCategory ?? 'best_practices'
+  const groups = new Map<string, typeof withIds>()
+  for (const entry of withIds) {
+    const key = entry.rec.groupCategory ?? 'best_practices'
     const group = groups.get(key) ?? []
-    group.push(rec)
+    group.push(entry)
     groups.set(key, group)
   }
 
   // Sort groups by CATEGORY_DEFINITIONS order
   const sortedGroups = CATEGORY_DEFINITIONS
     .filter((cat) => groups.has(cat.key))
-    .map((cat) => ({ category: cat, recs: groups.get(cat.key)! }))
+    .map((cat) => ({ category: cat, entries: groups.get(cat.key)! }))
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -95,12 +107,12 @@ function SecurityRecommendationsGroup({ recommendations }: { recommendations: Se
         <span className="text-xs text-slate-400">{recommendations.length} recommendation{recommendations.length !== 1 ? 's' : ''}</span>
       </div>
       <div className="mt-3 space-y-4">
-        {sortedGroups.map(({ category, recs }) => (
+        {sortedGroups.map(({ category, entries }) => (
           <div key={category.key}>
             <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{category.label}</h4>
             <div className="space-y-2">
-              {recs.map((rec, i) => (
-                <SecurityRecommendationCard key={`${rec.item}-${i}`} rec={rec} />
+              {entries.map(({ rec, referenceId }) => (
+                <SecurityRecommendationCard key={`${rec.item}-${referenceId}`} rec={rec} referenceId={referenceId} />
               ))}
             </div>
           </div>
@@ -134,9 +146,12 @@ export function RecommendationsView({ results }: RecommendationsViewProps) {
           )
         }
 
+        // Assign reference IDs to non-security recs
+        const nonSecurityWithIds = assignReferenceIds(nonSecurityRecs)
+
         // Group non-security recs by bucket
-        const bucketGroups = new Map<string, typeof nonSecurityRecs>()
-        for (const rec of nonSecurityRecs) {
+        const bucketGroups = new Map<string, typeof nonSecurityWithIds>()
+        for (const rec of nonSecurityWithIds) {
           const group = bucketGroups.get(rec.bucket) ?? []
           group.push(rec)
           bucketGroups.set(rec.bucket, group)
@@ -167,7 +182,7 @@ export function RecommendationsView({ results }: RecommendationsViewProps) {
                   <ul className="mt-3 space-y-2">
                     {recs.map((rec, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1 text-xs text-slate-400">&bull;</span>
+                        <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{rec.referenceId}</span>
                         <p className="text-sm text-slate-700">{rec.message}</p>
                       </li>
                     ))}

@@ -5,7 +5,10 @@ import { getSustainabilityScore } from '@/lib/contributors/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
+import { assignReferenceIds, resolveReferenceId } from '@/lib/recommendations/reference-id'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
+import { getHealthScore } from '@/lib/scoring/health-score'
+import { getSecurityScore } from '@/lib/security/score-config'
 
 export interface JsonExportResult {
   blob: Blob
@@ -74,6 +77,32 @@ function computeContributors(result: AnalysisResult) {
   }
 }
 
+function computeRecommendations(result: AnalysisResult) {
+  const healthScore = getHealthScore(result)
+  const nonSecurityRecs = healthScore.recommendations.filter((r) => r.tab !== 'security')
+  const securityRecs = result.securityResult !== 'unavailable'
+    ? getSecurityScore(result.securityResult, result.stars).recommendations
+    : []
+
+  const nonSecurityWithIds = assignReferenceIds(nonSecurityRecs).map((r) => ({
+    referenceId: r.referenceId,
+    bucket: r.bucket,
+    message: r.message,
+  }))
+
+  const securityWithIds = securityRecs.map((rec, i) => ({
+    referenceId: resolveReferenceId(rec.item, 'Security', i + 1),
+    bucket: 'Security',
+    title: rec.title ?? rec.text,
+    riskLevel: rec.riskLevel,
+    category: rec.category,
+    evidence: rec.evidence,
+    remediationHint: rec.remediationHint,
+  }))
+
+  return [...nonSecurityWithIds, ...securityWithIds]
+}
+
 function computeComparison(results: AnalysisResult[]) {
   if (results.length < 2) return undefined
   return buildComparisonSections(results).map((section) => ({
@@ -103,6 +132,7 @@ export function buildJsonExport(response: AnalyzeResponse): JsonExportResult {
       scores: computeScores(result),
       contributors: computeContributors(result),
       healthRatios: computeHealthRatios(result),
+      recommendations: computeRecommendations(result),
     })),
     comparison: computeComparison(response.results),
   }

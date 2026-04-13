@@ -7,7 +7,10 @@ import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildSpectrumProfile } from '@/lib/ecosystem-map/classification'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
+import { assignReferenceIds, resolveReferenceId } from '@/lib/recommendations/reference-id'
 import { formatHours, formatPercentage, getResponsivenessScore } from '@/lib/responsiveness/score-config'
+import { getHealthScore } from '@/lib/scoring/health-score'
+import { getSecurityScore } from '@/lib/security/score-config'
 import { encodeRepos } from '@/lib/export/shareable-url'
 
 export interface MarkdownExportResult {
@@ -331,6 +334,35 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       })),
       '',
     )
+  }
+
+  // Recommendations section
+  const healthScore = getHealthScore(result)
+  const nonSecurityRecs = healthScore.recommendations.filter((r) => r.tab !== 'security')
+  const securityRecs = result.securityResult !== 'unavailable'
+    ? getSecurityScore(result.securityResult, result.stars).recommendations
+    : []
+
+  if (nonSecurityRecs.length > 0 || securityRecs.length > 0) {
+    lines.push('### Recommendations', '')
+
+    if (nonSecurityRecs.length > 0) {
+      const withIds = assignReferenceIds(nonSecurityRecs)
+      for (const rec of withIds) {
+        lines.push(`- **${rec.referenceId}** — ${rec.message}`)
+      }
+      lines.push('')
+    }
+
+    if (securityRecs.length > 0) {
+      for (const [i, rec] of securityRecs.entries()) {
+        const refId = resolveReferenceId(rec.item, 'Security', i + 1)
+        const title = rec.title ?? rec.text
+        const risk = rec.riskLevel ? ` [${rec.riskLevel}]` : ''
+        lines.push(`- **${refId}**${risk} — ${title}`)
+      }
+      lines.push('')
+    }
   }
 
   if (result.missingFields.length > 0) {

@@ -9,6 +9,8 @@ import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-p
 
 export interface HealthScoreRecommendation {
   bucket: string
+  /** Stable catalog key for reference ID lookup (e.g. "pr_flow", "file:readme") */
+  key: string
   percentile: number
   message: string
   tab: 'activity' | 'responsiveness' | 'contributors' | 'documentation' | 'security'
@@ -80,6 +82,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   if (sustainabilityPercentile !== null) {
     recommendations.push({
       bucket: 'Sustainability',
+      key: 'contributor_diversity',
       percentile: sustainabilityPercentile,
       message: 'Onboard more contributors to reduce single-maintainer risk. The top 20% of contributors account for a disproportionate share of commits.',
       tab: 'contributors',
@@ -88,6 +91,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   if (result.maintainerCount === 'unavailable') {
     recommendations.push({
       bucket: 'Sustainability',
+      key: 'no_maintainers',
       percentile: sustainabilityPercentile ?? 0,
       message: 'No maintainers identified. Add a CODEOWNERS or MAINTAINERS.md file to make maintainer responsibility visible.',
       tab: 'contributors',
@@ -97,6 +101,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
     for (const rec of documentation.recommendations) {
       recommendations.push({
         bucket: 'Documentation',
+        key: `${rec.category}:${rec.item}`,
         percentile: documentationPercentile ?? 0,
         message: rec.text,
         tab: 'documentation',
@@ -107,6 +112,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
     for (const rec of security.recommendations) {
       recommendations.push({
         bucket: 'Security',
+        key: rec.item,
         percentile: securityPercentile ?? 0,
         message: rec.text,
         tab: 'security',
@@ -136,22 +142,22 @@ function getActivityRecommendations(score: ActivityScoreDefinition): HealthScore
 
   const prFlow = factors.find((f) => f.label === 'PR flow')
   if (prFlow?.percentile !== undefined) {
-    recs.push({ bucket: 'Activity', percentile: prFlow.percentile, message: 'Reduce PR backlog and speed up review throughput to improve merge rate.', tab: 'activity' })
+    recs.push({ bucket: 'Activity', key: 'pr_flow', percentile: prFlow.percentile, message: 'Reduce PR backlog and speed up review throughput to improve merge rate.', tab: 'activity' })
   }
 
   const issueFlow = factors.find((f) => f.label === 'Issue flow')
   if (issueFlow?.percentile !== undefined) {
-    recs.push({ bucket: 'Activity', percentile: issueFlow.percentile, message: 'Triage and close stale issues to improve issue flow.', tab: 'activity' })
+    recs.push({ bucket: 'Activity', key: 'issue_flow', percentile: issueFlow.percentile, message: 'Triage and close stale issues to improve issue flow.', tab: 'activity' })
   }
 
   const completionSpeed = factors.find((f) => f.label === 'Completion speed')
   if (completionSpeed?.percentile !== undefined) {
-    recs.push({ bucket: 'Activity', percentile: completionSpeed.percentile, message: 'Reduce time to merge PRs and close issues to improve completion speed.', tab: 'activity' })
+    recs.push({ bucket: 'Activity', key: 'completion_speed', percentile: completionSpeed.percentile, message: 'Reduce time to merge PRs and close issues to improve completion speed.', tab: 'activity' })
   }
 
   const sustained = factors.find((f) => f.label === 'Sustained activity')
   if (sustained?.percentile !== undefined) {
-    recs.push({ bucket: 'Activity', percentile: sustained.percentile, message: 'Increase commit frequency to show sustained development momentum.', tab: 'activity' })
+    recs.push({ bucket: 'Activity', key: 'sustained_activity', percentile: sustained.percentile, message: 'Increase commit frequency to show sustained development momentum.', tab: 'activity' })
   }
 
   return recs
@@ -163,17 +169,17 @@ function getResponsivenessRecommendations(score: ResponsivenessScoreDefinition):
 
   const responseTime = categories.find((c) => c.label === 'Issue & PR response time')
   if (responseTime?.percentile !== undefined) {
-    recs.push({ bucket: 'Responsiveness', percentile: responseTime.percentile, message: 'Reduce issue and PR first-response times — contributors are waiting longer than most repos in this bracket.', tab: 'responsiveness' })
+    recs.push({ bucket: 'Responsiveness', key: 'response_time', percentile: responseTime.percentile, message: 'Reduce issue and PR first-response times — contributors are waiting longer than most repos in this bracket.', tab: 'responsiveness' })
   }
 
   const resolution = categories.find((c) => c.label === 'Resolution metrics')
   if (resolution?.percentile !== undefined) {
-    recs.push({ bucket: 'Responsiveness', percentile: resolution.percentile, message: 'Speed up issue resolution and PR merge times to improve throughput.', tab: 'responsiveness' })
+    recs.push({ bucket: 'Responsiveness', key: 'resolution', percentile: resolution.percentile, message: 'Speed up issue resolution and PR merge times to improve throughput.', tab: 'responsiveness' })
   }
 
   const backlog = categories.find((c) => c.label === 'Volume & backlog health')
   if (backlog?.percentile !== undefined) {
-    recs.push({ bucket: 'Responsiveness', percentile: backlog.percentile, message: 'Address stale issues and PRs to improve backlog health.', tab: 'responsiveness' })
+    recs.push({ bucket: 'Responsiveness', key: 'backlog_health', percentile: backlog.percentile, message: 'Address stale issues and PRs to improve backlog health.', tab: 'responsiveness' })
   }
 
   return recs
