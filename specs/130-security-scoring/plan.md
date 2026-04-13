@@ -94,18 +94,18 @@ __tests__/
 
 ## Health Score Weight Rebalancing
 
-Adding Security as a 5th bucket requires redistributing weights. The approach: reduce each existing bucket proportionally to make room for Security at 10%.
+Adding Security as a 5th bucket requires redistributing weights. Security is given 15% — equal to Documentation's previous weight — reflecting its critical importance to project health assessment.
 
 | Bucket | Current Weight | New Weight | Change |
 |--------|---------------|------------|--------|
-| Activity | 30% | 27% | -3% |
-| Responsiveness | 30% | 27% | -3% |
+| Activity | 30% | 25% | -5% |
+| Responsiveness | 30% | 25% | -5% |
 | Sustainability | 25% | 23% | -2% |
-| Documentation | 15% | 13% | -2% |
-| **Security** | — | **10%** | new |
+| Documentation | 15% | 12% | -3% |
+| **Security** | — | **15%** | new |
 | **Total** | 100% | 100% | — |
 
-Rationale: Security at 10% reflects its importance while acknowledging that many repos (especially smaller ones) will have limited security data. The proportional reduction preserves the relative ranking of existing buckets.
+Rationale: Security is a critical adoption signal — repos with known vulnerabilities, no branch protection, or no security policy present real risk. 15% reflects this importance while leaving room to increase the weight further as more security signals are added (e.g., #136 for direct Dependabot alert access).
 
 ## Two-Layer Signal Architecture
 
