@@ -57,21 +57,6 @@ A user analyzing a repository sees branch protection status even when the OpenSS
 
 ---
 
-### User Story 4 - Dependency Freshness and Vulnerability Signals (Priority: P4)
-
-A user sees dependency health signals within the Security section: whether dependencies are up to date and whether known vulnerabilities exist. These signals were consolidated from issue #71 and complement the Scorecard checks by surfacing dependency-specific risks.
-
-**Why this priority**: Dependency health is critical for security but is secondary to the broader Scorecard assessment and foundational fallback checks. It adds depth to the security picture for repos where this data is accessible.
-
-**Independent Test**: Can be tested by analyzing repos with known outdated dependencies or active Dependabot vulnerability alerts.
-
-**Acceptance Scenarios**:
-
-1. **Given** a repository with accessible Dependabot alert data, **When** the user views the Security section, **Then** the system displays whether known vulnerabilities have been reported.
-2. **Given** a repository where Dependabot alert data is not accessible (requires specific permissions), **When** the user views the Security section, **Then** the vulnerability signal is marked as "unavailable" rather than penalized.
-
----
-
 ### Edge Cases
 
 - What happens when the OpenSSF Scorecard API is temporarily unavailable or returns an error? The system marks Scorecard signals as unavailable. The Security score is computed from direct checks only, same as if the repo were not in the dataset.
@@ -99,8 +84,6 @@ A user sees dependency health signals within the Security section: whether depen
 - **FR-013**: System MUST produce actionable recommendations when security signals are missing or weak (e.g., no security policy, no dependency automation, no branch protection).
 - **FR-014**: When security data is unavailable from any source, the system MUST mark the affected signal as `"Insufficient verified public data"` per the accuracy policy.
 - **FR-015**: System MUST NOT penalize a repository for signals that are unavailable — only signals with actual data (positive or negative) contribute to the score.
-- **FR-016**: When Dependabot vulnerability alert data is accessible, system MUST display whether known vulnerabilities have been reported. When not accessible, the signal MUST be marked as "unavailable."
-- **FR-017**: System MUST display dependency freshness signals when data is available, including whether automated dependency updates are configured.
 
 ### Key Entities
 
@@ -136,9 +119,7 @@ For the Branch-Protection signal specifically: the Scorecard score is used when 
 
 ### Signals Consolidation
 
-Per issue #68 comments, the following signals from closed issue #71 are consolidated into this feature:
-- Dependency freshness (comparing locked versions to latest)
-- Known vulnerabilities (Dependabot alerts, if accessible)
+Per issue #68 comments, dependency freshness and known vulnerability signals from closed issue #71 were originally consolidated into this feature. These are now covered by the OpenSSF Scorecard's Vulnerabilities and Pinned-Dependencies checks when Scorecard data is available. No independent implementation is needed — Scorecard subsumes these signals.
 
 ### UI Display
 
@@ -156,7 +137,6 @@ The analysis results gain a dedicated **Security section** displaying:
 - The Scorecard API covers approximately 1 million repositories, primarily popular open source projects. Repos outside this dataset return no data.
 - Scorecard data is refreshed approximately weekly. The system accepts this staleness as inherent to the data source.
 - Branch protection rules are queryable via the GitHub GraphQL API using the authenticated user's OAuth token. Some repos may restrict this data, in which case the signal is marked as unavailable.
-- Dependabot vulnerability alert data requires specific repository permissions to access. When inaccessible, the signal is marked as unavailable rather than penalized.
 - The SECURITY.md file presence check already exists in the Documentation scoring (file presence sub-score). The Security feature will use its own detection for SECURITY.md and the existing Documentation file presence check remains unchanged — no double-counting occurs because the two buckets score different aspects (Documentation: "does the file exist?" vs. Security: "does the project have a vulnerability disclosure process?").
 - Adding Security as a new health score dimension requires rebalancing all bucket weights. This rebalancing is deferred to the planning phase.
 - The OpenSSF Scorecard API call does not count against the user's GitHub API rate limit since it is a separate, unauthenticated service.
