@@ -19,9 +19,9 @@
 
 **Purpose**: Extend types and create the recommendation catalog data source
 
-- [ ] T001 Extend `SecurityRecommendation` interface with optional enriched fields (title, riskLevel, evidence, explanation, remediationHint, docsUrl, groupCategory) in `lib/security/analysis-result.ts`
-- [ ] T002 Add `RiskLevel`, `RecommendationCategoryKey`, and `RecommendationSource` types to `lib/security/analysis-result.ts`
-- [ ] T003 Update `SecurityRecommendationDisplay` in `specs/130-security-scoring/contracts/security-view-props.ts` with enriched fields matching the extended interface
+- [x] T001 Extend `SecurityRecommendation` interface with optional enriched fields (title, riskLevel, evidence, explanation, remediationHint, docsUrl, groupCategory) in `lib/security/analysis-result.ts`
+- [x] T002 Add `RiskLevel`, `RecommendationCategoryKey`, and `RecommendationSource` types to `lib/security/analysis-result.ts`
+- [x] T003 Update `SecurityRecommendationDisplay` in `specs/130-security-scoring/contracts/security-view-props.ts` with enriched fields matching the extended interface
 
 ---
 
@@ -35,14 +35,14 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T004 [P] Write catalog completeness tests in `lib/security/__tests__/recommendation-catalog.test.ts`: verify catalog has entries for all 17 Scorecard checks listed in research.md, all 4 direct checks, each entry has all required fields, keys are unique, riskLevel and groupCategory values are valid
-- [ ] T005 [P] Write catalog deduplication mapping tests in `lib/security/__tests__/recommendation-catalog.test.ts`: verify the 4 known overlapping Scorecard entries (Security-Policy, Dependency-Update-Tool, CI-Tests, Branch-Protection) each have a `directCheckMapping` pointing to the correct direct check name
+- [x] T004 [P] Write catalog completeness tests in `lib/security/__tests__/recommendation-catalog.test.ts`: verify catalog has entries for all 17 Scorecard checks listed in research.md, all 4 direct checks, each entry has all required fields, keys are unique, riskLevel and groupCategory values are valid
+- [x] T005 [P] Write catalog deduplication mapping tests in `lib/security/__tests__/recommendation-catalog.test.ts`: verify the 4 known overlapping Scorecard entries (Security-Policy, Dependency-Update-Tool, CI-Tests, Branch-Protection) each have a `directCheckMapping` pointing to the correct direct check name
 
 ### Implementation
 
-- [ ] T006 Create `lib/security/recommendation-catalog.ts` with the static `RECOMMENDATION_CATALOG` array containing all 17 Scorecard check entries derived from OpenSSF Scorecard checks documentation (https://github.com/ossf/scorecard/blob/main/docs/checks.md) — each entry has: key, source, title, riskLevel, groupCategory, whyItMatters, remediation, remediationHint, docsUrl, directCheckMapping
-- [ ] T007 Add 4 direct check entries to `RECOMMENDATION_CATALOG` in `lib/security/recommendation-catalog.ts` for: security_policy, dependabot, ci_cd, branch_protection — each with source "direct_check", appropriate riskLevel, groupCategory, and null docsUrl/directCheckMapping
-- [ ] T008 Export `CATEGORY_DEFINITIONS` array in `lib/security/recommendation-catalog.ts` with the 4 categories (critical_issues order 1, quick_wins order 2, workflow_hardening order 3, best_practices order 4) and a `getCatalogEntry(key: string)` lookup helper
+- [x] T006 Create `lib/security/recommendation-catalog.ts` with the static `RECOMMENDATION_CATALOG` array containing all 17 Scorecard check entries derived from OpenSSF Scorecard checks documentation (https://github.com/ossf/scorecard/blob/main/docs/checks.md) — each entry has: key, source, title, riskLevel, groupCategory, whyItMatters, remediation, remediationHint, docsUrl, directCheckMapping
+- [x] T007 Add 4 direct check entries to `RECOMMENDATION_CATALOG` in `lib/security/recommendation-catalog.ts` for: security_policy, dependabot, ci_cd, branch_protection — each with source "direct_check", appropriate riskLevel, groupCategory, and null docsUrl/directCheckMapping
+- [x] T008 Export `CATEGORY_DEFINITIONS` array in `lib/security/recommendation-catalog.ts` with the 4 categories (critical_issues order 1, quick_wins order 2, workflow_hardening order 3, best_practices order 4) and a `getCatalogEntry(key: string)` lookup helper
 
 **Checkpoint**: Catalog is complete and tested. All 21 entries pass validation. Ready for scoring integration.
 
@@ -58,20 +58,20 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring 3/10 with a catalog entry, `getSecurityScore()` returns a recommendation with title, riskLevel, evidence containing "scored 3/10", explanation, docsUrl, and groupCategory populated
-- [ ] T010 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a direct check with detected=false and a catalog entry, `getSecurityScore()` returns a recommendation with title, riskLevel, evidence containing "not detected", explanation, and groupCategory populated
-- [ ] T011 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given all Scorecard checks scoring 10/10 and all direct checks detected, `getSecurityScore()` returns zero recommendations
-- [ ] T012 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring 7/10 with a catalog entry, `getSecurityScore()` still returns a recommendation (threshold widened from 0-4 to 0-9)
-- [ ] T013 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check with indeterminate score (-1), no recommendation is generated for that check
-- [ ] T014 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring below 10 with NO catalog entry, no recommendation is generated (catalog entry required)
-- [ ] T015 [P] [US1] Write backward compatibility test in `lib/security/__tests__/score-config.test.ts`: enriched recommendations still have `text` field populated and `bucket: 'security'` so health-score.ts integration is unbroken
+- [x] T009 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring 3/10 with a catalog entry, `getSecurityScore()` returns a recommendation with title, riskLevel, evidence containing "scored 3/10", explanation, docsUrl, and groupCategory populated
+- [x] T010 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a direct check with detected=false and a catalog entry, `getSecurityScore()` returns a recommendation with title, riskLevel, evidence containing "not detected", explanation, and groupCategory populated
+- [x] T011 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given all Scorecard checks scoring 10/10 and all direct checks detected, `getSecurityScore()` returns zero recommendations
+- [x] T012 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring 7/10 with a catalog entry, `getSecurityScore()` still returns a recommendation (threshold widened from 0-4 to 0-9)
+- [x] T013 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check with indeterminate score (-1), no recommendation is generated for that check
+- [x] T014 [P] [US1] Write test in `lib/security/__tests__/score-config.test.ts`: given a Scorecard check scoring below 10 with NO catalog entry, no recommendation is generated (catalog entry required)
+- [x] T015 [P] [US1] Write backward compatibility test in `lib/security/__tests__/score-config.test.ts`: enriched recommendations still have `text` field populated and `bucket: 'security'` so health-score.ts integration is unbroken
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Refactor `generateDirectCheckRecommendations()` in `lib/security/score-config.ts` to look up catalog entries via `getCatalogEntry()` and populate enriched fields (title, riskLevel, evidence as "{check.name} not detected", explanation from whyItMatters, remediationHint, docsUrl, groupCategory). Compose `text` field from title + remediation for backward compat.
-- [ ] T017 [US1] Refactor Scorecard recommendation generation in `lib/security/score-config.ts` (lines 118-132) to: widen threshold from score 0-4 to score 0-9, look up catalog entries via `getCatalogEntry()`, populate enriched fields (title, riskLevel, evidence as "{check.name} scored {score}/10", explanation, remediationHint, docsUrl, groupCategory), skip checks with no catalog entry, skip indeterminate (-1) scores. Compose `text` from title + remediation.
-- [ ] T018 [US1] Remove the `RECOMMENDATION_TEXT` constant from `lib/security/score-config.ts` (lines 24-29) — replaced by catalog entries
-- [ ] T019 [US1] Verify all T009-T015 tests pass after implementation
+- [x] T016 [US1] Refactor `generateDirectCheckRecommendations()` in `lib/security/score-config.ts` to look up catalog entries via `getCatalogEntry()` and populate enriched fields (title, riskLevel, evidence as "{check.name} not detected", explanation from whyItMatters, remediationHint, docsUrl, groupCategory). Compose `text` field from title + remediation for backward compat.
+- [x] T017 [US1] Refactor Scorecard recommendation generation in `lib/security/score-config.ts` (lines 118-132) to: widen threshold from score 0-4 to score 0-9, look up catalog entries via `getCatalogEntry()`, populate enriched fields (title, riskLevel, evidence as "{check.name} scored {score}/10", explanation, remediationHint, docsUrl, groupCategory), skip checks with no catalog entry, skip indeterminate (-1) scores. Compose `text` from title + remediation.
+- [x] T018 [US1] Remove the `RECOMMENDATION_TEXT` constant from `lib/security/score-config.ts` (lines 24-29) — replaced by catalog entries
+- [x] T019 [US1] Verify all T009-T015 tests pass after implementation
 
 **Checkpoint**: `getSecurityScore()` returns enriched recommendations with all structured fields. `text` backward compat preserved. Threshold widened to 0-9.
 
@@ -87,18 +87,18 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T020 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a Critical-risk Scorecard check scoring 2/10, its groupCategory is "critical_issues" (promoted from default)
-- [ ] T021 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a High-risk Scorecard check scoring 3/10, its groupCategory is "critical_issues" (promoted from default)
-- [ ] T022 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a High-risk Scorecard check scoring 7/10, its groupCategory stays at its catalog default (NOT promoted to critical_issues)
-- [ ] T023 [P] [US2] Write sorting test in `lib/security/__tests__/score-config.test.ts`: recommendations are sorted by category order (critical_issues first, then quick_wins, workflow_hardening, best_practices), then by riskLevel severity within each category, then by weight
-- [ ] T024 [P] [US2] Write UI test in `components/security/SecurityView.test.tsx`: given recommendations spanning 3 categories, SecurityView renders 3 category sections with correct headings in display order, with empty categories omitted
+- [x] T020 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a Critical-risk Scorecard check scoring 2/10, its groupCategory is "critical_issues" (promoted from default)
+- [x] T021 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a High-risk Scorecard check scoring 3/10, its groupCategory is "critical_issues" (promoted from default)
+- [x] T022 [P] [US2] Write category assignment test in `lib/security/__tests__/score-config.test.ts`: given a High-risk Scorecard check scoring 7/10, its groupCategory stays at its catalog default (NOT promoted to critical_issues)
+- [x] T023 [P] [US2] Write sorting test in `lib/security/__tests__/score-config.test.ts`: recommendations are sorted by category order (critical_issues first, then quick_wins, workflow_hardening, best_practices), then by riskLevel severity within each category, then by weight
+- [x] T024 [P] [US2] Write UI test in `components/security/SecurityView.test.tsx`: given recommendations spanning 3 categories, SecurityView renders 3 category sections with correct headings in display order, with empty categories omitted
 
 ### Implementation for User Story 2
 
-- [ ] T025 [US2] Add category promotion logic to recommendation generation in `lib/security/score-config.ts`: after looking up catalog entry's default groupCategory, promote to "critical_issues" if riskLevel is Critical/High AND score is 0-4
-- [ ] T026 [US2] Update recommendation sorting in `lib/security/score-config.ts` to sort by: (1) category order (using CATEGORY_DEFINITIONS), (2) riskLevel severity (Critical > High > Medium > Low), (3) weight descending
-- [ ] T027 [US2] Add categorized recommendations rendering section to `components/security/SecurityView.tsx`: group recommendations by groupCategory, render each non-empty group under a labeled heading using CATEGORY_DEFINITIONS labels, display in category order
-- [ ] T028 [US2] Verify all T020-T024 tests pass after implementation
+- [x] T025 [US2] Add category promotion logic to recommendation generation in `lib/security/score-config.ts`: after looking up catalog entry's default groupCategory, promote to "critical_issues" if riskLevel is Critical/High AND score is 0-4
+- [x] T026 [US2] Update recommendation sorting in `lib/security/score-config.ts` to sort by: (1) category order (using CATEGORY_DEFINITIONS), (2) riskLevel severity (Critical > High > Medium > Low), (3) weight descending
+- [x] T027 [US2] Add categorized recommendations rendering section to `components/security/SecurityView.tsx`: group recommendations by groupCategory, render each non-empty group under a labeled heading using CATEGORY_DEFINITIONS labels, display in category order
+- [x] T028 [US2] Verify all T020-T024 tests pass after implementation
 
 **Checkpoint**: Recommendations are grouped into priority-driven categories. Critical Issues show first. Empty categories are hidden.
 
@@ -114,15 +114,15 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T029 [P] [US3] Write deduplication test in `lib/security/__tests__/score-config.test.ts`: given Security-Policy Scorecard check scoring 5/10 AND security_policy direct check detected=false, only one recommendation is emitted (Scorecard version preferred) with evidence noting both sources
-- [ ] T030 [P] [US3] Write deduplication test for all 4 overlapping pairs in `lib/security/__tests__/score-config.test.ts`: Security-Policy/security_policy, Dependency-Update-Tool/dependabot, CI-Tests/ci_cd, Branch-Protection/branch_protection
-- [ ] T031 [P] [US3] Write UI test in `components/security/SecurityView.test.tsx`: each rendered recommendation card shows a visible source label ("OpenSSF Scorecard" or "Direct check") without requiring hover or expansion
+- [x] T029 [P] [US3] Write deduplication test in `lib/security/__tests__/score-config.test.ts`: given Security-Policy Scorecard check scoring 5/10 AND security_policy direct check detected=false, only one recommendation is emitted (Scorecard version preferred) with evidence noting both sources
+- [x] T030 [P] [US3] Write deduplication test for all 4 overlapping pairs in `lib/security/__tests__/score-config.test.ts`: Security-Policy/security_policy, Dependency-Update-Tool/dependabot, CI-Tests/ci_cd, Branch-Protection/branch_protection
+- [x] T031 [P] [US3] Write UI test in `components/security/SecurityView.test.tsx`: each rendered recommendation card shows a visible source label ("OpenSSF Scorecard" or "Direct check") without requiring hover or expansion
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Add deduplication logic to `getSecurityScore()` in `lib/security/score-config.ts`: after generating all Scorecard recommendations, collect the set of direct check names that are covered by Scorecard entries with `directCheckMapping`. Suppress direct-check recommendations for those names. For deduplicated entries, append "Also confirmed by direct repository check" to evidence.
-- [ ] T033 [US3] Add source label rendering to the recommendation cards in `components/security/SecurityView.tsx`: display "OpenSSF Scorecard" or "Direct check" as a visible badge/label on each recommendation, using the `category` field
-- [ ] T034 [US3] Verify all T029-T031 tests pass after implementation
+- [x] T032 [US3] Add deduplication logic to `getSecurityScore()` in `lib/security/score-config.ts`: after generating all Scorecard recommendations, collect the set of direct check names that are covered by Scorecard entries with `directCheckMapping`. Suppress direct-check recommendations for those names. For deduplicated entries, append "Also confirmed by direct repository check" to evidence.
+- [x] T033 [US3] Add source label rendering to the recommendation cards in `components/security/SecurityView.tsx`: display "OpenSSF Scorecard" or "Direct check" as a visible badge/label on each recommendation, using the `category` field
+- [x] T034 [US3] Verify all T029-T031 tests pass after implementation
 
 **Checkpoint**: Source attribution is visible on every recommendation. Duplicates are merged.
 
@@ -138,15 +138,15 @@
 
 > **Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T035 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with a non-null remediationHint, the hint text is rendered in the recommendation card
-- [ ] T036 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with a non-null docsUrl, a clickable link to the OpenSSF Scorecard docs is rendered
-- [ ] T037 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with null remediationHint and null docsUrl, no hint section or link is rendered (graceful absence)
+- [x] T035 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with a non-null remediationHint, the hint text is rendered in the recommendation card
+- [x] T036 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with a non-null docsUrl, a clickable link to the OpenSSF Scorecard docs is rendered
+- [x] T037 [P] [US4] Write UI test in `components/security/SecurityView.test.tsx`: given a recommendation with null remediationHint and null docsUrl, no hint section or link is rendered (graceful absence)
 
 ### Implementation for User Story 4
 
-- [ ] T038 [US4] Add remediation hint rendering to recommendation cards in `components/security/SecurityView.tsx`: when `remediationHint` is non-null, render it as a distinct visual element (e.g., a light-background tip box) below the main remediation text
-- [ ] T039 [US4] Add documentation link rendering to recommendation cards in `components/security/SecurityView.tsx`: when `docsUrl` is non-null, render a clickable "OpenSSF Scorecard docs" link that opens in a new tab
-- [ ] T040 [US4] Verify all T035-T037 tests pass after implementation
+- [x] T038 [US4] Add remediation hint rendering to recommendation cards in `components/security/SecurityView.tsx`: when `remediationHint` is non-null, render it as a distinct visual element (e.g., a light-background tip box) below the main remediation text
+- [x] T039 [US4] Add documentation link rendering to recommendation cards in `components/security/SecurityView.tsx`: when `docsUrl` is non-null, render a clickable "OpenSSF Scorecard docs" link that opens in a new tab
+- [x] T040 [US4] Verify all T035-T037 tests pass after implementation
 
 **Checkpoint**: Recommendations show remediation hints and docs links where available.
 
@@ -156,10 +156,10 @@
 
 **Purpose**: Fix the missing Security color, ensure backward compat, and final validation
 
-- [ ] T041 [P] Add `Security: 'bg-red-100 text-red-800'` to `BUCKET_COLORS` in `components/recommendations/RecommendationsView.tsx`
-- [ ] T042 [P] Write integration test in `lib/security/__tests__/score-config.test.ts`: verify that enriched recommendations produced by `getSecurityScore()` are consumable by `getHealthScore()` — the `text` field maps to `HealthScoreRecommendation.message` without errors
-- [ ] T043 Run `npm test` and verify all existing + new tests pass
-- [ ] T044 Run `npm run lint` and `npm run build` to verify no type errors or build failures
+- [x] T041 [P] Add `Security: 'bg-red-100 text-red-800'` to `BUCKET_COLORS` in `components/recommendations/RecommendationsView.tsx`
+- [x] T042 [P] Write integration test in `lib/security/__tests__/score-config.test.ts`: verify that enriched recommendations produced by `getSecurityScore()` are consumable by `getHealthScore()` — the `text` field maps to `HealthScoreRecommendation.message` without errors
+- [x] T043 Run `npm test` and verify all existing + new tests pass
+- [x] T044 Run `npm run lint` and `npm run build` to verify no type errors or build failures
 - [ ] T045 Run quickstart.md manual verification: analyze a repo with known security findings and verify all 6 verification steps from quickstart.md
 
 ---

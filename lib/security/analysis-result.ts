@@ -1,6 +1,16 @@
 import type { Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
+export type RiskLevel = 'Critical' | 'High' | 'Medium' | 'Low'
+
+export type RecommendationCategoryKey =
+  | 'critical_issues'
+  | 'quick_wins'
+  | 'workflow_hardening'
+  | 'best_practices'
+
+export type RecommendationSource = 'scorecard' | 'direct_check'
+
 export interface ScorecardCheck {
   name: string
   score: number
@@ -29,10 +39,17 @@ export interface SecurityResult {
 
 export interface SecurityRecommendation {
   bucket: 'security'
-  category: 'scorecard' | 'direct_check'
+  category: RecommendationSource
   item: string
   weight: number
   text: string
+  title?: string
+  riskLevel?: RiskLevel
+  evidence?: string
+  explanation?: string
+  remediationHint?: string | null
+  docsUrl?: string | null
+  groupCategory?: RecommendationCategoryKey
 }
 
 export interface SecurityScoreDefinition {

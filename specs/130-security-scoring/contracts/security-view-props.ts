@@ -28,6 +28,13 @@ export interface SecurityRecommendationDisplay {
   item: string
   text: string
   weight: number
+  title?: string
+  riskLevel?: 'Critical' | 'High' | 'Medium' | 'Low'
+  evidence?: string
+  explanation?: string
+  remediationHint?: string | null
+  docsUrl?: string | null
+  groupCategory?: 'critical_issues' | 'quick_wins' | 'workflow_hardening' | 'best_practices'
 }
 
 /** Props for the SecurityView component */

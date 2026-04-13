@@ -223,6 +223,305 @@ describe('getSecurityScore', () => {
     })
   })
 
+  describe('enriched recommendations (US1)', () => {
+    it('populates enriched fields for a Scorecard check scoring 3/10', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 3.0,
+          checks: [
+            { name: 'Token-Permissions', score: 3, reason: 'token permissions partially set' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Token-Permissions')
+      expect(rec).toBeDefined()
+      expect(rec!.title).toBeTruthy()
+      expect(rec!.riskLevel).toBeTruthy()
+      expect(rec!.evidence).toContain('3/10')
+      expect(rec!.explanation).toBeTruthy()
+      expect(rec!.docsUrl).toBeTruthy()
+      expect(rec!.groupCategory).toBeTruthy()
+    })
+
+    it('populates enriched fields for a direct check with detected=false', () => {
+      const score = getSecurityScore(noSignalsResult, 100)
+      const rec = score.recommendations.find((r) => r.item === 'security_policy')
+      expect(rec).toBeDefined()
+      expect(rec!.title).toBeTruthy()
+      expect(rec!.riskLevel).toBeTruthy()
+      expect(rec!.evidence).toContain('not detected')
+      expect(rec!.explanation).toBeTruthy()
+      expect(rec!.groupCategory).toBeTruthy()
+    })
+
+    it('returns zero recommendations when all Scorecard checks score 10/10 and direct checks pass', () => {
+      const perfectResult: SecurityResult = {
+        scorecard: {
+          overallScore: 10.0,
+          checks: [
+            { name: 'Security-Policy', score: 10, reason: 'policy found' },
+            { name: 'Token-Permissions', score: 10, reason: 'permissions set' },
+            { name: 'Branch-Protection', score: 10, reason: 'protected' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(perfectResult, 5000)
+      expect(score.recommendations).toHaveLength(0)
+    })
+
+    it('generates a recommendation for a Scorecard check scoring 7/10 (widened threshold)', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 7.0,
+          checks: [
+            { name: 'Token-Permissions', score: 7, reason: 'token permissions mostly set' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Token-Permissions')
+      expect(rec).toBeDefined()
+      expect(rec!.evidence).toContain('7/10')
+    })
+
+    it('does not generate a recommendation for indeterminate score (-1)', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 5.0,
+          checks: [
+            { name: 'Branch-Protection', score: -1, reason: 'internal error' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Branch-Protection')
+      expect(rec).toBeUndefined()
+    })
+
+    it('does not generate a recommendation for a check with no catalog entry', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 5.0,
+          checks: [
+            { name: 'Unknown-Future-Check', score: 3, reason: 'some reason' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Unknown-Future-Check')
+      expect(rec).toBeUndefined()
+    })
+
+    it('preserves backward compat: enriched recs have text field and bucket security', () => {
+      const score = getSecurityScore(noSignalsResult, 100)
+      for (const rec of score.recommendations) {
+        expect(rec.text).toBeTruthy()
+        expect(rec.bucket).toBe('security')
+      }
+    })
+  })
+
+  describe('category assignment and sorting (US2)', () => {
+    it('promotes Critical-risk check scoring 2/10 to critical_issues', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 2.0,
+          checks: [
+            { name: 'Dangerous-Workflow', score: 2, reason: 'dangerous patterns found' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Dangerous-Workflow')
+      expect(rec).toBeDefined()
+      expect(rec!.groupCategory).toBe('critical_issues')
+    })
+
+    it('promotes High-risk check scoring 3/10 to critical_issues', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 3.0,
+          checks: [
+            { name: 'Token-Permissions', score: 3, reason: 'weak permissions' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Token-Permissions')
+      expect(rec).toBeDefined()
+      expect(rec!.groupCategory).toBe('critical_issues')
+    })
+
+    it('does NOT promote High-risk check scoring 7/10 to critical_issues', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 7.0,
+          checks: [
+            { name: 'Token-Permissions', score: 7, reason: 'mostly set' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const rec = score.recommendations.find((r) => r.item === 'Token-Permissions')
+      expect(rec).toBeDefined()
+      expect(rec!.groupCategory).toBe('workflow_hardening') // default, not promoted
+    })
+
+    it('sorts recommendations by category order, then risk level, then weight', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 3.0,
+          checks: [
+            { name: 'CI-Tests', score: 5, reason: 'some tests' }, // Low risk, quick_wins
+            { name: 'Dangerous-Workflow', score: 2, reason: 'dangerous' }, // Critical, critical_issues
+            { name: 'Fuzzing', score: 3, reason: 'no fuzzing' }, // Medium, best_practices
+            { name: 'Token-Permissions', score: 2, reason: 'weak' }, // High → critical_issues (promoted)
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: true, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const categories = score.recommendations.map((r) => r.groupCategory)
+      // critical_issues should come first, then quick_wins, then best_practices
+      const firstCritical = categories.indexOf('critical_issues')
+      const firstQuickWin = categories.indexOf('quick_wins')
+      const firstBestPractice = categories.indexOf('best_practices')
+      if (firstCritical >= 0 && firstQuickWin >= 0) {
+        expect(firstCritical).toBeLessThan(firstQuickWin)
+      }
+      if (firstQuickWin >= 0 && firstBestPractice >= 0) {
+        expect(firstQuickWin).toBeLessThan(firstBestPractice)
+      }
+    })
+  })
+
+  describe('deduplication (US3)', () => {
+    it('deduplicates Security-Policy when both Scorecard and direct check fire', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 5.0,
+          checks: [
+            { name: 'Security-Policy', score: 5, reason: 'partial policy' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: false, details: null },
+          { name: 'dependabot', detected: true, details: null },
+          { name: 'ci_cd', detected: true, details: null },
+          { name: 'branch_protection', detected: true, details: null },
+        ],
+        branchProtectionEnabled: true,
+      }
+      const score = getSecurityScore(result, 5000)
+      const secPolicyRecs = score.recommendations.filter(
+        (r) => r.item === 'Security-Policy' || r.item === 'security_policy',
+      )
+      expect(secPolicyRecs).toHaveLength(1)
+      expect(secPolicyRecs[0]!.category).toBe('scorecard') // Scorecard version preferred
+      expect(secPolicyRecs[0]!.evidence).toContain('Also confirmed')
+    })
+
+    it('deduplicates all 4 overlapping pairs', () => {
+      const result: SecurityResult = {
+        scorecard: {
+          overallScore: 3.0,
+          checks: [
+            { name: 'Security-Policy', score: 3, reason: 'weak' },
+            { name: 'Dependency-Update-Tool', score: 2, reason: 'none' },
+            { name: 'CI-Tests', score: 4, reason: 'some' },
+            { name: 'Branch-Protection', score: 1, reason: 'none' },
+          ],
+          scorecardVersion: 'v5.0.0',
+        },
+        directChecks: [
+          { name: 'security_policy', detected: false, details: null },
+          { name: 'dependabot', detected: false, details: null },
+          { name: 'ci_cd', detected: false, details: null },
+          { name: 'branch_protection', detected: false, details: null },
+        ],
+        branchProtectionEnabled: false,
+      }
+      const score = getSecurityScore(result, 5000)
+      // Should have 4 recs (Scorecard versions only), not 8
+      const directRecs = score.recommendations.filter((r) => r.category === 'direct_check')
+      expect(directRecs).toHaveLength(0)
+      expect(score.recommendations.length).toBe(4)
+    })
+  })
+
   describe('percentile and tone', () => {
     it('returns percentile when stars are available', () => {
       const score = getSecurityScore(fullScorecardResult, 5000)
