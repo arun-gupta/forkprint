@@ -26,16 +26,19 @@ function buildDocResult(overrides: Partial<DocumentationResult> = {}): Documenta
 
 const fullLicensing: LicensingResult = {
   license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+  additionalLicenses: [],
   contributorAgreement: { signedOffByRatio: 1.0, dcoOrClaBot: true, enforced: true },
 }
 
 const noLicensing: LicensingResult = {
   license: { spdxId: null, name: null, osiApproved: false, permissivenessTier: null },
+  additionalLicenses: [],
   contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
 }
 
 const partialLicensing: LicensingResult = {
   license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+  additionalLicenses: [],
   contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
 }
 

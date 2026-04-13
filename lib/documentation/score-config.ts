@@ -82,7 +82,12 @@ export function getLicensingScore(licensingResult: LicensingResult): {
   const recommendations: LicensingRecommendation[] = []
   let score = 0
 
-  const { license, contributorAgreement } = licensingResult
+  const { license, additionalLicenses, contributorAgreement } = licensingResult
+
+  // For scoring, consider all licenses (primary + additional)
+  const allLicenses = [license, ...additionalLicenses]
+  const anyOsiApproved = allLicenses.some((l) => l.osiApproved)
+  const anyTierClassified = allLicenses.some((l) => l.permissivenessTier !== null)
 
   // License present
   if (license.spdxId && license.spdxId !== 'NOASSERTION') {
@@ -106,8 +111,8 @@ export function getLicensingScore(licensingResult: LicensingResult): {
     })
   }
 
-  // OSI approved
-  if (license.osiApproved) {
+  // OSI approved — any license being OSI-approved counts
+  if (anyOsiApproved) {
     score += LICENSING_WEIGHTS.osiApproved
   } else if (license.spdxId && license.spdxId !== 'NOASSERTION') {
     recommendations.push({
@@ -119,8 +124,8 @@ export function getLicensingScore(licensingResult: LicensingResult): {
     })
   }
 
-  // Tier classified
-  if (license.permissivenessTier) {
+  // Tier classified — any license being classified counts
+  if (anyTierClassified) {
     score += LICENSING_WEIGHTS.tierClassified
   }
 

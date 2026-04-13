@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractLicensingResult, computeSignedOffByRatio, detectDcoClaBots } from '@/lib/analyzer/extract-licensing'
+import { extractLicensingResult, computeSignedOffByRatio, detectDcoClaBots, parseSpdxExpression, detectLicenseFiles } from '@/lib/analyzer/extract-licensing'
 
 describe('extractLicensingResult', () => {
   it('detects an OSI-approved permissive license', () => {
@@ -187,5 +187,145 @@ describe('detectDcoClaBots', () => {
       ],
     }
     expect(detectDcoClaBots(dir)).toBe(false)
+  })
+})
+
+describe('parseSpdxExpression', () => {
+  it('parses "MIT OR Apache-2.0" expression', () => {
+    const ids = parseSpdxExpression('Licensed under MIT OR Apache-2.0', null)
+    expect(ids).toContain('MIT')
+    expect(ids).toContain('Apache-2.0')
+  })
+
+  it('parses parenthesized expression "(MIT OR Apache-2.0)"', () => {
+    const ids = parseSpdxExpression('This software is (MIT OR Apache-2.0)', null)
+    expect(ids).toContain('MIT')
+    expect(ids).toContain('Apache-2.0')
+  })
+
+  it('excludes the primary SPDX ID', () => {
+    const ids = parseSpdxExpression('MIT OR Apache-2.0', 'Apache-2.0')
+    expect(ids).toContain('MIT')
+    expect(ids).not.toContain('Apache-2.0')
+  })
+
+  it('returns empty for non-SPDX content', () => {
+    const ids = parseSpdxExpression('This is a regular LICENSE file with no SPDX expressions', null)
+    expect(ids).toEqual([])
+  })
+
+  it('ignores unknown SPDX IDs', () => {
+    const ids = parseSpdxExpression('FAKE-LICENSE OR MIT', null)
+    expect(ids).toContain('MIT')
+    expect(ids).not.toContain('FAKE-LICENSE')
+  })
+
+  it('handles multiple OR expressions', () => {
+    const ids = parseSpdxExpression('MIT OR Apache-2.0\nBSD-2-Clause OR ISC', null)
+    expect(ids).toContain('MIT')
+    expect(ids).toContain('Apache-2.0')
+    expect(ids).toContain('BSD-2-Clause')
+    expect(ids).toContain('ISC')
+  })
+})
+
+describe('detectLicenseFiles', () => {
+  it('detects LICENSE-MIT file', () => {
+    const files = [{ suffix: 'MIT', content: 'MIT License text...' }]
+    const detections = detectLicenseFiles(files, null)
+    expect(detections).toHaveLength(1)
+    expect(detections[0].spdxId).toBe('MIT')
+    expect(detections[0].osiApproved).toBe(true)
+    expect(detections[0].permissivenessTier).toBe('Permissive')
+  })
+
+  it('detects LICENSE-APACHE file', () => {
+    const files = [{ suffix: 'APACHE', content: 'Apache License 2.0 text...' }]
+    const detections = detectLicenseFiles(files, null)
+    expect(detections).toHaveLength(1)
+    expect(detections[0].spdxId).toBe('Apache-2.0')
+  })
+
+  it('skips files with null content', () => {
+    const files = [{ suffix: 'MIT', content: null }]
+    const detections = detectLicenseFiles(files, null)
+    expect(detections).toHaveLength(0)
+  })
+
+  it('skips files matching the primary SPDX ID', () => {
+    const files = [{ suffix: 'MIT', content: 'MIT License text...' }]
+    const detections = detectLicenseFiles(files, 'MIT')
+    expect(detections).toHaveLength(0)
+  })
+
+  it('detects multiple additional license files', () => {
+    const files = [
+      { suffix: 'MIT', content: 'MIT License text...' },
+      { suffix: 'APACHE', content: 'Apache License text...' },
+    ]
+    const detections = detectLicenseFiles(files, null)
+    expect(detections).toHaveLength(2)
+    expect(detections.map((d) => d.spdxId)).toEqual(['MIT', 'Apache-2.0'])
+  })
+
+  it('ignores unknown license file suffixes', () => {
+    const files = [{ suffix: 'CUSTOM', content: 'Custom license...' }]
+    const detections = detectLicenseFiles(files, null)
+    expect(detections).toHaveLength(0)
+  })
+})
+
+describe('extractLicensingResult dual-license integration', () => {
+  it('detects dual license from SPDX expression in LICENSE content', () => {
+    const result = extractLicensingResult(
+      { spdxId: 'Apache-2.0', name: 'Apache License 2.0' },
+      [],
+      null,
+      'Licensed under the Apache License, Version 2.0 OR MIT',
+    )
+
+    expect(result.license.spdxId).toBe('Apache-2.0')
+    expect(result.additionalLicenses).toHaveLength(1)
+    expect(result.additionalLicenses[0].spdxId).toBe('MIT')
+    expect(result.additionalLicenses[0].osiApproved).toBe(true)
+    expect(result.additionalLicenses[0].permissivenessTier).toBe('Permissive')
+  })
+
+  it('detects dual license from separate license files', () => {
+    const result = extractLicensingResult(
+      { spdxId: 'Apache-2.0', name: 'Apache License 2.0' },
+      [],
+      null,
+      null,
+      [{ suffix: 'MIT', content: 'MIT License text...' }],
+    )
+
+    expect(result.additionalLicenses).toHaveLength(1)
+    expect(result.additionalLicenses[0].spdxId).toBe('MIT')
+  })
+
+  it('deduplicates licenses found from both expression and files', () => {
+    const result = extractLicensingResult(
+      { spdxId: 'Apache-2.0', name: 'Apache License 2.0' },
+      [],
+      null,
+      'MIT OR Apache-2.0',
+      [{ suffix: 'MIT', content: 'MIT License text...' }],
+    )
+
+    // MIT should appear only once despite being found in both expression and file
+    expect(result.additionalLicenses).toHaveLength(1)
+    expect(result.additionalLicenses[0].spdxId).toBe('MIT')
+  })
+
+  it('returns empty additionalLicenses when no dual licensing detected', () => {
+    const result = extractLicensingResult(
+      { spdxId: 'MIT', name: 'MIT License' },
+      [],
+      null,
+      'MIT License\n\nPermission is hereby granted...',
+    )
+
+    expect(result.additionalLicenses).toHaveLength(0)
   })
 })

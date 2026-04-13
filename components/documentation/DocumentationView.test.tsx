@@ -53,6 +53,7 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     },
     licensingResult: {
       license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+      additionalLicenses: [],
       contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
     },
     missingFields: [],
@@ -77,6 +78,7 @@ describe('DocumentationView', () => {
       render(<DocumentationView results={[buildResult({
         licensingResult: {
           license: { spdxId: 'GPL-3.0-only', name: 'GNU General Public License v3.0 only', osiApproved: true, permissivenessTier: 'Copyleft' },
+          additionalLicenses: [],
           contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
         },
       })]} />)
@@ -89,6 +91,7 @@ describe('DocumentationView', () => {
       render(<DocumentationView results={[buildResult({
         licensingResult: {
           license: { spdxId: 'MPL-2.0', name: 'Mozilla Public License 2.0', osiApproved: true, permissivenessTier: 'Weak Copyleft' },
+          additionalLicenses: [],
           contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
         },
       })]} />)
@@ -101,6 +104,7 @@ describe('DocumentationView', () => {
       render(<DocumentationView results={[buildResult({
         licensingResult: {
           license: { spdxId: null, name: null, osiApproved: false, permissivenessTier: null },
+          additionalLicenses: [],
           contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
         },
       })]} />)
@@ -120,6 +124,7 @@ describe('DocumentationView', () => {
       render(<DocumentationView results={[buildResult({
         licensingResult: {
           license: { spdxId: 'Apache-2.0', name: 'Apache License 2.0', osiApproved: true, permissivenessTier: 'Permissive' },
+          additionalLicenses: [],
           contributorAgreement: { signedOffByRatio: 0.95, dcoOrClaBot: true, enforced: true },
         },
       })]} />)
@@ -139,12 +144,37 @@ describe('DocumentationView', () => {
       render(<DocumentationView results={[buildResult({
         licensingResult: {
           license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+          additionalLicenses: [],
           contributorAgreement: { signedOffByRatio: 0.1, dcoOrClaBot: false, enforced: false },
         },
       })]} />)
 
       const licensingPane = screen.getByRole('region', { name: /licensing/i })
       expect(within(licensingPane).getByText(/not detected/i)).toBeInTheDocument()
+    })
+
+    it('renders dual-licensed repo with additional licenses', () => {
+      render(<DocumentationView results={[buildResult({
+        licensingResult: {
+          license: { spdxId: 'Apache-2.0', name: 'Apache License 2.0', osiApproved: true, permissivenessTier: 'Permissive' },
+          additionalLicenses: [
+            { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+          ],
+          contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
+        },
+      })]} />)
+
+      const licensingPane = screen.getByRole('region', { name: /licensing/i })
+      expect(within(licensingPane).getByText('Apache License 2.0')).toBeInTheDocument()
+      expect(within(licensingPane).getByText('MIT License')).toBeInTheDocument()
+      expect(within(licensingPane).getByText(/dual-licensed/i)).toBeInTheDocument()
+    })
+
+    it('does not show dual-licensed label for single license', () => {
+      render(<DocumentationView results={[buildResult()]} />)
+
+      const licensingPane = screen.getByRole('region', { name: /licensing/i })
+      expect(within(licensingPane).queryByText(/dual-licensed/i)).not.toBeInTheDocument()
     })
   })
 })

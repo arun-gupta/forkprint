@@ -19,7 +19,7 @@ import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
-import { extractLicensingResult } from './extract-licensing'
+import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
 
 interface DocBlob {
   text?: string
@@ -47,6 +47,9 @@ interface RepoOverviewResponse {
     docLicenseMd?: DocBlob | null
     docLicenseTxt?: DocBlob | null
     docCopying?: DocBlob | null
+    docLicenseMit?: DocBlob | null
+    docLicenseApache?: DocBlob | null
+    docLicenseBsd?: DocBlob | null
     docContributing?: DocBlob | null
     docContributingRst?: DocBlob | null
     docContributingTxt?: DocBlob | null
@@ -644,11 +647,26 @@ function buildAnalysisResult(
     medianTimeToCloseHours: activityMetricsByWindow[90].medianTimeToCloseHours,
     documentationResult: extractDocumentationResult(overview.repository),
     licensingResult: overview.repository
-      ? extractLicensingResult(
-          overview.repository.licenseInfo ?? null,
-          recentCommitNodes.filter((n): n is CommitNode & { message: string } => typeof n.message === 'string'),
-          overview.repository.workflowDir ?? null,
-        )
+      ? (() => {
+          const repo = overview.repository
+          // Collect license file content for SPDX expression parsing
+          const licenseFileContent =
+            repo.docLicense?.text ?? repo.docLicenseMd?.text ?? repo.docLicenseTxt?.text ??
+            repo.docLicenseRst?.text ?? repo.docCopying?.text ?? null
+          // Collect additional license files (LICENSE-MIT, LICENSE-APACHE, etc.)
+          const additionalLicenseFiles: LicenseFileInfo[] = [
+            { suffix: 'MIT', content: repo.docLicenseMit?.text ?? null },
+            { suffix: 'APACHE', content: repo.docLicenseApache?.text ?? null },
+            { suffix: 'BSD', content: repo.docLicenseBsd?.text ?? null },
+          ]
+          return extractLicensingResult(
+            repo.licenseInfo ?? null,
+            recentCommitNodes.filter((n): n is CommitNode & { message: string } => typeof n.message === 'string'),
+            repo.workflowDir ?? null,
+            licenseFileContent,
+            additionalLicenseFiles,
+          )
+        })()
       : 'unavailable',
     issueFirstResponseTimestamps,
     issueCloseTimestamps,
@@ -664,7 +682,7 @@ function extractDocumentationResult(repo: RepoOverviewResponse['repository']): D
     aliases.find((a) => a != null) ?? null
 
   const readmeBlob = findFirst(repo.docReadmeMd, repo.docReadmeLower, repo.docReadmeRst, repo.docReadmeTxt, repo.docReadmePlain)
-  const licenseBlob = findFirst(repo.docLicense, repo.docLicenseMd, repo.docLicenseTxt, repo.docLicenseRst, repo.docCopying)
+  const licenseBlob = findFirst(repo.docLicense, repo.docLicenseMd, repo.docLicenseTxt, repo.docLicenseRst, repo.docCopying, repo.docLicenseMit, repo.docLicenseApache, repo.docLicenseBsd)
   const contributingBlob = findFirst(repo.docContributing, repo.docContributingRst, repo.docContributingTxt)
   const codeOfConductBlob = findFirst(repo.docCodeOfConduct, repo.docCodeOfConductRst, repo.docCodeOfConductTxt)
   const securityBlob = findFirst(repo.docSecurity, repo.docSecurityRst)
@@ -676,6 +694,7 @@ function extractDocumentationResult(repo: RepoOverviewResponse['repository']): D
   ]
   const licensePathMap: [string, DocBlob | null | undefined][] = [
     ['LICENSE', repo.docLicense], ['LICENSE.md', repo.docLicenseMd], ['LICENSE.txt', repo.docLicenseTxt], ['LICENSE.rst', repo.docLicenseRst], ['COPYING', repo.docCopying],
+    ['LICENSE-MIT', repo.docLicenseMit], ['LICENSE-APACHE', repo.docLicenseApache], ['LICENSE-BSD', repo.docLicenseBsd],
   ]
   const contributingPathMap: [string, DocBlob | null | undefined][] = [
     ['CONTRIBUTING.md', repo.docContributing], ['CONTRIBUTING.rst', repo.docContributingRst], ['CONTRIBUTING.txt', repo.docContributingTxt],

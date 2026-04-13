@@ -70,6 +70,7 @@ export interface ContributorAgreementSignal {
 
 export interface LicensingResult {
   license: LicenseDetection
+  additionalLicenses: LicenseDetection[]
   contributorAgreement: ContributorAgreementSignal
 }
 

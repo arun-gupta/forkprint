@@ -36,8 +36,9 @@ function LicensingPane({ licensingResult }: { licensingResult: LicensingResult |
     )
   }
 
-  const { license, contributorAgreement } = licensingResult
+  const { license, additionalLicenses, contributorAgreement } = licensingResult
   const hasLicense = license.spdxId !== null
+  const isDualLicensed = additionalLicenses.length > 0
 
   return (
     <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -50,14 +51,34 @@ function LicensingPane({ licensingResult }: { licensingResult: LicensingResult |
           </span>
           <div className="min-w-0">
             {hasLicense ? (
-              <p className="text-sm font-medium text-slate-900">
-                {license.name} <span className="font-normal text-slate-400">({license.spdxId})</span>
-              </p>
+              <>
+                <p className="text-sm font-medium text-slate-900">
+                  {license.name} <span className="font-normal text-slate-400">({license.spdxId})</span>
+                </p>
+                {isDualLicensed ? (
+                  <p className="mt-0.5 text-xs text-slate-500">Dual-licensed</p>
+                ) : null}
+              </>
             ) : (
               <p className="text-sm font-medium text-slate-400">No license detected</p>
             )}
           </div>
         </li>
+
+        {/* Additional licenses */}
+        {additionalLicenses.map((addLicense) => (
+          <li key={addLicense.spdxId} className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm text-emerald-600">✓</span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-900">
+                {addLicense.name ?? addLicense.spdxId} <span className="font-normal text-slate-400">({addLicense.spdxId})</span>
+              </p>
+              {addLicense.permissivenessTier ? (
+                <p className="mt-0.5 text-xs text-slate-500">{addLicense.permissivenessTier}</p>
+              ) : null}
+            </div>
+          </li>
+        ))}
 
         {/* OSI Approval */}
         {hasLicense ? (
