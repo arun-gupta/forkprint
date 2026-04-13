@@ -348,13 +348,23 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
 
     if (nonSecurityRecs.length > 0) {
       const withIds = assignReferenceIds(nonSecurityRecs)
+      const grouped = new Map<string, typeof withIds>()
       for (const rec of withIds) {
-        lines.push(`- **${rec.referenceId}** — ${rec.message}`)
+        const group = grouped.get(rec.bucket) ?? []
+        group.push(rec)
+        grouped.set(rec.bucket, group)
       }
-      lines.push('')
+      for (const [bucket, recs] of grouped) {
+        lines.push(`#### ${bucket}`, '')
+        for (const rec of recs) {
+          lines.push(`- **${rec.referenceId}** — ${rec.message}`)
+        }
+        lines.push('')
+      }
     }
 
     if (securityRecs.length > 0) {
+      lines.push('#### Security', '')
       for (const [i, rec] of securityRecs.entries()) {
         const refId = resolveReferenceId(rec.item, 'Security', i + 1)
         const title = rec.title ?? rec.text
