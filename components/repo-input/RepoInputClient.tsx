@@ -48,23 +48,19 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   useEffect(() => {
     if (isLoading) {
       setElapsedSeconds(0)
-      setQuoteIndex(null)
+      setQuoteIndex(emptyQuoteIndex)
       timerRef.current = setInterval(() => {
         setElapsedSeconds((s) => s + 1)
       }, 1000)
 
-      // Show first quote after 5 seconds, rotate every 10 seconds
-      const quoteDelay = setTimeout(() => {
-        setQuoteIndex(getRandomQuoteIndex(null))
-        quoteTimerRef.current = setInterval(() => {
-          setQuoteIndex((current) => getRandomQuoteIndex(current))
-        }, 10000)
-      }, 5000)
+      // Rotate quote every 10 seconds
+      quoteTimerRef.current = setInterval(() => {
+        setQuoteIndex((current) => getRandomQuoteIndex(current))
+      }, 10000)
 
       return () => {
         if (timerRef.current) clearInterval(timerRef.current)
         if (quoteTimerRef.current) clearInterval(quoteTimerRef.current)
-        clearTimeout(quoteDelay)
       }
     }
 
