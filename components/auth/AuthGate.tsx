@@ -53,7 +53,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <p className="mt-2 text-lg text-slate-600">Measure the health of your open source projects</p>
         </div>
         <div className="max-w-md text-center text-sm text-slate-500 space-y-2">
-          <p>Get percentile-based scores for <span className="font-medium text-slate-700">Activity</span>, <span className="font-medium text-slate-700">Responsiveness</span>, and <span className="font-medium text-slate-700">Sustainability</span> — calibrated against 200+ real GitHub repositories.</p>
+          <p>Get percentile-based scores for <span className="font-medium text-slate-700">Activity</span>, <span className="font-medium text-slate-700">Responsiveness</span>, <span className="font-medium text-slate-700">Contributors</span>, <span className="font-medium text-slate-700">Security</span>, and <span className="font-medium text-slate-700">Documentation</span> — calibrated against 1,600+ real GitHub repositories.</p>
           <p>Analyze any public repo, compare side-by-side, and see exactly where it ranks.</p>
         </div>
         <SignInButton />

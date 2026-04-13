@@ -61,23 +61,11 @@ interface MetricRow {
 
 const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof BracketCalibration; label: string }> }> = [
   {
-    title: 'Documentation',
-    metrics: [
-      { key: 'documentationScore', label: 'Documentation completeness score' },
-    ],
-  },
-  {
     title: 'Overview',
     metrics: [
       { key: 'stars', label: 'Reach (stars)' },
       { key: 'watcherRate', label: 'Attention (watcher rate)' },
       { key: 'forkRate', label: 'Engagement (fork rate)' },
-    ],
-  },
-  {
-    title: 'Contributors / Sustainability',
-    metrics: [
-      { key: 'topContributorShare', label: 'Top 20% contributor commit share' },
     ],
   },
   {
@@ -113,6 +101,18 @@ const METRIC_SECTIONS: Array<{ title: string; metrics: Array<{ key: keyof Bracke
       // Engagement quality
       { key: 'prReviewDepth', label: 'Quality — PR review depth' },
       { key: 'issuesClosedWithoutCommentRatio', label: 'Quality — Issues closed without comment' },
+    ],
+  },
+  {
+    title: 'Contributors',
+    metrics: [
+      { key: 'topContributorShare', label: 'Top 20% contributor commit share' },
+    ],
+  },
+  {
+    title: 'Documentation',
+    metrics: [
+      { key: 'documentationScore', label: 'Documentation completeness score' },
     ],
   },
 ]
