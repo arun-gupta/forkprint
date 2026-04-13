@@ -149,7 +149,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     `| Sustainability | ${sustainability.value} |`,
     `| Activity | ${activity.value} |`,
     `| Responsiveness | ${responsiveness.value} |`,
-    `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.stars).value : 'unavailable'} |`,
+    `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars).value : 'unavailable'} |`,
     '',
   )
 
@@ -278,7 +278,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
 
   // Documentation section
   if (result.documentationResult !== 'unavailable') {
-    const docScore = getDocumentationScore(result.documentationResult, result.stars)
+    const docScore = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
     const { fileChecks, readmeSections } = result.documentationResult
     const FILE_LABELS: Record<string, string> = {
       readme: 'README', license: 'LICENSE', contributing: 'CONTRIBUTING',
@@ -298,7 +298,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       '',
       mdTable(fileChecks.map((f) => [
         FILE_LABELS[f.name] ?? f.name,
-        f.found ? `Present${f.path ? ` (${f.path})` : ''}${f.licenseType ? ` — ${f.licenseType}` : ''}` : 'Missing',
+        f.found ? `Present${f.path ? ` (${f.path})` : ''}` : 'Missing',
       ])),
       '',
       '#### README Sections',

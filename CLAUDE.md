@@ -36,6 +36,8 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 ## Active Technologies
 - TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library (032-doc-scoring)
 - N/A (stateless) (032-doc-scoring)
+- TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Reac (128-licensing-compliance)
+- N/A (stateless, on-demand analysis) (128-licensing-compliance)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library

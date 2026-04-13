@@ -1,7 +1,8 @@
 'use client'
 
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
-import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { DocumentationScoreHelp } from '@/components/documentation/DocumentationScoreHelp'
+import type { AnalysisResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 
 interface DocumentationViewProps {
@@ -25,6 +26,77 @@ const SECTION_LABELS: Record<string, string> = {
   license: 'License',
 }
 
+function LicensingPane({ licensingResult }: { licensingResult: LicensingResult | 'unavailable' }) {
+  if (licensingResult === 'unavailable') {
+    return (
+      <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
+        <p className="mt-3 text-sm text-slate-400">Licensing data unavailable.</p>
+      </section>
+    )
+  }
+
+  const { license, contributorAgreement } = licensingResult
+  const hasLicense = license.spdxId !== null
+
+  return (
+    <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
+      <ul className="mt-3 space-y-2">
+        {/* License detection */}
+        <li className="flex items-start gap-2">
+          <span className={`mt-0.5 text-sm ${hasLicense ? 'text-emerald-600' : 'text-red-400'}`}>
+            {hasLicense ? '✓' : '✗'}
+          </span>
+          <div className="min-w-0">
+            {hasLicense ? (
+              <p className="text-sm font-medium text-slate-900">
+                {license.name} <span className="font-normal text-slate-400">({license.spdxId})</span>
+              </p>
+            ) : (
+              <p className="text-sm font-medium text-slate-400">No license detected</p>
+            )}
+          </div>
+        </li>
+
+        {/* OSI Approval */}
+        {hasLicense ? (
+          <li className="flex items-start gap-2">
+            <span className={`mt-0.5 text-sm ${license.osiApproved ? 'text-emerald-600' : 'text-amber-500'}`}>
+              {license.osiApproved ? '✓' : '!'}
+            </span>
+            <p className={`text-sm font-medium ${license.osiApproved ? 'text-slate-900' : 'text-slate-400'}`}>
+              {license.osiApproved ? 'OSI Approved' : 'Not OSI approved'}
+            </p>
+          </li>
+        ) : null}
+
+        {/* Permissiveness tier */}
+        {license.permissivenessTier ? (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm text-slate-400">·</span>
+            <p className="text-sm font-medium text-slate-900">{license.permissivenessTier}</p>
+          </li>
+        ) : null}
+
+        {/* DCO/CLA enforcement */}
+        <li className="flex items-start gap-2">
+          <span className={`mt-0.5 text-sm ${contributorAgreement.enforced ? 'text-emerald-600' : 'text-slate-400'}`}>
+            {contributorAgreement.enforced ? '✓' : contributorAgreement.signedOffByRatio === null && !contributorAgreement.dcoOrClaBot ? '·' : '✗'}
+          </span>
+          <p className={`text-sm font-medium ${contributorAgreement.enforced ? 'text-slate-900' : 'text-slate-400'}`}>
+            {contributorAgreement.enforced
+              ? 'DCO/CLA enforcement detected'
+              : contributorAgreement.signedOffByRatio === null && !contributorAgreement.dcoOrClaBot
+                ? 'DCO/CLA enforcement not applicable'
+                : 'DCO/CLA enforcement not detected'}
+          </p>
+        </li>
+      </ul>
+    </section>
+  )
+}
+
 export function DocumentationView({ results }: DocumentationViewProps) {
   return (
     <section aria-label="Documentation view" className="space-y-6">
@@ -38,7 +110,7 @@ export function DocumentationView({ results }: DocumentationViewProps) {
           )
         }
 
-        const score = getDocumentationScore(result.documentationResult, result.stars)
+        const score = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
         const { fileChecks, readmeSections } = result.documentationResult
         const filesFound = fileChecks.filter((f) => f.found).length
         const sectionsDetected = readmeSections.filter((s) => s.detected).length
@@ -57,7 +129,9 @@ export function DocumentationView({ results }: DocumentationViewProps) {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <DocumentationScoreHelp score={score} />
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-3">
               {/* File presence */}
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Documentation files</h3>
@@ -71,7 +145,6 @@ export function DocumentationView({ results }: DocumentationViewProps) {
                         <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
                           {FILE_LABELS[check.name] ?? check.name}
                           {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
-                          {check.found && check.licenseType ? <span className="ml-1 font-normal text-slate-400">— {check.licenseType}</span> : null}
                         </p>
                         {!check.found ? (
                           <p className="mt-0.5 text-xs text-amber-700">
@@ -107,6 +180,9 @@ export function DocumentationView({ results }: DocumentationViewProps) {
                   ))}
                 </ul>
               </div>
+
+              {/* Licensing & Compliance */}
+              <LicensingPane licensingResult={result.licensingResult} />
             </div>
           </div>
         )

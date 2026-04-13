@@ -37,7 +37,7 @@ export function MetricCard({ card }: MetricCardProps) {
         <p className="text-xs text-slate-400">Created: {card.createdAtLabel}</p>
       </div>
 
-      <div className={`mt-3 flex items-center justify-between rounded-lg border px-3 py-2 ${scoreToneClass(hs.tone)}`} title={`Composite health score from Activity (30%), Responsiveness (30%), Sustainability (25%), and Documentation (15%) — scored relative to ${hs.bracketLabel} repositories.`}>
+      <div className={`mt-3 flex items-center justify-between rounded-lg border px-3 py-2 ${scoreToneClass(hs.tone)}`} title={`Composite health score from Activity (30%), Responsiveness (30%), Sustainability (25%), and Documentation (15%, includes licensing & compliance) — scored relative to ${hs.bracketLabel} repositories.`}>
         <div>
           <p className="text-xs font-medium uppercase tracking-wide">OSS Health Score</p>
           {hs.bracketLabel ? <p className="text-[10px] opacity-60">{hs.bracketLabel}</p> : null}

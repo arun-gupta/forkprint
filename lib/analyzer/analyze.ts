@@ -19,6 +19,7 @@ import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
+import { extractLicensingResult } from './extract-licensing'
 
 interface DocBlob {
   text?: string
@@ -61,6 +62,12 @@ interface RepoOverviewResponse {
     docChangesRst?: DocBlob | null
     docHistory?: DocBlob | null
     docNews?: DocBlob | null
+    workflowDir?: {
+      entries: Array<{
+        name: string
+        object: { text: string } | null
+      }>
+    } | null
   } | null
 }
 
@@ -262,6 +269,7 @@ interface CommitHistoryConnection {
 
 interface CommitNode {
   authoredDate: string
+  message?: string
   author: {
     name: string | null
     email: string | null
@@ -469,6 +477,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
           contributorCount.data,
           maintainerCount.data,
           experimentalOrgAttribution.data,
+          commitHistory.nodes,
         ),
       )
       const repoElapsed = ((Date.now() - repoStart) / 1000).toFixed(1)
@@ -519,6 +528,7 @@ function buildAnalysisResult(
   totalContributorCount: number | Unavailable,
   maintainerCount: number | Unavailable,
   experimentalMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
+  recentCommitNodes: CommitNode[],
 ): AnalysisResult {
   const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
   const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
@@ -633,6 +643,13 @@ function buildAnalysisResult(
     medianTimeToMergeHours: activityMetricsByWindow[90].medianTimeToMergeHours,
     medianTimeToCloseHours: activityMetricsByWindow[90].medianTimeToCloseHours,
     documentationResult: extractDocumentationResult(overview.repository),
+    licensingResult: overview.repository
+      ? extractLicensingResult(
+          overview.repository.licenseInfo ?? null,
+          recentCommitNodes.filter((n): n is CommitNode & { message: string } => typeof n.message === 'string'),
+          overview.repository.workflowDir ?? null,
+        )
+      : 'unavailable',
     issueFirstResponseTimestamps,
     issueCloseTimestamps,
     prMergeTimestamps,
@@ -678,12 +695,12 @@ function extractDocumentationResult(repo: RepoOverviewResponse['repository']): D
   const readmeContent = readmeBlob?.text ?? null
 
   const fileChecks: DocumentationFileCheck[] = [
-    { name: 'readme', found: readmeBlob !== null, path: foundPath(readmePathMap), licenseType: null },
-    { name: 'license', found: licenseBlob !== null, path: foundPath(licensePathMap), licenseType: repo.licenseInfo?.spdxId ?? null },
-    { name: 'contributing', found: contributingBlob !== null, path: foundPath(contributingPathMap), licenseType: null },
-    { name: 'code_of_conduct', found: codeOfConductBlob !== null, path: foundPath([['CODE_OF_CONDUCT.md', repo.docCodeOfConduct], ['CODE_OF_CONDUCT.rst', repo.docCodeOfConductRst], ['CODE_OF_CONDUCT.txt', repo.docCodeOfConductTxt]]), licenseType: null },
-    { name: 'security', found: securityBlob !== null, path: foundPath([['SECURITY.md', repo.docSecurity], ['SECURITY.rst', repo.docSecurityRst]]), licenseType: null },
-    { name: 'changelog', found: changelogBlob !== null, path: foundPath(changelogPathMap), licenseType: null },
+    { name: 'readme', found: readmeBlob !== null, path: foundPath(readmePathMap) },
+    { name: 'license', found: licenseBlob !== null, path: foundPath(licensePathMap) },
+    { name: 'contributing', found: contributingBlob !== null, path: foundPath(contributingPathMap) },
+    { name: 'code_of_conduct', found: codeOfConductBlob !== null, path: foundPath([['CODE_OF_CONDUCT.md', repo.docCodeOfConduct], ['CODE_OF_CONDUCT.rst', repo.docCodeOfConductRst], ['CODE_OF_CONDUCT.txt', repo.docCodeOfConductTxt]]) },
+    { name: 'security', found: securityBlob !== null, path: foundPath([['SECURITY.md', repo.docSecurity], ['SECURITY.rst', repo.docSecurityRst]]) },
+    { name: 'changelog', found: changelogBlob !== null, path: foundPath(changelogPathMap) },
   ]
 
   const readmeSections = detectReadmeSections(readmeContent)

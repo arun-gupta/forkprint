@@ -51,7 +51,26 @@ export interface DocumentationFileCheck {
   name: 'readme' | 'license' | 'contributing' | 'code_of_conduct' | 'security' | 'changelog'
   found: boolean
   path: string | null
-  licenseType: string | null
+}
+
+export type LicensePermissivenessTier = 'Permissive' | 'Weak Copyleft' | 'Copyleft'
+
+export interface LicenseDetection {
+  spdxId: string | null
+  name: string | null
+  osiApproved: boolean
+  permissivenessTier: LicensePermissivenessTier | null
+}
+
+export interface ContributorAgreementSignal {
+  signedOffByRatio: number | null
+  dcoOrClaBot: boolean
+  enforced: boolean
+}
+
+export interface LicensingResult {
+  license: LicenseDetection
+  contributorAgreement: ContributorAgreementSignal
 }
 
 export interface ReadmeSectionCheck {
@@ -100,6 +119,7 @@ export interface AnalysisResult {
   issueCloseTimestamps: string[] | Unavailable
   prMergeTimestamps: string[] | Unavailable
   documentationResult: DocumentationResult | Unavailable
+  licensingResult: LicensingResult | Unavailable
   missingFields: string[]
 }
 
