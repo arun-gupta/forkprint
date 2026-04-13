@@ -11,6 +11,8 @@ export interface RecommendationCatalogEntry {
   remediationHint: string | null
   docsUrl: string | null
   directCheckMapping: string | null
+  /** Cross-cutting tags for filtering (e.g. "governance") */
+  tags?: string[]
 }
 
 export interface RecommendationCategoryDefinition {
@@ -67,6 +69,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Go to Settings > Branches > Add rule for your default branch. Require at least 1 reviewer and enable "Require status checks to pass."',
     docsUrl: `${SCORECARD_DOCS_BASE}#branch-protection`,
     directCheckMapping: 'branch_protection',
+    tags: ['governance'],
   },
   {
     key: 'Binary-Artifacts',
@@ -91,6 +94,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Enable "Require pull request reviews before merging" in branch protection rules and set minimum reviewers to 1+.',
     docsUrl: `${SCORECARD_DOCS_BASE}#code-review`,
     directCheckMapping: null,
+    tags: ['governance'],
   },
   {
     key: 'Dependency-Update-Tool',
@@ -289,6 +293,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Go to Settings > Branches > Add rule for your default branch. Require at least 1 reviewer.',
     docsUrl: null,
     directCheckMapping: null,
+    tags: ['governance'],
   },
 ]
 

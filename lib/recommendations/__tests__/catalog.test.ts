@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RECOMMENDATION_CATALOG, getCatalogId, getCatalogEntryByKey } from '../catalog'
+import { RECOMMENDATION_CATALOG, getCatalogId, getCatalogEntryByKey, getCatalogEntriesByTag } from '../catalog'
 
 describe('RECOMMENDATION_CATALOG', () => {
   it('has no duplicate IDs', () => {
@@ -93,5 +93,17 @@ describe('getCatalogEntryByKey', () => {
 
   it('returns undefined for unknown keys', () => {
     expect(getCatalogEntryByKey('nonexistent')).toBeUndefined()
+  })
+})
+
+describe('getCatalogEntriesByTag', () => {
+  it('returns governance-tagged entries', () => {
+    const governance = getCatalogEntriesByTag('governance')
+    const ids = governance.map((e) => e.id).sort()
+    expect(ids).toEqual(['DOC-6', 'SEC-3', 'SEC-5', 'SUS-2'])
+  })
+
+  it('returns empty array for unknown tag', () => {
+    expect(getCatalogEntriesByTag('nonexistent')).toEqual([])
   })
 })

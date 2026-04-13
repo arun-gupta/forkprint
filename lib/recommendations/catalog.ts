@@ -18,6 +18,8 @@ export interface CatalogEntry {
   key: string
   /** Short human-readable title */
   title: string
+  /** Cross-cutting tags for filtering (e.g. "governance") */
+  tags?: string[]
 }
 
 // ── Security ──────────────────────────────────────────────────────────
@@ -27,9 +29,9 @@ const SEC: CatalogEntry[] = [
   { id: 'SEC-1', bucket: 'Security', key: 'Dangerous-Workflow', title: 'Fix dangerous GitHub Actions workflow patterns' },
   { id: 'SEC-2', bucket: 'Security', key: 'Webhooks', title: 'Secure webhook configurations with token authentication' },
   // High
-  { id: 'SEC-3', bucket: 'Security', key: 'Branch-Protection', title: 'Enforce branch protection on the default branch' },
+  { id: 'SEC-3', bucket: 'Security', key: 'Branch-Protection', title: 'Enforce branch protection on the default branch', tags: ['governance'] },
   { id: 'SEC-4', bucket: 'Security', key: 'Binary-Artifacts', title: 'Remove binary artifacts from the repository' },
-  { id: 'SEC-5', bucket: 'Security', key: 'Code-Review', title: 'Require code review before merging pull requests' },
+  { id: 'SEC-5', bucket: 'Security', key: 'Code-Review', title: 'Require code review before merging pull requests', tags: ['governance'] },
   { id: 'SEC-6', bucket: 'Security', key: 'Dependency-Update-Tool', title: 'Enable automated dependency updates' },
   { id: 'SEC-7', bucket: 'Security', key: 'Signed-Releases', title: 'Sign release artifacts to attest provenance' },
   { id: 'SEC-8', bucket: 'Security', key: 'Token-Permissions', title: 'Restrict GitHub Actions token permissions' },
@@ -78,7 +80,7 @@ const RSP: CatalogEntry[] = [
 
 const SUS: CatalogEntry[] = [
   { id: 'SUS-1', bucket: 'Sustainability', key: 'contributor_diversity', title: 'Onboard more contributors to reduce single-maintainer risk' },
-  { id: 'SUS-2', bucket: 'Sustainability', key: 'no_maintainers', title: 'Add a CODEOWNERS or MAINTAINERS.md file' },
+  { id: 'SUS-2', bucket: 'Sustainability', key: 'no_maintainers', title: 'Add a CODEOWNERS or MAINTAINERS.md file', tags: ['governance'] },
 ]
 
 // ── Documentation ─────────────────────────────────────────────────────
@@ -90,7 +92,7 @@ const DOC: CatalogEntry[] = [
   { id: 'DOC-3', bucket: 'Documentation', key: 'file:contributing', title: 'Add CONTRIBUTING.md' },
   { id: 'DOC-4', bucket: 'Documentation', key: 'file:code_of_conduct', title: 'Add CODE_OF_CONDUCT.md' },
   { id: 'DOC-5', bucket: 'Documentation', key: 'file:security', title: 'Add SECURITY.md' },
-  { id: 'DOC-6', bucket: 'Documentation', key: 'file:changelog', title: 'Add CHANGELOG.md' },
+  { id: 'DOC-6', bucket: 'Documentation', key: 'file:changelog', title: 'Add CHANGELOG.md', tags: ['governance'] },
   // README sections
   { id: 'DOC-7', bucket: 'Documentation', key: 'section:description', title: 'Add a project description to your README' },
   { id: 'DOC-8', bucket: 'Documentation', key: 'section:installation', title: 'Add installation instructions to your README' },
@@ -134,4 +136,11 @@ export function getCatalogId(key: string): string | undefined {
  */
 export function getCatalogEntryByKey(key: string): CatalogEntry | undefined {
   return keyIndex.get(key)
+}
+
+/**
+ * Return all catalog entries that carry a given tag (e.g. "governance").
+ */
+export function getCatalogEntriesByTag(tag: string): CatalogEntry[] {
+  return RECOMMENDATION_CATALOG.filter((e) => e.tags?.includes(tag))
 }
