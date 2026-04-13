@@ -39,7 +39,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   const responsiveness = getResponsivenessScore(result)
   const sustainability = getSustainabilityScore(result)
   const documentation = result.documentationResult !== 'unavailable'
-    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
+    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     : null
   const bracketLabel = activity.bracketLabel || responsiveness.bracketLabel || sustainability.bracketLabel || ''
 

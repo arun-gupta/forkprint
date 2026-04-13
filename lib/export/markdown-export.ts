@@ -149,7 +149,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     `| Sustainability | ${sustainability.value} |`,
     `| Activity | ${activity.value} |`,
     `| Responsiveness | ${responsiveness.value} |`,
-    `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars).value : 'unavailable'} |`,
+    `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult).value : 'unavailable'} |`,
     '',
   )
 
@@ -278,7 +278,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
 
   // Documentation section
   if (result.documentationResult !== 'unavailable') {
-    const docScore = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
+    const docScore = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     const { fileChecks, readmeSections } = result.documentationResult
     const FILE_LABELS: Record<string, string> = {
       readme: 'README', license: 'LICENSE', contributing: 'CONTRIBUTING',

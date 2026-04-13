@@ -56,6 +56,13 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
       additionalLicenses: [],
       contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
     },
+    defaultBranchName: 'main',
+    topics: [],
+    inclusiveNamingResult: {
+      defaultBranchName: 'main',
+      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      metadataChecks: [],
+    },
     missingFields: [],
     ...overrides,
   }

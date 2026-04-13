@@ -13,15 +13,16 @@ const mockScore: DocumentationScoreDefinition = {
   filePresenceScore: 0.80,
   readmeQualityScore: 0.60,
   licensingScore: 0.75,
+  inclusiveNamingScore: 1.0,
   recommendations: [],
 }
 
 describe('DocumentationScoreHelp', () => {
-  it('renders the score help section with three-part model description', () => {
+  it('renders the score help section with four-part model description', () => {
     render(<DocumentationScoreHelp score={mockScore} />)
 
     expect(screen.getByText(/how is documentation scored/i)).toBeInTheDocument()
-    expect(screen.getByText(/file presence.*40%.*readme quality.*30%.*licensing compliance.*30%/i)).toBeInTheDocument()
+    expect(screen.getByText(/file presence.*35%.*readme quality.*30%.*licensing compliance.*25%.*inclusive naming.*10%/i)).toBeInTheDocument()
   })
 
   it('renders factor chips with weights and values', () => {

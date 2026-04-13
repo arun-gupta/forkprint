@@ -25,7 +25,7 @@ function computeScores(result: AnalysisResult): RepoScores {
   const responsiveness = getResponsivenessScore(result)
   let documentation: RepoScores['documentation'] = null
   if (result.documentationResult !== 'unavailable') {
-    const docScore = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
+    const docScore = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     documentation = {
       value: docScore.value,
       tone: docScore.tone,

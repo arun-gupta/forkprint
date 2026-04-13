@@ -20,6 +20,7 @@ import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
+import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
 
 interface DocBlob {
   text?: string
@@ -37,6 +38,8 @@ interface RepoOverviewResponse {
     watchers: { totalCount: number }
     issues: { totalCount: number }
     pullRequests?: { totalCount: number }
+    defaultBranchRef?: { name: string } | null
+    repositoryTopics?: { nodes: Array<{ topic: { name: string } }> } | null
     licenseInfo?: { spdxId: string | null; name: string | null } | null
     docReadmeMd?: DocBlob | null
     docReadmeLower?: DocBlob | null
@@ -667,6 +670,15 @@ function buildAnalysisResult(
             additionalLicenseFiles,
           )
         })()
+      : 'unavailable',
+    defaultBranchName: overview.repository?.defaultBranchRef?.name ?? 'unavailable',
+    topics: overview.repository?.repositoryTopics?.nodes.map((n) => n.topic.name) ?? [],
+    inclusiveNamingResult: overview.repository
+      ? extractInclusiveNamingResult(
+          overview.repository.defaultBranchRef?.name ?? null,
+          overview.repository.description ?? null,
+          overview.repository.repositoryTopics?.nodes.map((n) => n.topic.name) ?? [],
+        )
       : 'unavailable',
     issueFirstResponseTimestamps,
     issueCloseTimestamps,

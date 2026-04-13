@@ -1,10 +1,11 @@
-import type { DocumentationResult, LicensingResult } from '@/lib/analyzer/analysis-result'
+import type { DocumentationResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
+import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
 import { getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 export interface DocumentationRecommendation {
   bucket: 'documentation'
-  category: 'file' | 'readme_section' | 'licensing'
+  category: 'file' | 'readme_section' | 'licensing' | 'inclusive_naming'
   item: string
   weight: number
   text: string
@@ -21,6 +22,7 @@ export interface DocumentationScoreDefinition {
   filePresenceScore: number
   readmeQualityScore: number
   licensingScore: number
+  inclusiveNamingScore: number
   recommendations: DocumentationRecommendation[]
 }
 
@@ -65,12 +67,19 @@ const LICENSING_WEIGHTS = {
 } as const
 
 const COMPOSITE_WEIGHTS = {
+  filePresence: 0.35,
+  readmeQuality: 0.30,
+  licensing: 0.25,
+  inclusiveNaming: 0.10,
+} as const
+
+const FALLBACK_NO_INI_WEIGHTS = {
   filePresence: 0.40,
   readmeQuality: 0.30,
   licensing: 0.30,
 } as const
 
-const FALLBACK_COMPOSITE_WEIGHTS = {
+const FALLBACK_NO_LICENSING_WEIGHTS = {
   filePresence: 0.60,
   readmeQuality: 0.40,
 } as const
@@ -149,6 +158,7 @@ export function getDocumentationScore(
   docResult: DocumentationResult,
   licensingResult: LicensingResult | 'unavailable',
   stars: number | 'unavailable',
+  inclusiveNamingResult?: InclusiveNamingResult | 'unavailable',
 ): DocumentationScoreDefinition {
   const recommendations: DocumentationRecommendation[] = []
 
@@ -195,17 +205,41 @@ export function getDocumentationScore(
     recommendations.push(...licensing.recommendations)
   }
 
-  // Composite score — three-part or fallback two-part when licensing unavailable
+  // Inclusive naming sub-score
+  let inclusiveNamingScore = 0
+  const hasInclusiveNaming = inclusiveNamingResult != null && inclusiveNamingResult !== 'unavailable'
+  if (hasInclusiveNaming) {
+    const iniScore = getInclusiveNamingScore(inclusiveNamingResult)
+    inclusiveNamingScore = iniScore.compositeScore
+    for (const rec of iniScore.recommendations) {
+      recommendations.push({
+        bucket: 'documentation',
+        category: 'inclusive_naming',
+        item: rec.item,
+        weight: rec.weight,
+        text: rec.text,
+      })
+    }
+  }
+
+  // Composite score — four-part, three-part, or two-part fallback
   let compositeScore: number
-  if (licensingResult !== 'unavailable') {
+  const hasLicensing = licensingResult !== 'unavailable'
+  if (hasLicensing && hasInclusiveNaming) {
     compositeScore =
       filePresenceScore * COMPOSITE_WEIGHTS.filePresence +
       readmeQualityScore * COMPOSITE_WEIGHTS.readmeQuality +
-      licensingScore * COMPOSITE_WEIGHTS.licensing
+      licensingScore * COMPOSITE_WEIGHTS.licensing +
+      inclusiveNamingScore * COMPOSITE_WEIGHTS.inclusiveNaming
+  } else if (hasLicensing) {
+    compositeScore =
+      filePresenceScore * FALLBACK_NO_INI_WEIGHTS.filePresence +
+      readmeQualityScore * FALLBACK_NO_INI_WEIGHTS.readmeQuality +
+      licensingScore * FALLBACK_NO_INI_WEIGHTS.licensing
   } else {
     compositeScore =
-      filePresenceScore * FALLBACK_COMPOSITE_WEIGHTS.filePresence +
-      readmeQualityScore * FALLBACK_COMPOSITE_WEIGHTS.readmeQuality
+      filePresenceScore * FALLBACK_NO_LICENSING_WEIGHTS.filePresence +
+      readmeQualityScore * FALLBACK_NO_LICENSING_WEIGHTS.readmeQuality
   }
 
   // Sort recommendations by weight descending
@@ -222,6 +256,7 @@ export function getDocumentationScore(
       filePresenceScore,
       readmeQualityScore,
       licensingScore,
+      inclusiveNamingScore,
       recommendations,
     }
   }
@@ -242,6 +277,7 @@ export function getDocumentationScore(
     filePresenceScore,
     readmeQualityScore,
     licensingScore,
+    inclusiveNamingScore,
     recommendations,
   }
 }

@@ -370,7 +370,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         valueType: 'number',
         getValue: (result) => {
           if (result.documentationResult === 'unavailable') return 'unavailable'
-          const score = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
+          const score = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
           if (typeof score.value !== 'number') return 'unavailable'
           return score.value
         },

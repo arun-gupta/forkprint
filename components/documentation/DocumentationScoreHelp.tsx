@@ -11,9 +11,10 @@ export function DocumentationScoreHelp({ score }: DocumentationScoreHelpProps) {
   const [showDetails, setShowDetails] = useState(false)
 
   const factors = [
-    { label: 'File Presence', weight: '40%', value: `${Math.round(score.filePresenceScore * 100)}%`, description: 'Presence of key documentation files: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, and CHANGELOG.' },
+    { label: 'File Presence', weight: '35%', value: `${Math.round(score.filePresenceScore * 100)}%`, description: 'Presence of key documentation files: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, and CHANGELOG.' },
     { label: 'README Quality', weight: '30%', value: `${Math.round(score.readmeQualityScore * 100)}%`, description: 'Detection of key README sections: project description, installation, usage, contributing, and license mention.' },
-    { label: 'Licensing & Compliance', weight: '30%', value: `${Math.round(score.licensingScore * 100)}%`, description: 'License recognition, OSI approval, permissiveness classification, and DCO/CLA enforcement.' },
+    { label: 'Licensing & Compliance', weight: '25%', value: `${Math.round(score.licensingScore * 100)}%`, description: 'License recognition, OSI approval, permissiveness classification, and DCO/CLA enforcement.' },
+    { label: 'Inclusive Naming', weight: '10%', value: `${Math.round(score.inclusiveNamingScore * 100)}%`, description: 'Checks default branch name and repo metadata for non-inclusive terms per the Inclusive Naming Initiative word list. Tier 1 terms carry full penalty, Tier 2 moderate, Tier 3 minor.' },
   ]
 
   return (
@@ -22,7 +23,7 @@ export function DocumentationScoreHelp({ score }: DocumentationScoreHelpProps) {
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is Documentation scored?</p>
           <p className="mt-1 text-sm text-slate-700">
-            Composite of file presence (40%), README quality (30%), and licensing compliance (30%).
+            Composite of file presence (35%), README quality (30%), licensing compliance (25%), and inclusive naming (10%).
           </p>
         </div>
         <button

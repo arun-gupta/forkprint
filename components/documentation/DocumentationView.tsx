@@ -2,7 +2,7 @@
 
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { DocumentationScoreHelp } from '@/components/documentation/DocumentationScoreHelp'
-import type { AnalysisResult, LicensingResult } from '@/lib/analyzer/analysis-result'
+import type { AnalysisResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 
 interface DocumentationViewProps {
@@ -118,6 +118,82 @@ function LicensingPane({ licensingResult }: { licensingResult: LicensingResult |
   )
 }
 
+const SEVERITY_COLORS: Record<string, string> = {
+  'Replace immediately': 'text-red-600',
+  'Recommended to replace': 'text-amber-600',
+  'Consider replacing': 'text-slate-500',
+}
+
+function InclusiveNamingPane({ inclusiveNamingResult }: { inclusiveNamingResult: InclusiveNamingResult | 'unavailable' }) {
+  if (inclusiveNamingResult === 'unavailable') {
+    return (
+      <section aria-label="Inclusive Naming" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Inclusive Naming</h3>
+        <p className="mt-3 text-sm text-slate-400">Inclusive naming data unavailable.</p>
+      </section>
+    )
+  }
+
+  const { branchCheck, metadataChecks } = inclusiveNamingResult
+  const allChecks = [branchCheck, ...metadataChecks]
+  const failingChecks = allChecks.filter((c) => !c.passed)
+
+  return (
+    <section aria-label="Inclusive Naming" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Inclusive Naming</h3>
+      <ul className="mt-3 space-y-2">
+        {/* Branch name check */}
+        <li className="flex items-start gap-2">
+          <span className={`mt-0.5 text-sm ${branchCheck.passed ? 'text-emerald-600' : 'text-red-400'}`}>
+            {branchCheck.passed ? '✓' : '✗'}
+          </span>
+          <div className="min-w-0">
+            <p className={`text-sm font-medium ${branchCheck.passed ? 'text-slate-900' : 'text-slate-400'}`}>
+              Default branch: {inclusiveNamingResult.defaultBranchName ?? 'unknown'}
+            </p>
+            {!branchCheck.passed && branchCheck.severity ? (
+              <p className={`mt-0.5 text-xs ${SEVERITY_COLORS[branchCheck.severity] ?? 'text-slate-500'}`}>
+                {branchCheck.severity} — consider renaming to &lsquo;{branchCheck.replacements[0] ?? 'main'}&rsquo;
+              </p>
+            ) : null}
+          </div>
+        </li>
+
+        {/* Metadata checks — show failing terms */}
+        {metadataChecks.filter((c) => !c.passed).map((check) => (
+          <li key={`${check.checkType}:${check.term}`} className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm text-red-400">✗</span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-slate-400">
+                &lsquo;{check.term}&rsquo; in {check.checkType}
+              </p>
+              {check.severity ? (
+                <p className={`mt-0.5 text-xs ${SEVERITY_COLORS[check.severity] ?? 'text-slate-500'}`}>
+                  {check.severity}
+                  {check.replacements.length > 0 ? ` — use: ${check.replacements.slice(0, 3).join(', ')}` : ''}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        ))}
+
+        {/* All clear message */}
+        {failingChecks.length === 0 ? (
+          <li className="flex items-start gap-2">
+            <span className="mt-0.5 text-sm text-emerald-600">✓</span>
+            <p className="text-sm font-medium text-slate-900">No non-inclusive terms detected</p>
+          </li>
+        ) : null}
+      </ul>
+      {failingChecks.length > 0 ? (
+        <p className="mt-3 text-xs text-slate-400">
+          Reference: <a href="https://inclusivenaming.org/" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">inclusivenaming.org</a>
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
 export function DocumentationView({ results }: DocumentationViewProps) {
   return (
     <section aria-label="Documentation view" className="space-y-6">
@@ -131,7 +207,7 @@ export function DocumentationView({ results }: DocumentationViewProps) {
           )
         }
 
-        const score = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars)
+        const score = getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
         const { fileChecks, readmeSections } = result.documentationResult
         const filesFound = fileChecks.filter((f) => f.found).length
         const sectionsDetected = readmeSections.filter((s) => s.detected).length
@@ -152,7 +228,7 @@ export function DocumentationView({ results }: DocumentationViewProps) {
 
             <DocumentationScoreHelp score={score} />
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
               {/* File presence */}
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Documentation files</h3>
@@ -204,6 +280,9 @@ export function DocumentationView({ results }: DocumentationViewProps) {
 
               {/* Licensing & Compliance */}
               <LicensingPane licensingResult={result.licensingResult} />
+
+              {/* Inclusive Naming */}
+              <InclusiveNamingPane inclusiveNamingResult={result.inclusiveNamingResult} />
             </div>
           </div>
         )

@@ -18,6 +18,16 @@ export const REPO_OVERVIEW_QUERY = `
       pullRequests(states: OPEN) {
         totalCount
       }
+      defaultBranchRef {
+        name
+      }
+      repositoryTopics(first: 20) {
+        nodes {
+          topic {
+            name
+          }
+        }
+      }
       licenseInfo {
         spdxId
         name

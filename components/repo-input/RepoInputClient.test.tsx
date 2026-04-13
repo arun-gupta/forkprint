@@ -51,6 +51,13 @@ describe('RepoInputClient', () => {
           issueCloseTimestamps: 'unavailable',
           prMergeTimestamps: 'unavailable',
           documentationResult: 'unavailable',
+    defaultBranchName: 'main',
+    topics: [],
+    inclusiveNamingResult: {
+      defaultBranchName: 'main',
+      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      metadataChecks: [],
+    },
     missingFields: [],
         },
       ],
@@ -508,6 +515,13 @@ function buildAnalysisResult(repo: string, overrides: Record<string, unknown> = 
     medianTimeToMergeHours: 24,
     medianTimeToCloseHours: 36,
     documentationResult: 'unavailable',
+    defaultBranchName: 'main',
+    topics: [],
+    inclusiveNamingResult: {
+      defaultBranchName: 'main',
+      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      metadataChecks: [],
+    },
     missingFields: [],
     ...overrides,
   }

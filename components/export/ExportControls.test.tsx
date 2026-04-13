@@ -44,6 +44,13 @@ const MINIMAL_RESPONSE: AnalyzeResponse = {
       issueCloseTimestamps: [],
       prMergeTimestamps: [],
       documentationResult: 'unavailable',
+    defaultBranchName: 'main',
+    topics: [],
+    inclusiveNamingResult: {
+      defaultBranchName: 'main',
+      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      metadataChecks: [],
+    },
     missingFields: [],
     },
   ],

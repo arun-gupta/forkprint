@@ -85,6 +85,39 @@ export interface DocumentationResult {
   readmeContent: string | null
 }
 
+export type InclusiveNamingCheckType = 'branch' | 'description' | 'topic'
+
+export type InclusiveNamingSeverity =
+  | 'Replace immediately'
+  | 'Recommended to replace'
+  | 'Consider replacing'
+
+export interface InclusiveNamingCheck {
+  checkType: InclusiveNamingCheckType
+  term: string
+  passed: boolean
+  tier: 1 | 2 | 3 | null
+  severity: InclusiveNamingSeverity | null
+  replacements: string[]
+  context: string | null
+}
+
+export interface InclusiveNamingResult {
+  defaultBranchName: string | null
+  branchCheck: InclusiveNamingCheck
+  metadataChecks: InclusiveNamingCheck[]
+}
+
+export interface InclusiveNamingRecommendation {
+  bucket: 'documentation'
+  category: 'inclusive_naming'
+  item: string
+  weight: number
+  text: string
+  tier: 1 | 2 | 3
+  severity: InclusiveNamingSeverity
+}
+
 export interface AnalysisResult {
   repo: string
   name: string | Unavailable
@@ -121,6 +154,9 @@ export interface AnalysisResult {
   prMergeTimestamps: string[] | Unavailable
   documentationResult: DocumentationResult | Unavailable
   licensingResult: LicensingResult | Unavailable
+  defaultBranchName: string | Unavailable
+  topics: string[]
+  inclusiveNamingResult: InclusiveNamingResult | Unavailable
   missingFields: string[]
 }
 
