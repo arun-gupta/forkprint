@@ -1,4 +1,5 @@
 import { BaselineView } from '@/components/baseline/BaselineView'
+import { BackToAnalyzerLink } from '@/components/baseline/BackToAnalyzerLink'
 
 export const metadata = {
   title: 'Scoring Methodology — RepoPulse',
@@ -17,12 +18,7 @@ export default function BaselinePage() {
             </a>
             <p className="mt-1 text-sm text-sky-100 md:text-base">Scoring Methodology</p>
           </div>
-          <a
-            href="/"
-            className="rounded-full border border-sky-700 bg-sky-950/25 px-4 py-2 text-sm font-medium text-sky-50 transition hover:border-sky-400 hover:bg-sky-950/40 hover:text-white"
-          >
-            Back to analyzer
-          </a>
+          <BackToAnalyzerLink />
         </div>
       </header>
       <div className="mx-auto max-w-5xl px-4 py-6">

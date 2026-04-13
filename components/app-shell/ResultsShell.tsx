@@ -83,6 +83,8 @@ export function ResultsShell({
           <div className="flex items-center gap-3">
             <a
               href="/baseline"
+              target="_blank"
+              rel="noopener noreferrer"
               className="rounded-full border border-sky-700 bg-sky-950/25 px-3 py-2 text-xs font-medium text-sky-50 transition hover:border-sky-400 hover:bg-sky-950/40 hover:text-white"
             >
               Scoring Methodology
