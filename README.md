@@ -1,28 +1,15 @@
 # RepoPulse — OSS Health Score
 
-RepoPulse measures the health of open source projects with a composite **OSS Health Score** — a single percentile-based score computed from Activity, Responsiveness, Sustainability, and Documentation, calibrated against 1600+ real GitHub repositories.
+RepoPulse measures the health of open source projects with a composite **OSS Health Score** — a single percentile-based score computed from Activity, Responsiveness, Contributors, Security, and Documentation, calibrated against 1600+ real GitHub repositories.
 
 Analyze any public repo, see exactly where it ranks, and get actionable recommendations for improvement.
 
 Live: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 
-## What it measures
-
-| Dimension | Weight | What it evaluates |
-|-----------|--------|-------------------|
-| **Activity** | 30% | PR throughput, issue flow, commit cadence, release frequency |
-| **Responsiveness** | 30% | Issue/PR response times, resolution speed, backlog health, engagement quality |
-| **Sustainability** | 25% | Contributor concentration, repeat/new contributor ratios |
-| **Documentation** | 15% | README, CONTRIBUTING, LICENSE, SECURITY, CODE_OF_CONDUCT, CHANGELOG |
-
-Each dimension is scored as a percentile relative to repos in the same star bracket (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
-
-**Coming soon**: Licensing & Compliance, Inclusive Naming, Governance & Transparency, Community, Security, Accessibility & Onboarding, Release Health, Development Cadence, Project Maturity, and Ecosystem Reach. See the [Phase 2 roadmap](docs/DEVELOPMENT.md#phase-2-feature-order) for details.
-
 ## Features
 
 - **OSS Health Score** — composite percentile with actionable recommendations
-- **7-dimension scorecard** — Reach, Attention, Engagement, Activity, Responsiveness, Sustainability, Documentation
+- **7-dimension scorecard** — Reach, Attention, Engagement, Activity, Responsiveness, Contributors, Documentation
 - **Percentile-based scoring** — calibrated against 1600+ repos across 4 star brackets
 - **Unified recommendations** — actionable improvement suggestions across all scoring dimensions
 - **Individual metric percentiles** — every metric shows where the repo ranks
@@ -30,6 +17,20 @@ Each dimension is scored as a percentile relative to repos in the same star brac
 - **Organization inventory** — browse and analyze repos within a GitHub org
 - **Scoring Methodology page** — full transparency into calibration data and thresholds
 - **Export** — JSON, Markdown, and shareable URL
+
+## What it measures
+
+| Dimension | Weight | What it evaluates |
+|-----------|--------|-------------------|
+| **Activity** | 25% | PR throughput, issue flow, commit cadence, release frequency |
+| **Responsiveness** | 25% | Issue/PR response times, resolution speed, backlog health, engagement quality |
+| **Contributors** | 23% | Contributor concentration, repeat/new contributor ratios |
+| **Security** | 15% | OpenSSF Scorecard checks, dependency automation, branch protection, SECURITY.md |
+| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, CHANGELOG, licensing & compliance, inclusive naming |
+
+Each dimension is scored as a percentile relative to repos in the same star bracket (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
+
+**Coming soon**: Governance & Transparency, Community, Accessibility & Onboarding, Release Health, Development Cadence, Project Maturity, and Ecosystem Reach. See the [Phase 2 roadmap](docs/DEVELOPMENT.md#phase-2-feature-order) for details.
 
 ## Getting started
 
@@ -53,8 +54,8 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deploym
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| 1 | Web app + core scoring (Activity, Responsiveness, Sustainability, Documentation) | ✅ Done |
-| 2 | Expand scoring dimensions (Security, Community, Release Health, Inclusive Naming, Licensing & Compliance, Governance & Transparency, Accessibility & Onboarding, Ecosystem Reach) | Next |
+| 1 | Web app + core scoring (Activity, Responsiveness, Contributors, Documentation) | ✅ Done |
+| 2 | Expand scoring dimensions — Security, Licensing & Compliance, Inclusive Naming ✅; Community, Release Health, Governance & Transparency, Accessibility & Onboarding, Ecosystem Reach upcoming | In progress |
 | 3 | Integrations (GitHub Action, MCP Server, CLI, PR bot, VS Code, Badge, Webhook) | Planned |
 | 4 | Git provider support (GitLab, Bitbucket, Gitea) | Planned |
 
