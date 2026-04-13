@@ -52,12 +52,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         setElapsedSeconds((s) => s + 1)
       }, 1000)
 
-      // Show first quote after 5 seconds, rotate every 6 seconds
+      // Show first quote after 5 seconds, rotate every 10 seconds
       const quoteDelay = setTimeout(() => {
         setQuoteIndex(getRandomQuoteIndex(null))
         quoteTimerRef.current = setInterval(() => {
           setQuoteIndex((current) => getRandomQuoteIndex(current))
-        }, 6000)
+        }, 10000)
       }, 5000)
 
       return () => {
@@ -91,7 +91,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
     const interval = setInterval(() => {
       setEmptyQuoteIndex((current) => getRandomQuoteIndex(current))
-    }, 8000)
+    }, 10000)
 
     return () => clearInterval(interval)
   }, [isEmptyState])
