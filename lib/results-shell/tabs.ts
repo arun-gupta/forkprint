@@ -16,8 +16,8 @@ export const resultTabs: ResultTabDefinition[] = [
   {
     id: 'activity',
     label: 'Activity',
-    status: 'placeholder',
-    description: 'Activity metrics and scoring are coming soon.',
+    status: 'implemented',
+    description: 'Activity metrics, scoring, and detailed repo flow signals.',
   },
   {
     id: 'responsiveness',
@@ -26,10 +26,22 @@ export const resultTabs: ResultTabDefinition[] = [
     description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
   },
   {
+    id: 'documentation',
+    label: 'Documentation',
+    status: 'implemented',
+    description: 'Documentation file presence, README quality, and improvement recommendations.',
+  },
+  {
     id: 'security',
     label: 'Security',
     status: 'implemented',
     description: 'Security posture including OpenSSF Scorecard checks, dependency automation, and branch protection.',
+  },
+  {
+    id: 'recommendations',
+    label: 'Recommendations',
+    status: 'implemented',
+    description: 'Actionable recommendations across all scoring dimensions.',
   },
   {
     id: 'comparison',

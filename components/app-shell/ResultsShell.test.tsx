@@ -13,6 +13,7 @@ describe('ResultsShell', () => {
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
+        security={<div>Security coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -36,6 +37,7 @@ describe('ResultsShell', () => {
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
+        security={<div>Security coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -54,6 +56,7 @@ describe('ResultsShell', () => {
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
+        security={<div>Security coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -76,6 +79,7 @@ describe('ResultsShell', () => {
         activity={<div>Activity coming soon</div>}
         responsiveness={<div>Responsiveness coming soon</div>}
         documentation={<div>Documentation coming soon</div>}
+        security={<div>Security coming soon</div>}
         recommendations={<div>Recommendations coming soon</div>}
         comparison={<div>Comparison coming soon</div>}
       />,
@@ -94,10 +98,15 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
+        documentation={<div>Documentation content</div>}
+        security={<div>Security content</div>}
+        recommendations={<div>Recommendations content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )
 
+    // Comparison is in the overflow menu
+    await userEvent.click(screen.getByRole('button', { name: /More/ }))
     await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
     expect(screen.getByText('Comparison content')).toBeInTheDocument()
 
@@ -109,6 +118,9 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
+        documentation={<div>Documentation content</div>}
+        security={<div>Security content</div>}
+        recommendations={<div>Recommendations content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )
@@ -118,7 +130,7 @@ describe('ResultsShell', () => {
     expect(screen.queryByText('Comparison content')).not.toBeInTheDocument()
   })
 
-  it('supports opening on an initial active tab', () => {
+  it('supports opening on an initial active tab', async () => {
     render(
       <ResultsShell
         initialActiveTab="comparison"
@@ -127,10 +139,15 @@ describe('ResultsShell', () => {
         contributors={<div>Contributors content</div>}
         activity={<div>Activity content</div>}
         responsiveness={<div>Responsiveness content</div>}
+        documentation={<div>Documentation content</div>}
+        security={<div>Security content</div>}
+        recommendations={<div>Recommendations content</div>}
         comparison={<div>Comparison content</div>}
       />,
     )
 
+    // Comparison is in the overflow — button shows "Comparison" when active
+    await userEvent.click(screen.getByRole('button', { name: /Comparison/ }))
     expect(screen.getByRole('tab', { name: 'Comparison' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('Comparison content')).toBeInTheDocument()
   })
