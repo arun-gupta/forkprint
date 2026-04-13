@@ -1,9 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { DocumentationScoreHelp } from '@/components/documentation/DocumentationScoreHelp'
+import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import type { AnalysisResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
+import { GOVERNANCE_DOC_FILES, LICENSING_IS_GOVERNANCE } from '@/lib/tags/governance'
 
 interface DocumentationViewProps {
   results: AnalysisResult[]
@@ -26,7 +29,7 @@ const SECTION_LABELS: Record<string, string> = {
   license: 'License',
 }
 
-function LicensingPane({ licensingResult }: { licensingResult: LicensingResult | 'unavailable' }) {
+function LicensingPane({ licensingResult, activeTag, onTagClick }: { licensingResult: LicensingResult | 'unavailable'; activeTag: string | null; onTagClick: (tag: string) => void }) {
   if (licensingResult === 'unavailable') {
     return (
       <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -42,7 +45,10 @@ function LicensingPane({ licensingResult }: { licensingResult: LicensingResult |
 
   return (
     <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
+        {LICENSING_IS_GOVERNANCE ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
+      </div>
       <ul className="mt-3 space-y-2">
         {/* License detection */}
         <li className="flex items-start gap-2">
@@ -195,6 +201,9 @@ function InclusiveNamingPane({ inclusiveNamingResult }: { inclusiveNamingResult:
 }
 
 export function DocumentationView({ results }: DocumentationViewProps) {
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+  const handleTagClick = (tag: string) => setActiveTag((prev) => (prev === tag ? null : tag))
+
   return (
     <section aria-label="Documentation view" className="space-y-6">
       {results.map((result) => {
@@ -228,61 +237,77 @@ export function DocumentationView({ results }: DocumentationViewProps) {
 
             <DocumentationScoreHelp score={score} />
 
+            {activeTag ? (
+              <div className="mt-4">
+                <ActiveFilterBar tag={activeTag} onClear={() => setActiveTag(null)} />
+              </div>
+            ) : null}
+
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               {/* File presence */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Documentation files</h3>
-                <ul className="mt-3 space-y-2">
-                  {fileChecks.map((check) => (
-                    <li key={check.name} className="flex items-start gap-2">
-                      <span className={`mt-0.5 text-sm ${check.found ? 'text-emerald-600' : 'text-red-400'}`}>
-                        {check.found ? '✓' : '✗'}
-                      </span>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
-                          {FILE_LABELS[check.name] ?? check.name}
-                          {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
-                        </p>
-                        {!check.found ? (
-                          <p className="mt-0.5 text-xs text-amber-700">
-                            {score.recommendations.find((r) => r.category === 'file' && r.item === check.name)?.text}
+              {!activeTag || fileChecks.some((c) => GOVERNANCE_DOC_FILES.has(c.name)) ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Documentation files</h3>
+                  <ul className="mt-3 space-y-2">
+                    {fileChecks
+                      .filter((check) => !activeTag || GOVERNANCE_DOC_FILES.has(check.name))
+                      .map((check) => {
+                        const isGov = GOVERNANCE_DOC_FILES.has(check.name)
+                        return (
+                          <li key={check.name} className="flex items-start gap-2">
+                            <span className={`mt-0.5 text-sm ${check.found ? 'text-emerald-600' : 'text-red-400'}`}>
+                              {check.found ? '✓' : '✗'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {FILE_LABELS[check.name] ?? check.name}
+                                {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
+                              </p>
+                              {!check.found ? (
+                                <p className="mt-0.5 text-xs text-amber-700">
+                                  {score.recommendations.find((r) => r.category === 'file' && r.item === check.name)?.text}
+                                </p>
+                              ) : null}
+                            </div>
+                            {isGov ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={handleTagClick} /> : null}
+                          </li>
+                        )
+                      })}
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* README sections — no governance items, hide when filtering */}
+              {!activeTag ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">README sections</h3>
+                  <ul className="mt-3 space-y-2">
+                    {readmeSections.map((section) => (
+                      <li key={section.name} className="flex items-start gap-2">
+                        <span className={`mt-0.5 text-sm ${section.detected ? 'text-emerald-600' : 'text-red-400'}`}>
+                          {section.detected ? '✓' : '✗'}
+                        </span>
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium ${section.detected ? 'text-slate-900' : 'text-slate-400'}`}>
+                            {SECTION_LABELS[section.name] ?? section.name}
                           </p>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                          {!section.detected ? (
+                            <p className="mt-0.5 text-xs text-amber-700">
+                              {score.recommendations.find((r) => r.category === 'readme_section' && r.item === section.name)?.text}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
-              {/* README sections */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">README sections</h3>
-                <ul className="mt-3 space-y-2">
-                  {readmeSections.map((section) => (
-                    <li key={section.name} className="flex items-start gap-2">
-                      <span className={`mt-0.5 text-sm ${section.detected ? 'text-emerald-600' : 'text-red-400'}`}>
-                        {section.detected ? '✓' : '✗'}
-                      </span>
-                      <div className="min-w-0">
-                        <p className={`text-sm font-medium ${section.detected ? 'text-slate-900' : 'text-slate-400'}`}>
-                          {SECTION_LABELS[section.name] ?? section.name}
-                        </p>
-                        {!section.detected ? (
-                          <p className="mt-0.5 text-xs text-amber-700">
-                            {score.recommendations.find((r) => r.category === 'readme_section' && r.item === section.name)?.text}
-                          </p>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {/* Licensing & Compliance — always governance */}
+              <LicensingPane licensingResult={result.licensingResult} activeTag={activeTag} onTagClick={handleTagClick} />
 
-              {/* Licensing & Compliance */}
-              <LicensingPane licensingResult={result.licensingResult} />
-
-              {/* Inclusive Naming */}
-              <InclusiveNamingPane inclusiveNamingResult={result.inclusiveNamingResult} />
+              {/* Inclusive Naming — hide when filtering governance */}
+              {!activeTag ? <InclusiveNamingPane inclusiveNamingResult={result.inclusiveNamingResult} /> : null}
             </div>
           </div>
         )
