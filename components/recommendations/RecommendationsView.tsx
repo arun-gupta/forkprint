@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
@@ -29,6 +30,18 @@ const RISK_COLORS: Record<string, string> = {
 const SOURCE_LABELS: Record<string, string> = {
   scorecard: 'OpenSSF Scorecard',
   direct_check: 'Direct check',
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-0' : '-rotate-90'}`}
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+    </svg>
+  )
 }
 
 function SecurityRecommendationCard({ rec, referenceId }: { rec: SecurityRecommendation; referenceId?: string }) {
@@ -77,7 +90,19 @@ function SecurityRecommendationCard({ rec, referenceId }: { rec: SecurityRecomme
   )
 }
 
-function SecurityRecommendationsGroup({ recommendations }: { recommendations: SecurityRecommendation[] }) {
+function SecurityRecommendationsGroup({
+  recommendations,
+  expanded,
+  onToggle,
+  categoryCollapsed,
+  onCategoryToggle,
+}: {
+  recommendations: SecurityRecommendation[]
+  expanded: boolean
+  onToggle: () => void
+  categoryCollapsed: Record<string, boolean>
+  onCategoryToggle: (key: string) => void
+}) {
   // Resolve catalog IDs — each rec's `item` field is the catalog key
   const withIds = recommendations.map((rec, i) => ({
     rec,
@@ -100,29 +125,54 @@ function SecurityRecommendationsGroup({ recommendations }: { recommendations: Se
 
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={expanded}
+      >
+        <ChevronIcon expanded={expanded} />
         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS.Security}`}>
           Security
         </span>
         <span className="text-xs text-slate-400">{recommendations.length} recommendation{recommendations.length !== 1 ? 's' : ''}</span>
-      </div>
-      <div className="mt-3 space-y-4">
-        {sortedGroups.map(({ category, entries }) => (
-          <div key={category.key}>
-            <h4 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">{category.label}</h4>
-            <div className="space-y-2">
-              {entries.map(({ rec, referenceId }) => (
-                <SecurityRecommendationCard key={`${rec.item}-${referenceId}`} rec={rec} referenceId={referenceId} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      </button>
+      {expanded ? (
+        <div className="mt-3 space-y-4">
+          {sortedGroups.map(({ category, entries }) => {
+            const collapsed = categoryCollapsed[category.key] ?? false
+            return (
+              <div key={category.key}>
+                <button
+                  type="button"
+                  onClick={() => onCategoryToggle(category.key)}
+                  className="mb-2 flex items-center gap-1.5 text-left"
+                  aria-expanded={!collapsed}
+                >
+                  <ChevronIcon expanded={!collapsed} />
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{category.label}</span>
+                  <span className="text-xs text-slate-400">{entries.length}</span>
+                </button>
+                {!collapsed ? (
+                  <div className="space-y-2">
+                    {entries.map(({ rec, referenceId }) => (
+                      <SecurityRecommendationCard key={`${rec.item}-${referenceId}`} rec={rec} referenceId={referenceId} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      ) : null}
     </div>
   )
 }
 
 export function RecommendationsView({ results }: RecommendationsViewProps) {
+  const [collapsedBuckets, setCollapsedBuckets] = useState<Record<string, boolean>>({})
+  const [categoryCollapsed, setCategoryCollapsed] = useState<Record<string, boolean>>({})
+
   return (
     <section aria-label="Recommendations view" className="space-y-6">
       {results.map((result) => {
@@ -159,6 +209,31 @@ export function RecommendationsView({ results }: RecommendationsViewProps) {
 
         const bucketCount = bucketGroups.size + (securityRecs.length > 0 ? 1 : 0)
 
+        // Collect all bucket keys for expand/collapse all
+        const allBucketKeys = [...Array.from(bucketGroups.keys()), ...(securityRecs.length > 0 ? ['Security'] : [])]
+        const allExpanded = allBucketKeys.every((key) => !collapsedBuckets[key])
+
+        const handleToggleAll = () => {
+          if (allExpanded) {
+            // Collapse all buckets and categories
+            const collapsed: Record<string, boolean> = {}
+            for (const key of allBucketKeys) {
+              collapsed[key] = true
+            }
+            setCollapsedBuckets(collapsed)
+            // Also collapse all security categories
+            const catCollapsed: Record<string, boolean> = {}
+            for (const cat of CATEGORY_DEFINITIONS) {
+              catCollapsed[cat.key] = true
+            }
+            setCategoryCollapsed(catCollapsed)
+          } else {
+            // Expand all
+            setCollapsedBuckets({})
+            setCategoryCollapsed({})
+          }
+        }
+
         return (
           <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-start justify-between">
@@ -168,30 +243,54 @@ export function RecommendationsView({ results }: RecommendationsViewProps) {
                   {totalCount} recommendation{totalCount !== 1 ? 's' : ''} across {bucketCount} dimension{bucketCount !== 1 ? 's' : ''}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={handleToggleAll}
+                className="shrink-0 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                {allExpanded ? 'Collapse all' : 'Expand all'}
+              </button>
             </div>
 
             <div className="mt-4 space-y-4">
-              {Array.from(bucketGroups.entries()).map(([bucket, recs]) => (
-                <div key={bucket} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS[bucket] ?? 'bg-slate-100 text-slate-800'}`}>
-                      {bucket}
-                    </span>
-                    <span className="text-xs text-slate-400">{recs.length} recommendation{recs.length !== 1 ? 's' : ''}</span>
+              {Array.from(bucketGroups.entries()).map(([bucket, recs]) => {
+                const isExpanded = !collapsedBuckets[bucket]
+                return (
+                  <div key={bucket} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <button
+                      type="button"
+                      onClick={() => setCollapsedBuckets((prev) => ({ ...prev, [bucket]: !prev[bucket] }))}
+                      className="flex w-full items-center gap-2 text-left"
+                      aria-expanded={isExpanded}
+                    >
+                      <ChevronIcon expanded={isExpanded} />
+                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS[bucket] ?? 'bg-slate-100 text-slate-800'}`}>
+                        {bucket}
+                      </span>
+                      <span className="text-xs text-slate-400">{recs.length} recommendation{recs.length !== 1 ? 's' : ''}</span>
+                    </button>
+                    {isExpanded ? (
+                      <ul className="mt-3 space-y-2">
+                        {recs.map((rec, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{rec.referenceId}</span>
+                            <p className="text-sm text-slate-700">{rec.message}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
-                  <ul className="mt-3 space-y-2">
-                    {recs.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{rec.referenceId}</span>
-                        <p className="text-sm text-slate-700">{rec.message}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                )
+              })}
 
               {securityRecs.length > 0 ? (
-                <SecurityRecommendationsGroup recommendations={securityRecs} />
+                <SecurityRecommendationsGroup
+                  recommendations={securityRecs}
+                  expanded={!collapsedBuckets['Security']}
+                  onToggle={() => setCollapsedBuckets((prev) => ({ ...prev, Security: !prev.Security }))}
+                  categoryCollapsed={categoryCollapsed}
+                  onCategoryToggle={(key) => setCategoryCollapsed((prev) => ({ ...prev, [key]: !prev[key] }))}
+                />
               ) : null}
             </div>
           </div>
