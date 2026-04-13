@@ -6,6 +6,18 @@ Analyze any public repo, see exactly where it ranks, and get actionable recommen
 
 Live: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 
+## Features
+
+- **OSS Health Score** — composite percentile with actionable recommendations
+- **7-dimension scorecard** — Reach, Attention, Engagement, Activity, Responsiveness, Contributors, Documentation
+- **Percentile-based scoring** — calibrated against 1600+ repos across 4 star brackets
+- **Unified recommendations** — actionable improvement suggestions across all scoring dimensions
+- **Individual metric percentiles** — every metric shows where the repo ranks
+- **Multi-repo comparison** — side-by-side analysis of up to 4 repos
+- **Organization inventory** — browse and analyze repos within a GitHub org
+- **Scoring Methodology page** — full transparency into calibration data and thresholds
+- **Export** — JSON, Markdown, and shareable URL
+
 ## What it measures
 
 | Dimension | Weight | What it evaluates |
@@ -19,18 +31,6 @@ Live: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
 Each dimension is scored as a percentile relative to repos in the same star bracket (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
 
 **Coming soon**: Governance & Transparency, Community, Accessibility & Onboarding, Release Health, Development Cadence, Project Maturity, and Ecosystem Reach. See the [Phase 2 roadmap](docs/DEVELOPMENT.md#phase-2-feature-order) for details.
-
-## Features
-
-- **OSS Health Score** — composite percentile with actionable recommendations
-- **7-dimension scorecard** — Reach, Attention, Engagement, Activity, Responsiveness, Contributors, Documentation
-- **Percentile-based scoring** — calibrated against 1600+ repos across 4 star brackets
-- **Unified recommendations** — actionable improvement suggestions across all scoring dimensions
-- **Individual metric percentiles** — every metric shows where the repo ranks
-- **Multi-repo comparison** — side-by-side analysis of up to 4 repos
-- **Organization inventory** — browse and analyze repos within a GitHub org
-- **Scoring Methodology page** — full transparency into calibration data and thresholds
-- **Export** — JSON, Markdown, and shareable URL
 
 ## Getting started
 
