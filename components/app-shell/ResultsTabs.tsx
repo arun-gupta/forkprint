@@ -42,7 +42,7 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
       {expanded && hasOverflow && (
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700"
+          className="px-1 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700"
           onClick={() => setExpanded(false)}
         >
           Show less
