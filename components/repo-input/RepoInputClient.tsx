@@ -48,7 +48,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   useEffect(() => {
     if (isLoading) {
       setElapsedSeconds(0)
-      setQuoteIndex(getRandomQuoteIndex(null))
+      setQuoteIndex(emptyQuoteIndex)
       timerRef.current = setInterval(() => {
         setElapsedSeconds((s) => s + 1)
       }, 1000)
