@@ -17,6 +17,7 @@ import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { decodeRepos } from '@/lib/export/shareable-url'
+import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 
 interface RepoInputClientProps {
@@ -37,30 +38,65 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [resultsResetKey, setResultsResetKey] = useState(0)
   const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg
 
   useEffect(() => {
     if (isLoading) {
       setElapsedSeconds(0)
+      setQuoteIndex(null)
       timerRef.current = setInterval(() => {
         setElapsedSeconds((s) => s + 1)
       }, 1000)
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-        timerRef.current = null
+
+      // Show first quote after 5 seconds, rotate every 10 seconds
+      const quoteDelay = setTimeout(() => {
+        setQuoteIndex(getRandomQuoteIndex(null))
+        quoteTimerRef.current = setInterval(() => {
+          setQuoteIndex((current) => getRandomQuoteIndex(current))
+        }, 10000)
+      }, 5000)
+
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current)
+        if (quoteTimerRef.current) clearInterval(quoteTimerRef.current)
+        clearTimeout(quoteDelay)
       }
-      setElapsedSeconds(0)
     }
 
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
     }
+    if (quoteTimerRef.current) {
+      clearInterval(quoteTimerRef.current)
+      quoteTimerRef.current = null
+    }
+    setElapsedSeconds(0)
+    setQuoteIndex(null)
+
+    return undefined
   }, [isLoading])
+
+  const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
+
+  const isEmptyState = !submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse
+  const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
+
+  useEffect(() => {
+    if (!isEmptyState) return
+
+    const interval = setInterval(() => {
+      setEmptyQuoteIndex((current) => getRandomQuoteIndex(current))
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [isEmptyState])
+
+  const emptyQuote = LOADING_QUOTES[emptyQuoteIndex]
 
   function handleModeChange(mode: 'repos' | 'org') {
     setInputMode(mode)
@@ -218,10 +254,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const overviewContent = (
     <div className="space-y-4">
-      {!submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse ? (
-        <p className="text-sm text-slate-500">
-          Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
-        </p>
+      {isEmptyState ? (
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500">
+            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          </p>
+          {emptyQuote ? (
+            <p className="text-xs italic text-slate-400">
+              &ldquo;{emptyQuote.text}&rdquo; — {emptyQuote.author}{emptyQuote.context ? `, ${emptyQuote.context}` : ''}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {submissionError ? (
         <p role="alert" data-testid="analysis-error" className="text-sm text-red-600">
@@ -249,6 +292,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               Still working — fetching commit history and computing contributor metrics.
             </p>
           ) : null}
+          {currentQuote ? (
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600">
+              &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
+            </p>
+          ) : null}
         </section>
       ) : null}
       {loadingOrg ? (
@@ -261,6 +309,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           {elapsedSeconds >= 10 ? (
             <p className="mt-3 text-xs text-blue-700">
               Large organizations with many repositories may take longer to load.
+            </p>
+          ) : null}
+          {currentQuote ? (
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600">
+              &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
         </section>
