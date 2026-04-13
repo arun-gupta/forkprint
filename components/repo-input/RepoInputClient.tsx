@@ -83,6 +83,21 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
 
+  const isEmptyState = !submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse
+  const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
+
+  useEffect(() => {
+    if (!isEmptyState) return
+
+    const interval = setInterval(() => {
+      setEmptyQuoteIndex((current) => getRandomQuoteIndex(current))
+    }, 8000)
+
+    return () => clearInterval(interval)
+  }, [isEmptyState])
+
+  const emptyQuote = LOADING_QUOTES[emptyQuoteIndex]
+
   function handleModeChange(mode: 'repos' | 'org') {
     setInputMode(mode)
   }
@@ -239,10 +254,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const overviewContent = (
     <div className="space-y-4">
-      {!submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse ? (
-        <p className="text-sm text-slate-500">
-          Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
-        </p>
+      {isEmptyState ? (
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500">
+            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          </p>
+          {emptyQuote ? (
+            <p className="text-xs italic text-slate-400">
+              &ldquo;{emptyQuote.text}&rdquo; — {emptyQuote.author}{emptyQuote.context ? `, ${emptyQuote.context}` : ''}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {submissionError ? (
         <p role="alert" data-testid="analysis-error" className="text-sm text-red-600">
