@@ -1,14 +1,16 @@
-import type { DocumentationResult } from '@/lib/analyzer/analysis-result'
+import type { DocumentationResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 export interface DocumentationRecommendation {
   bucket: 'documentation'
-  category: 'file' | 'readme_section'
+  category: 'file' | 'readme_section' | 'licensing'
   item: string
   weight: number
   text: string
 }
+
+export type LicensingRecommendation = DocumentationRecommendation & { category: 'licensing' }
 
 export interface DocumentationScoreDefinition {
   value: number | 'Insufficient verified public data'
@@ -18,16 +20,16 @@ export interface DocumentationScoreDefinition {
   compositeScore: number
   filePresenceScore: number
   readmeQualityScore: number
+  licensingScore: number
   recommendations: DocumentationRecommendation[]
 }
 
 const FILE_WEIGHTS: Record<string, number> = {
-  readme: 0.25,
-  license: 0.20,
-  contributing: 0.15,
+  readme: 0.30,
+  contributing: 0.20,
   code_of_conduct: 0.10,
-  security: 0.15,
-  changelog: 0.15,
+  security: 0.20,
+  changelog: 0.20,
 }
 
 const FILE_RECOMMENDATIONS: Record<string, string> = {
@@ -55,15 +57,100 @@ const SECTION_RECOMMENDATIONS: Record<string, string> = {
   license: 'Add a license section or badge to your README',
 }
 
+const LICENSING_WEIGHTS = {
+  licensePresent: 0.40,
+  osiApproved: 0.25,
+  tierClassified: 0.10,
+  dcoClaEnforced: 0.25,
+} as const
+
+const COMPOSITE_WEIGHTS = {
+  filePresence: 0.40,
+  readmeQuality: 0.30,
+  licensing: 0.30,
+} as const
+
+const FALLBACK_COMPOSITE_WEIGHTS = {
+  filePresence: 0.60,
+  readmeQuality: 0.40,
+} as const
+
+export function getLicensingScore(licensingResult: LicensingResult): {
+  score: number
+  recommendations: LicensingRecommendation[]
+} {
+  const recommendations: LicensingRecommendation[] = []
+  let score = 0
+
+  const { license, contributorAgreement } = licensingResult
+
+  // License present
+  if (license.spdxId && license.spdxId !== 'NOASSERTION') {
+    score += LICENSING_WEIGHTS.licensePresent
+  } else if (license.spdxId === 'NOASSERTION') {
+    score += LICENSING_WEIGHTS.licensePresent * 0.3
+    recommendations.push({
+      bucket: 'documentation',
+      category: 'licensing',
+      item: 'osi_license',
+      weight: LICENSING_WEIGHTS.osiApproved * COMPOSITE_WEIGHTS.licensing,
+      text: 'Use a standard OSI-approved license with a recognized SPDX identifier for machine-readable license detection',
+    })
+  } else {
+    recommendations.push({
+      bucket: 'documentation',
+      category: 'licensing',
+      item: 'license',
+      weight: LICENSING_WEIGHTS.licensePresent * COMPOSITE_WEIGHTS.licensing,
+      text: 'Add an open source license to clarify how others can use, modify, and distribute this project',
+    })
+  }
+
+  // OSI approved
+  if (license.osiApproved) {
+    score += LICENSING_WEIGHTS.osiApproved
+  } else if (license.spdxId && license.spdxId !== 'NOASSERTION') {
+    recommendations.push({
+      bucket: 'documentation',
+      category: 'licensing',
+      item: 'osi_license',
+      weight: LICENSING_WEIGHTS.osiApproved * COMPOSITE_WEIGHTS.licensing,
+      text: 'Consider adopting an OSI-approved license for broader compatibility and trust',
+    })
+  }
+
+  // Tier classified
+  if (license.permissivenessTier) {
+    score += LICENSING_WEIGHTS.tierClassified
+  }
+
+  // DCO/CLA enforced
+  if (contributorAgreement.enforced) {
+    score += LICENSING_WEIGHTS.dcoClaEnforced
+  } else {
+    recommendations.push({
+      bucket: 'documentation',
+      category: 'licensing',
+      item: 'dco_cla',
+      weight: LICENSING_WEIGHTS.dcoClaEnforced * COMPOSITE_WEIGHTS.licensing,
+      text: 'Consider enforcing a Developer Certificate of Origin (DCO) or Contributor License Agreement (CLA) to ensure contributions are legally vetted',
+    })
+  }
+
+  return { score, recommendations }
+}
+
 export function getDocumentationScore(
   docResult: DocumentationResult,
+  licensingResult: LicensingResult | 'unavailable',
   stars: number | 'unavailable',
 ): DocumentationScoreDefinition {
   const recommendations: DocumentationRecommendation[] = []
 
-  // File presence sub-score (60%)
+  // File presence sub-score — license file excluded from scoring (scored in licensing sub-score)
   let filePresenceScore = 0
   for (const check of docResult.fileChecks) {
+    if (check.name === 'license') continue
     const weight = FILE_WEIGHTS[check.name] ?? 0
     if (check.found) {
       filePresenceScore += weight
@@ -72,13 +159,13 @@ export function getDocumentationScore(
         bucket: 'documentation',
         category: 'file',
         item: check.name,
-        weight: weight * 0.6, // effective weight in composite
+        weight: weight * COMPOSITE_WEIGHTS.filePresence,
         text: FILE_RECOMMENDATIONS[check.name] ?? `Add ${check.name}`,
       })
     }
   }
 
-  // README quality sub-score (40%)
+  // README quality sub-score
   let readmeQualityScore = 0
   for (const section of docResult.readmeSections) {
     const weight = SECTION_WEIGHTS[section.name] ?? 0
@@ -89,13 +176,32 @@ export function getDocumentationScore(
         bucket: 'documentation',
         category: 'readme_section',
         item: section.name,
-        weight: weight * 0.4, // effective weight in composite
+        weight: weight * COMPOSITE_WEIGHTS.readmeQuality,
         text: SECTION_RECOMMENDATIONS[section.name] ?? `Add ${section.name} section to your README`,
       })
     }
   }
 
-  const compositeScore = filePresenceScore * 0.6 + readmeQualityScore * 0.4
+  // Licensing sub-score
+  let licensingScore = 0
+  if (licensingResult !== 'unavailable') {
+    const licensing = getLicensingScore(licensingResult)
+    licensingScore = licensing.score
+    recommendations.push(...licensing.recommendations)
+  }
+
+  // Composite score — three-part or fallback two-part when licensing unavailable
+  let compositeScore: number
+  if (licensingResult !== 'unavailable') {
+    compositeScore =
+      filePresenceScore * COMPOSITE_WEIGHTS.filePresence +
+      readmeQualityScore * COMPOSITE_WEIGHTS.readmeQuality +
+      licensingScore * COMPOSITE_WEIGHTS.licensing
+  } else {
+    compositeScore =
+      filePresenceScore * FALLBACK_COMPOSITE_WEIGHTS.filePresence +
+      readmeQualityScore * FALLBACK_COMPOSITE_WEIGHTS.readmeQuality
+  }
 
   // Sort recommendations by weight descending
   recommendations.sort((a, b) => b.weight - a.weight)
@@ -110,6 +216,7 @@ export function getDocumentationScore(
       compositeScore,
       filePresenceScore,
       readmeQualityScore,
+      licensingScore,
       recommendations,
     }
   }
@@ -129,6 +236,7 @@ export function getDocumentationScore(
     compositeScore,
     filePresenceScore,
     readmeQualityScore,
+    licensingScore,
     recommendations,
   }
 }

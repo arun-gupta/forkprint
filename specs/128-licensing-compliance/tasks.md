@@ -19,10 +19,10 @@
 
 **Purpose**: Static data and type definitions that all user stories depend on
 
-- [ ] T001 [P] Create OSI-approved license set and permissiveness tier map in lib/licensing/license-data.ts
-- [ ] T002 [P] Create unit tests for license-data (OSI lookup, tier classification, edge cases) in __tests__/licensing/license-data.test.ts
-- [ ] T003 Add LicensingResult, LicenseDetection, and ContributorAgreementSignal interfaces to lib/analyzer/analysis-result.ts
-- [ ] T004 Add licensingResult field (LicensingResult | Unavailable) to AnalysisResult interface in lib/analyzer/analysis-result.ts
+- [x] T001 [P] Create OSI-approved license set and permissiveness tier map in lib/licensing/license-data.ts
+- [x] T002 [P] Create unit tests for license-data (OSI lookup, tier classification, edge cases) in __tests__/licensing/license-data.test.ts
+- [x] T003 Add LicensingResult, LicenseDetection, and ContributorAgreementSignal interfaces to lib/analyzer/analysis-result.ts
+- [x] T004 Add licensingResult field (LicensingResult | Unavailable) to AnalysisResult interface in lib/analyzer/analysis-result.ts
 
 ---
 
@@ -30,14 +30,14 @@
 
 **Purpose**: Extend the analyzer to collect licensing and compliance data from the GitHub API. MUST complete before any scoring or UI work.
 
-- [ ] T005 Add `message` field to commit history nodes in REPO_COMMIT_AND_RELEASES_QUERY in lib/analyzer/queries.ts
-- [ ] T006 Add workflow tree query field (`object(expression: "HEAD:.github/workflows")`) to REPO_OVERVIEW_QUERY in lib/analyzer/queries.ts
-- [ ] T007 Write unit tests for licensing data extraction (license detection, Signed-off-by parsing, workflow bot detection) in __tests__/licensing/extract-licensing.test.ts
-- [ ] T008 Implement extractLicensingResult() in lib/analyzer/analyze.ts — extract license SPDX ID, OSI approval, permissiveness tier from overview query response
-- [ ] T009 Implement Signed-off-by trailer detection in lib/analyzer/analyze.ts — parse commit messages, compute signedOffByRatio
-- [ ] T010 Implement DCO/CLA bot detection in lib/analyzer/analyze.ts — scan workflow tree entries for known bot action references
-- [ ] T011 Wire extractLicensingResult() into the main analyze() function, populating licensingResult on AnalysisResult in lib/analyzer/analyze.ts
-- [ ] T012 Remove licenseType field from DocumentationFileCheck interface in lib/analyzer/analysis-result.ts and update all references in lib/analyzer/analyze.ts and components/documentation/DocumentationView.tsx
+- [x] T005 Add `message` field to commit history nodes in REPO_COMMIT_AND_RELEASES_QUERY in lib/analyzer/queries.ts
+- [x] T006 Add workflow tree query field (`object(expression: "HEAD:.github/workflows")`) to REPO_OVERVIEW_QUERY in lib/analyzer/queries.ts
+- [x] T007 Write unit tests for licensing data extraction (license detection, Signed-off-by parsing, workflow bot detection) in __tests__/licensing/extract-licensing.test.ts
+- [x] T008 Implement extractLicensingResult() in lib/analyzer/extract-licensing.ts — extract license SPDX ID, OSI approval, permissiveness tier from overview query response
+- [x] T009 Implement Signed-off-by trailer detection in lib/analyzer/extract-licensing.ts — parse commit messages, compute signedOffByRatio
+- [x] T010 Implement DCO/CLA bot detection in lib/analyzer/extract-licensing.ts — scan workflow tree entries for known bot action references
+- [x] T011 Wire extractLicensingResult() into the main analyze() function, populating licensingResult on AnalysisResult in lib/analyzer/analyze.ts
+- [x] T012 Remove licenseType field from DocumentationFileCheck interface in lib/analyzer/analysis-result.ts and update all references in lib/analyzer/analyze.ts and components/documentation/DocumentationView.tsx
 
 **Checkpoint**: Analyzer now produces LicensingResult for every analyzed repo. All downstream consumers can read licensing data.
 
@@ -53,21 +53,21 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [P] [US1] Write unit tests for three-part Documentation composite formula (40/30/30 weights) in __tests__/documentation/score-config.test.ts
-- [ ] T014 [P] [US1] Write unit tests for licensing sub-score calculation (license present, OSI approved, tier classified, DCO enforced) in __tests__/licensing/licensing-score.test.ts
-- [ ] T015 [P] [US1] Write unit tests for updated file presence weights (5 files, license removed from scoring) in __tests__/documentation/score-config.test.ts
-- [ ] T016 [P] [US1] Write unit tests for licensing recommendation generation (no license, non-OSI, no DCO) in __tests__/licensing/licensing-score.test.ts
-- [ ] T017 [P] [US1] Write unit test for fallback to two-part model when licensingResult is unavailable in __tests__/documentation/score-config.test.ts
+- [x] T013 [P] [US1] Write unit tests for three-part Documentation composite formula (40/30/30 weights) in __tests__/documentation/score-config.test.ts
+- [x] T014 [P] [US1] Write unit tests for licensing sub-score calculation (license present, OSI approved, tier classified, DCO enforced) in __tests__/licensing/licensing-score.test.ts
+- [x] T015 [P] [US1] Write unit tests for updated file presence weights (5 files, license removed from scoring) in __tests__/documentation/score-config.test.ts
+- [x] T016 [P] [US1] Write unit tests for licensing recommendation generation (no license, non-OSI, no DCO) in __tests__/licensing/licensing-score.test.ts
+- [x] T017 [P] [US1] Write unit test for fallback to two-part model when licensingResult is unavailable in __tests__/documentation/score-config.test.ts
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement getLicensingScore() function computing weighted licensing sub-score in lib/documentation/score-config.ts
-- [ ] T019 [US1] Update FILE_WEIGHTS in lib/documentation/score-config.ts — remove license entry, redistribute weights across 5 remaining files (readme 0.30, contributing 0.20, code_of_conduct 0.10, security 0.20, changelog 0.20)
-- [ ] T020 [US1] Update getDocumentationScore() signature to accept licensingResult parameter in lib/documentation/score-config.ts
-- [ ] T021 [US1] Update composite formula to three-part model (filePresence * 0.40 + readmeQuality * 0.30 + licensing * 0.30) with fallback to two-part when licensing unavailable in lib/documentation/score-config.ts
-- [ ] T022 [US1] Add licensingScore field to DocumentationScoreDefinition interface in lib/documentation/score-config.ts
-- [ ] T023 [US1] Generate licensing recommendations (no license, non-OSI license, no DCO/CLA) in lib/documentation/score-config.ts
-- [ ] T024 [US1] Update getHealthScore() call site to pass licensingResult to getDocumentationScore() in lib/scoring/health-score.ts
+- [x] T018 [US1] Implement getLicensingScore() function computing weighted licensing sub-score in lib/documentation/score-config.ts
+- [x] T019 [US1] Update FILE_WEIGHTS in lib/documentation/score-config.ts — remove license entry, redistribute weights across 5 remaining files (readme 0.30, contributing 0.20, code_of_conduct 0.10, security 0.20, changelog 0.20)
+- [x] T020 [US1] Update getDocumentationScore() signature to accept licensingResult parameter in lib/documentation/score-config.ts
+- [x] T021 [US1] Update composite formula to three-part model (filePresence * 0.40 + readmeQuality * 0.30 + licensing * 0.30) with fallback to two-part when licensing unavailable in lib/documentation/score-config.ts
+- [x] T022 [US1] Add licensingScore field to DocumentationScoreDefinition interface in lib/documentation/score-config.ts
+- [x] T023 [US1] Generate licensing recommendations (no license, non-OSI license, no DCO/CLA) in lib/documentation/score-config.ts
+- [x] T024 [US1] Update getHealthScore() call site to pass licensingResult to getDocumentationScore() in lib/scoring/health-score.ts
 
 **Checkpoint**: Documentation bucket score now incorporates licensing signals. All scoring tests pass.
 
@@ -81,14 +81,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T025 [P] [US2] Write component tests for Licensing pane rendering (license name, SPDX ID, OSI badge, permissiveness tier) in __tests__/components/DocumentationView.test.tsx
-- [ ] T026 [P] [US2] Write component tests for Licensing pane with missing/unavailable data states in __tests__/components/DocumentationView.test.tsx
+- [x] T025 [P] [US2] Write component tests for Licensing pane rendering (license name, SPDX ID, OSI badge, permissiveness tier) in components/documentation/DocumentationView.test.tsx
+- [x] T026 [P] [US2] Write component tests for Licensing pane with missing/unavailable data states in components/documentation/DocumentationView.test.tsx
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Add Licensing pane to DocumentationView — display license name, SPDX ID, OSI approval status, and permissiveness tier in components/documentation/DocumentationView.tsx
-- [ ] T028 [US2] Style Licensing pane with presence indicators (✓/✗), tier badge, and recommendation text consistent with existing file/section panes in components/documentation/DocumentationView.tsx
-- [ ] T029 [US2] Handle unavailable/missing licensing data gracefully in the Licensing pane (show "unavailable" state) in components/documentation/DocumentationView.tsx
+- [x] T027 [US2] Add Licensing pane to DocumentationView — display license name, SPDX ID, OSI approval status, and permissiveness tier in components/documentation/DocumentationView.tsx
+- [x] T028 [US2] Style Licensing pane with presence indicators (✓/✗), tier badge, and recommendation text consistent with existing file/section panes in components/documentation/DocumentationView.tsx
+- [x] T029 [US2] Handle unavailable/missing licensing data gracefully in the Licensing pane (show "unavailable" state) in components/documentation/DocumentationView.tsx
 
 **Checkpoint**: Documentation tab shows Licensing pane with license details and permissiveness tier.
 
@@ -102,13 +102,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T030 [P] [US3] Write component tests for DCO/CLA enforcement display in Licensing pane (detected/not detected states) in __tests__/components/DocumentationView.test.tsx
-- [ ] T031 [P] [US3] Write component test for enforcement recommendation display in __tests__/components/DocumentationView.test.tsx
+- [x] T030 [P] [US3] Write component tests for DCO/CLA enforcement display in Licensing pane (detected/not detected states) in components/documentation/DocumentationView.test.tsx
+- [x] T031 [P] [US3] Write component test for enforcement recommendation display in components/documentation/DocumentationView.test.tsx
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Add DCO/CLA enforcement section to Licensing pane — show Signed-off-by ratio, bot detection status, and enforcement verdict in components/documentation/DocumentationView.tsx
-- [ ] T033 [US3] Add enforcement recommendation text when not detected in components/documentation/DocumentationView.tsx
+- [x] T032 [US3] Add DCO/CLA enforcement section to Licensing pane — show Signed-off-by ratio, bot detection status, and enforcement verdict in components/documentation/DocumentationView.tsx
+- [x] T033 [US3] Add enforcement recommendation text when not detected in components/documentation/DocumentationView.tsx
 
 **Checkpoint**: Licensing pane shows full compliance picture — license quality + permissiveness + DCO/CLA enforcement.
 
@@ -118,13 +118,13 @@
 
 **Purpose**: Score help component, tooltip updates, and cleanup
 
-- [ ] T034 [P] Create DocumentationScoreHelp component explaining three-part model (file presence, README quality, licensing compliance) in components/documentation/DocumentationScoreHelp.tsx
-- [ ] T035 [P] Write component tests for DocumentationScoreHelp in __tests__/components/DocumentationScoreHelp.test.tsx
-- [ ] T036 Wire DocumentationScoreHelp into DocumentationView below the score badge in components/documentation/DocumentationView.tsx
-- [ ] T037 Update health score tooltip text to mention three-part Documentation model in lib/scoring/health-score.ts
-- [ ] T038 Update summary line in DocumentationView to include licensing signal count (e.g., "X of Y files · Z of W sections · licensing: [status]") in components/documentation/DocumentationView.tsx
-- [ ] T039 Verify no TODO, dead code, console.log, or untyped values remain across all modified files
-- [ ] T040 Create manual testing checklist in specs/128-licensing-compliance/checklists/manual-testing.md
+- [x] T034 [P] Create DocumentationScoreHelp component explaining three-part model (file presence, README quality, licensing compliance) in components/documentation/DocumentationScoreHelp.tsx
+- [x] T035 [P] Write component tests for DocumentationScoreHelp in components/documentation/DocumentationScoreHelp.test.tsx
+- [x] T036 Wire DocumentationScoreHelp into DocumentationView below the score badge in components/documentation/DocumentationView.tsx
+- [x] T037 Update health score tooltip text to mention three-part Documentation model in components/metric-cards/MetricCard.tsx
+- [x] T038 Update summary line in DocumentationView to include licensing signal count (e.g., "X of Y files · Z of W sections · licensing: [status]") in components/documentation/DocumentationView.tsx
+- [x] T039 Verify no TODO, dead code, console.log, or untyped values remain across all modified files
+- [x] T040 Create manual testing checklist in specs/128-licensing-compliance/checklists/manual-testing.md
 
 ---
 

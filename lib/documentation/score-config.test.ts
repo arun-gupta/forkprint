@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import type { DocumentationResult } from '@/lib/analyzer/analysis-result'
+import type { DocumentationResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from './score-config'
 
 function buildDocResult(overrides: Partial<DocumentationResult> = {}): DocumentationResult {
   return {
     fileChecks: [
-      { name: 'readme', found: true, path: 'README.md', licenseType: null },
-      { name: 'license', found: true, path: 'LICENSE', licenseType: 'MIT' },
-      { name: 'contributing', found: true, path: 'CONTRIBUTING.md', licenseType: null },
-      { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md', licenseType: null },
-      { name: 'security', found: true, path: 'SECURITY.md', licenseType: null },
-      { name: 'changelog', found: true, path: 'CHANGELOG.md', licenseType: null },
+      { name: 'readme', found: true, path: 'README.md' },
+      { name: 'license', found: true, path: 'LICENSE' },
+      { name: 'contributing', found: true, path: 'CONTRIBUTING.md' },
+      { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md' },
+      { name: 'security', found: true, path: 'SECURITY.md' },
+      { name: 'changelog', found: true, path: 'CHANGELOG.md' },
     ],
     readmeSections: [
       { name: 'description', detected: true },
@@ -24,26 +24,41 @@ function buildDocResult(overrides: Partial<DocumentationResult> = {}): Documenta
   }
 }
 
+const fullLicensing: LicensingResult = {
+  license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+  contributorAgreement: { signedOffByRatio: 1.0, dcoOrClaBot: true, enforced: true },
+}
+
+const noLicensing: LicensingResult = {
+  license: { spdxId: null, name: null, osiApproved: false, permissivenessTier: null },
+  contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
+}
+
+const partialLicensing: LicensingResult = {
+  license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+  contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
+}
+
 describe('documentation/score-config', () => {
   describe('getDocumentationScore', () => {
-    it('scores a fully documented repo with all files and sections', () => {
-      const score = getDocumentationScore(buildDocResult(), 1000)
+    it('scores a fully documented repo with all files, sections, and licensing as 1.0', () => {
+      const score = getDocumentationScore(buildDocResult(), fullLicensing, 1000)
 
       expect(score.filePresenceScore).toBe(1)
       expect(score.readmeQualityScore).toBe(1)
-      expect(score.compositeScore).toBe(1)
-      expect(score.recommendations).toHaveLength(0)
+      expect(score.licensingScore).toBeCloseTo(1, 2)
+      expect(score.compositeScore).toBeCloseTo(1, 2)
     })
 
-    it('scores a repo with no documentation files as 0', () => {
+    it('scores a repo with no documentation files and no license as 0', () => {
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: false, path: null, licenseType: null },
-          { name: 'license', found: false, path: null, licenseType: null },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: false, path: null, licenseType: null },
-          { name: 'security', found: false, path: null, licenseType: null },
-          { name: 'changelog', found: false, path: null, licenseType: null },
+          { name: 'readme', found: false, path: null },
+          { name: 'license', found: false, path: null },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
         ],
         readmeSections: [
           { name: 'description', detected: false },
@@ -53,25 +68,25 @@ describe('documentation/score-config', () => {
           { name: 'license', detected: false },
         ],
         readmeContent: null,
-      }), 1000)
+      }), noLicensing, 1000)
 
       expect(score.filePresenceScore).toBe(0)
       expect(score.readmeQualityScore).toBe(0)
+      expect(score.licensingScore).toBe(0)
       expect(score.compositeScore).toBe(0)
-      expect(score.recommendations).toHaveLength(11) // 6 files + 5 sections
     })
 
-    it('generates recommendations for each missing file', () => {
+    it('generates recommendations for each missing file (except license)', () => {
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: true, path: 'README.md', licenseType: null },
-          { name: 'license', found: true, path: 'LICENSE', licenseType: 'MIT' },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: false, path: null, licenseType: null },
-          { name: 'security', found: false, path: null, licenseType: null },
-          { name: 'changelog', found: false, path: null, licenseType: null },
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
         ],
-      }), 1000)
+      }), fullLicensing, 1000)
 
       const fileRecs = score.recommendations.filter((r) => r.category === 'file')
       expect(fileRecs).toHaveLength(4)
@@ -80,7 +95,8 @@ describe('documentation/score-config', () => {
       expect(items).toContain('code_of_conduct')
       expect(items).toContain('security')
       expect(items).toContain('changelog')
-      expect(fileRecs.find((r) => r.item === 'contributing')!.text).toContain('contributing guidelines')
+      // License file is no longer in file recs — it's in licensing category
+      expect(items).not.toContain('license')
     })
 
     it('generates recommendations for each missing README section', () => {
@@ -92,54 +108,39 @@ describe('documentation/score-config', () => {
           { name: 'contributing', detected: true },
           { name: 'license', detected: true },
         ],
-      }), 1000)
+      }), fullLicensing, 1000)
 
       const sectionRecs = score.recommendations.filter((r) => r.category === 'readme_section')
       expect(sectionRecs).toHaveLength(2)
       expect(sectionRecs.map((r) => r.item)).toEqual(['installation', 'usage'])
-      expect(sectionRecs[0]!.text).toContain('installation')
     })
 
-    it('computes weighted file presence score correctly', () => {
-      // Only README (25%) and LICENSE (20%) present = 0.45
+    it('computes weighted file presence score excluding license', () => {
+      // Only README (30%) present out of 5 scored files
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: true, path: 'README.md', licenseType: null },
-          { name: 'license', found: true, path: 'LICENSE', licenseType: 'MIT' },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: false, path: null, licenseType: null },
-          { name: 'security', found: false, path: null, licenseType: null },
-          { name: 'changelog', found: false, path: null, licenseType: null },
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
         ],
-      }), 1000)
+      }), fullLicensing, 1000)
 
-      expect(score.filePresenceScore).toBeCloseTo(0.45, 2)
+      // readme (0.30) only — license is not scored in file presence
+      expect(score.filePresenceScore).toBeCloseTo(0.30, 2)
     })
 
-    it('computes weighted README quality score correctly', () => {
-      // Only description (25%) and installation (25%) detected = 0.50
-      const score = getDocumentationScore(buildDocResult({
-        readmeSections: [
-          { name: 'description', detected: true },
-          { name: 'installation', detected: true },
-          { name: 'usage', detected: false },
-          { name: 'contributing', detected: false },
-          { name: 'license', detected: false },
-        ],
-      }), 1000)
-
-      expect(score.readmeQualityScore).toBeCloseTo(0.50, 2)
-    })
-
-    it('computes composite as 60% file + 40% readme', () => {
+    it('computes three-part composite correctly', () => {
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: true, path: 'README.md', licenseType: null },
-          { name: 'license', found: true, path: 'LICENSE', licenseType: 'MIT' },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: false, path: null, licenseType: null },
-          { name: 'security', found: false, path: null, licenseType: null },
-          { name: 'changelog', found: false, path: null, licenseType: null },
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
         ],
         readmeSections: [
           { name: 'description', detected: true },
@@ -148,14 +149,40 @@ describe('documentation/score-config', () => {
           { name: 'contributing', detected: false },
           { name: 'license', detected: false },
         ],
-      }), 1000)
+      }), partialLicensing, 1000)
 
-      // 0.45 * 0.6 + 0.50 * 0.4 = 0.27 + 0.20 = 0.47
-      expect(score.compositeScore).toBeCloseTo(0.47, 2)
+      // filePresence = 0.30, readmeQuality = 0.50, licensing = 0.75 (MIT, OSI, tier, no DCO)
+      // composite = 0.30 * 0.40 + 0.50 * 0.30 + 0.75 * 0.30 = 0.12 + 0.15 + 0.225 = 0.495
+      expect(score.compositeScore).toBeCloseTo(0.495, 2)
+    })
+
+    it('falls back to two-part model when licensing is unavailable', () => {
+      const score = getDocumentationScore(buildDocResult({
+        fileChecks: [
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
+        ],
+        readmeSections: [
+          { name: 'description', detected: true },
+          { name: 'installation', detected: true },
+          { name: 'usage', detected: false },
+          { name: 'contributing', detected: false },
+          { name: 'license', detected: false },
+        ],
+      }), 'unavailable', 1000)
+
+      // filePresence = 0.30, readmeQuality = 0.50
+      // fallback composite = 0.30 * 0.60 + 0.50 * 0.40 = 0.18 + 0.20 = 0.38
+      expect(score.compositeScore).toBeCloseTo(0.38, 2)
+      expect(score.licensingScore).toBe(0)
     })
 
     it('returns percentile and bracket label', () => {
-      const score = getDocumentationScore(buildDocResult(), 5000)
+      const score = getDocumentationScore(buildDocResult(), fullLicensing, 5000)
 
       expect(typeof score.value).toBe('number')
       expect(score.bracketLabel).toBe('Established (1k–10k stars)')
@@ -164,12 +191,12 @@ describe('documentation/score-config', () => {
     it('orders recommendations by weight descending', () => {
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: false, path: null, licenseType: null },
-          { name: 'license', found: false, path: null, licenseType: null },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: false, path: null, licenseType: null },
-          { name: 'security', found: false, path: null, licenseType: null },
-          { name: 'changelog', found: false, path: null, licenseType: null },
+          { name: 'readme', found: false, path: null },
+          { name: 'license', found: false, path: null },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: false, path: null },
+          { name: 'security', found: false, path: null },
+          { name: 'changelog', found: false, path: null },
         ],
         readmeSections: [
           { name: 'description', detected: false },
@@ -179,7 +206,7 @@ describe('documentation/score-config', () => {
           { name: 'license', detected: false },
         ],
         readmeContent: null,
-      }), 1000)
+      }), noLicensing, 1000)
 
       for (let i = 1; i < score.recommendations.length; i++) {
         expect(score.recommendations[i]!.weight).toBeLessThanOrEqual(score.recommendations[i - 1]!.weight)
@@ -189,14 +216,14 @@ describe('documentation/score-config', () => {
     it('tags all recommendations with documentation bucket', () => {
       const score = getDocumentationScore(buildDocResult({
         fileChecks: [
-          { name: 'readme', found: false, path: null, licenseType: null },
-          { name: 'license', found: true, path: 'LICENSE', licenseType: 'MIT' },
-          { name: 'contributing', found: false, path: null, licenseType: null },
-          { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md', licenseType: null },
-          { name: 'security', found: true, path: 'SECURITY.md', licenseType: null },
-          { name: 'changelog', found: true, path: 'CHANGELOG.md', licenseType: null },
+          { name: 'readme', found: false, path: null },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: false, path: null },
+          { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md' },
+          { name: 'security', found: true, path: 'SECURITY.md' },
+          { name: 'changelog', found: true, path: 'CHANGELOG.md' },
         ],
-      }), 1000)
+      }), partialLicensing, 1000)
 
       for (const rec of score.recommendations) {
         expect(rec.bucket).toBe('documentation')

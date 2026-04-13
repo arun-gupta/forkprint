@@ -1,0 +1,183 @@
+export type LicensePermissivenessTier = 'Permissive' | 'Weak Copyleft' | 'Copyleft'
+
+/**
+ * OSI-approved SPDX license identifiers.
+ * Source: https://opensource.org/licenses (snapshot 2026-04)
+ */
+export const OSI_APPROVED_SPDX_IDS: ReadonlySet<string> = new Set([
+  // Permissive
+  '0BSD',
+  'AFL-3.0',
+  'Apache-2.0',
+  'Artistic-2.0',
+  'BlueOak-1.0.0',
+  'BSD-1-Clause',
+  'BSD-2-Clause',
+  'BSD-2-Clause-Patent',
+  'BSD-3-Clause',
+  'BSD-3-Clause-LBNL',
+  'BSL-1.0',
+  'CAL-1.0',
+  'CAL-1.0-Combined-Work-Exception',
+  'ECL-2.0',
+  'EFL-2.0',
+  'EUDatagrid',
+  'Fair',
+  'Frameworx-1.0',
+  'HPND',
+  'ISC',
+  'JSON',
+  'LAL-1.2',
+  'LAL-1.3',
+  'Libpng',
+  'LiLiQ-P-1.1',
+  'MIT',
+  'MIT-0',
+  'MirOS',
+  'MS-PL',
+  'MS-RL',
+  'MulanPSL-2.0',
+  'Multics',
+  'NASA-1.3',
+  'NCSA',
+  'Nokia',
+  'NTP',
+  'OGTSL',
+  'OLDAP-2.8',
+  'OSET-PL-2.1',
+  'PHP-3.01',
+  'PostgreSQL',
+  'PSF-2.0',
+  'QPL-1.0',
+  'RPL-1.1',
+  'RPL-1.5',
+  'RSCPL',
+  'SimPL-2.0',
+  'Sleepycat',
+  'UCL-1.0',
+  'Unicode-DFS-2016',
+  'Unlicense',
+  'UPL-1.0',
+  'VSL-1.0',
+  'W3C',
+  'Watcom-1.0',
+  'Xnet',
+  'Zlib',
+  'ZPL-2.0',
+  'ZPL-2.1',
+
+  // Weak Copyleft
+  'APSL-2.0',
+  'CDDL-1.0',
+  'CECILL-2.1',
+  'CPL-1.0',
+  'CUA-OPL-1.0',
+  'ECL-1.0',
+  'EFL-1.0',
+  'EPL-1.0',
+  'EPL-2.0',
+  'EUPL-1.1',
+  'EUPL-1.2',
+  'IPA',
+  'IPL-1.0',
+  'LGPL-2.0-only',
+  'LGPL-2.0-or-later',
+  'LGPL-2.1-only',
+  'LGPL-2.1-or-later',
+  'LGPL-3.0-only',
+  'LGPL-3.0-or-later',
+  'LiLiQ-R-1.1',
+  'LiLiQ-Rplus-1.1',
+  'LPL-1.0',
+  'LPL-1.02',
+  'MPL-1.0',
+  'MPL-1.1',
+  'MPL-2.0',
+  'MPL-2.0-no-copyleft-exception',
+  'OSL-1.0',
+  'OSL-1.1',
+  'OSL-2.0',
+  'OSL-2.1',
+  'OSL-3.0',
+  'SPL-1.0',
+
+  // Copyleft
+  'AGPL-1.0-only',
+  'AGPL-1.0-or-later',
+  'AGPL-3.0-only',
+  'AGPL-3.0-or-later',
+  'GPL-2.0-only',
+  'GPL-2.0-or-later',
+  'GPL-3.0-only',
+  'GPL-3.0-or-later',
+  'SSPL-1.0',
+])
+
+/**
+ * Maps SPDX identifiers to their permissiveness tier.
+ * Covers the most common licenses. Unlisted OSI-approved licenses
+ * return null (tier unknown).
+ */
+export const PERMISSIVENESS_TIERS: ReadonlyMap<string, LicensePermissivenessTier> = new Map<string, LicensePermissivenessTier>([
+  // Permissive
+  ['0BSD', 'Permissive'],
+  ['Apache-2.0', 'Permissive'],
+  ['Artistic-2.0', 'Permissive'],
+  ['BlueOak-1.0.0', 'Permissive'],
+  ['BSD-1-Clause', 'Permissive'],
+  ['BSD-2-Clause', 'Permissive'],
+  ['BSD-2-Clause-Patent', 'Permissive'],
+  ['BSD-3-Clause', 'Permissive'],
+  ['BSD-3-Clause-LBNL', 'Permissive'],
+  ['BSL-1.0', 'Permissive'],
+  ['ECL-2.0', 'Permissive'],
+  ['ISC', 'Permissive'],
+  ['MIT', 'Permissive'],
+  ['MIT-0', 'Permissive'],
+  ['MulanPSL-2.0', 'Permissive'],
+  ['NCSA', 'Permissive'],
+  ['PostgreSQL', 'Permissive'],
+  ['Unlicense', 'Permissive'],
+  ['UPL-1.0', 'Permissive'],
+  ['W3C', 'Permissive'],
+  ['Zlib', 'Permissive'],
+  ['ZPL-2.0', 'Permissive'],
+
+  // Weak Copyleft
+  ['CDDL-1.0', 'Weak Copyleft'],
+  ['CECILL-2.1', 'Weak Copyleft'],
+  ['EPL-1.0', 'Weak Copyleft'],
+  ['EPL-2.0', 'Weak Copyleft'],
+  ['EUPL-1.1', 'Weak Copyleft'],
+  ['EUPL-1.2', 'Weak Copyleft'],
+  ['LGPL-2.0-only', 'Weak Copyleft'],
+  ['LGPL-2.0-or-later', 'Weak Copyleft'],
+  ['LGPL-2.1-only', 'Weak Copyleft'],
+  ['LGPL-2.1-or-later', 'Weak Copyleft'],
+  ['LGPL-3.0-only', 'Weak Copyleft'],
+  ['LGPL-3.0-or-later', 'Weak Copyleft'],
+  ['MPL-1.0', 'Weak Copyleft'],
+  ['MPL-1.1', 'Weak Copyleft'],
+  ['MPL-2.0', 'Weak Copyleft'],
+  ['OSL-3.0', 'Weak Copyleft'],
+
+  // Copyleft
+  ['AGPL-1.0-only', 'Copyleft'],
+  ['AGPL-1.0-or-later', 'Copyleft'],
+  ['AGPL-3.0-only', 'Copyleft'],
+  ['AGPL-3.0-or-later', 'Copyleft'],
+  ['GPL-2.0-only', 'Copyleft'],
+  ['GPL-2.0-or-later', 'Copyleft'],
+  ['GPL-3.0-only', 'Copyleft'],
+  ['GPL-3.0-or-later', 'Copyleft'],
+])
+
+export function isOsiApproved(spdxId: string | null): boolean {
+  if (!spdxId || spdxId === 'NOASSERTION') return false
+  return OSI_APPROVED_SPDX_IDS.has(spdxId)
+}
+
+export function getPermissivenessTier(spdxId: string | null): LicensePermissivenessTier | null {
+  if (!spdxId || spdxId === 'NOASSERTION') return null
+  return PERMISSIVENESS_TIERS.get(spdxId) ?? null
+}

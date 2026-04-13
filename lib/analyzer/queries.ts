@@ -46,6 +46,16 @@ export const REPO_OVERVIEW_QUERY = `
       docChangesRst: object(expression: "HEAD:CHANGES.rst") { ... on Blob { oid } }
       docHistory: object(expression: "HEAD:HISTORY.md") { ... on Blob { oid } }
       docNews: object(expression: "HEAD:NEWS.md") { ... on Blob { oid } }
+      workflowDir: object(expression: "HEAD:.github/workflows") {
+        ... on Tree {
+          entries {
+            name
+            object {
+              ... on Blob { text }
+            }
+          }
+        }
+      }
     }
     rateLimit {
       remaining
@@ -100,6 +110,7 @@ export const REPO_COMMIT_AND_RELEASES_QUERY = `
               }
               nodes {
                 authoredDate
+                message
                 author {
                   name
                   email
@@ -264,6 +275,7 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
               }
               nodes {
                 authoredDate
+                message
                 author {
                   name
                   email
