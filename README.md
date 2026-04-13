@@ -1,61 +1,78 @@
-# RepoPulse — OSS Health Score
+<p align="center">
+  <img src="public/repo-pulse-banner.png" alt="RepoPulse — Measure the health of your open source projects" width="700" />
+</p>
 
-RepoPulse measures the health of open source projects with a composite **OSS Health Score** — a single percentile-based score computed from Activity, Responsiveness, Contributors, Security, and Documentation, calibrated against 1600+ real GitHub repositories.
+<p align="center">
+  <strong>A single score that tells you how healthy your open source project really is.</strong><br/>
+  Calibrated against 1,600+ real GitHub repositories.
+</p>
 
-Analyze any public repo, see exactly where it ranks, and get actionable recommendations for improvement.
+<p align="center">
+  <a href="https://repopulse-arun-gupta.vercel.app"><img src="https://img.shields.io/badge/Try%20it%20live-repopulse-blue?style=for-the-badge" alt="Live App" /></a>&nbsp;
+  <a href="https://github.com/arun-gupta/repo-pulse/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green?style=for-the-badge" alt="License" /></a>&nbsp;
+  <a href="https://github.com/arun-gupta/repo-pulse/issues"><img src="https://img.shields.io/github/issues/arun-gupta/repo-pulse?style=for-the-badge" alt="Open Issues" /></a>
+</p>
 
-Live: [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app)
+---
 
-## Features
+## What is RepoPulse?
 
-- **OSS Health Score** — composite percentile with actionable recommendations
-- **8-dimension scorecard** — quick signals (Reach, Attention, Engagement) plus deep-dive dimensions (Activity, Responsiveness, Contributors, Security, Documentation)
-- **Percentile-based scoring** — calibrated against 1600+ repos across 4 star brackets
-- **Unified recommendations** — actionable improvement suggestions across all scoring dimensions
-- **Individual metric percentiles** — every metric shows where the repo ranks
-- **Multi-repo comparison** — side-by-side analysis of up to 4 repos
-- **Organization inventory** — browse and analyze repos within a GitHub org
-- **Scoring Methodology page** — full transparency into calibration data and thresholds
-- **Export** — JSON, Markdown, and shareable URL
+RepoPulse analyzes any public GitHub repository and produces a composite **OSS Health Score** — a percentile-based rating computed from five dimensions, each weighted by importance. You get a clear picture of where a project stands and **actionable recommendations** to improve it.
 
-## What it measures
+> **Try it now** — paste any GitHub repo URL into [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app) and get a health report in seconds.
+
+## Key Features
+
+| | Feature | Description |
+|---|---------|-------------|
+| :bar_chart: | **OSS Health Score** | Composite percentile with actionable recommendations |
+| :card_index_dividers: | **8-Dimension Scorecard** | Quick signals (Reach, Attention, Engagement) plus deep-dive dimensions |
+| :chart_with_upwards_trend: | **Percentile Scoring** | Every metric shows where the repo ranks vs. 1,600+ calibrated repos |
+| :busts_in_silhouette: | **Multi-Repo Comparison** | Side-by-side analysis of up to 4 repositories |
+| :office: | **Org Inventory** | Browse and analyze all repos within a GitHub organization |
+| :bulb: | **Unified Recommendations** | Actionable improvement suggestions across all scoring dimensions |
+| :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds |
+| :outbox_tray: | **Export** | JSON, Markdown, and shareable URL |
+
+## How Scoring Works
 
 | Dimension | Weight | What it evaluates |
 |-----------|--------|-------------------|
 | **Activity** | 25% | PR throughput, issue flow, commit cadence, release frequency |
-| **Responsiveness** | 25% | Issue/PR response times, resolution speed, backlog health, engagement quality |
+| **Responsiveness** | 25% | Issue/PR response times, resolution speed, backlog health |
 | **Contributors** | 23% | Contributor concentration, repeat/new contributor ratios |
-| **Security** | 15% | OpenSSF Scorecard checks, dependency automation, branch protection, SECURITY.md |
-| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, CHANGELOG, licensing & compliance, inclusive naming |
+| **Security** | 15% | OpenSSF Scorecard, dependency automation, branch protection |
+| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance |
 
-Each dimension is scored as a percentile relative to repos in the same star bracket (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
+Each dimension is scored as a percentile relative to repos in the same **star bracket** (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
 
-**Coming soon**: Governance & Transparency, Community, Accessibility & Onboarding, Release Health, Development Cadence, Project Maturity, and Ecosystem Reach. See the [Phase 2 roadmap](docs/DEVELOPMENT.md#phase-2-feature-order) for details.
-
-## Getting started
+## Quick Start
 
 ```bash
+# 1. Clone and install
+git clone https://github.com/arun-gupta/repo-pulse.git
+cd repo-pulse
 npm install
+
+# 2. Set up environment (create a GitHub OAuth App first)
+#    Callback URL: http://localhost:3000/api/auth/callback
+echo "GITHUB_CLIENT_ID=your_id" >> .env.local
+echo "GITHUB_CLIENT_SECRET=your_secret" >> .env.local
+
+# 3. Run
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000) and analyze your first repo.
 
-Required env vars (create a [GitHub OAuth App](https://github.com/settings/developers) with callback URL `http://localhost:3000/api/auth/callback`):
-
-```bash
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-```
-
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full setup and Vercel deployment instructions.
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel deployment instructions.
 
 ## Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| 1 | Web app + core scoring (Activity, Responsiveness, Contributors, Documentation) | ✅ Done |
-| 2 | Expand scoring dimensions — Security, Licensing & Compliance, Inclusive Naming ✅; Community, Release Health, Governance & Transparency, Accessibility & Onboarding, Ecosystem Reach upcoming | In progress |
+| 1 | Web app + core scoring (Activity, Responsiveness, Contributors, Documentation) | :white_check_mark: Done |
+| 2 | Expand scoring — Security, Licensing & Compliance, Inclusive Naming :white_check_mark:; Community, Release Health, Governance & more upcoming | In progress |
 | 3 | Integrations (GitHub Action, MCP Server, CLI, PR bot, VS Code, Badge, Webhook) | Planned |
 | 4 | Git provider support (GitLab, Bitbucket, Gitea) | Planned |
 
@@ -71,3 +88,9 @@ We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup ins
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — Development workflow, implementation order, verification commands
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Vercel deployment guide
 - [`docs/scoring-and-calibration.md`](docs/scoring-and-calibration.md) — Scoring methodology, calibration pipeline, statistical approach
+
+---
+
+<p align="center">
+  <a href="https://repopulse-arun-gupta.vercel.app"><strong>Try RepoPulse now →</strong></a>
+</p>
