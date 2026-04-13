@@ -1,6 +1,6 @@
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 
-export type ResultTabId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'recommendations' | 'comparison'
+export type ResultTabId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'security' | 'recommendations' | 'comparison'
 
 export interface ResultsShellProps {
   hasServerToken: boolean

@@ -22,6 +22,7 @@ import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
 import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
 import type { SecurityResult, DirectSecurityCheck } from '@/lib/security/analysis-result'
+import { fetchScorecardData } from '@/lib/security/scorecard-client'
 
 interface DocBlob {
   text?: string
@@ -357,6 +358,10 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       staleBefore365.setDate(now.getDate() - 365)
       const repoSearch = `${owner}/${name}`
 
+      // Fetch OpenSSF Scorecard data in parallel (unauthenticated, separate API)
+      console.log(`[analyzer] ${repo} — fetching OpenSSF Scorecard`)
+      const scorecardPromise = fetchScorecardData(owner!, name!)
+
       // Pass 1: Commit history + releases (lightweight — no search queries)
       console.log(`[analyzer] ${repo} — pass 1: commit history + releases`)
       const commitAndReleases = await queryGitHubGraphQL<RepoCommitAndReleasesResponse>(input.token, REPO_COMMIT_AND_RELEASES_QUERY, {
@@ -479,20 +484,26 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       const experimentalOrgAttribution = await buildExperimentalOrganizationCommitCountsByWindow(input.token, commitHistory.nodes, now)
       latestRateLimit = experimentalOrgAttribution.rateLimit ?? latestRateLimit
 
-      results.push(
-        buildAnalysisResult(
-          repo,
-          overview.data,
-          activity.data,
-          responsiveness.data,
-          contributorMetricsByWindow,
-          activityMetricsByWindow,
-          contributorCount.data,
-          maintainerCount.data,
-          experimentalOrgAttribution.data,
-          commitHistory.nodes,
-        ),
+      const analysisResult = buildAnalysisResult(
+        repo,
+        overview.data,
+        activity.data,
+        responsiveness.data,
+        contributorMetricsByWindow,
+        activityMetricsByWindow,
+        contributorCount.data,
+        maintainerCount.data,
+        experimentalOrgAttribution.data,
+        commitHistory.nodes,
       )
+
+      // Populate Scorecard data (fetched in parallel earlier)
+      const scorecardData = await scorecardPromise
+      if (analysisResult.securityResult !== 'unavailable') {
+        analysisResult.securityResult.scorecard = scorecardData
+      }
+
+      results.push(analysisResult)
       const repoElapsed = ((Date.now() - repoStart) / 1000).toFixed(1)
       console.log(`[analyzer] ${repo} — done in ${repoElapsed}s`)
     } catch (error) {

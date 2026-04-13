@@ -7,6 +7,7 @@ import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
 import { ComparisonView } from '@/components/comparison/ComparisonView'
 import { DocumentationView } from '@/components/documentation/DocumentationView'
+import { SecurityView } from '@/components/security/SecurityView'
 import { RecommendationsView } from '@/components/recommendations/RecommendationsView'
 import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOverview'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
@@ -416,6 +417,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       documentation={
         analysisResponse ? (
           <DocumentationView results={analysisResponse.results} />
+        ) : (
+          <p className="text-sm text-slate-500">
+            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          </p>
+        )
+      }
+      security={
+        analysisResponse ? (
+          <SecurityView results={analysisResponse.results} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.

@@ -3,6 +3,7 @@ import { getActivityScore, type ActivityScoreDefinition } from '@/lib/activity/s
 import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/lib/responsiveness/score-config'
 import { getSustainabilityScore, type SustainabilityScoreDefinition } from '@/lib/contributors/score-config'
 import { getDocumentationScore, type DocumentationRecommendation } from '@/lib/documentation/score-config'
+import { getSecurityScore } from '@/lib/security/score-config'
 import { formatPercentileLabel, formatPercentileOrdinal, getBracketLabel, percentileToTone } from '@/lib/scoring/config-loader'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
@@ -10,7 +11,7 @@ export interface HealthScoreRecommendation {
   bucket: string
   percentile: number
   message: string
-  tab: 'activity' | 'responsiveness' | 'contributors' | 'documentation'
+  tab: 'activity' | 'responsiveness' | 'contributors' | 'documentation' | 'security'
 }
 
 export interface HealthScoreDefinition {
@@ -28,10 +29,11 @@ export interface HealthScoreDefinition {
 }
 
 const WEIGHTS = {
-  activity: 0.30,
-  responsiveness: 0.30,
-  sustainability: 0.25,
-  documentation: 0.15,
+  activity: 0.25,
+  responsiveness: 0.25,
+  sustainability: 0.23,
+  documentation: 0.12,
+  security: 0.15,
 } as const
 
 export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
@@ -41,12 +43,16 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   const documentation = result.documentationResult !== 'unavailable'
     ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     : null
+  const security = result.securityResult !== 'unavailable'
+    ? getSecurityScore(result.securityResult, result.stars)
+    : null
   const bracketLabel = activity.bracketLabel || responsiveness.bracketLabel || sustainability.bracketLabel || ''
 
   const activityPercentile = typeof activity.value === 'number' ? activity.percentile : null
   const responsivenessPercentile = typeof responsiveness.value === 'number' ? responsiveness.percentile : null
   const sustainabilityPercentile = typeof sustainability.value === 'number' ? sustainability.percentile : null
   const documentationPercentile = documentation !== null && typeof documentation.value === 'number' ? documentation.percentile : null
+  const securityPercentile = security !== null && typeof security.value === 'number' ? security.percentile : null
 
   // Compute weighted average from available buckets
   const bucketValues: Array<{ percentile: number; weight: number }> = []
@@ -54,6 +60,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   if (responsivenessPercentile !== null) bucketValues.push({ percentile: responsivenessPercentile, weight: WEIGHTS.responsiveness })
   if (sustainabilityPercentile !== null) bucketValues.push({ percentile: sustainabilityPercentile, weight: WEIGHTS.sustainability })
   if (documentationPercentile !== null) bucketValues.push({ percentile: documentationPercentile, weight: WEIGHTS.documentation })
+  if (securityPercentile !== null) bucketValues.push({ percentile: securityPercentile, weight: WEIGHTS.security })
 
   let compositePercentile: number | null = null
   if (bucketValues.length > 0) {
@@ -96,6 +103,16 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
       })
     }
   }
+  if (security !== null) {
+    for (const rec of security.recommendations) {
+      recommendations.push({
+        bucket: 'Security',
+        percentile: securityPercentile ?? 0,
+        message: rec.text,
+        tab: 'security',
+      })
+    }
+  }
 
   return {
     percentile: compositePercentile,
@@ -107,6 +124,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
       { name: 'Responsiveness', percentile: responsivenessPercentile, weight: WEIGHTS.responsiveness, label: responsivenessPercentile !== null ? formatPercentileLabel(responsivenessPercentile) : 'N/A' },
       { name: 'Sustainability', percentile: sustainabilityPercentile, weight: WEIGHTS.sustainability, label: sustainabilityPercentile !== null ? formatPercentileLabel(sustainabilityPercentile) : 'N/A' },
       { name: 'Documentation', percentile: documentationPercentile, weight: WEIGHTS.documentation, label: documentationPercentile !== null ? formatPercentileLabel(documentationPercentile) : 'N/A' },
+      { name: 'Security', percentile: securityPercentile, weight: WEIGHTS.security, label: securityPercentile !== null ? formatPercentileLabel(securityPercentile) : 'N/A' },
     ],
     recommendations,
   }

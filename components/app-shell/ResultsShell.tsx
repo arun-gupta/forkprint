@@ -14,6 +14,7 @@ interface ResultsShellProps {
   activity: React.ReactNode
   responsiveness: React.ReactNode
   documentation: React.ReactNode
+  security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
   tabs?: ResultTabDefinition[]
@@ -30,6 +31,7 @@ export function ResultsShell({
   activity,
   responsiveness,
   documentation,
+  security,
   recommendations,
   comparison,
   tabs = resultTabs,
@@ -119,6 +121,7 @@ export function ResultsShell({
               {currentActiveTab === 'activity' ? activity : null}
               {currentActiveTab === 'responsiveness' ? responsiveness : null}
               {currentActiveTab === 'documentation' ? documentation : null}
+              {currentActiveTab === 'security' ? security : null}
               {currentActiveTab === 'recommendations' ? recommendations : null}
               {currentActiveTab === 'comparison' ? comparison : null}
             </div>

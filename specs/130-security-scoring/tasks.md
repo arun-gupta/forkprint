@@ -50,22 +50,22 @@
 
 > **Write tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T008 [P] [US1] Write tests for Scorecard API client: success response, 404 (not in dataset), network error, timeout (5s) in lib/security/__tests__/scorecard-client.test.ts
-- [ ] T009 [P] [US1] Write tests for security score computation Mode A (Scorecard + direct checks): composite = scorecardNormalized * 0.60 + directComposite * 0.40 in lib/security/__tests__/score-config.test.ts
-- [ ] T010 [P] [US1] Write tests for SecurityView component with Scorecard data: renders overall score, individual check scores, mode indicator showing "Scorecard + direct checks" in __tests__/security/SecurityView.test.tsx
+- [x] T008 [P] [US1] Write tests for Scorecard API client: success response, 404 (not in dataset), network error, timeout (5s) in lib/security/__tests__/scorecard-client.test.ts
+- [x] T009 [P] [US1] Write tests for security score computation Mode A (Scorecard + direct checks): composite = scorecardNormalized * 0.60 + directComposite * 0.40 in lib/security/__tests__/score-config.test.ts
+- [x] T010 [P] [US1] Write tests for SecurityView component with Scorecard data: renders overall score, individual check scores, mode indicator showing "Scorecard + direct checks" in __tests__/security/SecurityView.test.tsx
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement Scorecard API client: `fetchScorecardData(owner, repo)` with 5s timeout, 404 → 'unavailable', error → 'unavailable' in lib/security/scorecard-client.ts
-- [ ] T012 [US1] Call Scorecard API in analyze.ts in parallel with existing GitHub API calls — populate `securityResult.scorecard` with response or 'unavailable' in lib/analyzer/analyze.ts
-- [ ] T013 [US1] Implement `getSecurityScore(securityResult, stars)` with Mode A scoring (Scorecard available): normalize Scorecard overall score to 0-1, weight at 60%, direct checks at 40%, generate recommendations for low Scorecard checks in lib/security/score-config.ts
-- [ ] T014 [US1] Add security bucket to health score: add `security: 0.15` weight, rebalance existing weights (activity 0.25, responsiveness 0.25, sustainability 0.23, documentation 0.12), call getSecurityScore, push to bucketValues and recommendations in lib/scoring/health-score.ts
-- [ ] T015 [US1] Update HealthScoreRecommendation tab type to include `'security'` in lib/scoring/health-score.ts
-- [ ] T016 [US1] Add placeholder `securityScore` percentile sets to all brackets in lib/scoring/calibration-data.json
-- [ ] T017 [US1] Create SecurityView component per contracts/security-view-props.ts: score badge, Scorecard checks table (name + score 0-10 + reason), direct checks list, recommendations, mode indicator in components/security/SecurityView.tsx
-- [ ] T018 [US1] Add `'security'` to ResultTabId type in specs/006-results-shell/contracts/results-shell-props.ts and add security tab entry to resultTabs array in lib/results-shell/tabs.ts
-- [ ] T019 [US1] Wire SecurityView into ResultsShell: compute SecurityViewProps from AnalysisResult + SecurityScoreDefinition, render when security tab is active in components/app-shell/ResultsShell.tsx
-- [ ] T020 [US1] Update existing health score tests for new weight distribution (activity 0.25, responsiveness 0.25, sustainability 0.23, documentation 0.12, security 0.10) in lib/scoring/__tests__/
+- [x] T011 [US1] Implement Scorecard API client: `fetchScorecardData(owner, repo)` with 5s timeout, 404 → 'unavailable', error → 'unavailable' in lib/security/scorecard-client.ts
+- [x] T012 [US1] Call Scorecard API in analyze.ts in parallel with existing GitHub API calls — populate `securityResult.scorecard` with response or 'unavailable' in lib/analyzer/analyze.ts
+- [x] T013 [US1] Implement `getSecurityScore(securityResult, stars)` with Mode A scoring (Scorecard available): normalize Scorecard overall score to 0-1, weight at 60%, direct checks at 40%, generate recommendations for low Scorecard checks in lib/security/score-config.ts
+- [x] T014 [US1] Add security bucket to health score: add `security: 0.15` weight, rebalance existing weights (activity 0.25, responsiveness 0.25, sustainability 0.23, documentation 0.12), call getSecurityScore, push to bucketValues and recommendations in lib/scoring/health-score.ts
+- [x] T015 [US1] Update HealthScoreRecommendation tab type to include `'security'` in lib/scoring/health-score.ts
+- [x] T016 [US1] Add placeholder `securityScore` percentile sets to all brackets in lib/scoring/calibration-data.json
+- [x] T017 [US1] Create SecurityView component per contracts/security-view-props.ts: score badge, Scorecard checks table (name + score 0-10 + reason), direct checks list, recommendations, mode indicator in components/security/SecurityView.tsx
+- [x] T018 [US1] Add `'security'` to ResultTabId type in specs/006-results-shell/contracts/results-shell-props.ts and add security tab entry to resultTabs array in lib/results-shell/tabs.ts
+- [x] T019 [US1] Wire SecurityView into ResultsShell: compute SecurityViewProps from AnalysisResult + SecurityScoreDefinition, render when security tab is active in components/app-shell/ResultsShell.tsx
+- [x] T020 [US1] Update existing health score tests for new weight distribution (activity 0.25, responsiveness 0.25, sustainability 0.23, documentation 0.12, security 0.10) in lib/scoring/__tests__/
 
 **Checkpoint**: Repos in Scorecard dataset show full security assessment. Repos not in dataset show direct checks only with Scorecard marked "unavailable". Health score includes Security bucket.
 

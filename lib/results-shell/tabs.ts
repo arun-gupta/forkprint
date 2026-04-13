@@ -26,6 +26,12 @@ export const resultTabs: ResultTabDefinition[] = [
     description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
   },
   {
+    id: 'security',
+    label: 'Security',
+    status: 'implemented',
+    description: 'Security posture including OpenSSF Scorecard checks, dependency automation, and branch protection.',
+  },
+  {
     id: 'comparison',
     label: 'Comparison',
     status: 'implemented',
