@@ -82,7 +82,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
     recommendations.push({
       bucket: 'Sustainability',
       percentile: sustainabilityPercentile ?? 0,
-      message: 'No maintainers could be identified. Add a CODEOWNERS file, an MAINTAINERS file, or configure repository roles so maintainer responsibility is visible to contributors and adopters.',
+      message: 'No maintainers identified. Add a CODEOWNERS or MAINTAINERS.md file to make maintainer responsibility visible.',
       tab: 'contributors',
     })
   }
