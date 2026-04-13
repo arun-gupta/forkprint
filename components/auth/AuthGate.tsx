@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from './AuthContext'
 import { SignInButton } from './SignInButton'
-import { UserBadge } from './UserBadge'
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, signIn } = useAuth()
@@ -63,13 +62,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     )
   }
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 px-6 py-3">
-        <span className="text-sm font-semibold text-slate-900">RepoPulse</span>
-        <UserBadge />
-      </header>
-      <main className="flex-1">{children}</main>
-    </div>
-  )
+  return <>{children}</>
+
 }

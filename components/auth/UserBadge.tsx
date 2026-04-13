@@ -15,14 +15,18 @@ export function UserBadge({ onSignOut }: UserBadgeProps) {
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-slate-700">
-        Signed in as <span className="font-medium text-slate-900">{session?.username}</span>
-      </span>
+    <div className="flex items-center gap-2">
+      <img
+        src={`https://github.com/${session?.username}.png`}
+        alt=""
+        className="h-7 w-7 rounded-full border border-sky-600"
+        aria-hidden="true"
+      />
+      <span className="text-xs font-medium text-white">{session?.username}</span>
       <button
         type="button"
         onClick={handleSignOut}
-        className="text-xs text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+        className="ml-1 text-xs text-sky-300 underline-offset-2 hover:text-white hover:underline"
       >
         Sign out
       </button>
