@@ -120,12 +120,12 @@
 
 **Purpose**: Calibration, manual testing, definition of done
 
-- [ ] T034 [P] Add security score to Overview tab health score breakdown display in components/app-shell/ResultsShell.tsx or relevant overview component
-- [ ] T035 [P] Run `npm run lint` and fix any lint errors across all new and modified files
-- [ ] T036 Run `npm run build` and fix any build errors
-- [ ] T037 Create manual testing checklist at specs/130-security-scoring/checklists/manual-testing.md
-- [ ] T038 Execute manual testing checklist and sign off
-- [ ] T039 Update docs/DEVELOPMENT.md to reflect Security scoring status
+- [x] T034 [P] Add security score to Overview tab health score breakdown display in components/app-shell/ResultsShell.tsx or relevant overview component
+- [x] T035 [P] Run `npm run lint` and fix any lint errors across all new and modified files
+- [x] T036 Run `npm run build` and fix any build errors
+- [x] T037 Create manual testing checklist at specs/130-security-scoring/checklists/manual-testing.md
+- [x] T038 Execute manual testing checklist and sign off
+- [x] T039 Update docs/DEVELOPMENT.md to reflect Security scoring status
 
 ---
 

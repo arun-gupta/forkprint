@@ -3,6 +3,7 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getActivityScore } from '@/lib/activity/score-config'
 import { getSustainabilityScore } from '@/lib/contributors/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
+import { getSecurityScore } from '@/lib/security/score-config'
 
 export interface ScoreBadgeDefinition extends ScoreBadgeProps {
   description: string
@@ -11,7 +12,7 @@ export interface ScoreBadgeDefinition extends ScoreBadgeProps {
 const PENDING_VALUE: ScoreValue = 'Not scored yet'
 const PENDING_TONE: ScoreTone = 'neutral'
 
-export const SCORE_CATEGORIES: ScoreCategory[] = ['Sustainability', 'Activity', 'Responsiveness']
+export const SCORE_CATEGORIES: ScoreCategory[] = ['Sustainability', 'Activity', 'Responsiveness', 'Security']
 
 export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
   {
@@ -32,6 +33,12 @@ export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
     tone: PENDING_TONE,
     description: 'Score will populate when responsiveness scoring lands in P1-F10.',
   },
+  {
+    category: 'Security',
+    value: PENDING_VALUE,
+    tone: PENDING_TONE,
+    description: 'Security posture via OpenSSF Scorecard and direct checks.',
+  },
 ]
 
 export function getDefaultScoreBadges(): ScoreBadgeDefinition[] {
@@ -48,6 +55,9 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
   const activityScore = getActivityScore(result)
   const sustainabilityScore = getSustainabilityScore(result)
   const responsivenessScore = getResponsivenessScore(result)
+  const securityScore = result.securityResult !== 'unavailable'
+    ? getSecurityScore(result.securityResult, result.stars)
+    : null
   return badges.map((badge) =>
     badge.category === 'Activity'
       ? {
@@ -69,6 +79,15 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
           value: responsivenessScore.value,
           tone: responsivenessScore.tone,
           description: responsivenessScore.description,
+        }
+      : badge.category === 'Security' && securityScore
+      ? {
+          ...badge,
+          value: securityScore.value,
+          tone: securityScore.tone,
+          description: securityScore.mode === 'scorecard'
+            ? 'OpenSSF Scorecard + direct checks'
+            : 'Direct security checks only',
         }
       : badge,
   )

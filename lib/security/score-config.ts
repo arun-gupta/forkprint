@@ -1,7 +1,6 @@
 import type { SecurityResult, SecurityScoreDefinition, SecurityRecommendation, DirectSecurityCheck } from './analysis-result'
 import type { Unavailable } from '@/lib/analyzer/analysis-result'
-import { getBracketLabel, getCalibrationForStars, interpolatePercentile, type PercentileSet } from '@/lib/scoring/config-loader'
-import { percentileToTone, formatPercentileOrdinal } from '@/lib/scoring/config-loader'
+import { getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone, type PercentileSet } from '@/lib/scoring/config-loader'
 
 const SCORECARD_WEIGHT = 0.60
 const DIRECT_WEIGHT = 0.40
