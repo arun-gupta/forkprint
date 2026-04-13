@@ -27,17 +27,20 @@ export const REPO_OVERVIEW_QUERY = `
       docReadmeRst: object(expression: "HEAD:README.rst") { ... on Blob { text } }
       docReadmeTxt: object(expression: "HEAD:README.txt") { ... on Blob { text } }
       docReadmePlain: object(expression: "HEAD:README") { ... on Blob { text } }
-      docLicense: object(expression: "HEAD:LICENSE") { ... on Blob { oid } }
-      docLicenseMd: object(expression: "HEAD:LICENSE.md") { ... on Blob { oid } }
-      docLicenseTxt: object(expression: "HEAD:LICENSE.txt") { ... on Blob { oid } }
-      docCopying: object(expression: "HEAD:COPYING") { ... on Blob { oid } }
+      docLicense: object(expression: "HEAD:LICENSE") { ... on Blob { oid text } }
+      docLicenseMd: object(expression: "HEAD:LICENSE.md") { ... on Blob { oid text } }
+      docLicenseTxt: object(expression: "HEAD:LICENSE.txt") { ... on Blob { oid text } }
+      docCopying: object(expression: "HEAD:COPYING") { ... on Blob { oid text } }
+      docLicenseMit: object(expression: "HEAD:LICENSE-MIT") { ... on Blob { oid text } }
+      docLicenseApache: object(expression: "HEAD:LICENSE-APACHE") { ... on Blob { oid text } }
+      docLicenseBsd: object(expression: "HEAD:LICENSE-BSD") { ... on Blob { oid text } }
       docContributing: object(expression: "HEAD:CONTRIBUTING.md") { ... on Blob { oid } }
       docContributingRst: object(expression: "HEAD:CONTRIBUTING.rst") { ... on Blob { oid } }
       docContributingTxt: object(expression: "HEAD:CONTRIBUTING.txt") { ... on Blob { oid } }
       docCodeOfConduct: object(expression: "HEAD:CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docCodeOfConductRst: object(expression: "HEAD:CODE_OF_CONDUCT.rst") { ... on Blob { oid } }
       docCodeOfConductTxt: object(expression: "HEAD:CODE_OF_CONDUCT.txt") { ... on Blob { oid } }
-      docLicenseRst: object(expression: "HEAD:LICENSE.rst") { ... on Blob { oid } }
+      docLicenseRst: object(expression: "HEAD:LICENSE.rst") { ... on Blob { oid text } }
       docSecurity: object(expression: "HEAD:SECURITY.md") { ... on Blob { oid } }
       docSecurityRst: object(expression: "HEAD:SECURITY.rst") { ... on Blob { oid } }
       docChangelog: object(expression: "HEAD:CHANGELOG.md") { ... on Blob { oid } }

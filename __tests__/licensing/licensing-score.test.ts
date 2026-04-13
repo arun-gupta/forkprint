@@ -10,6 +10,7 @@ function buildLicensingResult(overrides: Partial<LicensingResult> = {}): Licensi
       osiApproved: true,
       permissivenessTier: 'Permissive',
     },
+    additionalLicenses: [],
     contributorAgreement: {
       signedOffByRatio: null,
       dcoOrClaBot: false,
@@ -110,5 +111,39 @@ describe('getLicensingScore', () => {
     }))
 
     expect(recommendations.some((r) => r.item === 'dco_cla')).toBe(false)
+  })
+
+  it('counts OSI approval from additional licenses when primary is not OSI', () => {
+    const { score } = getLicensingScore(buildLicensingResult({
+      license: {
+        spdxId: 'UNKNOWN-1.0',
+        name: 'Unknown License',
+        osiApproved: false,
+        permissivenessTier: null,
+      },
+      additionalLicenses: [
+        { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+      ],
+    }))
+
+    // license present (0.40) + OSI from additional (0.25) + tier from additional (0.10) = 0.75
+    expect(score).toBeCloseTo(0.75, 2)
+  })
+
+  it('counts tier classification from additional licenses', () => {
+    const { score } = getLicensingScore(buildLicensingResult({
+      license: {
+        spdxId: 'UNKNOWN-1.0',
+        name: 'Unknown License',
+        osiApproved: false,
+        permissivenessTier: null,
+      },
+      additionalLicenses: [
+        { spdxId: 'Apache-2.0', name: 'Apache License 2.0', osiApproved: true, permissivenessTier: 'Permissive' },
+      ],
+    }))
+
+    // license present (0.40) + OSI (0.25) + tier (0.10) = 0.75
+    expect(score).toBeCloseTo(0.75, 2)
   })
 })
