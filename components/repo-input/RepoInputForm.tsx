@@ -24,7 +24,20 @@ export function RepoInputForm({
   const [orgValue, setOrgValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const repoTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement | null>(null)
   const mode = controlledMode ?? uncontrolledMode
+
+  useEffect(() => {
+    if (!tooltipOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (tooltipRef.current && !tooltipRef.current.contains(e.target as Node)) {
+        setTooltipOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [tooltipOpen])
 
   useEffect(() => {
     if (mode !== 'repos' || !repoTextareaRef.current) return
@@ -95,6 +108,38 @@ export function RepoInputForm({
         </button>
       </div>
       {mode === 'repos' ? (
+        <div className="relative">
+          <div className="mb-1 flex items-center justify-end">
+            <div ref={tooltipRef} className="relative">
+              <button
+                type="button"
+                aria-label="Accepted input formats"
+                className="flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onMouseEnter={() => setTooltipOpen(true)}
+                onMouseLeave={() => setTooltipOpen(false)}
+                onTouchStart={() => setTooltipOpen((prev) => !prev)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" aria-hidden="true">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM8.94 6.94a.75.75 0 1 1-1.061-1.061 2.75 2.75 0 1 1 3.871 3.871.75.75 0 0 1-.25.177.75.75 0 0 0-.45.688v.19a.75.75 0 0 1-1.5 0v-.19a2.25 2.25 0 0 1 1.35-2.064A1.25 1.25 0 0 0 8.94 6.94ZM10 15a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {tooltipOpen && (
+                <div
+                  role="tooltip"
+                  data-testid="format-tooltip"
+                  className="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-lg"
+                >
+                  <p className="mb-2 font-medium text-slate-900">Accepted formats</p>
+                  <ul className="space-y-1 font-mono text-xs">
+                    <li><span className="text-slate-500">Slug:</span> owner/repo</li>
+                    <li><span className="text-slate-500">URL:</span> https://github.com/owner/repo</li>
+                    <li><span className="text-slate-500">URL (.git):</span> https://github.com/owner/repo.git</li>
+                  </ul>
+                  <p className="mt-2 text-xs text-slate-500">Separate multiple repos with spaces, commas, or newlines.</p>
+                </div>
+              )}
+            </div>
+          </div>
         <textarea
           ref={repoTextareaRef}
           value={repoValue}
@@ -105,6 +150,7 @@ export function RepoInputForm({
           aria-label="Repository list"
           aria-describedby={error ? 'repo-input-error' : undefined}
         />
+        </div>
       ) : (
         <input
           value={orgValue}

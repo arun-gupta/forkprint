@@ -65,6 +65,16 @@ describe('parseRepos — valid input (US1)', () => {
     const result = parseRepos('facebook/react\nhttps://github.com/facebook/react')
     expect(result).toEqual({ valid: true, repos: ['facebook/react'] })
   })
+
+  it('extracts slug from a GitHub URL with .git suffix', () => {
+    const result = parseRepos('https://github.com/facebook/react.git')
+    expect(result).toEqual({ valid: true, repos: ['facebook/react'] })
+  })
+
+  it('extracts slug from a GitHub URL with .git suffix and trailing slash', () => {
+    const result = parseRepos('https://github.com/facebook/react.git/')
+    expect(result).toEqual({ valid: true, repos: ['facebook/react'] })
+  })
 })
 
 describe('parseRepos — invalid input (US2)', () => {

@@ -2,7 +2,7 @@ export type ParseResult =
   | { valid: true; repos: string[] }
   | { valid: false; error: string }
 
-const GITHUB_URL_RE = /^https:\/\/github\.com\/([a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+?)\/?$/
+const GITHUB_URL_RE = /^https:\/\/github\.com\/([a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+?)(?:\.git)?\/?$/
 const SLUG_RE = /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/
 
 function extractSlug(token: string): string {
