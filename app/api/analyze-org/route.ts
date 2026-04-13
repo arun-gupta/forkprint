@@ -14,13 +14,20 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Authentication required.' }, { status: 401 })
     }
 
+    console.log(`[analyze-org] Starting inventory for org: ${body.org}`)
+    const start = Date.now()
+
     const response = await analyzeOrgInventory({
       org: body.org,
       token,
     })
 
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1)
+    console.log(`[analyze-org] Completed in ${elapsed}s — ${response.results.length} repos found`)
+
     return Response.json(response)
-  } catch {
+  } catch (error) {
+    console.error(`[analyze-org] Request failed:`, error)
     return Response.json({ error: 'Organization inventory request failed.' }, { status: 500 })
   }
 }

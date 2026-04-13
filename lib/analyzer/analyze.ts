@@ -293,8 +293,10 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
 
   for (const repo of input.repos) {
     const [owner, name] = repo.split('/')
+    const repoStart = Date.now()
 
     try {
+      console.log(`[analyzer] ${repo} — fetching overview`)
       const overview = await queryGitHubGraphQL<RepoOverviewResponse>(input.token, REPO_OVERVIEW_QUERY, {
         owner,
         name,
@@ -302,6 +304,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       latestRateLimit = overview.rateLimit ?? latestRateLimit
 
       if (!overview.data.repository) {
+        console.warn(`[analyzer] ${repo} — not found, skipping`)
         failures.push({
           repo,
           reason: 'Repository could not be analyzed.',
@@ -334,6 +337,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       const repoSearch = `${owner}/${name}`
 
       // Pass 1: Commit history + releases (lightweight — no search queries)
+      console.log(`[analyzer] ${repo} — pass 1: commit history + releases`)
       const commitAndReleases = await queryGitHubGraphQL<RepoCommitAndReleasesResponse>(input.token, REPO_COMMIT_AND_RELEASES_QUERY, {
         owner,
         name,
@@ -346,6 +350,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       latestRateLimit = commitAndReleases.rateLimit ?? latestRateLimit
 
       // Pass 2: Search-based PR/issue counts (may hit RESOURCE_LIMITS_EXCEEDED)
+      console.log(`[analyzer] ${repo} — pass 2: activity counts (search-based)`)
       const searchVariables = {
         prsOpened30Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since30),
         prsOpened60Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since60),
@@ -391,6 +396,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         rateLimit: latestRateLimit,
       }
 
+      console.log(`[analyzer] ${repo} — fetching responsiveness metrics`)
       const responsiveness = await fetchResponsivenessTwoPass(
         input.token,
         {
@@ -409,6 +415,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       )
       latestRateLimit = responsiveness.rateLimit ?? latestRateLimit
 
+      console.log(`[analyzer] ${repo} — fetching contributor + maintainer counts`)
       const contributorCount = await fetchContributorCount(input.token, owner, name).catch((error) => {
         latestRateLimit = extractRateLimitFromError(error) ?? latestRateLimit
         diagnostics.push(buildDiagnostic(repo, 'github-rest:contributors', error))
@@ -431,6 +438,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       })
       latestRateLimit = maintainerCount.rateLimit ?? latestRateLimit
 
+      console.log(`[analyzer] ${repo} — collecting commit history`)
       const commitHistory = await collectRecentCommitHistory({
         token: input.token,
         owner,
@@ -463,7 +471,11 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
           experimentalOrgAttribution.data,
         ),
       )
+      const repoElapsed = ((Date.now() - repoStart) / 1000).toFixed(1)
+      console.log(`[analyzer] ${repo} — done in ${repoElapsed}s`)
     } catch (error) {
+      const repoElapsed = ((Date.now() - repoStart) / 1000).toFixed(1)
+      console.error(`[analyzer] ${repo} — failed after ${repoElapsed}s:`, error)
       latestRateLimit = latestRateLimit ?? extractRateLimitFromError(error)
       diagnostics.push(buildDiagnostic(repo, 'analyze', error, 'error'))
       failures.push(buildFailure(repo, error))

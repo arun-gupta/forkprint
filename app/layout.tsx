@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DevToolsLink } from "@/components/debug/DevToolsLink";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,10 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <DevToolsLink />
+      </body>
     </html>
   );
 }
