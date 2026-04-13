@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/repo-pulse-banner.png" alt="RepoPulse — Measure the health of your open source projects" width="700" />
+  <img src="public/repo-pulse-banner.png" alt="RepoPulse — Measure the health of your open source projects" width="350" />
 </p>
 
 <p align="center">
