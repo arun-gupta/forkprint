@@ -28,6 +28,14 @@ describe('isOsiApproved', () => {
     expect(isOsiApproved('UNKNOWN')).toBe(false)
     expect(isOsiApproved('Custom-License')).toBe(false)
   })
+
+  it('returns true for deprecated GitHub short-form SPDX IDs', () => {
+    expect(isOsiApproved('GPL-2.0')).toBe(true)
+    expect(isOsiApproved('GPL-3.0')).toBe(true)
+    expect(isOsiApproved('AGPL-3.0')).toBe(true)
+    expect(isOsiApproved('LGPL-2.1')).toBe(true)
+    expect(isOsiApproved('LGPL-3.0')).toBe(true)
+  })
 })
 
 describe('getPermissivenessTier', () => {
@@ -71,6 +79,14 @@ describe('getPermissivenessTier', () => {
 
   it('returns null for unrecognized SPDX IDs', () => {
     expect(getPermissivenessTier('UNKNOWN')).toBeNull()
+  })
+
+  it('classifies deprecated GitHub short-form SPDX IDs correctly', () => {
+    expect(getPermissivenessTier('GPL-2.0')).toBe('Copyleft')
+    expect(getPermissivenessTier('GPL-3.0')).toBe('Copyleft')
+    expect(getPermissivenessTier('AGPL-3.0')).toBe('Copyleft')
+    expect(getPermissivenessTier('LGPL-2.1')).toBe('Weak Copyleft')
+    expect(getPermissivenessTier('LGPL-3.0')).toBe('Weak Copyleft')
   })
 })
 

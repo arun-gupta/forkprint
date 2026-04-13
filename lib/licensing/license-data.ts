@@ -106,11 +106,19 @@ export const OSI_APPROVED_SPDX_IDS: ReadonlySet<string> = new Set([
   'AGPL-1.0-or-later',
   'AGPL-3.0-only',
   'AGPL-3.0-or-later',
+  'AGPL-3.0',
   'GPL-2.0-only',
   'GPL-2.0-or-later',
+  'GPL-2.0',
   'GPL-3.0-only',
   'GPL-3.0-or-later',
+  'GPL-3.0',
   'SSPL-1.0',
+
+  // Deprecated short forms returned by GitHub API
+  'LGPL-2.0',
+  'LGPL-2.1',
+  'LGPL-3.0',
 ])
 
 /**
@@ -156,6 +164,9 @@ export const PERMISSIVENESS_TIERS: ReadonlyMap<string, LicensePermissivenessTier
   ['LGPL-2.1-or-later', 'Weak Copyleft'],
   ['LGPL-3.0-only', 'Weak Copyleft'],
   ['LGPL-3.0-or-later', 'Weak Copyleft'],
+  ['LGPL-2.0', 'Weak Copyleft'],
+  ['LGPL-2.1', 'Weak Copyleft'],
+  ['LGPL-3.0', 'Weak Copyleft'],
   ['MPL-1.0', 'Weak Copyleft'],
   ['MPL-1.1', 'Weak Copyleft'],
   ['MPL-2.0', 'Weak Copyleft'],
@@ -170,6 +181,9 @@ export const PERMISSIVENESS_TIERS: ReadonlyMap<string, LicensePermissivenessTier
   ['GPL-2.0-or-later', 'Copyleft'],
   ['GPL-3.0-only', 'Copyleft'],
   ['GPL-3.0-or-later', 'Copyleft'],
+  ['AGPL-3.0', 'Copyleft'],
+  ['GPL-2.0', 'Copyleft'],
+  ['GPL-3.0', 'Copyleft'],
 ])
 
 export function isOsiApproved(spdxId: string | null): boolean {
