@@ -19,7 +19,8 @@ A maintainer analyzes their repository and sees security recommendations enriche
 
 1. **Given** a repo with OpenSSF Scorecard data where `Token-Permissions` scored 0/10, **When** the user views security recommendations, **Then** the recommendation displays a descriptive title (e.g., "Restrict GitHub Actions token permissions"), source label ("OpenSSF Scorecard"), risk level, the actual score as evidence, an explanation of why overly broad tokens are risky, a specific remediation action, and a link to the relevant OpenSSF check documentation.
 2. **Given** a repo missing `SECURITY.md` (direct check), **When** the user views security recommendations, **Then** the recommendation displays a descriptive title, source label ("Direct check"), risk level, evidence that the file was not detected, why a security policy matters, and the recommended action to add one.
-3. **Given** a repo where all Scorecard checks score 7+ and all direct checks pass, **When** the user views security recommendations, **Then** no security recommendations are shown (existing behavior preserved).
+3. **Given** a repo where all Scorecard checks score 10/10 and all direct checks pass, **When** the user views security recommendations, **Then** no security recommendations are shown.
+4. **Given** a repo where a Scorecard check scores 7/10 and the catalog has remediation guidance for it, **When** the user views security recommendations, **Then** a recommendation is shown with the actual score as evidence and the OpenSSF remediation guidance.
 
 ---
 
@@ -33,7 +34,7 @@ A maintainer sees their security recommendations organized into meaningful categ
 
 **Acceptance Scenarios**:
 
-1. **Given** a repo with findings across multiple security domains (e.g., missing security policy, low token-permissions score, no dependency updates), **When** the user views the recommendations, **Then** recommendations are grouped under category headings rather than displayed as a flat list.
+1. **Given** a repo with a Critical-risk check scoring 0/10 and a Low-risk check scoring 8/10, **When** the user views the recommendations, **Then** the critical finding appears under "Critical Issues" and the low-risk finding appears under "Quick Wins" or "Best Practices", with Critical Issues displayed first.
 2. **Given** a repo with findings in only one category, **When** the user views the recommendations, **Then** only that single category heading is shown — empty categories are not displayed.
 
 ---
@@ -82,7 +83,7 @@ A maintainer sees actionable remediation snippets or links for common security f
 - **FR-001**: Each security recommendation MUST include structured fields: a descriptive title, source label (OpenSSF Scorecard or Direct check), risk level (Critical, High, Medium, Low), evidence string, why-it-matters explanation, and recommended action text.
 - **FR-002**: Recommendations sourced from OpenSSF Scorecard checks MUST use guidance derived from the published OpenSSF Scorecard checks documentation as the baseline for title, risk level, why-it-matters, and remediation text — not generic invented guidance.
 - **FR-003**: Each Scorecard-sourced recommendation MUST include a documentation link pointing to the relevant OpenSSF Scorecard check documentation.
-- **FR-004**: Recommendations MUST be grouped into meaningful categories. The initial categories are: Quick Wins, Workflow Hardening, Release Integrity, and Security Process. Each recommendation maps to exactly one category.
+- **FR-004**: Recommendations MUST be grouped into priority-driven categories. The initial categories are: Critical Issues (Critical/High risk + low score 0–4), Quick Wins (Low/Medium risk or high score 5–9 with a clear simple fix), Workflow Hardening (CI/CD, branch protection, token permissions at medium scores), and Best Practices (mature security practices like fuzzing, SAST, SBOM, signed releases). Each recommendation maps to exactly one category based on its risk level and score.
 - **FR-005**: Empty categories (no findings in that group) MUST NOT be displayed.
 - **FR-006**: Each recommendation MUST display a source label distinguishing between "OpenSSF Scorecard" and "Direct check" origins.
 - **FR-007**: When a security concern is covered by both a Scorecard check and a direct check, the system MUST deduplicate by presenting a single recommendation that prefers the richer Scorecard-sourced version when available.
