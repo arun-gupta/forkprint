@@ -186,6 +186,23 @@ export function BaselineView() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Security Scoring</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          The security score combines two signal sources: the{' '}
+          <a href="https://github.com/ossf/scorecard" className="text-sky-700 underline hover:text-sky-900" target="_blank" rel="noopener noreferrer">OpenSSF Scorecard</a>{' '}
+          (60%) and direct repository checks (40%). When Scorecard data is unavailable, the score falls back to direct checks only.
+        </p>
+        <p className="mt-2 text-sm text-slate-600">
+          Direct checks detect the presence of a security policy (SECURITY.md), dependency automation (Dependabot or Renovate), CI/CD pipelines (GitHub Actions), and branch protection rules. Each signal is weighted by its impact on project security posture.
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          See the{' '}
+          <a href="https://github.com/ossf/scorecard/blob/main/docs/checks.md" className="text-sky-700 underline hover:text-sky-900" target="_blank" rel="noopener noreferrer">OpenSSF Scorecard checks documentation</a>{' '}
+          for details on individual Scorecard checks.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Scoring Methodology</h3>
         <p className="mt-1 text-sm text-slate-600">
           Percentile thresholds derived from sampling real GitHub repositories. All RepoPulse scores are computed relative to these distributions.
