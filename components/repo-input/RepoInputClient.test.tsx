@@ -99,6 +99,8 @@ describe('RepoInputClient', () => {
     await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react nvidia/topograph')
     await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
 
+    // Comparison is in the overflow menu
+    await userEvent.click(screen.getByRole('button', { name: /More/ }))
     await userEvent.click(await screen.findByRole('tab', { name: 'Comparison' }))
     expect(await screen.findByRole('region', { name: /comparison view/i })).toBeInTheDocument()
   })
@@ -209,8 +211,9 @@ describe('RepoInputClient', () => {
     expect(screen.getByText(/enter a github organization slug or org url above/i)).toBeInTheDocument()
   })
 
-  it('shows the comparison tab with a placeholder before any analysis results exist', () => {
+  it('shows the comparison tab in the overflow menu before any analysis results exist', async () => {
     renderWithAuth(<RepoInputClient />)
+    await userEvent.click(screen.getByRole('button', { name: /More/ }))
     expect(screen.getByRole('tab', { name: 'Comparison' })).toBeInTheDocument()
   })
 

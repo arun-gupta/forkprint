@@ -31,7 +31,7 @@ describe('ResultsTabs', () => {
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
   })
 
-  it('shows overflow tabs in a More menu when tab count exceeds visible limit', async () => {
+  it('shows overflow tabs in a More menu and supports Show all', async () => {
     const manyTabs: ResultTabDefinition[] = [
       { id: 'overview', label: 'Overview', status: 'implemented', description: '' },
       { id: 'contributors', label: 'Contributors', status: 'placeholder', description: '' },
@@ -41,24 +41,33 @@ describe('ResultsTabs', () => {
       { id: 'security', label: 'Security', status: 'implemented', description: '' },
       { id: 'recommendations', label: 'Recommendations', status: 'implemented', description: '' },
       { id: 'comparison', label: 'Comparison', status: 'implemented', description: '' },
-      { id: 'comparison', label: 'Extra Tab', status: 'implemented', description: '' },
     ]
     const onChange = vi.fn()
 
     render(<ResultsTabs tabs={manyTabs} activeTab="overview" onChange={onChange} />)
 
-    // First 8 tabs are visible directly
+    // First 6 tabs are visible directly
     expect(screen.getByRole('tab', { name: 'Overview' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Comparison' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Security' })).toBeInTheDocument()
 
     // Overflow tabs are hidden until More is clicked
-    expect(screen.queryByRole('tab', { name: 'Extra Tab' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Recommendations' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Comparison' })).not.toBeInTheDocument()
 
+    // Open dropdown and select a tab
     await userEvent.click(screen.getByRole('button', { name: /More/ }))
+    expect(screen.getByRole('tab', { name: 'Recommendations' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Comparison' })).toBeInTheDocument()
 
-    expect(screen.getByRole('tab', { name: 'Extra Tab' })).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('tab', { name: 'Extra Tab' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Comparison' }))
     expect(onChange).toHaveBeenCalledWith('comparison')
+
+    // Open dropdown again and click Show all — all tabs become inline
+    await userEvent.click(screen.getByRole('button', { name: /More/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Show all/ }))
+
+    // Now all 8 tabs are visible as inline tab buttons
+    expect(screen.getAllByRole('tab')).toHaveLength(8)
+    expect(screen.queryByRole('button', { name: /More/ })).not.toBeInTheDocument()
   })
 })

@@ -9,14 +9,17 @@ interface ResultsTabsProps {
   onChange: (tabId: ResultTabId) => void
 }
 
-const VISIBLE_COUNT = 8
+const COLLAPSED_COUNT = 6
 
 export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const visibleTabs = tabs.slice(0, VISIBLE_COUNT)
-  const overflowTabs = tabs.slice(VISIBLE_COUNT)
+  const hasOverflow = tabs.length > COLLAPSED_COUNT
+  const showAll = expanded || !hasOverflow
+  const visibleTabs = showAll ? tabs : tabs.slice(0, COLLAPSED_COUNT)
+  const overflowTabs = showAll ? [] : tabs.slice(COLLAPSED_COUNT)
   const activeOverflowTab = overflowTabs.find((t) => t.id === activeTab)
 
   useEffect(() => {
@@ -77,6 +80,17 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
                   {tab.label}
                 </button>
               ))}
+              <div className="my-1 border-t border-slate-100" />
+              <button
+                type="button"
+                className="block w-full px-4 py-2 text-left text-xs font-medium text-slate-500 hover:bg-slate-50"
+                onClick={() => {
+                  setExpanded(true)
+                  setMenuOpen(false)
+                }}
+              >
+                Show all
+              </button>
             </div>
           )}
         </div>
