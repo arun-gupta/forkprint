@@ -59,7 +59,11 @@ function DirectChecksSection({ checks }: { checks: DirectSecurityCheck[] }) {
               {check.details ? (
                 <p className="text-xs text-slate-500">{check.details}</p>
               ) : check.detected === 'unavailable' ? (
-                <p className="text-xs text-slate-400">Unavailable</p>
+                <p className="text-xs text-slate-400">
+                  {check.name === 'branch_protection'
+                    ? 'Requires admin access to the repository'
+                    : 'Unavailable'}
+                </p>
               ) : null}
             </div>
           </li>
