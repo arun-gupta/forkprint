@@ -4,16 +4,32 @@ import { useState } from 'react'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
 import { HelpLabel } from '@/components/shared/HelpLabel'
 import { MetricValue } from '@/components/shared/MetricValue'
+import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import { type ActivityWindowDays, type AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildResponsivenessSections, getResponsivenessWindowOptions } from '@/lib/responsiveness/view-model'
+import { CONTRIB_EX_RESPONSIVENESS_PANES } from '@/lib/tags/tag-mappings'
 import { ResponsivenessScoreHelp } from './ResponsivenessScoreHelp'
 
 interface ResponsivenessViewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
-export function ResponsivenessView({ results }: ResponsivenessViewProps) {
+function getResponsivenessPaneTags(title: string): string[] {
+  if (CONTRIB_EX_RESPONSIVENESS_PANES.has(title)) return ['contrib-ex']
+  return []
+}
+
+export function ResponsivenessView({ results, activeTag: externalTag, onTagChange }: ResponsivenessViewProps) {
   const [windowDays, setWindowDays] = useState<ActivityWindowDays>(90)
+  const [localTag, setLocalTag] = useState<string | null>(null)
+  const activeTag = externalTag !== undefined ? externalTag : localTag
+  const handleTagClick = (tag: string) => {
+    const next = activeTag === tag ? null : tag
+    if (onTagChange) onTagChange(next)
+    else setLocalTag(next)
+  }
   const sections = buildResponsivenessSections(results, windowDays)
   const windowOptions = getResponsivenessWindowOptions()
 
@@ -63,10 +79,23 @@ export function ResponsivenessView({ results }: ResponsivenessViewProps) {
             </div>
           </div>
 
+          {activeTag ? (
+            <div className="mt-4">
+              <ActiveFilterBar tag={activeTag} onClear={() => handleTagClick(activeTag)} />
+            </div>
+          ) : null}
+
           <div className="grid gap-3 xl:grid-cols-2">
-            {section.panes.map((pane) => (
+            {section.panes
+              .filter((pane) => !activeTag || getResponsivenessPaneTags(pane.title).includes(activeTag))
+              .map((pane) => {
+                const tags = getResponsivenessPaneTags(pane.title)
+                return (
               <div key={pane.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{pane.title}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{pane.title}</p>
+                  {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={handleTagClick} />)}
+                </div>
                 <dl className="mt-3 space-y-2">
                   {pane.metrics.map((metric) => (
                     <div key={metric.label} className="flex items-baseline justify-between gap-4">
@@ -78,7 +107,8 @@ export function ResponsivenessView({ results }: ResponsivenessViewProps) {
                   ))}
                 </dl>
               </div>
-            ))}
+                )
+              })}
           </div>
 
           <ResponsivenessScoreHelp score={section.score} />

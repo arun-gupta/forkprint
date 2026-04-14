@@ -401,7 +401,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       activity={
         analysisResponse ? (
-          <ActivityView results={analysisResponse.results} />
+          <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
@@ -410,7 +410,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       responsiveness={
         analysisResponse ? (
-          <ResponsivenessView results={analysisResponse.results} />
+          <ResponsivenessView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.

@@ -7,6 +7,7 @@ import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import type { AnalysisResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { GOVERNANCE_DOC_FILES, LICENSING_IS_GOVERNANCE } from '@/lib/tags/governance'
+import { getDocFileTags, getReadmeSectionTags, LICENSING_IS_COMPLIANCE } from '@/lib/tags/tag-mappings'
 
 interface DocumentationViewProps {
   results: AnalysisResult[]
@@ -31,6 +32,13 @@ const SECTION_LABELS: Record<string, string> = {
   license: 'License',
 }
 
+function getDocFileAllTags(name: string): string[] {
+  const tags: string[] = []
+  if (GOVERNANCE_DOC_FILES.has(name)) tags.push('governance')
+  tags.push(...getDocFileTags(name))
+  return tags
+}
+
 function LicensingPane({ licensingResult, activeTag, onTagClick }: { licensingResult: LicensingResult | 'unavailable'; activeTag: string | null; onTagClick: (tag: string) => void }) {
   if (licensingResult === 'unavailable') {
     return (
@@ -50,6 +58,7 @@ function LicensingPane({ licensingResult, activeTag, onTagClick }: { licensingRe
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
         {LICENSING_IS_GOVERNANCE ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
+        {LICENSING_IS_COMPLIANCE ? <TagPill tag="compliance" active={activeTag === 'compliance'} onClick={onTagClick} /> : null}
       </div>
       <ul className="mt-3 space-y-2">
         {/* License detection */}
@@ -252,14 +261,14 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
 
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               {/* File presence */}
-              {!activeTag || fileChecks.some((c) => GOVERNANCE_DOC_FILES.has(c.name)) ? (
+              {!activeTag || fileChecks.some((c) => getDocFileAllTags(c.name).includes(activeTag)) ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Documentation files</h3>
                   <ul className="mt-3 space-y-2">
                     {fileChecks
-                      .filter((check) => !activeTag || GOVERNANCE_DOC_FILES.has(check.name))
+                      .filter((check) => !activeTag || getDocFileAllTags(check.name).includes(activeTag))
                       .map((check) => {
-                        const isGov = GOVERNANCE_DOC_FILES.has(check.name)
+                        const tags = getDocFileAllTags(check.name)
                         return (
                           <li key={check.name} className="flex items-start gap-2">
                             <span className={`mt-0.5 text-sm ${check.found ? 'text-emerald-600' : 'text-red-400'}`}>
@@ -269,7 +278,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                               <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {FILE_LABELS[check.name] ?? check.name}
                                 {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
-                                {isGov ? <> <TagPill tag="governance" active={activeTag === 'governance'} onClick={handleTagClick} /></> : null}
+                                {tags.map((tag) => <span key={tag}> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
                               </p>
                               {!check.found ? (
                                 <p className="mt-0.5 text-xs text-amber-700">
@@ -284,36 +293,44 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                 </div>
               ) : null}
 
-              {/* README sections — no governance items, hide when filtering */}
-              {!activeTag ? (
+              {/* README sections — show when no filter or when contrib-ex is active */}
+              {!activeTag || readmeSections.some((s) => getReadmeSectionTags(s.name).includes(activeTag)) ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">README sections</h3>
                   <ul className="mt-3 space-y-2">
-                    {readmeSections.map((section) => (
-                      <li key={section.name} className="flex items-start gap-2">
-                        <span className={`mt-0.5 text-sm ${section.detected ? 'text-emerald-600' : 'text-red-400'}`}>
-                          {section.detected ? '✓' : '✗'}
-                        </span>
-                        <div className="min-w-0">
-                          <p className={`text-sm font-medium ${section.detected ? 'text-slate-900' : 'text-slate-400'}`}>
-                            {SECTION_LABELS[section.name] ?? section.name}
-                          </p>
-                          {!section.detected ? (
-                            <p className="mt-0.5 text-xs text-amber-700">
-                              {score.recommendations.find((r) => r.category === 'readme_section' && r.item === section.name)?.text}
-                            </p>
-                          ) : null}
-                        </div>
-                      </li>
-                    ))}
+                    {readmeSections
+                      .filter((section) => !activeTag || getReadmeSectionTags(section.name).includes(activeTag))
+                      .map((section) => {
+                        const tags = getReadmeSectionTags(section.name)
+                        return (
+                          <li key={section.name} className="flex items-start gap-2">
+                            <span className={`mt-0.5 text-sm ${section.detected ? 'text-emerald-600' : 'text-red-400'}`}>
+                              {section.detected ? '✓' : '✗'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm font-medium ${section.detected ? 'text-slate-900' : 'text-slate-400'}`}>
+                                {SECTION_LABELS[section.name] ?? section.name}
+                                {tags.map((tag) => <span key={tag}> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
+                              </p>
+                              {!section.detected ? (
+                                <p className="mt-0.5 text-xs text-amber-700">
+                                  {score.recommendations.find((r) => r.category === 'readme_section' && r.item === section.name)?.text}
+                                </p>
+                              ) : null}
+                            </div>
+                          </li>
+                        )
+                      })}
                   </ul>
                 </div>
               ) : null}
 
-              {/* Licensing & Compliance — always governance */}
-              <LicensingPane licensingResult={result.licensingResult} activeTag={activeTag} onTagClick={handleTagClick} />
+              {/* Licensing & Compliance — governance + compliance */}
+              {!activeTag || activeTag === 'governance' || activeTag === 'compliance' ? (
+                <LicensingPane licensingResult={result.licensingResult} activeTag={activeTag} onTagClick={handleTagClick} />
+              ) : null}
 
-              {/* Inclusive Naming — hide when filtering governance */}
+              {/* Inclusive Naming — hide when any tag is filtering */}
               {!activeTag ? <InclusiveNamingPane inclusiveNamingResult={result.inclusiveNamingResult} /> : null}
             </div>
           </div>
