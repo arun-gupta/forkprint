@@ -1,18 +1,24 @@
 import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import { getMergeRateGuidance } from '@/lib/activity/merge-rate-guidance'
 import { computeContributionConcentration, getContributorsScore, formatPercentage as formatContributorPercentage } from '@/lib/contributors/score-config'
+import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 
-export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'health-ratios'
+export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'community' | 'health-ratios'
 export type ComparisonAttributeId =
   | 'stars'
   | 'forks'
   | 'watchers'
   | 'fork-rate'
   | 'watcher-rate'
+  | 'community-completeness'
+  | 'community-signals-present'
+  | 'community-discussions-enabled'
+  | 'community-discussions-count'
+  | 'community-funding'
   | 'total-contributors'
   | 'maintainer-count'
   | 'top-contributor-share'
@@ -409,6 +415,100 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         formatValue: (value) => {
           if (value === 'unavailable') return '—'
           return `${value} / 5`
+        },
+      },
+    ],
+  },
+  {
+    id: 'community',
+    label: 'Community',
+    description: 'Compare community signals across repositories. Community is a cross-cutting lens — it does not feed the composite OSS Health Score.',
+    attributes: [
+      {
+        id: 'community-completeness',
+        sectionId: 'community',
+        label: 'Community completeness',
+        helpText: 'Percentile rank of community signals present (count-based) against the peer bracket. Unknown signals are excluded from both numerator and denominator.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          const completeness = computeCommunityCompleteness(result)
+          return completeness.percentile ?? 'unavailable'
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return formatPercentileLabel(value as number)
+        },
+      },
+      {
+        id: 'community-signals-present',
+        sectionId: 'community',
+        label: 'Community signals present',
+        helpText: 'Count of community signals detected as present out of the signals that could be determined (unknowns excluded).',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          const completeness = computeCommunityCompleteness(result)
+          const known = completeness.present.length + completeness.missing.length
+          if (known === 0) return 'unavailable'
+          return completeness.present.length
+        },
+        formatValue: (value, result) => {
+          if (value === 'unavailable') return '—'
+          if (!result) return `${value}`
+          const completeness = computeCommunityCompleteness(result)
+          const known = completeness.present.length + completeness.missing.length
+          return `${value} / ${known}`
+        },
+      },
+      {
+        id: 'community-discussions-enabled',
+        sectionId: 'community',
+        label: 'Discussions enabled',
+        helpText: 'Whether GitHub Discussions is enabled for this repository.',
+        direction: 'higher-is-better',
+        valueType: 'label',
+        getValue: (result) => {
+          if (result.hasDiscussionsEnabled === true) return 1
+          if (result.hasDiscussionsEnabled === false) return 0
+          return 'unavailable'
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return value === 1 ? 'Yes' : 'No'
+        },
+      },
+      {
+        id: 'community-discussions-count',
+        sectionId: 'community',
+        label: 'Discussions (recent)',
+        helpText: 'Number of Discussions created within the selected analysis window. Gated on Discussions being enabled.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          if (typeof result.discussionsCountWindow !== 'number') return 'unavailable'
+          return result.discussionsCountWindow
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return formatNumber(value as number)
+        },
+      },
+      {
+        id: 'community-funding',
+        sectionId: 'community',
+        label: 'Funding disclosure',
+        helpText: 'Presence of a .github/FUNDING.yml file declaring sponsorship or funding channels.',
+        direction: 'higher-is-better',
+        valueType: 'label',
+        getValue: (result) => {
+          if (result.hasFundingConfig === true) return 1
+          if (result.hasFundingConfig === false) return 0
+          return 'unavailable'
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return value === 1 ? 'Present' : 'Not detected'
         },
       },
     ],

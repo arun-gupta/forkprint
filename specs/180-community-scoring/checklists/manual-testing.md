@@ -66,12 +66,13 @@ Items landed during this session are marked done below. Items still deferred wil
 - [x] Markdown export `### Community` section between Contributors and Activity (data-model.md §4)
 - [x] Explicit recommendation emission paths for CTR-3 (funding) and ACT-5 (discussions)
 
+- [x] Comparison-tab Community section
+
 ### Deferred to a follow-up PR
 
 - Dedicated `e2e/community-scoring.spec.ts` Playwright coverage
 - `/baseline` methodology page copy describing the Community lens
 - Governance lens pill in the Lenses row ([#191](https://github.com/arun-gupta/repo-pulse/issues/191))
-- Comparison-tab Community section
 
 ---
 
