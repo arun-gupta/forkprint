@@ -82,6 +82,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Delete checked-in binaries (`.exe`, `.dll`, `.so`, `.jar`) and add them to `.gitignore`. Build artifacts from source in CI.',
     docsUrl: `${SCORECARD_DOCS_BASE}#binary-artifacts`,
     directCheckMapping: null,
+    tags: ['supply-chain'],
   },
   {
     key: 'Code-Review',
@@ -107,6 +108,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create `.github/dependabot.yml` with update schedules for your package ecosystems.',
     docsUrl: `${SCORECARD_DOCS_BASE}#dependency-update-tool`,
     directCheckMapping: 'dependabot',
+    tags: ['supply-chain', 'quick-win'],
   },
   {
     key: 'Signed-Releases',
@@ -119,6 +121,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Use `gpg --sign` or `cosign` to sign release artifacts, and attach `.sig` or `.pem` files to GitHub releases.',
     docsUrl: `${SCORECARD_DOCS_BASE}#signed-releases`,
     directCheckMapping: null,
+    tags: ['supply-chain'],
   },
   {
     key: 'Token-Permissions',
@@ -131,6 +134,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Add `permissions: read-all` at the top of workflow files and grant specific write permissions per job.',
     docsUrl: `${SCORECARD_DOCS_BASE}#token-permissions`,
     directCheckMapping: null,
+    tags: ['supply-chain'],
   },
   {
     key: 'Vulnerabilities',
@@ -181,6 +185,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Replace `uses: actions/checkout@v4` with `uses: actions/checkout@<full-sha>` in workflow files.',
     docsUrl: `${SCORECARD_DOCS_BASE}#pinned-dependencies`,
     directCheckMapping: null,
+    tags: ['supply-chain'],
   },
   {
     key: 'SAST',
@@ -205,7 +210,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create `SECURITY.md` with sections: Reporting a Vulnerability, Contact, Response Timeline. GitHub also supports private vulnerability reporting.',
     docsUrl: `${SCORECARD_DOCS_BASE}#security-policy`,
     directCheckMapping: 'security_policy',
-    tags: ['governance'],
+    tags: ['governance', 'quick-win', 'compliance'],
   },
   {
     key: 'Packaging',
@@ -218,6 +223,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: null,
     docsUrl: `${SCORECARD_DOCS_BASE}#packaging`,
     directCheckMapping: null,
+    tags: ['supply-chain'],
   },
 
   // --- Low risk Scorecard checks ---
@@ -232,6 +238,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Add a GitHub Actions workflow with `on: pull_request` that runs your test suite.',
     docsUrl: `${SCORECARD_DOCS_BASE}#ci-tests`,
     directCheckMapping: 'ci_cd',
+    tags: ['quick-win'],
   },
   {
     key: 'License',
@@ -244,7 +251,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create a `LICENSE` file at the repo root. Use `choosealicense.com` to pick an appropriate license.',
     docsUrl: `${SCORECARD_DOCS_BASE}#license`,
     directCheckMapping: null,
-    tags: ['governance'],
+    tags: ['governance', 'compliance'],
   },
 
   // --- Direct checks ---
@@ -259,7 +266,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create `SECURITY.md` at the repo root with sections for reporting process, contact info, and response expectations.',
     docsUrl: null,
     directCheckMapping: null,
-    tags: ['governance'],
+    tags: ['governance', 'quick-win', 'compliance'],
   },
   {
     key: 'dependabot',
@@ -272,6 +279,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create `.github/dependabot.yml` with update schedules for your package ecosystems.',
     docsUrl: null,
     directCheckMapping: null,
+    tags: ['supply-chain', 'quick-win'],
   },
   {
     key: 'ci_cd',
@@ -284,6 +292,7 @@ export const RECOMMENDATION_CATALOG: RecommendationCatalogEntry[] = [
     remediationHint: 'Create `.github/workflows/ci.yml` with a workflow that runs your test suite on push and pull_request events.',
     docsUrl: null,
     directCheckMapping: null,
+    tags: ['quick-win'],
   },
   {
     key: 'branch_protection',

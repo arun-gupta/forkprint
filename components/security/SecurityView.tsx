@@ -7,6 +7,7 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getSecurityScore } from '@/lib/security/score-config'
 import type { ScorecardCheck, DirectSecurityCheck, SecurityScoreDefinition } from '@/lib/security/analysis-result'
 import { GOVERNANCE_SCORECARD_CHECKS, GOVERNANCE_DIRECT_CHECKS } from '@/lib/tags/governance'
+import { getScorecardCheckTags, getDirectCheckTags } from '@/lib/tags/tag-mappings'
 
 interface SecurityViewProps {
   results: AnalysisResult[]
@@ -21,8 +22,22 @@ const DIRECT_CHECK_LABELS: Record<string, string> = {
   branch_protection: 'Branch Protection',
 }
 
+function getAllScorecardTags(name: string): string[] {
+  const tags: string[] = []
+  if (GOVERNANCE_SCORECARD_CHECKS.has(name)) tags.push('governance')
+  tags.push(...getScorecardCheckTags(name))
+  return tags
+}
+
+function getAllDirectCheckTags(name: string): string[] {
+  const tags: string[] = []
+  if (GOVERNANCE_DIRECT_CHECKS.has(name)) tags.push('governance')
+  tags.push(...getDirectCheckTags(name))
+  return tags
+}
+
 function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: ScorecardCheck[]; activeTag: string | null; onTagClick: (tag: string) => void }) {
-  const filtered = activeTag ? checks.filter((c) => GOVERNANCE_SCORECARD_CHECKS.has(c.name)) : checks
+  const filtered = activeTag ? checks.filter((c) => getAllScorecardTags(c.name).includes(activeTag)) : checks
   if (filtered.length === 0) return null
 
   return (
@@ -30,12 +45,12 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
       <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">OpenSSF Scorecard Checks</h3>
       <div className="mt-3 space-y-2">
         {filtered.map((check) => {
-          const isGov = GOVERNANCE_SCORECARD_CHECKS.has(check.name)
+          const tags = getAllScorecardTags(check.name)
           return (
             <div key={check.name} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-700">{check.name}</span>
-                {isGov ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
+                {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
               </div>
               <div className="flex items-center gap-2">
                 {check.score === -1 ? (
@@ -55,7 +70,7 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
 }
 
 function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: DirectSecurityCheck[]; activeTag: string | null; onTagClick: (tag: string) => void }) {
-  const filtered = activeTag ? checks.filter((c) => GOVERNANCE_DIRECT_CHECKS.has(c.name)) : checks
+  const filtered = activeTag ? checks.filter((c) => getAllDirectCheckTags(c.name).includes(activeTag)) : checks
   if (filtered.length === 0) return null
 
   return (
@@ -63,7 +78,7 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
       <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Direct Security Checks</h3>
       <ul className="mt-3 space-y-2">
         {filtered.map((check) => {
-          const isGov = GOVERNANCE_DIRECT_CHECKS.has(check.name)
+          const tags = getAllDirectCheckTags(check.name)
           return (
             <li key={check.name} className="flex items-start gap-2">
               {check.detected === 'unavailable' ? (
@@ -85,7 +100,7 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
                   </p>
                 ) : null}
               </div>
-              {isGov ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
+              {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
             </li>
           )
         })}
