@@ -337,10 +337,16 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                         {recs.map((rec, i) => (
                           <li key={i} className="flex items-start gap-2">
                             <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{rec.referenceId}</span>
-                            <p className="flex-1 text-sm text-slate-700">{rec.message}</p>
-                            {rec.tags.map((tag) => (
-                              <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={handleTagClick} />
-                            ))}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-slate-700">{rec.message}</p>
+                              {rec.tags.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {rec.tags.map((tag) => (
+                                    <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={handleTagClick} />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </li>
                         ))}
                       </ul>

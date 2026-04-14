@@ -45,7 +45,7 @@ export function MetricCard({ card }: MetricCardProps) {
         <p className="text-lg font-bold">{hs.label}</p>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+      <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3">
         {cells.map((cell) => (
           <ScorecardCell key={cell.label} {...cell} />
         ))}

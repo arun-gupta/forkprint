@@ -197,7 +197,7 @@ export function ResultsShell({
             {analysisPanel}
           </section>
 
-          <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <section aria-label="Result workspace" className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} matchCounts={domMatchCounts} />
             <div className="mt-6" ref={containerRef}>

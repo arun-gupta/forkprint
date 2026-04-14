@@ -43,16 +43,13 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
   return (
     <section aria-label="OpenSSF Scorecard Checks" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">OpenSSF Scorecard Checks</h3>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-1.5">
         {filtered.map((check) => {
           const tags = getAllScorecardTags(check.name)
           return (
-            <div key={check.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div key={check.name}>
+              <div className="grid grid-cols-[1fr_auto] gap-2">
                 <span className="text-sm text-slate-700">{check.name}</span>
-                {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
-              </div>
-              <div className="flex items-center gap-2">
                 {check.score === -1 ? (
                   <span className="text-xs text-slate-400">indeterminate</span>
                 ) : (
@@ -61,6 +58,11 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
                   </span>
                 )}
               </div>
+              {tags.length > 0 && (
+                <div className="mt-1 hidden flex-wrap gap-1 sm:flex">
+                  {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
+                </div>
+              )}
             </div>
           )
         })}
@@ -100,7 +102,9 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
                   </p>
                 ) : null}
               </div>
-              {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
+              <span className="hidden shrink-0 gap-1 sm:flex">
+                {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />)}
+              </span>
             </li>
           )
         })}

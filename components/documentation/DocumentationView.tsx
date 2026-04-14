@@ -57,8 +57,10 @@ function LicensingPane({ licensingResult, activeTag, onTagClick }: { licensingRe
     <section aria-label="Licensing" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Licensing & Compliance</h3>
-        {LICENSING_IS_GOVERNANCE ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
-        {LICENSING_IS_COMPLIANCE ? <TagPill tag="compliance" active={activeTag === 'compliance'} onClick={onTagClick} /> : null}
+        <span className="hidden sm:inline-flex sm:gap-1">
+          {LICENSING_IS_GOVERNANCE ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={onTagClick} /> : null}
+          {LICENSING_IS_COMPLIANCE ? <TagPill tag="compliance" active={activeTag === 'compliance'} onClick={onTagClick} /> : null}
+        </span>
       </div>
       <ul className="mt-3 space-y-2">
         {/* License detection */}
@@ -238,7 +240,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
         const sectionsDetected = readmeSections.filter((s) => s.detected).length
 
         return (
-          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div key={result.repo} className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
@@ -259,7 +261,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
               </div>
             ) : null}
 
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div className="mt-6 grid gap-6 overflow-hidden md:grid-cols-2">
               {/* File presence */}
               {!activeTag || fileChecks.some((c) => getDocFileAllTags(c.name).includes(activeTag)) ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -275,10 +277,10 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                               {check.found ? '✓' : '✗'}
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
+                              <p className={`break-all text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {FILE_LABELS[check.name] ?? check.name}
                                 {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
-                                {tags.map((tag) => <span key={tag}> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
+                                {tags.map((tag) => <span key={tag} className="hidden sm:inline"> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
                               </p>
                               {!check.found ? (
                                 <p className="mt-0.5 text-xs text-amber-700">
@@ -310,7 +312,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                             <div className="min-w-0 flex-1">
                               <p className={`text-sm font-medium ${section.detected ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {SECTION_LABELS[section.name] ?? section.name}
-                                {tags.map((tag) => <span key={tag}> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
+                                {tags.map((tag) => <span key={tag} className="hidden sm:inline"> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
                               </p>
                               {!section.detected ? (
                                 <p className="mt-0.5 text-xs text-amber-700">
