@@ -42,7 +42,7 @@ RepoPulse analyzes any public GitHub repository and produces a composite **OSS H
 | **Responsiveness** | 25% | Issue/PR response times, resolution speed, backlog health |
 | **Contributors** | 23% | Contributor concentration, repeat/new contributor ratios |
 | **Security** | 15% | OpenSSF Scorecard, dependency automation, branch protection |
-| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance |
+| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance, inclusive naming |
 
 Each dimension is scored as a percentile relative to repos in the same **star bracket** (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
 
