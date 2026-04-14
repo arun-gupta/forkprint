@@ -9,17 +9,33 @@ interface ResultsTabsProps {
   onChange: (tabId: ResultTabId) => void
 }
 
-const COLLAPSED_COUNT = 6
+const COLLAPSED_COUNT_MOBILE = 3
+const COLLAPSED_COUNT_DESKTOP = 6
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const mql = window.matchMedia('(max-width: 639px)')
+    setIsMobile(mql.matches)
+    function onChange(e: MediaQueryListEvent) { setIsMobile(e.matches) }
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+  return isMobile
+}
 
 export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
 
-  const hasOverflow = tabs.length > COLLAPSED_COUNT
+  const collapsedCount = isMobile ? COLLAPSED_COUNT_MOBILE : COLLAPSED_COUNT_DESKTOP
+  const hasOverflow = tabs.length > collapsedCount
   const showAll = expanded || !hasOverflow
-  const visibleTabs = showAll ? tabs : tabs.slice(0, COLLAPSED_COUNT)
-  const overflowTabs = showAll ? [] : tabs.slice(COLLAPSED_COUNT)
+  const visibleTabs = showAll ? tabs : tabs.slice(0, collapsedCount)
+  const overflowTabs = showAll ? [] : tabs.slice(collapsedCount)
   const activeOverflowTab = overflowTabs.find((t) => t.id === activeTab)
 
   useEffect(() => {

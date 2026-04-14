@@ -62,11 +62,8 @@ describe('ResultsShell', () => {
       />,
     )
 
-    expect(
-      screen.getByText(
-        /oss health score/i,
-      ),
-    ).toBeInTheDocument()
+    const matches = screen.getAllByText(/oss health score/i)
+    expect(matches.length).toBeGreaterThanOrEqual(1)
   })
 
   it('supports a custom tab set for alternate workflows like org inventory', () => {

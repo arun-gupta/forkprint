@@ -27,7 +27,7 @@ export function ComparisonTable({
   return (
     <div className="space-y-6">
       {sections.map((section) => (
-        <section key={section.id} className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section key={section.id} className="space-y-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">{section.label}</h2>
             <p className="mt-1 text-sm text-slate-600">{section.description}</p>

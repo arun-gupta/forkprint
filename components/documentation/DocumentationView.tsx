@@ -229,7 +229,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
         const sectionsDetected = readmeSections.filter((s) => s.detected).length
 
         return (
-          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
@@ -269,6 +269,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                               <p className={`text-sm font-medium ${check.found ? 'text-slate-900' : 'text-slate-400'}`}>
                                 {FILE_LABELS[check.name] ?? check.name}
                                 {check.found && check.path ? <span className="ml-1 font-normal text-slate-400">({check.path})</span> : null}
+                                {isGov ? <> <TagPill tag="governance" active={activeTag === 'governance'} onClick={handleTagClick} /></> : null}
                               </p>
                               {!check.found ? (
                                 <p className="mt-0.5 text-xs text-amber-700">
@@ -276,7 +277,6 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                                 </p>
                               ) : null}
                             </div>
-                            {isGov ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={handleTagClick} /> : null}
                           </li>
                         )
                       })}

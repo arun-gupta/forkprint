@@ -63,14 +63,14 @@ function SecurityRecommendationCard({ rec, referenceId, activeTag, onTagClick }:
   const tags = getTagsForKey(rec.item, true)
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <h4 className="text-sm font-semibold text-slate-900">
           {referenceId ? (
             <span className="mr-1.5 inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{referenceId}</span>
           ) : null}
           {rec.title ?? rec.text}
         </h4>
-        <div className="flex shrink-0 gap-1.5">
+        <div className="flex flex-wrap gap-1.5 sm:shrink-0">
           {tags.map((tag) => (
             <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={onTagClick} />
           ))}
@@ -286,7 +286,7 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
         }
 
         return (
-          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>

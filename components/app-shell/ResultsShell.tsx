@@ -142,7 +142,7 @@ export function ResultsShell({
               )}
             </button>
             {mobileMenuOpen ? (
-              <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-lg border border-sky-700 bg-sky-900 p-3 shadow-lg">
+              <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-sky-700 bg-sky-900 p-3 shadow-lg sm:w-56">
                 <nav className="flex flex-col gap-2">
                   <a
                     href="/baseline"
@@ -181,11 +181,11 @@ export function ResultsShell({
           </div>
         ) : null}
         <section className="space-y-6">
-          <section aria-label="Analysis panel" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section aria-label="Analysis panel" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {analysisPanel}
           </section>
 
-          <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} />
             <div className="mt-6">
