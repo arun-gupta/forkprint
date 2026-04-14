@@ -6,9 +6,11 @@ import { MetricCard } from './MetricCard'
 
 interface MetricCardsOverviewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
-export function MetricCardsOverview({ results }: MetricCardsOverviewProps) {
+export function MetricCardsOverview({ results, activeTag, onTagChange }: MetricCardsOverviewProps) {
   const cards = buildMetricCardViewModels(results)
 
   if (cards.length === 0) {
@@ -18,7 +20,7 @@ export function MetricCardsOverview({ results }: MetricCardsOverviewProps) {
   return (
     <section aria-label="Metric cards overview" className="space-y-4">
       {cards.map((card) => (
-        <MetricCard key={card.repo} card={card} />
+        <MetricCard key={card.repo} card={card} activeTag={activeTag ?? null} onTagChange={onTagChange} />
       ))}
     </section>
   )

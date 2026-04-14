@@ -311,7 +311,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       ) : null}
       {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
-          <MetricCardsOverview results={analysisResponse.results} />
+          <MetricCardsOverview results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
           {analysisResponse.failures.length > 0 ? (
             <section className="rounded border border-amber-200 bg-amber-50 p-4">
               <h2 className="font-semibold text-amber-900">Failed repositories</h2>

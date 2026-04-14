@@ -6,9 +6,15 @@ import { scoreToneClass } from '@/lib/metric-cards/score-config'
 
 interface MetricCardProps {
   card: MetricCardViewModel
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
-export function MetricCard({ card }: MetricCardProps) {
+export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
+  const handleLensClick = (key: string) => {
+    if (!onTagChange) return
+    onTagChange(activeTag === key ? null : key)
+  }
   const profileCells: ScorecardCellProps[] = card.profile
     ? [
         { label: 'Reach', percentileLabel: card.profile.reachLabel, detail: `${card.starsLabel} stars`, tooltip: 'Star count percentile. Measures visibility and adoption.', toneClass: percentileToneClass(card.profile.reachPercentile, 'emerald') },
@@ -62,7 +68,12 @@ export function MetricCard({ card }: MetricCardProps) {
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400">Lenses</span>
           {card.lenses.map((lens) => (
-            <LensPill key={lens.key} lens={lens} />
+            <LensPill
+              key={lens.key}
+              lens={lens}
+              active={activeTag === lens.key}
+              onClick={onTagChange ? () => handleLensClick(lens.key) : undefined}
+            />
           ))}
         </div>
       ) : null}
@@ -97,16 +108,37 @@ interface ScorecardCellProps {
   toneClass: string
 }
 
-function LensPill({ lens }: { lens: LensReadout }) {
-  return (
-    <span
-      className={`inline-flex items-baseline gap-1.5 rounded-full border px-2 py-0.5 text-[10px] ${scoreToneClass(lens.tone)}`}
-      title={lens.tooltip}
-    >
+const LENS_RING_COLORS: Record<string, string> = {
+  community: 'ring-amber-400',
+  governance: 'ring-indigo-400',
+}
+
+function LensPill({ lens, active, onClick }: { lens: LensReadout; active: boolean; onClick?: () => void }) {
+  const ringClass = active ? `ring-2 ${LENS_RING_COLORS[lens.key] ?? 'ring-slate-400'} ring-offset-1` : ''
+  const baseClass = `inline-flex items-baseline gap-1.5 rounded-full border px-2 py-0.5 text-[10px] ${scoreToneClass(lens.tone)} ${ringClass}`
+
+  const content = (
+    <>
       <span className="font-semibold uppercase tracking-wide">{lens.label}</span>
       <span className="font-medium">{lens.percentileLabel}</span>
       <span className="opacity-60">· {lens.detail}</span>
-    </span>
+    </>
+  )
+
+  if (!onClick) {
+    return <span className={baseClass} title={lens.tooltip}>{content}</span>
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${baseClass} transition-all hover:opacity-80`}
+      title={lens.tooltip}
+      aria-pressed={active}
+    >
+      {content}
+    </button>
   )
 }
 

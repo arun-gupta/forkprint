@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import { buildMetricCardViewModels } from '@/lib/metric-cards/view-model'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { MetricCard } from './MetricCard'
@@ -56,6 +56,31 @@ describe('MetricCard', () => {
     expect(screen.getByText('No description found')).toBeInTheDocument()
   })
 
+  it('renders lens pills as non-clickable spans when no onTagChange is provided', () => {
+    const card = buildMetricCardViewModels([buildResult(sparseCommunityOverrides())])[0]!
+    render(<MetricCard card={card} />)
+    const communityLabel = screen.getByText(/^Community$/i)
+    expect(communityLabel.closest('button')).toBeNull()
+  })
+
+  it('renders lens pills as buttons and toggles activeTag when clicked', () => {
+    const card = buildMetricCardViewModels([buildResult(sparseCommunityOverrides())])[0]!
+    const onTagChange = vi.fn()
+
+    const { rerender } = render(<MetricCard card={card} activeTag={null} onTagChange={onTagChange} />)
+    const communityButton = screen.getByRole('button', { name: /community/i })
+    expect(communityButton).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(communityButton)
+    expect(onTagChange).toHaveBeenCalledWith('community')
+
+    rerender(<MetricCard card={card} activeTag="community" onTagChange={onTagChange} />)
+    const active = screen.getByRole('button', { name: /community/i })
+    expect(active).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(active)
+    expect(onTagChange).toHaveBeenLastCalledWith(null)
+  })
+
   it('handles unavailable ecosystem metrics gracefully', () => {
     const card = buildMetricCardViewModels([
       buildResult({ stars: 'unavailable', forks: 'unavailable', watchers: 'unavailable' }),
@@ -69,6 +94,13 @@ describe('MetricCard', () => {
     expect(screen.queryByText(/^Attention$/)).not.toBeInTheDocument()
   })
 })
+
+function sparseCommunityOverrides(): Partial<AnalysisResult> {
+  return {
+    hasFundingConfig: true,
+    hasDiscussionsEnabled: false,
+  }
+}
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
   return {
