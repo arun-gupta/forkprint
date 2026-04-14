@@ -29,17 +29,23 @@ Measuring open source health is harder than scanning a README. A few of the top 
 
 [RepoPulse](https://repopulse-arun-gupta.vercel.app) tackles those constraints directly: it analyzes a public GitHub repository and returns a composite **OSS Health Score** — percentile-based, calibrated against 1,600+ repositories, with dimensions and recommendations tied to explicit signals.
 
-<a href="https://repopulse-arun-gupta.vercel.app">
-  <img src="./landing-page.png" alt="Landing page" title="Landing page" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
-</a>
+<p align="center">
+  <a href="https://repopulse-arun-gupta.vercel.app">
+    <img src="./landing-page.png" alt="Landing page" title="Landing page" width="50%" />
+  </a>
+</p>
 
 You log in using your GitHub to get started to see this page:
 
-<img src="./main-page.png" alt="Main page" title="Main page" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-page.png" alt="Main page" title="Main page" width="50%" />
+</p>
 
 You enter a repo and click on Analyze to get full results. The Overview tab provides a quick snapshot across the dimensions:
 
-<img src="./main-overview.png" alt="Overview tab" title="Overview tab" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-overview.png" alt="Overview tab" title="Overview tab" width="50%" />
+</p>
 
 In the screenshot above, the tabs map directly to the five health dimensions this article explains.
 
@@ -61,7 +67,9 @@ The subsections below follow the same order as RepoPulse’s in-app tabs—**Con
 
 ### Contributors (23% of Health Score)
 
-<img src="./main-contributors.png" alt="Contributors dimension" title="Contributors dimension" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-contributors.png" alt="Contributors dimension" title="Contributors dimension" width="50%" />
+</p>
 
 **Contributors** measures who shows up and who keeps showing up—through a **sustainability** lens: can the project keep operating if key people leave, and is the workload spread across more than one person or organization?
 
@@ -92,7 +100,9 @@ It also provides a heatmap of contributors with optional names of each contribut
 
 ### Activity (25% of Health Score)
 
-<img src="./main-activity.png" alt="Activity dimension" title="Activity dimension" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-activity.png" alt="Activity dimension" title="Activity dimension" width="50%" />
+</p>
 
 Activity measures whether your project has a pulse — are PRs moving, issues closing, and releases shipping?
 
@@ -123,7 +133,9 @@ Activity measures whether your project has a pulse — are PRs moving, issues cl
 
 ### Responsiveness (25% of Health Score)
 
-<img src="./main-responsiveness.png" alt="Responsiveness dimension" title="Responsiveness dimension" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-responsiveness.png" alt="Responsiveness dimension" title="Responsiveness dimension" width="50%" />
+</p>
 
 Responsiveness measures how quickly maintainers engage with their community. This is often the dimension that separates thriving projects from abandoned ones.
 
@@ -163,7 +175,9 @@ Responsiveness measures how quickly maintainers engage with their community. Thi
 
 ### Documentation (12% of Health Score)
 
-<img src="./main-documentation.png" alt="Documentation dimension" title="Documentation dimension" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-documentation.png" alt="Documentation dimension" title="Documentation dimension" width="50%" />
+</p>
 
 Documentation is the front door of your project. Bad docs don't just frustrate users — they actively repel potential contributors.
 
@@ -208,7 +222,9 @@ RepoPulse’s inclusive-naming suggestions are informed by guidance from the [In
 
 ### Security (15% of Health Score)
 
-<img src="./main-security.png" alt="Security dimension" title="Security dimension" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-security.png" alt="Security dimension" title="Security dimension" width="50%" />
+</p>
 
 Supply chain security is no longer optional. RepoPulse integrates with the **OpenSSF Scorecard** (17 checks) and runs 4 direct repository checks.
 
@@ -264,7 +280,9 @@ Each of the 42 recommendations in the catalog is also tagged with one or more **
 - **Compliance** — Legal and policy requirements
 - **Contributor Experience** — Making it easier for others to participate
 
-<img src="./main-recommendation.png" alt="Recommendations" title="Recommendations" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-recommendation.png" alt="Recommendations" title="Recommendations" width="50%" />
+</p>
 
 ---
 
@@ -274,7 +292,9 @@ After you analyze repositories in the same session (up to **four**), open the **
 
 Tables are grouped the same way as the rest of the report (for example **Overview** ecosystem signals and **Contributors** health metrics). Each row shows the anchor value, the comparison repo value or delta, and optional median—handy for “us vs. them” without re-running analysis.
 
-<img src="./main-comparison.png" alt="Comparison tab: facebook/react as anchor vs kubernetes/kubernetes" title="Comparison tab: facebook/react as anchor vs kubernetes/kubernetes" style="display: block; margin: 12px auto; border: 1px solid #e5e7eb; border-radius: 12px; width: 50%; height: auto;" />
+<p align="center">
+  <img src="./main-comparison.png" alt="Comparison tab: facebook/react as anchor vs kubernetes/kubernetes" title="Comparison tab: facebook/react as anchor vs kubernetes/kubernetes" width="50%" />
+</p>
 
 You can still use **Download JSON**, **Download Markdown**, and **Copy link** from the top bar to share or archive a comparison session.
 
