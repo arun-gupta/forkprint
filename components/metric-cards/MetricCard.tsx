@@ -51,7 +51,7 @@ export function MetricCard({ card }: MetricCardProps) {
         </div>
       ) : null}
       {scoreCells.length > 0 ? (
-        <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
           {scoreCells.map((cell) => (
             <ScorecardCell key={cell.label} {...cell} />
           ))}

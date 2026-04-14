@@ -35,8 +35,9 @@ describe('MetricCard', () => {
 
     render(<MetricCard card={card} />)
 
-    // Contributors has no commit data → insufficient
-    expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
+    // Both Contributors (no commit data) and Community (no known signals)
+    // can surface as insufficient; assert at least one is rendered.
+    expect(screen.getAllByText('Insufficient verified public data').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders repo description below header', () => {
