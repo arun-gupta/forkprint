@@ -2,7 +2,7 @@ import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
-export interface SustainabilityScoreDefinition {
+export interface ContributorsScoreDefinition {
   value: ScoreValue
   tone: ScoreTone
   description: string
@@ -13,10 +13,10 @@ export interface SustainabilityScoreDefinition {
   contributorCount: number | Unavailable
 }
 
-const INSUFFICIENT_SCORE: SustainabilityScoreDefinition = {
+const INSUFFICIENT_SCORE: ContributorsScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
-  description: 'RepoPulse cannot verify enough contributor-distribution data to score sustainability yet.',
+  description: 'RepoPulse cannot verify enough contributor-distribution data to score contributors yet.',
   percentile: 0,
   bracketLabel: '',
   concentration: 'unavailable',
@@ -24,7 +24,7 @@ const INSUFFICIENT_SCORE: SustainabilityScoreDefinition = {
   contributorCount: 'unavailable',
 }
 
-export function getSustainabilityScore(result: AnalysisResult): SustainabilityScoreDefinition {
+export function getContributorsScore(result: AnalysisResult): ContributorsScoreDefinition {
   const cal = getCalibrationForStars(result.stars)
   const bracketLabel = getBracketLabel(result.stars)
   const concentration = getContributionConcentrationDetails(result.commitCountsByAuthor)
@@ -33,7 +33,7 @@ export function getSustainabilityScore(result: AnalysisResult): SustainabilitySc
     return INSUFFICIENT_SCORE
   }
 
-  // Inverted: lower concentration = higher percentile (better sustainability)
+  // Inverted: lower concentration = higher percentile (better contributor diversity)
   const percentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
 
   return {
@@ -48,10 +48,10 @@ export function getSustainabilityScore(result: AnalysisResult): SustainabilitySc
   }
 }
 
-export function getSustainabilityScoreFromCommitCounts(
+export function getContributorsScoreFromCommitCounts(
   commitCountsByAuthor: Record<string, number> | Unavailable,
   stars: number | Unavailable = 'unavailable',
-): SustainabilityScoreDefinition {
+): ContributorsScoreDefinition {
   const cal = getCalibrationForStars(stars)
   const bracketLabel = getBracketLabel(stars)
   const concentration = getContributionConcentrationDetails(commitCountsByAuthor)

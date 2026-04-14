@@ -20,6 +20,7 @@ import { useAuth } from '@/components/auth/AuthContext'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
+import { resultTabs } from '@/lib/results-shell/tabs'
 import { decodeRepos } from '@/lib/export/shareable-url'
 import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
@@ -240,56 +241,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const showOrgWorkspace = inputMode === 'org' && !analysisResponse
   const successfulRepoCount = analysisResponse?.results.length ?? 0
-  const repoTabs: ResultTabDefinition[] = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      status: 'implemented',
-      description: 'Current analysis summary, ecosystem profile, and shared status',
-    },
-    {
-      id: 'contributors',
-      label: 'Contributors',
-      status: 'implemented',
-      description: 'Core contributor metrics and sustainability signals.',
-    },
-    {
-      id: 'activity',
-      label: 'Activity',
-      status: 'implemented',
-      description: 'Activity metrics, scoring, and detailed repo flow signals.',
-    },
-    {
-      id: 'responsiveness',
-      label: 'Responsiveness',
-      status: 'implemented',
-      description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
-    },
-    {
-      id: 'documentation',
-      label: 'Documentation',
-      status: 'implemented',
-      description: 'Documentation file presence, README quality, and improvement recommendations.',
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      status: 'implemented',
-      description: 'Security posture including OpenSSF Scorecard checks, dependency automation, and branch protection.',
-    },
-    {
-      id: 'recommendations',
-      label: 'Recommendations',
-      status: 'implemented',
-      description: 'Actionable recommendations across all scoring dimensions.',
-    },
-    {
-      id: 'comparison' as const,
-      label: 'Comparison',
-      status: 'implemented' as const,
-      description: 'Side-by-side comparison across analyzed repositories.',
-    },
-  ]
+  const repoTabs: ResultTabDefinition[] = resultTabs
 
   const overviewContent = (
     <div className="space-y-4">

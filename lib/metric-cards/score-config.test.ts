@@ -8,7 +8,7 @@ describe('score-config', () => {
 
     expect(badges).toHaveLength(4)
     expect(badges.map((badge) => badge.category)).toEqual([
-      'Sustainability',
+      'Contributors',
       'Activity',
       'Responsiveness',
       'Security',
@@ -23,11 +23,11 @@ describe('score-config', () => {
     expect(scoreToneClass('neutral')).toContain('slate')
   })
 
-  it('replaces the activity, sustainability, and responsiveness placeholders when real scores are available', () => {
+  it('replaces the activity, contributors, and responsiveness placeholders when real scores are available', () => {
     const badges = getScoreBadges(buildResult())
 
     expect(typeof badges.find((badge) => badge.category === 'Activity')?.value).toBe('number')
-    expect(typeof badges.find((badge) => badge.category === 'Sustainability')?.value).toBe('number')
+    expect(typeof badges.find((badge) => badge.category === 'Contributors')?.value).toBe('number')
     expect(typeof badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('number')
   })
 })

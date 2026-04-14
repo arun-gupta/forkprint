@@ -86,7 +86,7 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('Releases (12 months)')
   })
 
-  it('includes detailed sustainability metrics', () => {
+  it('includes detailed contributor metrics', () => {
     const md = buildMarkdownReport(MINIMAL_RESPONSE)
     expect(md).toContain('Total contributors')
     expect(md).toContain('Unique commit authors')

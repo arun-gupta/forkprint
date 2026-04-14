@@ -179,7 +179,7 @@ describe('RecommendationsView security recommendations', () => {
 })
 
 describe('RecommendationsView collapse/expand', () => {
-  // Build a result that produces both Sustainability and Security recommendations
+  // Build a result that produces both Contributors and Security recommendations
   function buildCollapsibleResult(): AnalysisResult {
     return buildResult({
       // Security result to generate Security recommendations
@@ -207,8 +207,8 @@ describe('RecommendationsView collapse/expand', () => {
   it('renders all buckets expanded by default', () => {
     render(<RecommendationsView results={[buildCollapsibleResult()]} />)
 
-    // Sustainability bucket header should be visible (via button)
-    expect(screen.getByRole('button', { name: /Sustainability/i })).toBeInTheDocument()
+    // Contributors bucket header should be visible (via button)
+    expect(screen.getByRole('button', { name: /Contributors/i })).toBeInTheDocument()
     // Security bucket header should be visible
     expect(screen.getByRole('button', { name: /Security/i })).toBeInTheDocument()
 
@@ -221,11 +221,11 @@ describe('RecommendationsView collapse/expand', () => {
     const user = userEvent.setup()
     render(<RecommendationsView results={[buildCollapsibleResult()]} />)
 
-    // Find and click the Sustainability bucket toggle
-    const sustainabilityToggle = screen.getByRole('button', { name: /Sustainability/i })
-    await user.click(sustainabilityToggle)
+    // Find and click the Contributors bucket toggle
+    const contributorsToggle = screen.getByRole('button', { name: /Contributors/i })
+    await user.click(contributorsToggle)
 
-    // Sustainability recommendations should be hidden
+    // Contributors recommendations should be hidden
     expect(screen.queryByText(/No maintainers identified/)).not.toBeInTheDocument()
 
     // Security should still be visible
@@ -236,13 +236,13 @@ describe('RecommendationsView collapse/expand', () => {
     const user = userEvent.setup()
     render(<RecommendationsView results={[buildCollapsibleResult()]} />)
 
-    const sustainabilityToggle = screen.getByRole('button', { name: /Sustainability/i })
+    const contributorsToggle = screen.getByRole('button', { name: /Contributors/i })
     // Collapse
-    await user.click(sustainabilityToggle)
+    await user.click(contributorsToggle)
     expect(screen.queryByText(/No maintainers identified/)).not.toBeInTheDocument()
 
     // Expand again
-    await user.click(sustainabilityToggle)
+    await user.click(contributorsToggle)
     expect(screen.getByText(/No maintainers identified/)).toBeInTheDocument()
   })
 
@@ -302,7 +302,7 @@ describe('RecommendationsView collapse/expand', () => {
     render(<RecommendationsView results={[buildCollapsibleResult()]} />)
 
     // Chevron SVG should be present on bucket toggle buttons
-    const sustainabilityToggle = screen.getByRole('button', { name: /Sustainability/i })
-    expect(sustainabilityToggle.querySelector('svg')).toBeInTheDocument()
+    const contributorsToggle = screen.getByRole('button', { name: /Contributors/i })
+    expect(contributorsToggle.querySelector('svg')).toBeInTheDocument()
   })
 })

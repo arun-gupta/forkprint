@@ -3,7 +3,7 @@ import { buildContributorsViewModels } from './view-model'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
 describe('contributors/view-model', () => {
-  it('builds core and sustainability rows for each repository', () => {
+  it('builds core and contributors-score rows for each repository', () => {
     const section = buildContributorsViewModels([
       buildResult({
         totalContributors: 12,
@@ -99,15 +99,15 @@ describe('contributors/view-model', () => {
     expect(section.coreMetrics.find((metric) => metric.label === 'Contribution concentration')).toBeUndefined()
     expect(section.heatmap[0]?.contributor).toBe('alice')
     expect(section.heatmap.map((cell) => cell.intensity)).toEqual(['max', 'higher', 'high', 'low', 'low'])
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.value).toMatch(/36\.4%/)
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.supportingText).toBe(
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.value).toMatch(/36\.4%/)
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.supportingText).toBe(
       '1 of 5 active contributors',
     )
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Scored contributor group')).toBeUndefined()
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Inactive contributors')).toBeUndefined()
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Maintainer count')?.value).toBe('3')
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Occasional contributors')).toBeUndefined()
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Types of contributions')?.value).toBe('Commits, Pull requests, Issues')
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Scored contributor group')).toBeUndefined()
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Inactive contributors')).toBeUndefined()
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Maintainer count')?.value).toBe('3')
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Occasional contributors')).toBeUndefined()
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Types of contributions')?.value).toBe('Commits, Pull requests, Issues')
     expect(section.experimentalMetrics.find((metric) => metric.label === 'Elephant Factor')?.value).toBe('1')
     expect(section.experimentalMetrics.find((metric) => metric.label === 'Single-vendor dependency ratio')?.value).toBe('63.6%')
     expect(section.experimentalHeatmap.map((cell) => cell.contributor)).toEqual(['meta', 'openai', 'vercel'])
@@ -119,7 +119,7 @@ describe('contributors/view-model', () => {
 
     expect(section.coreMetrics.find((metric) => metric.label === 'Contribution concentration')).toBeUndefined()
     expect(section.heatmap).toEqual([])
-    expect(section.sustainabilityScore.value).toBe('Insufficient verified public data')
+    expect(section.contributorsScore.value).toBe('Insufficient verified public data')
     expect(section.missingData).toContain('Contribution concentration')
     expect(section.missingData).toContain('Maintainer count')
     expect(section.missingData).toContain('Repeat contributor ratio')
@@ -239,7 +239,7 @@ describe('contributors/view-model', () => {
 
     expect(section.windowDays).toBe(30)
     expect(section.coreMetrics.find((metric) => metric.label === 'Contributor composition')?.supportingText).toBe('1 repeat, 1 one-time, 10 inactive')
-    expect(section.sustainabilityMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.supportingText).toBe(
+    expect(section.contributorsMetrics.find((metric) => metric.label === 'Top 20% contributor share')?.supportingText).toBe(
       '1 of 2 active contributors',
     )
   })

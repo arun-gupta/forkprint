@@ -61,6 +61,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-wrap justify-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2">
             <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:rounded-lg sm:px-3 sm:py-2">
+              <p className="font-semibold uppercase tracking-wide text-slate-500">👥 Contributors</p>
+              <p className="mt-0.5 hidden text-slate-600 sm:block">Contributor concentration, repeat and new contributor mix</p>
+            </div>
+            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:rounded-lg sm:px-3 sm:py-2">
               <p className="font-semibold uppercase tracking-wide text-slate-500">⚡ Activity</p>
               <p className="mt-0.5 hidden text-slate-600 sm:block">PR throughput, issue flow, commit cadence, release frequency</p>
             </div>
@@ -69,16 +73,12 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               <p className="mt-0.5 hidden text-slate-600 sm:block">Response times, resolution speed, backlog health</p>
             </div>
             <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:rounded-lg sm:px-3 sm:py-2">
-              <p className="font-semibold uppercase tracking-wide text-slate-500">👥 Contributors</p>
-              <p className="mt-0.5 hidden text-slate-600 sm:block">Contributor concentration, repeat and new contributor mix</p>
-            </div>
-            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:rounded-lg sm:px-3 sm:py-2">
-              <p className="font-semibold uppercase tracking-wide text-slate-500">🔒 Security</p>
-              <p className="mt-0.5 hidden text-slate-600 sm:block">OpenSSF Scorecard, dependency automation, branch protection</p>
-            </div>
-            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:col-span-2 sm:rounded-lg sm:px-3 sm:py-2">
               <p className="font-semibold uppercase tracking-wide text-slate-500">📄 Documentation</p>
               <p className="mt-0.5 hidden text-slate-600 sm:block">Key project files, README quality, licensing compliance, inclusive naming</p>
+            </div>
+            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 sm:col-span-2 sm:rounded-lg sm:px-3 sm:py-2">
+              <p className="font-semibold uppercase tracking-wide text-slate-500">🔒 Security</p>
+              <p className="mt-0.5 hidden text-slate-600 sm:block">OpenSSF Scorecard, dependency automation, branch protection</p>
             </div>
           </div>
 

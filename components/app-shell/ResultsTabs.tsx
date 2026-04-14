@@ -73,6 +73,7 @@ export function ResultsTabs({ tabs, activeTab, onChange, matchCounts }: ResultsT
             type="button"
             aria-haspopup="true"
             aria-expanded={menuOpen}
+            title={activeOverflowTab ? activeOverflowTab.description : undefined}
             className={
               activeOverflowTab
                 ? 'inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1.5 text-sm font-medium text-white'
@@ -97,6 +98,7 @@ export function ResultsTabs({ tabs, activeTab, onChange, matchCounts }: ResultsT
                     type="button"
                     data-tab-id={tab.id}
                     aria-selected={tab.id === activeTab}
+                    title={tab.description}
                     className={
                       tab.id === activeTab
                         ? 'block w-full px-4 py-2 text-left text-sm font-medium text-slate-900 bg-slate-100'
@@ -138,6 +140,7 @@ function TabButton({ tab, active, onClick, badgeCount }: { tab: ResultTabDefinit
       type="button"
       data-tab-id={tab.id}
       aria-selected={active}
+      title={tab.description}
       className={
         active
           ? 'whitespace-nowrap rounded-full bg-slate-900 px-2.5 py-1.5 text-sm font-medium text-white'

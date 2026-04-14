@@ -1,6 +1,6 @@
 import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import { getMergeRateGuidance } from '@/lib/activity/merge-rate-guidance'
-import { computeContributionConcentration, getSustainabilityScore, formatPercentage as formatContributorPercentage } from '@/lib/contributors/score-config'
+import { computeContributionConcentration, getContributorsScore, formatPercentage as formatContributorPercentage } from '@/lib/contributors/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
@@ -16,7 +16,7 @@ export type ComparisonAttributeId =
   | 'total-contributors'
   | 'maintainer-count'
   | 'top-contributor-share'
-  | 'sustainability-score'
+  | 'contributors-score'
   | 'repeat-contributor-ratio'
   | 'new-contributor-ratio'
   | 'commits-90d'
@@ -148,7 +148,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
   {
     id: 'contributors',
     label: 'Contributors',
-    description: 'Compare contributor breadth and sustainability signals.',
+    description: 'Compare contributor breadth and diversity signals.',
     attributes: [
       {
         id: 'total-contributors',
@@ -181,14 +181,14 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         formatValue: formatContributorPercentage,
       },
       {
-        id: 'sustainability-score',
+        id: 'contributors-score',
         sectionId: 'contributors',
-        label: 'Sustainability score',
-        helpText: 'Derived sustainability score from contributor concentration, as a percentile within the star bracket.',
+        label: 'Contributors score',
+        helpText: 'Contributor-diversity score, derived from commit concentration and expressed as a percentile within the star bracket.',
         direction: 'higher-is-better',
         valueType: 'number',
         getValue: (result) => {
-          const score = getSustainabilityScore(result)
+          const score = getContributorsScore(result)
           if (typeof score.value !== 'number') return 'unavailable'
           return score.value
         },

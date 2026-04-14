@@ -6,7 +6,7 @@
  *
  * Bucket prefixes:
  *   SEC — Security     ACT — Activity       RSP — Responsiveness
- *   SUS — Sustainability   DOC — Documentation
+ *   CTR — Contributors   DOC — Documentation
  */
 
 export interface CatalogEntry {
@@ -76,11 +76,11 @@ const RSP: CatalogEntry[] = [
   { id: 'RSP-3', bucket: 'Responsiveness', key: 'backlog_health', title: 'Address stale issues and PRs' },
 ]
 
-// ── Sustainability ────────────────────────────────────────────────────
+// ── Contributors ──────────────────────────────────────────────────────
 
-const SUS: CatalogEntry[] = [
-  { id: 'SUS-1', bucket: 'Sustainability', key: 'contributor_diversity', title: 'Onboard more contributors to reduce single-maintainer risk' },
-  { id: 'SUS-2', bucket: 'Sustainability', key: 'no_maintainers', title: 'Add a CODEOWNERS or MAINTAINERS.md file', tags: ['governance'] },
+const CTR: CatalogEntry[] = [
+  { id: 'CTR-1', bucket: 'Contributors', key: 'contributor_diversity', title: 'Onboard more contributors to reduce single-maintainer risk' },
+  { id: 'CTR-2', bucket: 'Contributors', key: 'no_maintainers', title: 'Add a CODEOWNERS or MAINTAINERS.md file', tags: ['governance'] },
 ]
 
 // ── Documentation ─────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ const DOC: CatalogEntry[] = [
 // ── Combined catalog ──────────────────────────────────────────────────
 
 export const RECOMMENDATION_CATALOG: CatalogEntry[] = [
-  ...SEC, ...ACT, ...RSP, ...SUS, ...DOC,
+  ...SEC, ...ACT, ...RSP, ...CTR, ...DOC,
 ]
 
 /** Fast lookup: key → CatalogEntry */

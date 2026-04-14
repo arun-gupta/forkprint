@@ -1,7 +1,7 @@
 import type { AnalysisResult, AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import { getActivityScore } from '@/lib/activity/score-config'
 import { buildComparisonSections } from '@/lib/comparison/view-model'
-import { getSustainabilityScore } from '@/lib/contributors/score-config'
+import { getContributorsScore } from '@/lib/contributors/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildHealthRatioRows } from '@/lib/health-ratios/view-model'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
@@ -18,7 +18,7 @@ export interface JsonExportResult {
 
 interface RepoScores {
   activity: { value: number | string; tone: string; description: string }
-  sustainability: { value: number | string; tone: string; description: string }
+  contributors: { value: number | string; tone: string; description: string }
   responsiveness: { value: number | string; tone: string; description: string }
   documentation: { value: number | string; tone: string; filesFound: number; readmeSections: number } | null
   security: { value: number | string; tone: string; mode: string } | null
@@ -26,7 +26,7 @@ interface RepoScores {
 
 function computeScores(result: AnalysisResult): RepoScores {
   const activity = getActivityScore(result)
-  const sustainability = getSustainabilityScore(result)
+  const contributors = getContributorsScore(result)
   const responsiveness = getResponsivenessScore(result)
   let documentation: RepoScores['documentation'] = null
   if (result.documentationResult !== 'unavailable') {
@@ -45,7 +45,7 @@ function computeScores(result: AnalysisResult): RepoScores {
   }
   return {
     activity: { value: activity.value, tone: activity.tone, description: activity.description },
-    sustainability: { value: sustainability.value, tone: sustainability.tone, description: sustainability.description },
+    contributors: { value: contributors.value, tone: contributors.tone, description: contributors.description },
     responsiveness: { value: responsiveness.value, tone: responsiveness.tone, description: responsiveness.description },
     documentation,
     security,
@@ -78,8 +78,8 @@ function computeContributors(result: AnalysisResult) {
   const section = buildContributorsViewModels([result])[0]
   if (!section) return undefined
   return {
-    sustainabilityScore: section.sustainabilityScore.value,
-    sustainabilityMetrics: section.sustainabilityMetrics.map((m) => ({ label: m.label, value: m.value })),
+    contributorsScore: section.contributorsScore.value,
+    contributorsMetrics: section.contributorsMetrics.map((m) => ({ label: m.label, value: m.value })),
     coreMetrics: section.coreMetrics.map((m) => ({ label: m.label, value: m.value })),
     experimentalMetrics: section.experimentalMetrics.map((m) => ({ label: m.label, value: m.value })),
   }

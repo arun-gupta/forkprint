@@ -1,7 +1,7 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getActivityScore, type ActivityScoreDefinition } from '@/lib/activity/score-config'
 import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/lib/responsiveness/score-config'
-import { getSustainabilityScore, type SustainabilityScoreDefinition } from '@/lib/contributors/score-config'
+import { getContributorsScore } from '@/lib/contributors/score-config'
 import { getDocumentationScore, type DocumentationRecommendation } from '@/lib/documentation/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { formatPercentileLabel, formatPercentileOrdinal, getBracketLabel, percentileToTone } from '@/lib/scoring/config-loader'
@@ -33,7 +33,7 @@ export interface HealthScoreDefinition {
 const WEIGHTS = {
   activity: 0.25,
   responsiveness: 0.25,
-  sustainability: 0.23,
+  contributors: 0.23,
   documentation: 0.12,
   security: 0.15,
 } as const
@@ -41,18 +41,18 @@ const WEIGHTS = {
 export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   const activity = getActivityScore(result)
   const responsiveness = getResponsivenessScore(result)
-  const sustainability = getSustainabilityScore(result)
+  const contributors = getContributorsScore(result)
   const documentation = result.documentationResult !== 'unavailable'
     ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     : null
   const security = result.securityResult !== 'unavailable'
     ? getSecurityScore(result.securityResult, result.stars)
     : null
-  const bracketLabel = activity.bracketLabel || responsiveness.bracketLabel || sustainability.bracketLabel || ''
+  const bracketLabel = activity.bracketLabel || responsiveness.bracketLabel || contributors.bracketLabel || ''
 
   const activityPercentile = typeof activity.value === 'number' ? activity.percentile : null
   const responsivenessPercentile = typeof responsiveness.value === 'number' ? responsiveness.percentile : null
-  const sustainabilityPercentile = typeof sustainability.value === 'number' ? sustainability.percentile : null
+  const contributorsPercentile = typeof contributors.value === 'number' ? contributors.percentile : null
   const documentationPercentile = documentation !== null && typeof documentation.value === 'number' ? documentation.percentile : null
   const securityPercentile = security !== null && typeof security.value === 'number' ? security.percentile : null
 
@@ -60,7 +60,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   const bucketValues: Array<{ percentile: number; weight: number }> = []
   if (activityPercentile !== null) bucketValues.push({ percentile: activityPercentile, weight: WEIGHTS.activity })
   if (responsivenessPercentile !== null) bucketValues.push({ percentile: responsivenessPercentile, weight: WEIGHTS.responsiveness })
-  if (sustainabilityPercentile !== null) bucketValues.push({ percentile: sustainabilityPercentile, weight: WEIGHTS.sustainability })
+  if (contributorsPercentile !== null) bucketValues.push({ percentile: contributorsPercentile, weight: WEIGHTS.contributors })
   if (documentationPercentile !== null) bucketValues.push({ percentile: documentationPercentile, weight: WEIGHTS.documentation })
   if (securityPercentile !== null) bucketValues.push({ percentile: securityPercentile, weight: WEIGHTS.security })
 
@@ -79,20 +79,20 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
   if (responsivenessPercentile !== null) {
     recommendations.push(...getResponsivenessRecommendations(responsiveness))
   }
-  if (sustainabilityPercentile !== null) {
+  if (contributorsPercentile !== null) {
     recommendations.push({
-      bucket: 'Sustainability',
+      bucket: 'Contributors',
       key: 'contributor_diversity',
-      percentile: sustainabilityPercentile,
+      percentile: contributorsPercentile,
       message: 'Onboard more contributors to reduce single-maintainer risk. The top 20% of contributors account for a disproportionate share of commits.',
       tab: 'contributors',
     })
   }
   if (result.maintainerCount === 'unavailable') {
     recommendations.push({
-      bucket: 'Sustainability',
+      bucket: 'Contributors',
       key: 'no_maintainers',
-      percentile: sustainabilityPercentile ?? 0,
+      percentile: contributorsPercentile ?? 0,
       message: 'No maintainers identified. Add a CODEOWNERS or MAINTAINERS.md file to make maintainer responsibility visible.',
       tab: 'contributors',
     })
@@ -128,7 +128,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
     buckets: [
       { name: 'Activity', percentile: activityPercentile, weight: WEIGHTS.activity, label: activityPercentile !== null ? formatPercentileLabel(activityPercentile) : 'N/A' },
       { name: 'Responsiveness', percentile: responsivenessPercentile, weight: WEIGHTS.responsiveness, label: responsivenessPercentile !== null ? formatPercentileLabel(responsivenessPercentile) : 'N/A' },
-      { name: 'Sustainability', percentile: sustainabilityPercentile, weight: WEIGHTS.sustainability, label: sustainabilityPercentile !== null ? formatPercentileLabel(sustainabilityPercentile) : 'N/A' },
+      { name: 'Contributors', percentile: contributorsPercentile, weight: WEIGHTS.contributors, label: contributorsPercentile !== null ? formatPercentileLabel(contributorsPercentile) : 'N/A' },
       { name: 'Documentation', percentile: documentationPercentile, weight: WEIGHTS.documentation, label: documentationPercentile !== null ? formatPercentileLabel(documentationPercentile) : 'N/A' },
       { name: 'Security', percentile: securityPercentile, weight: WEIGHTS.security, label: securityPercentile !== null ? formatPercentileLabel(securityPercentile) : 'N/A' },
     ],

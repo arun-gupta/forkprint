@@ -4,7 +4,7 @@ import type { SearchIndex } from './types'
 
 const index: SearchIndex = {
   overview: ['facebook/react', 'Stars: 230000', 'Activity score: High'],
-  contributors: ['facebook/react', 'alice: 30 commits', 'Sustainability score: Medium'],
+  contributors: ['facebook/react', 'alice: 30 commits', 'Contributors score: Medium'],
   activity: ['facebook/react', 'PR merge rate: 87%', 'Commits (30d): 20', 'Stale issue ratio: 12%'],
   responsiveness: ['facebook/react', 'Issue first response (median): 4.2h', 'Responsiveness score: High'],
   documentation: ['facebook/react', 'README: found', 'LICENSE: MIT', 'CONTRIBUTING: found', 'SECURITY.md: not found'],

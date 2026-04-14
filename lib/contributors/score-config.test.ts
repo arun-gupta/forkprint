@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computeContributionConcentration, getSustainabilityScore } from './score-config'
+import { computeContributionConcentration, getContributorsScore } from './score-config'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
 describe('contributors/score-config', () => {
@@ -15,8 +15,8 @@ describe('contributors/score-config', () => {
     ).toBeCloseTo(5 / 12)
   })
 
-  it('returns a high sustainability score for broadly distributed contributor activity', () => {
-    const score = getSustainabilityScore(
+  it('returns a high contributors score for broadly distributed contributor activity', () => {
+    const score = getContributorsScore(
       buildResult({
         commitCountsByAuthor: {
           'login:alice': 2,
@@ -33,7 +33,7 @@ describe('contributors/score-config', () => {
   })
 
   it('returns insufficient data when contributor distribution cannot be verified', () => {
-    const score = getSustainabilityScore(buildResult({ commitCountsByAuthor: 'unavailable' }))
+    const score = getContributorsScore(buildResult({ commitCountsByAuthor: 'unavailable' }))
 
     expect(score.value).toBe('Insufficient verified public data')
     expect(score.tone).toBe('neutral')

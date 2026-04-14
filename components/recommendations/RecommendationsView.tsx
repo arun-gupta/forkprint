@@ -20,7 +20,7 @@ interface RecommendationsViewProps {
 const BUCKET_COLORS: Record<string, string> = {
   Activity: 'bg-blue-100 text-blue-800',
   Responsiveness: 'bg-purple-100 text-purple-800',
-  Sustainability: 'bg-emerald-100 text-emerald-800',
+  Contributors: 'bg-emerald-100 text-emerald-800',
   Documentation: 'bg-amber-100 text-amber-800',
   Security: 'bg-red-100 text-red-800',
 }

@@ -6,7 +6,7 @@ describe('getBucketPrefix', () => {
     ['Security', 'SEC'],
     ['Activity', 'ACT'],
     ['Responsiveness', 'RSP'],
-    ['Sustainability', 'SUS'],
+    ['Contributors', 'CTR'],
     ['Documentation', 'DOC'],
   ])('maps %s to %s', (bucket, expected) => {
     expect(getBucketPrefix(bucket)).toBe(expected)
@@ -40,9 +40,9 @@ describe('resolveReferenceId', () => {
     expect(resolveReferenceId('backlog_health', 'Responsiveness', 1)).toBe('RSP-3')
   })
 
-  it('returns catalog ID for sustainability keys', () => {
-    expect(resolveReferenceId('contributor_diversity', 'Sustainability', 1)).toBe('SUS-1')
-    expect(resolveReferenceId('no_maintainers', 'Sustainability', 1)).toBe('SUS-2')
+  it('returns catalog ID for contributors keys', () => {
+    expect(resolveReferenceId('contributor_diversity', 'Contributors', 1)).toBe('CTR-1')
+    expect(resolveReferenceId('no_maintainers', 'Contributors', 1)).toBe('CTR-2')
   })
 
   it('returns catalog ID for documentation keys', () => {

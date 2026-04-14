@@ -7,16 +7,16 @@ import { MetricValue } from '@/components/shared/MetricValue'
 import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import { formatPercentage } from '@/lib/contributors/score-config'
 import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model'
-import { GOVERNANCE_SUSTAINABILITY_METRICS } from '@/lib/tags/governance'
+import { GOVERNANCE_CONTRIBUTORS_METRICS } from '@/lib/tags/governance'
 import { ContributionBarChart } from './ContributionBarChart'
 
-interface SustainabilityPaneProps {
+interface ContributorsScorePaneProps {
   section: ContributorsSectionViewModel
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
 }
 
-export function SustainabilityPane({ section, activeTag: externalTag, onTagChange }: SustainabilityPaneProps) {
+export function ContributorsScorePane({ section, activeTag: externalTag, onTagChange }: ContributorsScorePaneProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
   const [showExperimentalNames, setShowExperimentalNames] = useState(true)
@@ -30,14 +30,14 @@ export function SustainabilityPane({ section, activeTag: externalTag, onTagChang
   }
 
   return (
-    <section aria-label="Sustainability pane" className="rounded-2xl border border-slate-200 bg-white p-4">
+    <section aria-label="Contributors score pane" className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Sustainability</h3>
-          <p className="mt-1 text-sm text-slate-600">{section.sustainabilityScore.description}</p>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Contributors score</h3>
+          <p className="mt-1 text-sm text-slate-600">{section.contributorsScore.description}</p>
         </div>
         <div className="w-full md:max-w-xs">
-          <ScoreBadge category="Sustainability" value={section.sustainabilityScore.value} tone={section.sustainabilityScore.tone} />
+          <ScoreBadge category="Contributors" value={section.contributorsScore.value} tone={section.contributorsScore.tone} />
         </div>
       </div>
 
@@ -46,7 +46,7 @@ export function SustainabilityPane({ section, activeTag: externalTag, onTagChang
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this scored?</p>
             <p className="mt-1 text-sm text-slate-700">
-              RepoPulse scores sustainability from recent commit concentration, ranked as a percentile against repos in the same star bracket. Lower top-20% share means the active contributor base is more distributed.
+              RepoPulse scores contributor diversity from recent commit concentration, ranked as a percentile against repos in the same star bracket. Lower top-20% share means the active contributor base is more distributed.
             </p>
           </div>
           <button
@@ -62,8 +62,8 @@ export function SustainabilityPane({ section, activeTag: externalTag, onTagChang
           <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Concentration</p>
             <p className="mt-1 text-sm text-slate-700">
-              Top-20% contributor share: {formatPercentage(section.sustainabilityScore.concentration)}
-              {section.sustainabilityScore.bracketLabel ? ` — scored relative to ${section.sustainabilityScore.bracketLabel} repositories` : ''}
+              Top-20% contributor share: {formatPercentage(section.contributorsScore.concentration)}
+              {section.contributorsScore.bracketLabel ? ` — scored relative to ${section.contributorsScore.bracketLabel} repositories` : ''}
             </p>
           </div>
         ) : null}
@@ -76,10 +76,10 @@ export function SustainabilityPane({ section, activeTag: externalTag, onTagChang
       ) : null}
 
       <dl className="mt-4 grid gap-3 md:grid-cols-2">
-        {section.sustainabilityMetrics
-          .filter((metric) => !activeTag || GOVERNANCE_SUSTAINABILITY_METRICS.has(metric.label))
+        {section.contributorsMetrics
+          .filter((metric) => !activeTag || GOVERNANCE_CONTRIBUTORS_METRICS.has(metric.label))
           .map((metric) => {
-            const isGov = GOVERNANCE_SUSTAINABILITY_METRICS.has(metric.label)
+            const isGov = GOVERNANCE_CONTRIBUTORS_METRICS.has(metric.label)
             return (
               <div key={metric.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <dt className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500">

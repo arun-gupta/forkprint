@@ -23,7 +23,7 @@ describe('buildMetricCardViewModels', () => {
     expect(typeof card.profile?.reachPercentile).toBe('number')
     expect(card.profile?.reachLabel).toMatch(/\d+\w{2} percentile/)
     expect(card.scoreBadges).toHaveLength(4)
-    expect(card.scoreBadges.find((badge) => badge.category === 'Sustainability')?.value).toBe('Insufficient verified public data')
+    expect(card.scoreBadges.find((badge) => badge.category === 'Contributors')?.value).toBe('Insufficient verified public data')
     expect(card.details.find((detail) => detail.label === 'Releases (12mo)')?.value).toBe('—')
   })
 

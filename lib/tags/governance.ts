@@ -29,19 +29,19 @@ export const GOVERNANCE_DIRECT_CHECKS = new Set([
   'security_policy',
 ])
 
-/** Sustainability metric labels that are governance signals */
-export const GOVERNANCE_SUSTAINABILITY_METRICS = new Set([
+/** Contributors-tab metric labels that are governance signals */
+export const GOVERNANCE_CONTRIBUTORS_METRICS = new Set([
   'Maintainer count',
 ])
 
 /** Returns true if the licensing pane is governance-tagged (always true) */
 export const LICENSING_IS_GOVERNANCE = true
 
-export function isGovernanceItem(key: string, domain: 'doc_file' | 'scorecard' | 'direct_check' | 'sustainability_metric'): boolean {
+export function isGovernanceItem(key: string, domain: 'doc_file' | 'scorecard' | 'direct_check' | 'contributors_metric'): boolean {
   switch (domain) {
     case 'doc_file': return GOVERNANCE_DOC_FILES.has(key)
     case 'scorecard': return GOVERNANCE_SCORECARD_CHECKS.has(key)
     case 'direct_check': return GOVERNANCE_DIRECT_CHECKS.has(key)
-    case 'sustainability_metric': return GOVERNANCE_SUSTAINABILITY_METRICS.has(key)
+    case 'contributors_metric': return GOVERNANCE_CONTRIBUTORS_METRICS.has(key)
   }
 }

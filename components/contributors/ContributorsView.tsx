@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { CONTRIBUTOR_WINDOW_DAYS, type AnalysisResult, type ContributorWindowDays } from '@/lib/analyzer/analysis-result'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { CoreContributorsPane } from './CoreContributorsPane'
-import { SustainabilityPane } from './SustainabilityPane'
+import { ContributorsScorePane } from './ContributorsScorePane'
 
 interface ContributorsViewProps {
   results: AnalysisResult[]
@@ -48,10 +48,7 @@ export function ContributorsView({ results, activeTag, onTagChange }: Contributo
         <article key={section.repo} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">{section.repo}</h2>
-            <p className="mt-1 text-sm text-slate-600">{`Contributor health and sustainability signals derived from verified public repository activity over the last ${section.windowDays} days.`}</p>
-            <p className="mt-2 text-sm text-slate-700">
-              The `Contributors` tab is the workspace for contributor analysis; the corresponding overview score category is `Sustainability`.
-            </p>
+            <p className="mt-1 text-sm text-slate-600">{`Contributor health and diversity signals derived from verified public repository activity over the last ${section.windowDays} days.`}</p>
           </div>
           <CoreContributorsPane
             metrics={section.coreMetrics}
@@ -60,7 +57,7 @@ export function ContributorsView({ results, activeTag, onTagChange }: Contributo
             includeBots={includeBots}
             onToggleIncludeBots={() => setIncludeBots((current) => !current)}
           />
-          <SustainabilityPane section={section} activeTag={activeTag} onTagChange={onTagChange} />
+          <ContributorsScorePane section={section} activeTag={activeTag} onTagChange={onTagChange} />
         </article>
       ))}
     </section>

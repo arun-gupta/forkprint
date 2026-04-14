@@ -69,11 +69,11 @@ describe('buildJsonExport', () => {
   it('includes computed contributor metrics for each repo', async () => {
     const result = buildJsonExport(MINIMAL_RESPONSE)
     const text = await result.blob.text()
-    const parsed = JSON.parse(text) as { results: Array<{ contributors: { sustainabilityScore: string; sustainabilityMetrics: Array<{ label: string; value: string }>; experimentalMetrics: Array<{ label: string; value: string }> } }> }
+    const parsed = JSON.parse(text) as { results: Array<{ contributors: { contributorsScore: string; contributorsMetrics: Array<{ label: string; value: string }>; experimentalMetrics: Array<{ label: string; value: string }> } }> }
     const contributors = parsed.results[0].contributors
     expect(contributors).toBeDefined()
-    expect(contributors.sustainabilityScore).toBeDefined()
-    expect(contributors.sustainabilityMetrics.some((m) => m.label === 'Top 20% contributor share')).toBe(true)
+    expect(contributors.contributorsScore).toBeDefined()
+    expect(contributors.contributorsMetrics.some((m) => m.label === 'Top 20% contributor share')).toBe(true)
     expect(contributors.experimentalMetrics.some((m) => m.label === 'Elephant Factor')).toBe(true)
     expect(contributors.experimentalMetrics.some((m) => m.label === 'Single-vendor dependency ratio')).toBe(true)
   })
@@ -81,13 +81,13 @@ describe('buildJsonExport', () => {
   it('includes computed scores for each repo', async () => {
     const result = buildJsonExport(MINIMAL_RESPONSE)
     const text = await result.blob.text()
-    const parsed = JSON.parse(text) as { results: Array<{ scores: { activity: { value: string }; sustainability: { value: string }; responsiveness: { value: string } } }> }
+    const parsed = JSON.parse(text) as { results: Array<{ scores: { activity: { value: string }; contributors: { value: string }; responsiveness: { value: string } } }> }
     const scores = parsed.results[0].scores
     expect(scores).toBeDefined()
     expect(scores.activity).toHaveProperty('value')
     expect(scores.activity).toHaveProperty('tone')
     expect(scores.activity).toHaveProperty('description')
-    expect(scores.sustainability).toHaveProperty('value')
+    expect(scores.contributors).toHaveProperty('value')
     expect(scores.responsiveness).toHaveProperty('value')
   })
 

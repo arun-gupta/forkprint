@@ -19,7 +19,7 @@ describe('MetricCard', () => {
     expect(screen.getByText(/^Engagement$/)).toBeInTheDocument()
     expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
     expect(screen.getByText(/^Responsiveness$/)).toBeInTheDocument()
-    expect(screen.getByText(/^Sustainability$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Contributors$/)).toBeInTheDocument()
 
     // Supporting details inline
     expect(screen.getByText(/244,295 stars/)).toBeInTheDocument()
@@ -35,7 +35,7 @@ describe('MetricCard', () => {
 
     render(<MetricCard card={card} />)
 
-    // Sustainability has no commit data → insufficient
+    // Contributors has no commit data → insufficient
     expect(screen.getByText('Insufficient verified public data')).toBeInTheDocument()
   })
 

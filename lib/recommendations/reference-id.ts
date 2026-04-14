@@ -15,7 +15,7 @@ const BUCKET_PREFIX: Record<string, string> = {
   Security: 'SEC',
   Activity: 'ACT',
   Responsiveness: 'RSP',
-  Sustainability: 'SUS',
+  Contributors: 'CTR',
   Documentation: 'DOC',
 }
 

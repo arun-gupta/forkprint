@@ -9,24 +9,21 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ card }: MetricCardProps) {
-  const cells: ScorecardCellProps[] = []
+  const profileCells: ScorecardCellProps[] = card.profile
+    ? [
+        { label: 'Reach', percentileLabel: card.profile.reachLabel, detail: `${card.starsLabel} stars`, tooltip: 'Star count percentile. Measures visibility and adoption.', toneClass: percentileToneClass(card.profile.reachPercentile, 'emerald') },
+        { label: 'Attention', percentileLabel: card.profile.attentionLabel, detail: `${card.profile.watcherRateLabel} watcher rate`, tooltip: 'Watcher-to-star ratio. More watchers = more people following updates.', toneClass: percentileToneClass(card.profile.attentionPercentile, 'violet') },
+        { label: 'Engagement', percentileLabel: card.profile.engagementLabel, detail: `${card.profile.forkRateLabel} fork rate`, tooltip: 'Fork-to-star ratio. More forks = more people building on the project.', toneClass: percentileToneClass(card.profile.engagementPercentile, 'sky') },
+      ]
+    : []
 
-  if (card.profile) {
-    cells.push(
-      { label: 'Reach', percentileLabel: card.profile.reachLabel, detail: `${card.starsLabel} stars`, tooltip: 'Star count percentile. Measures visibility and adoption.', toneClass: percentileToneClass(card.profile.reachPercentile, 'emerald') },
-      { label: 'Attention', percentileLabel: card.profile.attentionLabel, detail: `${card.profile.watcherRateLabel} watcher rate`, tooltip: 'Watcher-to-star ratio. More watchers = more people following updates.', toneClass: percentileToneClass(card.profile.attentionPercentile, 'violet') },
-      { label: 'Engagement', percentileLabel: card.profile.engagementLabel, detail: `${card.profile.forkRateLabel} fork rate`, tooltip: 'Fork-to-star ratio. More forks = more people building on the project.', toneClass: percentileToneClass(card.profile.engagementPercentile, 'sky') },
-    )
-  }
-
-  for (const badge of card.scoreBadges) {
-    cells.push({
-      label: badge.category,
-      percentileLabel: typeof badge.value === 'number' ? formatPercentileLabel(badge.value) : String(badge.value),
-      tooltip: badge.description,
-      toneClass: scoreToneClass(badge.tone),
-    })
-  }
+  const scoreCells: ScorecardCellProps[] = card.scoreBadges.map((badge) => ({
+    label: badge.category,
+    percentileLabel: typeof badge.value === 'number' ? formatPercentileLabel(badge.value) : String(badge.value),
+    detail: badge.detail,
+    tooltip: badge.description,
+    toneClass: scoreToneClass(badge.tone),
+  }))
 
   const hs = card.healthScore
 
@@ -46,11 +43,20 @@ export function MetricCard({ card }: MetricCardProps) {
         <p className="text-lg font-bold">{hs.label}</p>
       </div>
 
-      <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3">
-        {cells.map((cell) => (
-          <ScorecardCell key={cell.label} {...cell} />
-        ))}
-      </div>
+      {profileCells.length > 0 ? (
+        <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3">
+          {profileCells.map((cell) => (
+            <ScorecardCell key={cell.label} {...cell} />
+          ))}
+        </div>
+      ) : null}
+      {scoreCells.length > 0 ? (
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          {scoreCells.map((cell) => (
+            <ScorecardCell key={cell.label} {...cell} />
+          ))}
+        </div>
+      ) : null}
 
       {hs.recommendations.length > 0 ? (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center">
@@ -84,12 +90,12 @@ interface ScorecardCellProps {
 
 function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass }: ScorecardCellProps) {
   return (
-    <div className={`rounded border px-2 py-1.5 ${toneClass}`} title={tooltip}>
+    <div className={`flex min-h-[44px] flex-col justify-between rounded border px-2 py-1.5 ${toneClass}`} title={tooltip}>
       <div className="flex items-baseline justify-between gap-1">
         <span className="text-[10px] font-medium uppercase tracking-wide">{label}</span>
         <span className="text-xs font-semibold">{percentileLabel}</span>
       </div>
-      {detail ? <p className="mt-0.5 text-[10px] opacity-60">{detail}</p> : null}
+      <p className="mt-0.5 text-[10px] opacity-60">{detail ?? '\u00A0'}</p>
     </div>
   )
 }

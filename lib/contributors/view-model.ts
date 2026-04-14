@@ -1,6 +1,6 @@
 import type { AnalysisResult, ContributorWindowDays, ContributorWindowMetrics, Unavailable } from '@/lib/analyzer/analysis-result'
 import { buildContributorRatioMetricRows } from '@/lib/health-ratios/view-model'
-import { computeContributionConcentration, formatPercentage, getSustainabilityScoreFromCommitCounts } from './score-config'
+import { computeContributionConcentration, formatPercentage, getContributorsScoreFromCommitCounts } from './score-config'
 import { formatPercentileLabel, getCalibrationForStars, interpolatePercentile } from '@/lib/scoring/config-loader'
 
 export interface ContributorMetricRow {
@@ -32,8 +32,8 @@ export interface ContributorsSectionViewModel {
   coreMetrics: ContributorMetricRow[]
   heatmap: ContributorHeatmapCell[]
   experimentalHeatmap: ContributorHeatmapCell[]
-  sustainabilityScore: ReturnType<typeof getSustainabilityScoreFromCommitCounts>
-  sustainabilityMetrics: ContributorMetricRow[]
+  contributorsScore: ReturnType<typeof getContributorsScoreFromCommitCounts>
+  contributorsMetrics: ContributorMetricRow[]
   experimentalMetrics: ContributorMetricRow[]
   experimentalWarning: string
   missingData: string[]
@@ -49,7 +49,7 @@ export function buildContributorsViewModels(
   return results.map((result) => {
     const windowMetrics = getContributorWindowMetrics(result, windowDays)
     const filteredCommitCountsByAuthor = filterCommitCountsByAuthorBots(windowMetrics.commitCountsByAuthor, includeBots)
-    const sustainabilityScore = getSustainabilityScoreFromCommitCounts(filteredCommitCountsByAuthor, result.stars)
+    const contributorsScore = getContributorsScoreFromCommitCounts(filteredCommitCountsByAuthor, result.stars)
     const concentration = computeContributionConcentration(filteredCommitCountsByAuthor)
     const repeatContributors = computeRepeatContributors(filteredCommitCountsByAuthor)
     const activeContributors = getActiveContributorCount(filteredCommitCountsByAuthor)
@@ -82,14 +82,14 @@ export function buildContributorsViewModels(
       ],
       heatmap: buildHeatmap(filteredCommitCountsByAuthor),
       experimentalHeatmap: buildHeatmap(experimentalCommitCounts, 'organization'),
-      sustainabilityScore,
-      sustainabilityMetrics: [
+      contributorsScore,
+      contributorsMetrics: [
         {
           label: 'Top 20% contributor share',
-          value: formatConcentrationWithPercentile(sustainabilityScore.concentration, result.stars),
+          value: formatConcentrationWithPercentile(contributorsScore.concentration, result.stars),
           supportingText: getTopContributorGroupText(
-            sustainabilityScore.topContributorCount,
-            sustainabilityScore.contributorCount,
+            contributorsScore.topContributorCount,
+            contributorsScore.contributorCount,
           ),
         },
         {

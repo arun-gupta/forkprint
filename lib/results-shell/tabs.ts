@@ -10,32 +10,32 @@ export const resultTabs: ResultTabDefinition[] = [
   {
     id: 'contributors',
     label: 'Contributors',
-    status: 'placeholder',
-    description: 'Core contributor metrics and sustainability signals are coming soon.',
+    status: 'implemented',
+    description: 'Contributor concentration, repeat and new contributor mix.',
   },
   {
     id: 'activity',
     label: 'Activity',
     status: 'implemented',
-    description: 'Activity metrics, scoring, and detailed repo flow signals.',
+    description: 'PR throughput, issue flow, commit cadence, release frequency.',
   },
   {
     id: 'responsiveness',
     label: 'Responsiveness',
     status: 'implemented',
-    description: 'Response-time, backlog-health, and engagement signals from public issue and PR activity.',
+    description: 'Response times, resolution speed, backlog health.',
   },
   {
     id: 'documentation',
     label: 'Documentation',
     status: 'implemented',
-    description: 'Documentation file presence, README quality, and improvement recommendations.',
+    description: 'Key project files, README quality, licensing compliance, inclusive naming.',
   },
   {
     id: 'security',
     label: 'Security',
     status: 'implemented',
-    description: 'Security posture including OpenSSF Scorecard checks, dependency automation, and branch protection.',
+    description: 'OpenSSF Scorecard, dependency automation, branch protection.',
   },
   {
     id: 'recommendations',

@@ -2,7 +2,7 @@ import type { AnalysisResult, AnalyzeResponse, ResponsivenessMetrics } from '@/l
 import { getActivityScore } from '@/lib/activity/score-config'
 import { buildComparisonSections } from '@/lib/comparison/view-model'
 import { limitComparedResults } from '@/lib/comparison/view-model'
-import { getSustainabilityScore } from '@/lib/contributors/score-config'
+import { getContributorsScore } from '@/lib/contributors/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { buildSpectrumProfile } from '@/lib/ecosystem-map/classification'
@@ -88,7 +88,7 @@ const HEALTH_RATIO_CATEGORY_LABELS: Record<string, string> = {
 
 function renderRepo(result: AnalysisResult, appUrl?: string): string {
   const activity = getActivityScore(result)
-  const sustainability = getSustainabilityScore(result)
+  const contributorsScore = getContributorsScore(result)
   const responsiveness = getResponsivenessScore(result)
   const contributors = buildContributorsViewModels([result])[0]
   const healthRatioRows = buildHealthRatioRows([result])
@@ -149,7 +149,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     '',
     '| Score | Value |',
     '| --- | --- |',
-    `| Sustainability | ${sustainability.value} |`,
+    `| Contributors | ${contributorsScore.value} |`,
     `| Activity | ${activity.value} |`,
     `| Responsiveness | ${responsiveness.value} |`,
     `| Documentation | ${result.documentationResult !== 'unavailable' ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult).value : 'unavailable'} |`,
@@ -157,12 +157,12 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     '',
   )
 
-  // Contributors section (contains Sustainability score)
-  const typesOfContributions = contributors?.sustainabilityMetrics.find((m) => m.label === 'Types of contributions')?.value
+  // Contributors section
+  const typesOfContributions = contributors?.contributorsMetrics.find((m) => m.label === 'Types of contributions')?.value
   lines.push(
     '### Contributors',
     '',
-    `**Sustainability score**: ${sustainability.value}`,
+    `**Contributors score**: ${contributorsScore.value}`,
     '',
     mdTable([
       ['Total contributors', fmt(result.totalContributors)],
@@ -170,7 +170,7 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       ['Repeat contributors (90 days)', fmt(result.contributorMetricsByWindow?.[90]?.repeatContributors ?? 'unavailable')],
       ['New contributors (90 days)', fmt(result.contributorMetricsByWindow?.[90]?.newContributors ?? 'unavailable')],
       ['Maintainer count', fmt(result.maintainerCount)],
-      ['Top 20% contributor share', fmtPct(sustainability.concentration)],
+      ['Top 20% contributor share', fmtPct(contributorsScore.concentration)],
       ...(typesOfContributions ? [['Types of contributions', typesOfContributions] as [string, string]] : []),
     ]),
     '',

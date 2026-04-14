@@ -1,16 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { SustainabilityPane } from './SustainabilityPane'
+import { ContributorsScorePane } from './ContributorsScorePane'
 
-describe('SustainabilityPane', () => {
-  it('renders score details and the non-duplicative sustainability metrics', async () => {
+describe('ContributorsScorePane', () => {
+  it('renders score details and the non-duplicative contributor metrics', async () => {
     render(
-      <SustainabilityPane
+      <ContributorsScorePane
         section={{
           repo: 'facebook/react',
           coreMetrics: [],
-          sustainabilityScore: {
+          contributorsScore: {
             value: 45,
             tone: 'warning',
             description: 'Contributor concentration ranks at the 45th percentile among Growing (100–999 stars) repositories.',
@@ -20,7 +20,7 @@ describe('SustainabilityPane', () => {
             topContributorCount: 1,
             contributorCount: 5,
           },
-          sustainabilityMetrics: [
+          contributorsMetrics: [
             { label: 'Top 20% contributor share', value: '62.5%', supportingText: '1 of 5 active contributors' },
             {
               label: 'Maintainer count',
@@ -106,7 +106,7 @@ describe('SustainabilityPane', () => {
       ),
     ).toBeInTheDocument()
     expect(screen.queryByText(/^Missing data$/i)).not.toBeInTheDocument()
-    expect(screen.queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/later contributor signals/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/grouped areas/i)).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /show details/i }))
@@ -137,11 +137,11 @@ describe('SustainabilityPane', () => {
 
   it('does not render a missing-data panel', () => {
     render(
-      <SustainabilityPane
+      <ContributorsScorePane
         section={{
           repo: 'facebook/react',
           coreMetrics: [],
-          sustainabilityScore: {
+          contributorsScore: {
             value: 82,
             tone: 'success',
             description: 'Contributor concentration ranks at the 82nd percentile among Growing (100–999 stars) repositories.',
@@ -151,7 +151,7 @@ describe('SustainabilityPane', () => {
             topContributorCount: 1,
             contributorCount: 5,
           },
-          sustainabilityMetrics: [{ label: 'Top 20% contributor share', value: '40.0%', supportingText: '1 of 5 active contributors' }],
+          contributorsMetrics: [{ label: 'Top 20% contributor share', value: '40.0%', supportingText: '1 of 5 active contributors' }],
           experimentalMetrics: [],
           experimentalHeatmap: [],
           experimentalWarning:

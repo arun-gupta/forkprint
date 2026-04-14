@@ -5,7 +5,7 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { ContributorsView } from './ContributorsView'
 
 describe('ContributorsView', () => {
-  it('renders core and sustainability panes for each repository section', () => {
+  it('renders core and contributors-score panes for each repository section', () => {
     render(<ContributorsView results={[buildResult()]} />)
 
     const region = screen.getByRole('region', { name: /contributors view/i })
@@ -13,12 +13,12 @@ describe('ContributorsView', () => {
     expect(within(region).getByRole('button', { name: '90d' })).toHaveAttribute('aria-pressed', 'true')
     const corePane = within(region).getByRole('region', { name: /core contributors pane/i })
     expect(within(region).getByText('facebook/react')).toBeInTheDocument()
-    expect(within(region).getByRole('heading', { name: /core/i })).toBeInTheDocument()
-    expect(within(region).getByRole('heading', { name: /sustainability/i })).toBeInTheDocument()
+    expect(within(region).getByRole('heading', { name: /^core/i })).toBeInTheDocument()
+    expect(within(region).getByRole('heading', { name: /contributors score/i })).toBeInTheDocument()
     expect(within(corePane).getByText('Repeat contributor ratio')).toBeInTheDocument()
     expect(within(corePane).getByText('New contributor ratio')).toBeInTheDocument()
     expect(within(corePane).getByText(/^Contribution chart$/i)).toBeInTheDocument()
-    expect(within(region).queryByText(/later sustainability signals/i)).not.toBeInTheDocument()
+    expect(within(region).queryByText(/later contributor signals/i)).not.toBeInTheDocument()
   })
 
   it('lets the user include detected bot accounts in recent-commit metrics', async () => {

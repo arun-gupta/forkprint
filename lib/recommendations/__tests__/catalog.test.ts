@@ -14,7 +14,7 @@ describe('RECOMMENDATION_CATALOG', () => {
 
   it('contains entries for all five buckets', () => {
     const buckets = new Set(RECOMMENDATION_CATALOG.map((e) => e.bucket))
-    expect(buckets).toEqual(new Set(['Security', 'Activity', 'Responsiveness', 'Sustainability', 'Documentation']))
+    expect(buckets).toEqual(new Set(['Security', 'Activity', 'Responsiveness', 'Contributors', 'Documentation']))
   })
 
   it('IDs follow the PREFIX-N pattern', () => {
@@ -26,7 +26,7 @@ describe('RECOMMENDATION_CATALOG', () => {
   it('IDs use the correct prefix for their bucket', () => {
     const prefixMap: Record<string, string> = {
       Security: 'SEC', Activity: 'ACT', Responsiveness: 'RSP',
-      Sustainability: 'SUS', Documentation: 'DOC',
+      Contributors: 'CTR', Documentation: 'DOC',
     }
     for (const entry of RECOMMENDATION_CATALOG) {
       const expectedPrefix = prefixMap[entry.bucket]
@@ -46,8 +46,8 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Responsiveness')).toHaveLength(3)
   })
 
-  it('has 2 sustainability entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Sustainability')).toHaveLength(2)
+  it('has 2 contributors entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(2)
   })
 
   it('has 14 documentation entries', () => {
@@ -102,10 +102,10 @@ describe('getCatalogEntriesByTag', () => {
     const governance = getCatalogEntriesByTag('governance')
     const ids = governance.map((e) => e.id).sort()
     expect(ids).toEqual([
+      'CTR-2',
       'DOC-12', 'DOC-13', 'DOC-14',
       'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-17', 'SEC-3', 'SEC-5',
-      'SUS-2',
     ])
   })
 
