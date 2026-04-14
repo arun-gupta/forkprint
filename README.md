@@ -42,7 +42,7 @@ RepoPulse analyzes any public GitHub repository and produces a composite **OSS H
 | **Responsiveness** | 25% | Issue/PR response times, resolution speed, backlog health |
 | **Contributors** | 23% | Contributor concentration, repeat/new contributor ratios |
 | **Security** | 15% | OpenSSF Scorecard, dependency automation, branch protection |
-| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance |
+| **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance, inclusive naming |
 
 Each dimension is scored as a percentile relative to repos in the same **star bracket** (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
 
@@ -72,7 +72,7 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel deployment instruction
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 1 | Web app + core scoring (Activity, Responsiveness, Contributors, Documentation) | :white_check_mark: Done |
-| 2 | Expand scoring — Security, Licensing & Compliance, Inclusive Naming :white_check_mark:; Community, Release Health, Governance & more upcoming | In progress |
+| 2 | Expand scoring — Security, Licensing & Compliance, Inclusive Naming, Governance :white_check_mark:; Community, Release Health & more upcoming | In progress |
 | 3 | Integrations (GitHub Action, MCP Server, CLI, PR bot, VS Code, Badge, Webhook) | Planned |
 | 4 | Git provider support (GitLab, Bitbucket, Gitea) | Planned |
 
