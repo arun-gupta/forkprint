@@ -25,6 +25,7 @@ const FILE_LABELS: Record<string, string> = {
   changelog: 'CHANGELOG',
   issue_templates: 'Issue templates',
   pull_request_template: 'PR template',
+  governance: 'GOVERNANCE',
 }
 
 const SECTION_LABELS: Record<string, string> = {

@@ -13,6 +13,7 @@ export const GOVERNANCE_DOC_FILES = new Set([
   'code_of_conduct',
   'security',
   'changelog',
+  'governance',
 ])
 
 /** Scorecard check names that are governance signals */

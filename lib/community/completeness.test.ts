@@ -74,7 +74,9 @@ describe('computeCommunityCompleteness', () => {
     // present: CoC, issue_templates, PR template, codeowners (maintainerCount > 0),
     //          discussions_enabled → 5
     // missing: funding → 1
-    // unknown: governance (never captured yet) → 1
+    // unknown: governance — fixture does not include a 'governance' entry in
+    //          fileChecks, so it resolves to unknown here. (When the analyzer
+    //          synthesizes a real entry this would flip present/missing.) → 1
     expect(c.present.length + c.missing.length + c.unknown.length).toBe(7)
     expect(c.present).toContain('code_of_conduct')
     expect(c.present).toContain('issue_templates')

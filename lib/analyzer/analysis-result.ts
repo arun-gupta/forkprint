@@ -59,6 +59,7 @@ export interface DocumentationFileCheck {
     | 'changelog'
     | 'issue_templates'
     | 'pull_request_template'
+    | 'governance'
   found: boolean
   path: string | null
 }

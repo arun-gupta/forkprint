@@ -56,9 +56,7 @@ function extractSignalPresence(result: AnalysisResult): Record<CommunitySignalKe
     // means a public maintainer file was parsed (CODEOWNERS / MAINTAINERS /
     // OWNERS / GOVERNANCE.md). If the count is unavailable we can't tell.
     codeowners: maintainerCountPresence(result.maintainerCount),
-    // GOVERNANCE.md file is not currently captured in fileChecks; mark unknown
-    // for now. When a dedicated field is added this can return present/missing.
-    governance: 'unknown',
+    governance: fromDocFile('governance'),
     funding: booleanOrUnknown(result.hasFundingConfig),
     discussions_enabled: booleanOrUnknown(result.hasDiscussionsEnabled),
   }

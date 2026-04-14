@@ -80,6 +80,9 @@ export const REPO_OVERVIEW_QUERY = `
       commDiscussionsRecent: discussions(first: 100, orderBy: { field: CREATED_AT, direction: DESC }) {
         nodes { createdAt }
       }
+      commGovernanceRoot: object(expression: "HEAD:GOVERNANCE.md") { ... on Blob { oid } }
+      commGovernanceGithub: object(expression: "HEAD:.github/GOVERNANCE.md") { ... on Blob { oid } }
+      commGovernanceDocs: object(expression: "HEAD:docs/GOVERNANCE.md") { ... on Blob { oid } }
       workflowDir: object(expression: "HEAD:.github/workflows") {
         ... on Tree {
           entries {

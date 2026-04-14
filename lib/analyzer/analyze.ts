@@ -86,6 +86,9 @@ interface RepoOverviewResponse {
     commPrTemplateGithub?: { oid: string } | null
     commPrTemplateDocs?: { oid: string } | null
     commDiscussionsRecent?: { nodes: Array<{ createdAt: string }> } | null
+    commGovernanceRoot?: { oid: string } | null
+    commGovernanceGithub?: { oid: string } | null
+    commGovernanceDocs?: { oid: string } | null
     workflowDir?: {
       entries: Array<{
         name: string
@@ -790,6 +793,15 @@ function extractDocumentationResult(repo: RepoOverviewResponse['repository']): D
         : null
   const hasPullRequestTemplate = prTemplatePath !== null
 
+  const governancePath = repo.commGovernanceRoot
+    ? 'GOVERNANCE.md'
+    : repo.commGovernanceGithub
+      ? '.github/GOVERNANCE.md'
+      : repo.commGovernanceDocs
+        ? 'docs/GOVERNANCE.md'
+        : null
+  const hasGovernance = governancePath !== null
+
   const fileChecks: DocumentationFileCheck[] = [
     { name: 'readme', found: readmeBlob !== null, path: foundPath(readmePathMap) },
     { name: 'license', found: licenseBlob !== null, path: foundPath(licensePathMap) },
@@ -799,6 +811,7 @@ function extractDocumentationResult(repo: RepoOverviewResponse['repository']): D
     { name: 'changelog', found: changelogBlob !== null, path: foundPath(changelogPathMap) },
     { name: 'issue_templates', found: hasIssueTemplates, path: issueTemplatePath },
     { name: 'pull_request_template', found: hasPullRequestTemplate, path: prTemplatePath },
+    { name: 'governance', found: hasGovernance, path: governancePath },
   ]
 
   const readmeSections = detectReadmeSections(readmeContent)
