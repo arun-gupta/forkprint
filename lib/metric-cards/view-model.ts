@@ -3,6 +3,7 @@ import { buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
 import { getScoreBadges, type ScoreBadgeDefinition } from './score-config'
 import { getHealthScore, type HealthScoreDefinition } from '@/lib/scoring/health-score'
 import { computeCommunityCompleteness } from '@/lib/community/completeness'
+import { computeGovernanceCompleteness } from '@/lib/governance/completeness'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 /**
@@ -94,6 +95,18 @@ function buildLensReadouts(result: AnalysisResult): LensReadout[] {
       detail: `${community.present.length} of ${community.present.length + community.missing.length} signals`,
       tooltip: 'Community is a cross-cutting lens — count of community signals present. Does not feed the composite OSS Health Score.',
       tone: community.tone,
+    })
+  }
+
+  const governance = computeGovernanceCompleteness(result)
+  if (governance.ratio !== null) {
+    lenses.push({
+      key: 'governance',
+      label: 'Governance',
+      percentileLabel: governance.percentile !== null ? `${governance.percentile}th percentile` : '—',
+      detail: `${governance.present.length} of ${governance.present.length + governance.missing.length} signals`,
+      tooltip: 'Governance is a cross-cutting lens — count of governance signals present (license, contributing, CoC, security, changelog, branch protection, code review, maintainers). Does not feed the composite OSS Health Score.',
+      tone: governance.tone,
     })
   }
 
