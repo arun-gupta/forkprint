@@ -76,6 +76,39 @@ describe('buildMarkdownReport', () => {
     expect(activityPos).toBeLessThan(responsivenessPos)
   })
 
+  it('includes a Community section between Contributors and Activity when signals are determinate', () => {
+    // Build a response where at least one community signal is determinate (ratio != null).
+    const response = {
+      ...MINIMAL_RESPONSE,
+      results: [{
+        ...MINIMAL_RESPONSE.results[0],
+        hasFundingConfig: true,
+        hasDiscussionsEnabled: true,
+        discussionsCountWindow: 42,
+        discussionsWindowDays: 90 as const,
+      }],
+    }
+    const md = buildMarkdownReport(response)
+    expect(md).toContain('### Community')
+    const contributorsPos = md.indexOf('### Contributors')
+    const communityPos = md.indexOf('### Community')
+    const activityPos = md.indexOf('### Activity')
+    expect(contributorsPos).toBeLessThan(communityPos)
+    expect(communityPos).toBeLessThan(activityPos)
+    // Header + table row for each signal
+    expect(md).toContain('**Completeness:**')
+    expect(md).toContain('| Signal | Status |')
+    expect(md).toContain('| Code of Conduct |')
+    expect(md).toContain('| Issue templates |')
+    expect(md).toContain('| PR template |')
+    expect(md).toContain('| CODEOWNERS / maintainer file |')
+    expect(md).toContain('| GOVERNANCE.md |')
+    expect(md).toContain('| FUNDING.yml |')
+    expect(md).toContain('| Discussions |')
+    // Discussions row renders the richer enabled-with-count variant
+    expect(md).toContain('Enabled (42 in last 90d)')
+  })
+
   it('includes detailed activity metrics', () => {
     const md = buildMarkdownReport(MINIMAL_RESPONSE)
     expect(md).toContain('Commits (30 days)')

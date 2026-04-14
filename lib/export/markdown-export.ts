@@ -11,6 +11,7 @@ import { assignReferenceIds, resolveReferenceId } from '@/lib/recommendations/re
 import { formatHours, formatPercentage, getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
+import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/community/completeness'
 import { encodeRepos } from '@/lib/export/shareable-url'
 
 export interface MarkdownExportResult {
@@ -187,6 +188,12 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       ),
       '',
     )
+  }
+
+  // Community section (cross-cutting lens, not a composite-weighted bucket).
+  const communityLines = renderCommunitySection(result)
+  if (communityLines.length > 0) {
+    lines.push(...communityLines)
   }
 
   // Activity section with grouped tables
@@ -573,6 +580,59 @@ export function buildMarkdownReport(response: AnalyzeResponse, analyzedRepos?: s
   }
 
   return parts.join('\n')
+}
+
+/**
+ * Render the Community lens section for a repo's markdown export.
+ *
+ * Positioned between the Contributors section and the Activity section
+ * (data-model.md §4). Shows completeness (ratio + percentile + counts) and
+ * a 7-row signal status table. Empty array returned when completeness
+ * ratio is null (all signals unknown), so the section doesn't render as
+ * meaningless header-only output.
+ */
+function renderCommunitySection(result: AnalysisResult): string[] {
+  const completeness = computeCommunityCompleteness(result)
+  if (completeness.ratio === null) return []
+
+  const total = completeness.present.length + completeness.missing.length
+  const percentileLabel = completeness.percentile !== null
+    ? `${completeness.percentile}th percentile`
+    : '—'
+  const status = (key: CommunitySignalKey): string => {
+    if (completeness.present.includes(key)) return '✓ Present'
+    if (completeness.missing.includes(key)) return '✗ Missing'
+    return '? Unknown'
+  }
+
+  // Discussions row variant — more expressive when enabled
+  const discussionsStatus = (() => {
+    if (result.hasDiscussionsEnabled !== true && result.hasDiscussionsEnabled !== false) return '? Unknown'
+    if (result.hasDiscussionsEnabled === false) return 'Not enabled'
+    const count = typeof result.discussionsCountWindow === 'number' ? result.discussionsCountWindow : null
+    const windowDays = typeof result.discussionsWindowDays === 'number' ? result.discussionsWindowDays : null
+    if (count !== null && windowDays !== null) return `Enabled (${count} in last ${windowDays}d)`
+    return 'Enabled'
+  })()
+
+  return [
+    '### Community',
+    '',
+    `Community is a cross-cutting lens — it does not feed the composite OSS Health Score.`,
+    '',
+    `**Completeness:** ${percentileLabel} (${completeness.present.length}/${total} signals)`,
+    '',
+    '| Signal | Status |',
+    '| --- | --- |',
+    `| Code of Conduct | ${status('code_of_conduct')} |`,
+    `| Issue templates | ${status('issue_templates')} |`,
+    `| PR template | ${status('pull_request_template')} |`,
+    `| CODEOWNERS / maintainer file | ${status('codeowners')} |`,
+    `| GOVERNANCE.md | ${status('governance')} |`,
+    `| FUNDING.yml | ${status('funding')} |`,
+    `| Discussions | ${discussionsStatus} |`,
+    '',
+  ]
 }
 
 export function buildMarkdownExport(response: AnalyzeResponse, analyzedRepos?: string[]): MarkdownExportResult {
