@@ -42,6 +42,8 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 - N/A (stateless) (032-doc-scoring)
 - TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Reac (128-licensing-compliance)
 - N/A (stateless, on-demand analysis) (128-licensing-compliance)
+- TypeScript 5.x (Next.js 16+) + React, Tailwind CSS (174-report-search)
+- N/A (stateless, in-memory only) (174-report-search)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library

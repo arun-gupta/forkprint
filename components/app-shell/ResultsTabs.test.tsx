@@ -31,6 +31,30 @@ describe('ResultsTabs', () => {
     expect(screen.queryByRole('tab', { name: 'Metrics' })).not.toBeInTheDocument()
   })
 
+  it('renders badge counts when matchCounts prop is provided', () => {
+    const matchCounts = { overview: 3, activity: 5, security: 0 }
+    render(<ResultsTabs tabs={tabs} activeTab="overview" onChange={vi.fn()} matchCounts={matchCounts} />)
+
+    // Overview should show (3)
+    const overviewTab = screen.getByRole('tab', { name: /Overview/ })
+    expect(overviewTab.textContent).toContain('3')
+
+    // Activity should show (5)
+    const activityTab = screen.getByRole('tab', { name: /Activity/ })
+    expect(activityTab.textContent).toContain('5')
+
+    // Contributors has no count in matchCounts, so no badge
+    const contributorsTab = screen.getByRole('tab', { name: /Contributors/ })
+    expect(contributorsTab.textContent).toBe('Contributors')
+  })
+
+  it('does not render badges when matchCounts is not provided', () => {
+    render(<ResultsTabs tabs={tabs} activeTab="overview" onChange={vi.fn()} />)
+
+    const overviewTab = screen.getByRole('tab', { name: /Overview/ })
+    expect(overviewTab.textContent).toBe('Overview')
+  })
+
   it('shows overflow tabs in a More menu and supports Show all', async () => {
     const manyTabs: ResultTabDefinition[] = [
       { id: 'overview', label: 'Overview', status: 'implemented', description: '' },

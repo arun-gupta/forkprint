@@ -6,6 +6,8 @@ import { resultTabs } from '@/lib/results-shell/tabs'
 import type { ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { UserBadge } from '@/components/auth/UserBadge'
+import type { TabMatchCounts } from '@/lib/search/types'
+import { useHighlightMatches } from '@/components/search/useHighlightMatches'
 import { ResultsTabs } from './ResultsTabs'
 
 interface ResultsShellProps {
@@ -23,6 +25,8 @@ interface ResultsShellProps {
   resetKey?: number
   toolbar?: React.ReactNode
   onReset?: () => void
+  searchQuery?: string
+  onDomMatchCounts?: (counts: { domMatchCounts: TabMatchCounts; domTotalMatches: number; domMatchedTabCount: number }) => void
 }
 
 export function ResultsShell({
@@ -40,6 +44,8 @@ export function ResultsShell({
   resetKey,
   toolbar,
   onReset,
+  searchQuery = '',
+  onDomMatchCounts,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>(initialActiveTab)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -73,6 +79,12 @@ export function ResultsShell({
     () => (tabs.some((tab) => tab.id === activeTab) ? activeTab : tabs[0]?.id ?? 'overview'),
     [activeTab, tabs],
   )
+
+  const { containerRef, domMatchCounts, domTotalMatches, domMatchedTabCount } = useHighlightMatches(searchQuery, currentActiveTab)
+
+  useEffect(() => {
+    onDomMatchCounts?.({ domMatchCounts, domTotalMatches, domMatchedTabCount })
+  }, [domMatchCounts, domTotalMatches, domMatchedTabCount, onDomMatchCounts])
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -187,16 +199,16 @@ export function ResultsShell({
 
           <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
-            <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} />
-            <div className="mt-6">
-              {currentActiveTab === 'overview' ? overview : null}
-              {currentActiveTab === 'contributors' ? contributors : null}
-              {currentActiveTab === 'activity' ? activity : null}
-              {currentActiveTab === 'responsiveness' ? responsiveness : null}
-              {currentActiveTab === 'documentation' ? documentation : null}
-              {currentActiveTab === 'security' ? security : null}
-              {currentActiveTab === 'recommendations' ? recommendations : null}
-              {currentActiveTab === 'comparison' ? comparison : null}
+            <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} matchCounts={domMatchCounts} />
+            <div className="mt-6" ref={containerRef}>
+              <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>{overview}</div>
+              <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
+              <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
+              <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
+              <div data-tab-content="documentation" style={{ display: currentActiveTab === 'documentation' ? 'contents' : 'none' }}>{documentation}</div>
+              <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
+              <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
+              <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
             </div>
           </section>
         </section>

@@ -13,6 +13,9 @@ import { MetricCardsOverview } from '@/components/metric-cards/MetricCardsOvervi
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { ResponsivenessView } from '@/components/responsiveness/ResponsivenessView'
 import { ExportControls } from '@/components/export/ExportControls'
+import { ReportSearchBar } from '@/components/search/ReportSearchBar'
+import { SearchProvider } from '@/components/search/SearchContext'
+import type { TabMatchCounts } from '@/lib/search/types'
 import { useAuth } from '@/components/auth/AuthContext'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
@@ -41,6 +44,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -96,6 +101,26 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const emptyQuote = LOADING_QUOTES[emptyQuoteIndex]
 
+  // Search: DOM-based match counts (populated by ResultsShell after highlighting)
+  const [domTotalMatches, setDomTotalMatches] = useState(0)
+  const [domMatchedTabCount, setDomMatchedTabCount] = useState(0)
+  const handleDomMatchCounts = useRef((counts: { domMatchCounts: TabMatchCounts; domTotalMatches: number; domMatchedTabCount: number }) => {
+    setDomTotalMatches(counts.domTotalMatches)
+    setDomMatchedTabCount(counts.domMatchedTabCount)
+  }).current
+
+  // Search: debounce query
+  useEffect(() => {
+    if (!searchQuery) {
+      setDebouncedQuery('')
+      setDomTotalMatches(0)
+      setDomMatchedTabCount(0)
+      return
+    }
+    const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 300)
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
+
   function handleModeChange(mode: 'repos' | 'org') {
     setInputMode(mode)
   }
@@ -106,6 +131,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setOrgInventoryResponse(null)
     setSubmissionError(null)
     setResultsResetKey((k) => k + 1)
+    setSearchQuery('')
+    setDebouncedQuery('')
   }
 
   useEffect(() => {
@@ -191,7 +218,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   )
 
   const exportToolbar = analysisResponse ? (
-    <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <ReportSearchBar
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
+        totalMatches={domTotalMatches}
+        matchedTabCount={domMatchedTabCount}
+      />
+      <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
+    </div>
   ) : null
 
   const orgInventoryTabs: ResultTabDefinition[] = [
@@ -382,6 +417,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   )
 
   return (
+    <SearchProvider query={debouncedQuery}>
     <ResultsShell
       resetKey={resultsResetKey}
       initialActiveTab="overview"
@@ -389,6 +425,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       analysisPanel={analysisPanel}
       toolbar={exportToolbar}
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
+      searchQuery={debouncedQuery}
+      onDomMatchCounts={handleDomMatchCounts}
       overview={overviewContent}
       contributors={
         analysisResponse ? (
@@ -467,6 +505,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
     />
+    </SearchProvider>
   )
 }
 

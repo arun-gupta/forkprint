@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
+import type { TabMatchCounts } from '@/lib/search/types'
 
 interface ResultsTabsProps {
   tabs: ResultTabDefinition[]
   activeTab: ResultTabId
   onChange: (tabId: ResultTabId) => void
+  matchCounts?: TabMatchCounts
 }
 
 const COLLAPSED_COUNT_MOBILE = 3
@@ -25,7 +27,7 @@ function useIsMobile() {
   return isMobile
 }
 
-export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
+export function ResultsTabs({ tabs, activeTab, onChange, matchCounts }: ResultsTabsProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -52,7 +54,7 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
   return (
     <div role="tablist" aria-label="Result views" className="flex flex-wrap items-center gap-1.5">
       {visibleTabs.map((tab) => (
-        <TabButton key={tab.id} tab={tab} active={tab.id === activeTab} onClick={() => onChange(tab.id)} />
+        <TabButton key={tab.id} tab={tab} active={tab.id === activeTab} onClick={() => onChange(tab.id)} badgeCount={matchCounts?.[tab.id]} />
       ))}
 
       {expanded && hasOverflow && (
@@ -86,26 +88,30 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
 
           {menuOpen && (
             <div className="absolute left-0 top-full z-10 mt-1 min-w-[10rem] rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-              {overflowTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  type="button"
-                  data-tab-id={tab.id}
-                  aria-selected={tab.id === activeTab}
-                  className={
-                    tab.id === activeTab
-                      ? 'block w-full px-4 py-2 text-left text-sm font-medium text-slate-900 bg-slate-100'
-                      : 'block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50'
-                  }
-                  onClick={() => {
-                    onChange(tab.id)
-                    setMenuOpen(false)
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              {overflowTabs.map((tab) => {
+                const count = matchCounts?.[tab.id]
+                return (
+                  <button
+                    key={tab.id}
+                    role="tab"
+                    type="button"
+                    data-tab-id={tab.id}
+                    aria-selected={tab.id === activeTab}
+                    className={
+                      tab.id === activeTab
+                        ? 'block w-full px-4 py-2 text-left text-sm font-medium text-slate-900 bg-slate-100'
+                        : 'block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50'
+                    }
+                    onClick={() => {
+                      onChange(tab.id)
+                      setMenuOpen(false)
+                    }}
+                  >
+                    {tab.label}
+                    {count ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700">{count}</span> : null}
+                  </button>
+                )
+              })}
               <div className="my-1 border-t border-slate-100" />
               <button
                 type="button"
@@ -125,7 +131,7 @@ export function ResultsTabs({ tabs, activeTab, onChange }: ResultsTabsProps) {
   )
 }
 
-function TabButton({ tab, active, onClick }: { tab: ResultTabDefinition; active: boolean; onClick: () => void }) {
+function TabButton({ tab, active, onClick, badgeCount }: { tab: ResultTabDefinition; active: boolean; onClick: () => void; badgeCount?: number }) {
   return (
     <button
       role="tab"
@@ -140,6 +146,7 @@ function TabButton({ tab, active, onClick }: { tab: ResultTabDefinition; active:
       onClick={onClick}
     >
       {tab.label}
+      {badgeCount ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700">{badgeCount}</span> : null}
     </button>
   )
 }

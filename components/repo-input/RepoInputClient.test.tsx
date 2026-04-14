@@ -447,8 +447,9 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
 
     await userEvent.click(await screen.findByRole('tab', { name: 'Activity' }))
-    await userEvent.click(screen.getByRole('button', { name: '30d' }))
-    await userEvent.click(screen.getByRole('button', { name: '12 months' }))
+    const activityTab = document.querySelector('[data-tab-content="activity"]')!
+    await userEvent.click(within(activityTab as HTMLElement).getByRole('button', { name: '30d' }))
+    await userEvent.click(within(activityTab as HTMLElement).getByRole('button', { name: '12 months' }))
 
     expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
