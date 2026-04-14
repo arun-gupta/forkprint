@@ -255,7 +255,7 @@ export const LOADING_QUOTES: LoadingQuote[] = [
   {
     text: 'Fostering an open source culture in an enterprise sustains innovation.',
     author: 'Arun Gupta',
-    context: 'Open Source Strategist',
+    context: 'Author of Fostering Open Source Culture',
   },
   {
     text: 'Code is law.',
