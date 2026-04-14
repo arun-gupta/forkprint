@@ -78,6 +78,8 @@ Items landed during this session are marked done below. Items still deferred wil
 
 ## Signoff
 
-- **Tested by**: _____________________
-- **Date**: _____________________
+- **Tested by**: arun-gupta
+- **Date**: 2026-04-14
 - **Notes / follow-ups**:
+  - Step 3 (Discussions window-switching) filed as [#194](https://github.com/arun-gupta/repo-pulse/issues/194); non-blocking
+  - Deferred polish items tracked as [#191](https://github.com/arun-gupta/repo-pulse/issues/191) / [#196](https://github.com/arun-gupta/repo-pulse/issues/196) / [#197](https://github.com/arun-gupta/repo-pulse/issues/197)
