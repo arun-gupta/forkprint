@@ -2,6 +2,26 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildEcosystemRows } from '@/lib/ecosystem-map/chart-data'
 import { getScoreBadges, type ScoreBadgeDefinition } from './score-config'
 import { getHealthScore, type HealthScoreDefinition } from '@/lib/scoring/health-score'
+import { computeCommunityCompleteness } from '@/lib/community/completeness'
+import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
+
+/**
+ * A "lens readout" — a cross-cutting completeness summary that is rendered on
+ * the scorecard as a small pill below the scored dimensions. Lenses do NOT
+ * feed the composite OSS Health Score (guarded by health-score.test.ts).
+ *
+ * This is the extensibility seam for additional lenses (Governance etc. —
+ * tracked in #191). Adding a lens is: write a compute{Lens}Completeness
+ * function, push an entry into the lenses array here.
+ */
+export interface LensReadout {
+  key: string            // 'community' | 'governance' | ...
+  label: string          // 'Community'
+  percentileLabel: string
+  detail: string         // e.g. 'N of M signals'
+  tooltip: string
+  tone: ScoreTone
+}
 
 export interface MetricCardViewModel {
   repo: string
@@ -17,6 +37,7 @@ export interface MetricCardViewModel {
   profile: ReturnType<typeof buildEcosystemRows>[number]['profile']
   scoreBadges: ScoreBadgeDefinition[]
   healthScore: HealthScoreDefinition
+  lenses: LensReadout[]
 }
 
 export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCardViewModel[] {
@@ -52,8 +73,31 @@ export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCard
       profile: ecosystemRow?.profile ?? null,
       scoreBadges: getScoreBadges(result),
       healthScore: getHealthScore(result),
+      lenses: buildLensReadouts(result),
     }
   })
+}
+
+/**
+ * Registered lenses, in display order. Adding a new lens = one entry here
+ * plus the corresponding compute{Lens}Completeness function.
+ */
+function buildLensReadouts(result: AnalysisResult): LensReadout[] {
+  const lenses: LensReadout[] = []
+
+  const community = computeCommunityCompleteness(result)
+  if (community.ratio !== null) {
+    lenses.push({
+      key: 'community',
+      label: 'Community',
+      percentileLabel: community.percentile !== null ? `${community.percentile}th percentile` : '—',
+      detail: `${community.present.length} of ${community.present.length + community.missing.length} signals`,
+      tooltip: 'Community is a cross-cutting lens — count of community signals present. Does not feed the composite OSS Health Score.',
+      tone: community.tone,
+    })
+  }
+
+  return lenses
 }
 
 function formatMetric(value: number | 'unavailable') {

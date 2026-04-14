@@ -4,7 +4,6 @@ import { getActivityScore } from '@/lib/activity/score-config'
 import { getContributorsScore } from '@/lib/contributors/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
-import { computeCommunityCompleteness } from '@/lib/community/completeness'
 
 export interface ScoreBadgeDefinition extends ScoreBadgeProps {
   description: string
@@ -14,7 +13,7 @@ export interface ScoreBadgeDefinition extends ScoreBadgeProps {
 const PENDING_VALUE: ScoreValue = 'Not scored yet'
 const PENDING_TONE: ScoreTone = 'neutral'
 
-export const SCORE_CATEGORIES: ScoreCategory[] = ['Contributors', 'Activity', 'Responsiveness', 'Security', 'Community']
+export const SCORE_CATEGORIES: ScoreCategory[] = ['Contributors', 'Activity', 'Responsiveness', 'Security']
 
 export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
   {
@@ -41,12 +40,6 @@ export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
     tone: PENDING_TONE,
     description: 'Security posture via OpenSSF Scorecard and direct checks.',
   },
-  {
-    category: 'Community',
-    value: PENDING_VALUE,
-    tone: PENDING_TONE,
-    description: 'Community completeness readout. Derived count of community signals present; does not feed the composite OSS Health Score.',
-  },
 ]
 
 export function getDefaultScoreBadges(): ScoreBadgeDefinition[] {
@@ -66,7 +59,6 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
   const securityScore = result.securityResult !== 'unavailable'
     ? getSecurityScore(result.securityResult, result.stars)
     : null
-  const communityCompleteness = computeCommunityCompleteness(result)
   return badges.map((badge) =>
     badge.category === 'Activity'
       ? {
@@ -105,18 +97,6 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
           detail: securityScore.mode === 'scorecard' && typeof securityScore.scorecardScore === 'number'
             ? `${(securityScore.scorecardScore * 10).toFixed(1)}/10 Scorecard`
             : 'Direct checks only',
-        }
-      : badge.category === 'Community'
-      ? {
-          ...badge,
-          value: communityCompleteness.percentile !== null
-            ? communityCompleteness.percentile
-            : ('Insufficient verified public data' as const),
-          tone: communityCompleteness.tone,
-          description: 'Count of community signals present. Derived summary — does not feed the composite score.',
-          detail: communityCompleteness.ratio !== null
-            ? `${communityCompleteness.present.length} of ${communityCompleteness.present.length + communityCompleteness.missing.length} signals`
-            : undefined,
         }
       : badge,
   )

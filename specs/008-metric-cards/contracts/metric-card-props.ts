@@ -2,7 +2,7 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 
 export type ScoreValue = number | 'Not scored yet' | 'Insufficient verified public data'
 export type ScoreTone = 'success' | 'warning' | 'danger' | 'neutral'
-export type ScoreCategory = 'Activity' | 'Contributors' | 'Responsiveness' | 'Documentation' | 'Security' | 'Community'
+export type ScoreCategory = 'Activity' | 'Contributors' | 'Responsiveness' | 'Documentation' | 'Security'
 
 export interface ScoreBadgeProps {
   category: ScoreCategory

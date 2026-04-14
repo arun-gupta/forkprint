@@ -6,13 +6,12 @@ describe('score-config', () => {
   it('returns one default badge per CHAOSS category', () => {
     const badges = getDefaultScoreBadges()
 
-    expect(badges).toHaveLength(5)
+    expect(badges).toHaveLength(4)
     expect(badges.map((badge) => badge.category)).toEqual([
       'Contributors',
       'Activity',
       'Responsiveness',
       'Security',
-      'Community',
     ])
     expect(badges.every((badge) => badge.value === 'Not scored yet')).toBe(true)
   })

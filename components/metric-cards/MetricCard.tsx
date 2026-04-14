@@ -1,6 +1,6 @@
 'use client'
 
-import type { MetricCardViewModel } from '@/lib/metric-cards/view-model'
+import type { LensReadout, MetricCardViewModel } from '@/lib/metric-cards/view-model'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 import { scoreToneClass } from '@/lib/metric-cards/score-config'
 
@@ -51,9 +51,18 @@ export function MetricCard({ card }: MetricCardProps) {
         </div>
       ) : null}
       {scoreCells.length > 0 ? (
-        <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           {scoreCells.map((cell) => (
             <ScorecardCell key={cell.label} {...cell} />
+          ))}
+        </div>
+      ) : null}
+
+      {card.lenses.length > 0 ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400">Lenses</span>
+          {card.lenses.map((lens) => (
+            <LensPill key={lens.key} lens={lens} />
           ))}
         </div>
       ) : null}
@@ -86,6 +95,19 @@ interface ScorecardCellProps {
   detail?: string
   tooltip?: string
   toneClass: string
+}
+
+function LensPill({ lens }: { lens: LensReadout }) {
+  return (
+    <span
+      className={`inline-flex items-baseline gap-1.5 rounded-full border px-2 py-0.5 text-[10px] ${scoreToneClass(lens.tone)}`}
+      title={lens.tooltip}
+    >
+      <span className="font-semibold uppercase tracking-wide">{lens.label}</span>
+      <span className="font-medium">{lens.percentileLabel}</span>
+      <span className="opacity-60">· {lens.detail}</span>
+    </span>
+  )
 }
 
 function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass }: ScorecardCellProps) {
