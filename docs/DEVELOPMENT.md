@@ -106,7 +106,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 3 | P2-F03 | Inclusive naming | #107 | ✅ Done |
 | 4 | P2-F07 | Security scoring | #68 | ✅ Done |
 | 5 | P2-F04 | Governance & Transparency | #116 | ✅ Done |
-| 6 | P2-F05 | Community scoring | #70 | |
+| 6 | P2-F05 | Community scoring | #70 | ✅ Done |
 | 7 | P2-F06 | Foundation-aware recommendations | #119 | |
 | 8 | P2-F08 | Accessibility & Onboarding | #117 | |
 | 9 | P2-F09 | Release health scoring | #69 | |
