@@ -10,6 +10,8 @@ import { GOVERNANCE_DOC_FILES, LICENSING_IS_GOVERNANCE } from '@/lib/tags/govern
 
 interface DocumentationViewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
 const FILE_LABELS: Record<string, string> = {
@@ -200,9 +202,14 @@ function InclusiveNamingPane({ inclusiveNamingResult }: { inclusiveNamingResult:
   )
 }
 
-export function DocumentationView({ results }: DocumentationViewProps) {
-  const [activeTag, setActiveTag] = useState<string | null>(null)
-  const handleTagClick = (tag: string) => setActiveTag((prev) => (prev === tag ? null : tag))
+export function DocumentationView({ results, activeTag: externalTag, onTagChange }: DocumentationViewProps) {
+  const [localTag, setLocalTag] = useState<string | null>(null)
+  const activeTag = externalTag !== undefined ? externalTag : localTag
+  const handleTagClick = (tag: string) => {
+    const next = activeTag === tag ? null : tag
+    if (onTagChange) onTagChange(next)
+    else setLocalTag(next)
+  }
 
   return (
     <section aria-label="Documentation view" className="space-y-6">
@@ -239,7 +246,7 @@ export function DocumentationView({ results }: DocumentationViewProps) {
 
             {activeTag ? (
               <div className="mt-4">
-                <ActiveFilterBar tag={activeTag} onClear={() => setActiveTag(null)} />
+                <ActiveFilterBar tag={activeTag} onClear={() => handleTagClick(activeTag)} />
               </div>
             ) : null}
 

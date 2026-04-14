@@ -12,15 +12,22 @@ import { ContributionBarChart } from './ContributionBarChart'
 
 interface SustainabilityPaneProps {
   section: ContributorsSectionViewModel
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
-export function SustainabilityPane({ section }: SustainabilityPaneProps) {
+export function SustainabilityPane({ section, activeTag: externalTag, onTagChange }: SustainabilityPaneProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
   const [showExperimentalNames, setShowExperimentalNames] = useState(true)
   const [showExperimentalNumbers, setShowExperimentalNumbers] = useState(false)
-  const [activeTag, setActiveTag] = useState<string | null>(null)
-  const handleTagClick = (tag: string) => setActiveTag((prev) => (prev === tag ? null : tag))
+  const [localTag, setLocalTag] = useState<string | null>(null)
+  const activeTag = externalTag !== undefined ? externalTag : localTag
+  const handleTagClick = (tag: string) => {
+    const next = activeTag === tag ? null : tag
+    if (onTagChange) onTagChange(next)
+    else setLocalTag(next)
+  }
 
   return (
     <section aria-label="Sustainability pane" className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -64,7 +71,7 @@ export function SustainabilityPane({ section }: SustainabilityPaneProps) {
 
       {activeTag ? (
         <div className="mt-4">
-          <ActiveFilterBar tag={activeTag} onClear={() => setActiveTag(null)} />
+          <ActiveFilterBar tag={activeTag} onClear={() => handleTagClick(activeTag)} />
         </div>
       ) : null}
 

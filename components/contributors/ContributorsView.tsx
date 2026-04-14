@@ -8,9 +8,11 @@ import { SustainabilityPane } from './SustainabilityPane'
 
 interface ContributorsViewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
-export function ContributorsView({ results }: ContributorsViewProps) {
+export function ContributorsView({ results, activeTag, onTagChange }: ContributorsViewProps) {
   const [includeBots, setIncludeBots] = useState(false)
   const [windowDays, setWindowDays] = useState<ContributorWindowDays>(90)
   const sections = buildContributorsViewModels(results, { includeBots, windowDays })
@@ -58,7 +60,7 @@ export function ContributorsView({ results }: ContributorsViewProps) {
             includeBots={includeBots}
             onToggleIncludeBots={() => setIncludeBots((current) => !current)}
           />
-          <SustainabilityPane section={section} />
+          <SustainabilityPane section={section} activeTag={activeTag} onTagChange={onTagChange} />
         </article>
       ))}
     </section>

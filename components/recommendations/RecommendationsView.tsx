@@ -13,6 +13,8 @@ import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 
 interface RecommendationsViewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
 const BUCKET_COLORS: Record<string, string> = {
@@ -198,13 +200,16 @@ function SecurityRecommendationsGroup({
   )
 }
 
-export function RecommendationsView({ results }: RecommendationsViewProps) {
+export function RecommendationsView({ results, activeTag: externalTag, onTagChange }: RecommendationsViewProps) {
   const [collapsedBuckets, setCollapsedBuckets] = useState<Record<string, boolean>>({})
   const [categoryCollapsed, setCategoryCollapsed] = useState<Record<string, boolean>>({})
-  const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [localTag, setLocalTag] = useState<string | null>(null)
+  const activeTag = externalTag !== undefined ? externalTag : localTag
 
   const handleTagClick = (tag: string) => {
-    setActiveTag((prev) => (prev === tag ? null : tag))
+    const next = activeTag === tag ? null : tag
+    if (onTagChange) onTagChange(next)
+    else setLocalTag(next)
   }
 
   return (
@@ -302,7 +307,7 @@ export function RecommendationsView({ results }: RecommendationsViewProps) {
 
             {activeTag ? (
               <div className="mt-3">
-                <ActiveFilterBar tag={activeTag} onClear={() => setActiveTag(null)} />
+                <ActiveFilterBar tag={activeTag} onClear={() => handleTagClick(activeTag)} />
               </div>
             ) : null}
 

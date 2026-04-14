@@ -10,6 +10,8 @@ import { GOVERNANCE_SCORECARD_CHECKS, GOVERNANCE_DIRECT_CHECKS } from '@/lib/tag
 
 interface SecurityViewProps {
   results: AnalysisResult[]
+  activeTag?: string | null
+  onTagChange?: (tag: string | null) => void
 }
 
 const DIRECT_CHECK_LABELS: Record<string, string> = {
@@ -125,9 +127,14 @@ function SecuritySummary({
   )
 }
 
-export function SecurityView({ results }: SecurityViewProps) {
-  const [activeTag, setActiveTag] = useState<string | null>(null)
-  const handleTagClick = (tag: string) => setActiveTag((prev) => (prev === tag ? null : tag))
+export function SecurityView({ results, activeTag: externalTag, onTagChange }: SecurityViewProps) {
+  const [localTag, setLocalTag] = useState<string | null>(null)
+  const activeTag = externalTag !== undefined ? externalTag : localTag
+  const handleTagClick = (tag: string) => {
+    const next = activeTag === tag ? null : tag
+    if (onTagChange) onTagChange(next)
+    else setLocalTag(next)
+  }
 
   if (results.length === 0) return null
 
@@ -159,7 +166,7 @@ export function SecurityView({ results }: SecurityViewProps) {
 
             {activeTag ? (
               <div className="mt-4">
-                <ActiveFilterBar tag={activeTag} onClear={() => setActiveTag(null)} />
+                <ActiveFilterBar tag={activeTag} onClear={() => handleTagClick(activeTag)} />
               </div>
             ) : null}
 

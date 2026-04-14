@@ -40,6 +40,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
+  const [activeTag, setActiveTag] = useState<string | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -391,7 +392,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       overview={overviewContent}
       contributors={
         analysisResponse ? (
-          <ContributorsView results={analysisResponse.results} />
+          <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
@@ -418,7 +419,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       documentation={
         analysisResponse ? (
-          <DocumentationView results={analysisResponse.results} />
+          <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
@@ -427,7 +428,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       security={
         analysisResponse ? (
-          <SecurityView results={analysisResponse.results} />
+          <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
@@ -436,7 +437,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       recommendations={
         analysisResponse ? (
-          <RecommendationsView results={analysisResponse.results} />
+          <RecommendationsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
