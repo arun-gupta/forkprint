@@ -200,15 +200,15 @@ export function ResultsShell({
           <section aria-label="Result workspace" className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} matchCounts={domMatchCounts} />
-            <div className="mt-6" ref={containerRef}>
-              <div data-tab-content="overview" className={currentActiveTab === 'overview' ? undefined : 'hidden'}>{overview}</div>
-              <div data-tab-content="contributors" className={currentActiveTab === 'contributors' ? undefined : 'hidden'}>{contributors}</div>
-              <div data-tab-content="activity" className={currentActiveTab === 'activity' ? undefined : 'hidden'}>{activity}</div>
-              <div data-tab-content="responsiveness" className={currentActiveTab === 'responsiveness' ? undefined : 'hidden'}>{responsiveness}</div>
-              <div data-tab-content="documentation" className={currentActiveTab === 'documentation' ? undefined : 'hidden'}>{documentation}</div>
-              <div data-tab-content="security" className={currentActiveTab === 'security' ? undefined : 'hidden'}>{security}</div>
-              <div data-tab-content="recommendations" className={currentActiveTab === 'recommendations' ? undefined : 'hidden'}>{recommendations}</div>
-              <div data-tab-content="comparison" className={currentActiveTab === 'comparison' ? undefined : 'hidden'}>{comparison}</div>
+            <div className="mt-6 min-w-0" ref={containerRef}>
+              <div data-tab-content="overview" className={currentActiveTab !== 'overview' ? 'hidden' : 'min-w-0'}>{overview}</div>
+              <div data-tab-content="contributors" className={currentActiveTab !== 'contributors' ? 'hidden' : 'min-w-0'}>{contributors}</div>
+              <div data-tab-content="activity" className={currentActiveTab !== 'activity' ? 'hidden' : 'min-w-0'}>{activity}</div>
+              <div data-tab-content="responsiveness" className={currentActiveTab !== 'responsiveness' ? 'hidden' : 'min-w-0'}>{responsiveness}</div>
+              <div data-tab-content="documentation" className={currentActiveTab !== 'documentation' ? 'hidden' : 'min-w-0'}>{documentation}</div>
+              <div data-tab-content="security" className={currentActiveTab !== 'security' ? 'hidden' : 'min-w-0'}>{security}</div>
+              <div data-tab-content="recommendations" className={currentActiveTab !== 'recommendations' ? 'hidden' : 'min-w-0'}>{recommendations}</div>
+              <div data-tab-content="comparison" className={currentActiveTab !== 'comparison' ? 'hidden' : 'min-w-0'}>{comparison}</div>
             </div>
           </section>
         </section>
