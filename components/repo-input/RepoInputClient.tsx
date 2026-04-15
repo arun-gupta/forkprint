@@ -16,6 +16,7 @@ import { ExportControls } from '@/components/export/ExportControls'
 import { ReportSearchBar } from '@/components/search/ReportSearchBar'
 import { SearchProvider } from '@/components/search/SearchContext'
 import type { TabMatchCounts } from '@/lib/search/types'
+import { computeTabTagCounts } from '@/lib/tags/tab-counts'
 import { useAuth } from '@/components/auth/AuthContext'
 import type { AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
@@ -379,6 +380,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
       searchQuery={debouncedQuery}
       onDomMatchCounts={handleDomMatchCounts}
+      tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
       overview={overviewContent}
       contributors={
         analysisResponse ? (

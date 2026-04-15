@@ -27,6 +27,7 @@ interface ResultsShellProps {
   onReset?: () => void
   searchQuery?: string
   onDomMatchCounts?: (counts: { domMatchCounts: TabMatchCounts; domTotalMatches: number; domMatchedTabCount: number }) => void
+  tagMatchCounts?: TabMatchCounts
 }
 
 export function ResultsShell({
@@ -46,6 +47,7 @@ export function ResultsShell({
   onReset,
   searchQuery = '',
   onDomMatchCounts,
+  tagMatchCounts,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>(initialActiveTab)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -199,7 +201,12 @@ export function ResultsShell({
 
           <section aria-label="Result workspace" className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
-            <ResultsTabs tabs={tabs} activeTab={currentActiveTab} onChange={setActiveTab} matchCounts={domMatchCounts} />
+            <ResultsTabs
+              tabs={tabs}
+              activeTab={currentActiveTab}
+              onChange={setActiveTab}
+              matchCounts={searchQuery.trim() ? domMatchCounts : tagMatchCounts}
+            />
             <div className="mt-6" ref={containerRef}>
               <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>{overview}</div>
               <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
