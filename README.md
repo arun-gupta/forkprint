@@ -21,6 +21,16 @@ RepoPulse analyzes any public GitHub repository and produces a composite **OSS H
 
 > **Try it now** — paste any GitHub repo URL into [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app) and get a health report in seconds.
 
+## Who it's for
+
+RepoPulse is built for **community-oriented projects** — multi-contributor repositories with users, maintainers, and a growth story. The primary audience is:
+
+- Foundation-track projects (CNCF, Apache, Linux Foundation, etc.) preparing for stage reviews
+- OSPOs and program managers evaluating OSS health across a portfolio
+- Maintainers of projects with 3+ active contributors looking to close specific gaps
+
+**Not the right fit for** solo-maintainer projects or 1–2 person dependencies. Those projects will see low Contributors and Responsiveness scores by design — not a judgment, just a poor match between the tool's signals and the project's shape. A dedicated solo-project profile with re-weighted scoring (Activity / Security / Documentation emphasized) is planned in [#214](https://github.com/arun-gupta/repo-pulse/issues/214).
+
 ## Key Features
 
 | | Feature | Description |

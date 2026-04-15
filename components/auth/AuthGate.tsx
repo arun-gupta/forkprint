@@ -89,6 +89,21 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             <span className="text-slate-300">|</span>
             <span>Export as JSON or Markdown</span>
           </div>
+
+          <p className="text-center text-xs italic text-slate-500">
+            Built for community-oriented projects — multi-contributor and foundation-track.
+            Solo-maintainer projects will see sparse scores on Contributors and Responsiveness; a
+            dedicated solo-project profile is{' '}
+            <a
+              href="https://github.com/arun-gupta/repo-pulse/issues/214"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-slate-700"
+            >
+              planned (#214)
+            </a>
+            .
+          </p>
         </div>
 
         <SignInButton />
