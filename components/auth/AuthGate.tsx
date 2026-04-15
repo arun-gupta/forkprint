@@ -93,16 +93,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <p className="text-center text-xs italic text-slate-500">
             Built for community-oriented projects — multi-contributor and foundation-track.
             Solo-maintainer projects are auto-detected and scored on Activity, Security, and
-            Documentation instead of Contributors and Responsiveness (
-            <a
-              href="https://github.com/arun-gupta/repo-pulse/issues/214"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-slate-700"
-            >
-              #214
-            </a>
-            ).
+            Documentation instead of Contributors and Responsiveness.
           </p>
         </div>
 
