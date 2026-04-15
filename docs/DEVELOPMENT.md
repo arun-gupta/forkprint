@@ -93,6 +93,33 @@ npm run lint
 npm run build
 ```
 
+> **Note**: If you have `DEV_GITHUB_PAT` in `.env.local` (see multi-worktree section below), run `DEV_GITHUB_PAT= npm run build` — the build asserts this variable is not present in `NODE_ENV=production` contexts, and `next build` forces production.
+
+---
+
+## Multi-worktree local development (`DEV_GITHUB_PAT`)
+
+The GitHub OAuth App registers a single callback URL (`http://localhost:3000/api/auth/callback`). Running multiple worktrees concurrently means only the worktree on port 3000 can complete OAuth.
+
+To work around this in `next dev` (only — never production), set a GitHub PAT in `.env.local`:
+
+```bash
+# .env.local
+DEV_GITHUB_PAT=ghp_your_personal_access_token
+```
+
+Required scope: `public_repo` (read only).
+
+When set, clicking "Sign in with GitHub" short-circuits the OAuth round-trip and grants a session using the PAT directly. Unset the variable (or leave it blank) to restore the normal OAuth flow.
+
+Safety layers:
+
+- Gated by `NODE_ENV === 'development'` — ignored under `next build` / `next start` / deployed contexts.
+- Boot assertion: if `NODE_ENV=production` and `DEV_GITHUB_PAT` is set, the app throws at startup. Vercel deploys with this var set will fail to boot.
+- `.env.local` is gitignored; no secret enters the repo.
+
+See issue #207 for the full rationale and constitution discussion.
+
 ---
 
 ## Phase 2 feature order

@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
+      // Next.js "server-only" sentinel is a runtime no-op but trips
+      // vitest's module resolver. Alias to an empty shim so server-side
+      // modules import cleanly in tests.
+      'server-only': path.resolve(__dirname, './vitest.shims/server-only.ts'),
     },
   },
   test: {
