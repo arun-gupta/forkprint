@@ -38,7 +38,7 @@ Review the task list before implementation begins.
 
 > `/speckit.implement` `[P1-F01]`
 
-Each feature must include a manual testing checklist at `specs/NNN-feature-name/checklists/manual-testing.md`. Create it during the feature workflow if it does not already exist, and complete/sign it off before opening the PR.
+Implement the feature per the generated tasks.
 
 ### Step 5 — PR
 
@@ -49,7 +49,7 @@ Before opening a PR, verify the Definition of Done (constitution Section XII):
 - [ ] No TODOs, dead code, `console.log`, or untyped values remain
 - [ ] All spec documents for the feature are current
 - [ ] `docs/DEVELOPMENT.md` reflects the feature's completed status in the implementation order table (`✅ Done`)
-- [ ] Manual testing checklist completed and signed off
+- [ ] PR body includes a `## Test plan` section; all checkboxes are checked before merge
 - [ ] README updated for any user-facing or setup changes
 - [ ] Constitution compliance verified — no rule violated
 
@@ -249,7 +249,7 @@ There is no central signal registry. When adding a new signal to an existing len
 
 - `.specify/` is managed by SpecKit. Do not manually edit files inside it outside of the workflows above.
 - Feature specs live in `specs/NNN-feature-name/`.
-- Every feature must have `specs/NNN-feature-name/checklists/manual-testing.md`.
+- Manual testing signoff lives in the PR body's `## Test plan` section — not in an in-repo checklist file.
 - Constitution: `.specify/memory/constitution.md`
 - Product definition: `docs/PRODUCT.md`
 - Deployment guide: `docs/DEPLOYMENT.md`

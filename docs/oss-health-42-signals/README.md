@@ -355,7 +355,7 @@ Percentile anchors (p25, p50, p75, p90) will be refreshed quarterly. This means 
 
 **AI-assisted development.** The project was built with **Claude Code** and **OpenAI Codex** as AI coding assistants, with **VS Code** for code review. Every scoring algorithm, UI component, calibration pipeline, and test was written through human–AI collaboration — proving that AI-assisted development can produce production-grade open source tooling.
 
-**Specification-Driven Development (SpecKit).** Non-trivial features follow a [SpecKit](https://github.com/github/spec-kit) loop: `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement`. The spec captures *what* and *why*; SpecKit generates TypeScript contracts (interfaces, view props, data-flow shapes) as the *how*. Each feature lands in `specs/NNN-feature-name/` with a manual-testing checklist that has to be signed off before the PR opens.
+**Specification-Driven Development (SpecKit).** Non-trivial features follow a [SpecKit](https://github.com/github/spec-kit) loop: `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement`. The spec captures *what* and *why*; SpecKit generates TypeScript contracts (interfaces, view props, data-flow shapes) as the *how*. Each feature lands in `specs/NNN-feature-name/`, and manual-testing signoff happens in the PR body's `## Test plan` section before merge.
 
 **Governance layer.** Two in-repo documents keep intent and execution aligned:
 

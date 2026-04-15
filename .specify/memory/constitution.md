@@ -1,7 +1,9 @@
 # RepoPulse Constitution
 
-**Version**: 1.1 — Amended 2026-04-06
-**Amendment**: Section III rules 4 and 6 updated to reflect OAuth-only authentication (P1-F14). PAT input and server-side `GITHUB_TOKEN` removed. Rationale: GitHub OAuth distributes rate limit consumption across individual user quotas, enabling the app to scale to any number of concurrent users without a shared API quota bottleneck. Storing the OAuth token in-memory only (never in localStorage or cookies) eliminates the XSS token-theft risk present in the previous PAT-based localStorage flow, improving security while preserving the stateless Phase 1 architecture. Signed off by: arun-gupta.
+**Version**: 1.2 — Amended 2026-04-15
+**Amendment**: Sections XII and XIII updated to drop the per-feature `specs/NNN-feature-name/checklists/manual-testing.md` file. The PR body's `## Test plan` section is now the single source of truth for manual testing signoff. Rationale: under the one-Claude-per-issue ephemeral-worktree workflow, the in-repo checklist file duplicated the PR Test Plan, drifted from it, and added ceremony without adding coverage. GitHub preserves PR bodies indefinitely and they are queryable via `gh pr view --json body`, so the test record remains durable. Signed off by: arun-gupta.
+
+**Previous amendment (v1.1, 2026-04-06)**: Section III rules 4 and 6 updated to reflect OAuth-only authentication (P1-F14). PAT input and server-side `GITHUB_TOKEN` removed. Rationale: GitHub OAuth distributes rate limit consumption across individual user quotas, enabling the app to scale to any number of concurrent users without a shared API quota bottleneck. Storing the OAuth token in-memory only (never in localStorage or cookies) eliminates the XSS token-theft risk present in the previous PAT-based localStorage flow, improving security while preserving the stateless Phase 1 architecture. Signed off by: arun-gupta.
 
 **Single authoritative source of all project rules.**
 Every spec, plan, task, and line of code must comply. No exceptions.
@@ -175,8 +177,7 @@ A feature is complete only when all of the following are true:
 - [ ] No TODOs, dead code, `console.log`, or untyped values remain
 - [ ] All spec documents for the feature are current
 - [ ] `docs/DEVELOPMENT.md` reflects the feature's completed status in the implementation order
-- [ ] `specs/NNN-feature-name/checklists/manual-testing.md` exists for the feature
-- [ ] Manual testing checklist completed and signed off
+- [ ] PR Test Plan completed and signed off before merge
 - [ ] README updated for any user-facing or setup changes
 - [ ] Constitution compliance verified — no rule violated
 
@@ -186,13 +187,12 @@ A feature is complete only when all of the following are true:
 
 1. All work happens on feature branches. No direct commits to `main`.
 2. All tests must pass and linting must be clean before a PR is merged.
-3. Every feature must maintain `specs/NNN-feature-name/checklists/manual-testing.md`.
-4. A manual testing checklist must be completed and signed off before submitting a PR.
-5. README must be updated to reflect any user-facing or setup changes before submitting a PR.
-6. `docs/DEVELOPMENT.md` must be updated when a feature is completed so the implementation order reflects current status.
-7. A PR must be opened and merged before starting the next feature.
-8. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
-9. README is updated when a completed feature changes the user-facing behavior or setup steps.
+3. Every PR must include a `## Test plan` section in its body — this is the single source of truth for manual testing signoff. All checkboxes must be checked before merge.
+4. README must be updated to reflect any user-facing or setup changes before submitting a PR.
+5. `docs/DEVELOPMENT.md` must be updated when a feature is completed so the implementation order reflects current status.
+6. A PR must be opened and merged before starting the next feature.
+7. Credentials go in `.env.local` only — never committed. `.env.example` is committed with placeholder values.
+8. README is updated when a completed feature changes the user-facing behavior or setup steps.
 
 ---
 
