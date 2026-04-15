@@ -4,6 +4,7 @@ import { getActivityScore } from '@/lib/activity/score-config'
 import { getContributorsScore } from '@/lib/contributors/score-config'
 import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
+import { getDocumentationScore } from '@/lib/documentation/score-config'
 
 export interface ScoreBadgeDefinition extends ScoreBadgeProps {
   description: string
@@ -13,7 +14,7 @@ export interface ScoreBadgeDefinition extends ScoreBadgeProps {
 const PENDING_VALUE: ScoreValue = 'Not scored yet'
 const PENDING_TONE: ScoreTone = 'neutral'
 
-export const SCORE_CATEGORIES: ScoreCategory[] = ['Contributors', 'Activity', 'Responsiveness', 'Security']
+export const SCORE_CATEGORIES: ScoreCategory[] = ['Contributors', 'Activity', 'Responsiveness', 'Documentation', 'Security']
 
 export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
   {
@@ -33,6 +34,12 @@ export const DEFAULT_SCORE_BADGES: ScoreBadgeDefinition[] = [
     value: PENDING_VALUE,
     tone: PENDING_TONE,
     description: 'Score will populate when responsiveness scoring lands in P1-F10.',
+  },
+  {
+    category: 'Documentation',
+    value: PENDING_VALUE,
+    tone: PENDING_TONE,
+    description: 'Documentation completeness — file presence, README quality, licensing, and inclusive naming.',
   },
   {
     category: 'Security',
@@ -58,6 +65,9 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
   const responsivenessScore = getResponsivenessScore(result)
   const securityScore = result.securityResult !== 'unavailable'
     ? getSecurityScore(result.securityResult, result.stars)
+    : null
+  const documentationScore = result.documentationResult !== 'unavailable'
+    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
     : null
   return badges.map((badge) =>
     badge.category === 'Activity'
@@ -86,6 +96,14 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
           description: responsivenessScore.description,
           detail: getTopFactorDetail(responsivenessScore.weightedCategories),
         }
+      : badge.category === 'Documentation' && documentationScore
+      ? {
+          ...badge,
+          value: documentationScore.value,
+          tone: documentationScore.tone,
+          description: badge.description,
+          detail: getTopDocumentationDetail(documentationScore),
+        }
       : badge.category === 'Security' && securityScore
       ? {
           ...badge,
@@ -100,6 +118,23 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
         }
       : badge,
   )
+}
+
+function getTopDocumentationDetail(score: {
+  filePresenceScore: number
+  readmeQualityScore: number
+  licensingScore: number
+  inclusiveNamingScore: number
+}): string | undefined {
+  const subs: Array<{ label: string; value: number }> = [
+    { label: 'Files', value: score.filePresenceScore },
+    { label: 'README', value: score.readmeQualityScore },
+    { label: 'Licensing', value: score.licensingScore },
+    { label: 'Inclusive naming', value: score.inclusiveNamingScore },
+  ].filter((s) => s.value > 0)
+  if (subs.length === 0) return undefined
+  const top = subs.reduce((best, s) => (s.value > best.value ? s : best))
+  return `${top.label} strongest`
 }
 
 function getTopFactorDetail(factors: Array<{ label: string; percentile?: number }>): string | undefined {

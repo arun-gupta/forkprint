@@ -20,6 +20,8 @@ describe('MetricCard', () => {
     expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
     expect(screen.getByText(/^Responsiveness$/)).toBeInTheDocument()
     expect(screen.getByText(/^Contributors$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Documentation$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Security$/)).toBeInTheDocument()
 
     // Supporting details inline
     expect(screen.getByText(/244,295 stars/)).toBeInTheDocument()
@@ -90,6 +92,7 @@ describe('MetricCard', () => {
       <button role="tab" data-tab-id="contributors"></button>
       <button role="tab" data-tab-id="activity"></button>
       <button role="tab" data-tab-id="responsiveness"></button>
+      <button role="tab" data-tab-id="documentation"></button>
       <button role="tab" data-tab-id="security"></button>
     `
     document.body.appendChild(tabs)
@@ -101,13 +104,13 @@ describe('MetricCard', () => {
     try {
       render(<MetricCard card={card} />)
 
-      for (const dim of ['Activity', 'Responsiveness', 'Security', 'Contributors'] as const) {
+      for (const dim of ['Activity', 'Responsiveness', 'Documentation', 'Security', 'Contributors'] as const) {
         const btn = screen.getByRole('button', { name: `Open ${dim} tab` })
         expect(btn.tagName).toBe('BUTTON')
         fireEvent.click(btn)
       }
 
-      expect(clicks).toEqual(['activity', 'responsiveness', 'security', 'contributors'])
+      expect(clicks).toEqual(['activity', 'responsiveness', 'documentation', 'security', 'contributors'])
     } finally {
       tabs.remove()
     }
