@@ -35,14 +35,12 @@ export function DiscussionsCard({ result, activeTag, onTagClick, windowDays = 90
   const enabled = result.hasDiscussionsEnabled === true
   const computed = enabled ? countDiscussionsInWindow(result, windowDays) : 'unavailable'
   const count = typeof computed === 'number' ? computed : null
-  // GraphQL caps `commDiscussionsRecent` at 100 nodes — when the preserved
-  // raw array is saturated we cannot distinguish "exactly 100" from ">100",
-  // so annotate as `100+` rather than implying an exact count (issue #194).
-  const rawLength = Array.isArray(result.discussionsRecentCreatedAt)
-    ? result.discussionsRecentCreatedAt.length
-    : 0
-  const saturated = count !== null && count === 100 && rawLength >= 100
-  const countLabel = saturated ? '100+' : count !== null ? String(count) : ''
+  // The analyzer paginates discussions up to `MAX_DISCUSSION_PAGES` (2,000
+  // within-year entries). Beyond that it signals `discussionsRecentTruncated`
+  // so we can annotate the count as `N+` rather than imply an exact total —
+  // see issue #194.
+  const truncated = result.discussionsRecentTruncated === true
+  const countLabel = count !== null ? (truncated ? `${count}+` : String(count)) : ''
 
   let statusLine: string
   if (!enabled) {

@@ -25,6 +25,7 @@ describe('extractCommunitySignals', () => {
       discussionsCountWindow: 'unavailable',
       discussionsWindowDays: 'unavailable',
       discussionsRecentCreatedAt: 'unavailable',
+      discussionsRecentTruncated: false,
     })
   })
 

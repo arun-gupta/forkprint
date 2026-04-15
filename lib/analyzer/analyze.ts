@@ -18,7 +18,7 @@ import type {
 import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
-import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
+import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_DISCUSSIONS_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
 import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
 import type { SecurityResult, DirectSecurityCheck } from '@/lib/security/analysis-result'
@@ -85,7 +85,11 @@ interface RepoOverviewResponse {
     commPrTemplateRoot?: { oid: string } | null
     commPrTemplateGithub?: { oid: string } | null
     commPrTemplateDocs?: { oid: string } | null
-    commDiscussionsRecent?: { nodes: Array<{ createdAt: string }> } | null
+    commDiscussionsRecent?: {
+      totalCount?: number
+      pageInfo?: { hasNextPage: boolean; endCursor: string | null }
+      nodes: Array<{ createdAt: string }>
+    } | null
     commGovernanceRoot?: { oid: string } | null
     commGovernanceGithub?: { oid: string } | null
     commGovernanceDocs?: { oid: string } | null
@@ -489,6 +493,24 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       })
       latestRateLimit = commitHistory.rateLimit ?? latestRateLimit
 
+      // Paginate discussions (if enabled) so the Activity-tab window
+       // selector can compute real per-window counts rather than saturating
+       // at the 100-node overview cap — issue #194.
+       let discussionTimestamps: string[] | undefined
+       let discussionsTruncated = false
+       if (overview.data.repository?.hasDiscussionsEnabled === true) {
+         console.log(`[analyzer] ${repo} — paginating discussions`)
+         const discussionPagination = await collectRecentDiscussionTimestamps({
+           token: input.token,
+           owner: owner!,
+           name: name!,
+           initialConnection: overview.data.repository?.commDiscussionsRecent ?? null,
+         })
+         discussionTimestamps = discussionPagination.createdAt
+         discussionsTruncated = discussionPagination.truncated
+         latestRateLimit = discussionPagination.rateLimit ?? latestRateLimit
+       }
+
       const contributorMetricsByWindow = buildContributorMetricsByWindow(commitHistory.nodes, now)
       const activityMetricsByWindow = buildActivityMetricsByWindow(
         activity.data,
@@ -510,6 +532,8 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         maintainerCount.data,
         experimentalOrgAttribution.data,
         commitHistory.nodes,
+        discussionTimestamps,
+        discussionsTruncated,
       )
 
       // Populate Scorecard data and branch protection (fetched in parallel earlier)
@@ -576,6 +600,8 @@ function buildAnalysisResult(
   maintainerCount: number | Unavailable,
   experimentalMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
   recentCommitNodes: CommitNode[],
+  discussionTimestamps?: string[],
+  discussionsTruncated?: boolean,
 ): AnalysisResult {
   const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
   const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
@@ -725,7 +751,7 @@ function buildAnalysisResult(
     issueCloseTimestamps,
     prMergeTimestamps,
     securityResult: extractSecurityResult(overview.repository),
-    ...extractCommunitySignals(overview.repository),
+    ...extractCommunitySignals(overview.repository, 90, discussionTimestamps, discussionsTruncated),
     missingFields,
   }
 }
@@ -827,6 +853,7 @@ interface CommunitySignalSet {
   discussionsCountWindow: number | Unavailable
   discussionsWindowDays: ActivityWindowDays | Unavailable
   discussionsRecentCreatedAt: string[] | Unavailable
+  discussionsRecentTruncated: boolean
 }
 
 /**
@@ -850,6 +877,8 @@ interface CommunitySignalSet {
 export function extractCommunitySignals(
   repo: RepoOverviewResponse['repository'],
   windowDays: ActivityWindowDays = 90,
+  discussionTimestamps?: string[],
+  discussionsTruncated?: boolean,
 ): CommunitySignalSet {
   if (!repo) {
     return {
@@ -860,6 +889,7 @@ export function extractCommunitySignals(
       discussionsCountWindow: 'unavailable',
       discussionsWindowDays: 'unavailable',
       discussionsRecentCreatedAt: 'unavailable',
+      discussionsRecentTruncated: false,
     }
   }
 
@@ -889,12 +919,18 @@ export function extractCommunitySignals(
   let discussionsCountWindow: number | Unavailable = 'unavailable'
   let discussionsWindowDays: ActivityWindowDays | Unavailable = 'unavailable'
   let discussionsRecentCreatedAt: string[] | Unavailable = 'unavailable'
+  let discussionsRecentTruncated = false
   if (hasDiscussionsEnabled === true) {
-    const nodes = repo.commDiscussionsRecent?.nodes ?? []
-    discussionsRecentCreatedAt = nodes.map((node) => node.createdAt)
+    // Prefer the fully-paginated list when supplied by the analyzer; fall
+    // back to the first 100 nodes from the overview payload for test code
+    // paths (community-signals.test.ts) that don't stub pagination.
+    const timestamps =
+      discussionTimestamps ?? (repo.commDiscussionsRecent?.nodes ?? []).map((n) => n.createdAt)
+    discussionsRecentCreatedAt = timestamps
+    discussionsRecentTruncated = discussionsTruncated ?? false
     const sinceMs = Date.now() - windowDays * 24 * 60 * 60 * 1000
-    discussionsCountWindow = nodes.filter((node) => {
-      const created = Date.parse(node.createdAt)
+    discussionsCountWindow = timestamps.filter((iso) => {
+      const created = Date.parse(iso)
       return Number.isFinite(created) && created >= sinceMs
     }).length
     discussionsWindowDays = windowDays
@@ -908,6 +944,7 @@ export function extractCommunitySignals(
     discussionsCountWindow,
     discussionsWindowDays,
     discussionsRecentCreatedAt,
+    discussionsRecentTruncated,
   }
 }
 
@@ -1669,6 +1706,72 @@ async function buildExperimentalOrganizationCommitCountsByWindow(
     data: buildExperimentalMetricsByWindow(recentCommitNodes, organizationsByLogin, now),
     rateLimit,
   }
+}
+
+// Cap discussions pagination. Discussions pages are small and cheap, but
+// we still bound worst-case cost for hyperactive forums (e.g. vercel/next.js
+// which has thousands). 20 pages × 100 = 2,000 within-year discussions —
+// comfortably above the saturation point while preventing runaway cost.
+const MAX_DISCUSSION_PAGES = 20
+const DISCUSSION_WINDOW_CAP_DAYS = 365
+
+async function collectRecentDiscussionTimestamps({
+  token,
+  owner,
+  name,
+  initialConnection,
+}: {
+  token: string
+  owner: string
+  name: string
+  initialConnection: NonNullable<RepoOverviewResponse['repository']>['commDiscussionsRecent'] | null | undefined
+}): Promise<{ createdAt: string[]; truncated: boolean; rateLimit: RateLimitState | null }> {
+  if (!initialConnection) {
+    return { createdAt: [], truncated: false, rateLimit: null }
+  }
+
+  const createdAt: string[] = initialConnection.nodes.map((n) => n.createdAt)
+  const cutoffMs = Date.now() - DISCUSSION_WINDOW_CAP_DAYS * 24 * 60 * 60 * 1000
+  let rateLimit: RateLimitState | null = null
+  let hasNextPage = initialConnection.pageInfo?.hasNextPage ?? false
+  let cursor = initialConnection.pageInfo?.endCursor ?? null
+
+  // Short-circuit: if the first page already crossed the 365d cutoff,
+  // everything we care about is in hand.
+  const crossedCutoff = (nodes: string[]): boolean => {
+    if (nodes.length === 0) return false
+    const oldestMs = Date.parse(nodes[nodes.length - 1]!)
+    return Number.isFinite(oldestMs) && oldestMs < cutoffMs
+  }
+  if (crossedCutoff(createdAt)) {
+    return { createdAt, truncated: false, rateLimit }
+  }
+
+  let pagesFetched = 1 // the initial overview page counts as page 1
+  while (
+    hasNextPage &&
+    cursor &&
+    pagesFetched < MAX_DISCUSSION_PAGES
+  ) {
+    const response = await queryGitHubGraphQL<{
+      repository: { discussions: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: Array<{ createdAt: string }> } } | null
+    }>(token, REPO_DISCUSSIONS_PAGE_QUERY, { owner, name, after: cursor })
+    rateLimit = response.rateLimit ?? rateLimit
+    const connection = response.data.repository?.discussions
+    if (!connection) break
+    const pageTimestamps = connection.nodes.map((n) => n.createdAt)
+    createdAt.push(...pageTimestamps)
+    pagesFetched += 1
+    if (crossedCutoff(pageTimestamps)) {
+      return { createdAt, truncated: false, rateLimit }
+    }
+    hasNextPage = connection.pageInfo.hasNextPage
+    cursor = connection.pageInfo.endCursor
+  }
+
+  // Truncated only when we hit the page cap while still inside the window.
+  const truncated = hasNextPage && pagesFetched >= MAX_DISCUSSION_PAGES
+  return { createdAt, truncated, rateLimit }
 }
 
 // Cap commit history pagination to avoid extremely long analysis times
