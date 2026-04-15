@@ -175,6 +175,12 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       ...(typesOfContributions ? [['Types of contributions', typesOfContributions] as [string, string]] : []),
     ]),
     '',
+    '**Score factors**',
+    '',
+    '| Factor | Weight | Percentile |',
+    '| --- | --- | --- |',
+    ...contributorsScore.weightedFactors.map((f) => `| ${f.label} | ${f.weightLabel} | ${f.percentile !== undefined ? `${f.percentile}` : '—'} |`),
+    '',
   )
 
   if (contributors?.experimentalMetrics.length) {

@@ -40,6 +40,11 @@ export type ComparisonAttributeId =
   | 'documentation-readme-sections'
   | 'fork-rate-health'
   | 'repeat-contributor-ratio-health'
+  | 'contributors-factor-concentration'
+  | 'contributors-factor-maintainer-depth'
+  | 'contributors-factor-repeat-ratio'
+  | 'contributors-factor-new-inflow'
+  | 'contributors-factor-breadth'
 
 export type ComparisonDirection = 'higher-is-better' | 'lower-is-better' | 'neutral'
 export type ComparisonValueType = 'number' | 'percentage' | 'duration' | 'label'
@@ -83,6 +88,37 @@ function formatDurationHours(value: number | Unavailable) {
 
 function getContributorWindowMetrics(result: AnalysisResult) {
   return result.contributorMetricsByWindow?.[90]
+}
+
+function contributorsFactorRows(): ComparisonAttributeDefinition[] {
+  const factors: Array<{
+    id: ComparisonAttributeId
+    label: string
+    factorLabel: string
+    helpText: string
+  }> = [
+    { id: 'contributors-factor-concentration', label: 'Concentration factor', factorLabel: 'Contributor concentration', helpText: 'Contributor-concentration sub-factor percentile (40% weight).' },
+    { id: 'contributors-factor-maintainer-depth', label: 'Maintainer depth factor', factorLabel: 'Maintainer depth', helpText: 'Maintainer-depth sub-factor percentile (15% weight).' },
+    { id: 'contributors-factor-repeat-ratio', label: 'Repeat-contributor factor', factorLabel: 'Repeat-contributor ratio', helpText: 'Repeat-contributor sub-factor percentile (20% weight).' },
+    { id: 'contributors-factor-new-inflow', label: 'New-contributor inflow factor', factorLabel: 'New-contributor inflow', helpText: 'New-contributor-inflow sub-factor percentile (10% weight).' },
+    { id: 'contributors-factor-breadth', label: 'Contribution breadth factor', factorLabel: 'Contribution breadth', helpText: 'Contribution-breadth sub-factor percentile (15% weight).' },
+  ]
+  return factors.map(({ id, label, factorLabel, helpText }) => ({
+    id,
+    sectionId: 'contributors' as const,
+    label,
+    helpText,
+    direction: 'higher-is-better' as const,
+    valueType: 'number' as const,
+    getValue: (result: AnalysisResult) => {
+      const factor = getContributorsScore(result).weightedFactors.find((f) => f.label === factorLabel)
+      return factor?.percentile ?? 'unavailable'
+    },
+    formatValue: (value: number | Unavailable) => {
+      if (value === 'unavailable') return '—'
+      return formatPercentileLabel(value as number)
+    },
+  }))
 }
 
 function getActivityWindowMetrics(result: AnalysisResult) {
@@ -203,6 +239,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
           return formatPercentileLabel(value as number)
         },
       },
+      ...contributorsFactorRows(),
       {
         id: 'repeat-contributor-ratio',
         sectionId: 'contributors',
