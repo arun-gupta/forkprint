@@ -221,6 +221,8 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
+- [ ] T108a [P] Dark-mode sweep: every component under `components/org-summary/` (OrgSummaryView, RunStatusHeader, PerRepoStatusList, ProgressIndicator, PreRunWarningDialog, RateLimitPausePanel, ConsolidatedMissingDataPanel, EmptyState, and all 18 `panels/*`) MUST use Tailwind `dark:` variants for every non-transparent color utility (backgrounds, text, borders, ring, shadow) so the view renders correctly under the existing `ThemeProvider` (merged to main via PR #88, #239). Cross-check by flipping `ThemeToggle` in the dev server and confirming no panel has low-contrast or hardcoded light-only styling.
+- [ ] T108b [P] Add a dark-mode RTL test at `components/org-summary/OrgSummaryView.dark-mode.test.tsx` that renders `OrgSummaryView` inside `<ThemeProvider>` with `choice='dark'` and asserts at least one text element uses a `dark:text-*` utility. Acts as a gate against future regressions when new panels are added.
 - [ ] T109 [P] Add Playwright happy-path E2E at `tests/e2e/org-aggregation.spec.ts`: sign in (DEV_GITHUB_PAT path), open a small public org's inventory, click "Analyze all active repos", confirm dialog (or skip if below threshold), wait for completion, assert OrgSummary panels present
 - [ ] T110 [P] Update `docs/DEVELOPMENT.md` Phase 1 implementation order table — append a row for `231-org-aggregation` marked `✅ Done`; add a short note under "Adding a new scoring signal" if any new signal touchpoints were added (none expected)
 - [ ] T111 [P] Update `README.md` with a short "Analyzing a whole org" subsection describing the "Analyze all active repos" flow and where to find the Org Summary
@@ -253,4 +255,4 @@ US1 alone is shippable as an MVP that delivers the contributor-diversity story. 
 
 ## Total task count
 
-114 tasks · US1: 15 · US2: 59 · US3: 20 · Setup: 5 · Foundational: 9 · Polish: 6
+116 tasks · US1: 15 · US2: 59 · US3: 20 · Setup: 5 · Foundational: 9 · Polish: 8 (incl. dark-mode sweep T108a/T108b)
