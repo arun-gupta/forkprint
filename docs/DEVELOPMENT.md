@@ -124,6 +124,8 @@ See issue #207 for the full rationale and constitution discussion.
 
 `scripts/claude-worktree.sh` automates the parallel-worktree workflow: it provisions an isolated git worktree per issue, picks a free dev-server port, copies `.env.local` (so `DEV_GITHUB_PAT` flows through), starts `next dev`, and launches Claude with a kickoff prompt pointing at the issue.
 
+Run `scripts/claude-worktree.sh --help` for the canonical usage reference.
+
 **Spawn:**
 
 ```bash
