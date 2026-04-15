@@ -24,6 +24,8 @@ describe('extractCommunitySignals', () => {
       hasDiscussionsEnabled: 'unavailable',
       discussionsCountWindow: 'unavailable',
       discussionsWindowDays: 'unavailable',
+      discussionsRecentCreatedAt: 'unavailable',
+      discussionsRecentTruncated: false,
     })
   })
 
@@ -147,6 +149,38 @@ describe('extractCommunitySignals', () => {
       }), 30)
       expect(result30.discussionsCountWindow).toBe(1)
       expect(result30.discussionsWindowDays).toBe(30)
+    })
+
+    // Issue #194 acceptance: same fixture, different windowDays → different counts.
+    it('returns different counts for windowDays 30 vs 365 on same fixture', () => {
+      const now = Date.now()
+      const day10 = new Date(now - 10 * 24 * 3600 * 1000).toISOString()
+      const day200 = new Date(now - 200 * 24 * 3600 * 1000).toISOString()
+      const day400 = new Date(now - 400 * 24 * 3600 * 1000).toISOString()
+      const fixture = repoFixture({
+        hasDiscussionsEnabled: true,
+        commDiscussionsRecent: { nodes: [{ createdAt: day10 }, { createdAt: day200 }, { createdAt: day400 }] },
+      })
+      expect(extractCommunitySignals(fixture, 30).discussionsCountWindow).toBe(1)
+      expect(extractCommunitySignals(fixture, 365).discussionsCountWindow).toBe(2)
+    })
+
+    it('preserves raw createdAt array when enabled for per-window recompute', () => {
+      const now = Date.now()
+      const iso = new Date(now - 5 * 24 * 3600 * 1000).toISOString()
+      const result = extractCommunitySignals(repoFixture({
+        hasDiscussionsEnabled: true,
+        commDiscussionsRecent: { nodes: [{ createdAt: iso }, { createdAt: iso }] },
+      }))
+      expect(result.discussionsRecentCreatedAt).toEqual([iso, iso])
+    })
+
+    it('keeps discussionsRecentCreatedAt unavailable when disabled', () => {
+      const result = extractCommunitySignals(repoFixture({
+        hasDiscussionsEnabled: false,
+        commDiscussionsRecent: { nodes: [{ createdAt: new Date().toISOString() }] },
+      }))
+      expect(result.discussionsRecentCreatedAt).toBe('unavailable')
     })
   })
 })

@@ -143,7 +143,7 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
                       )
                     })}
                   {!activeTag || activeTag === 'community' ? (
-                    <DiscussionsCard result={result} activeTag={activeTag} onTagClick={handleTagClick} />
+                    <DiscussionsCard result={result} activeTag={activeTag} onTagClick={handleTagClick} windowDays={windowDays} />
                   ) : null}
                 </div>
                 <ActivityScoreHelp score={score} />

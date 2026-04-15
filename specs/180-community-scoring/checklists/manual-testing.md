@@ -29,8 +29,8 @@ This checklist covers what ships in this PR. Items under the **Deferred** sectio
 
 ## Step 3 — Window switching (Activity tab)
 
-- [ ] ⚠️ **FAILING** — filed as [#194](https://github.com/arun-gupta/repo-pulse/issues/194). Switching the window does NOT update the Discussions card count; it stays at "last 90d". Root cause: `discussionsCountWindow` is pre-computed at analyze time and stored on AnalysisResult. Fix is to preserve raw `createdAt` nodes and recompute locally per window. Not gating this PR merge — tracked as a follow-up.
-- [ ] No extra network requests fire on window switch (window is a local recompute)
+- [x] ✅ **FIXED** via [#194](https://github.com/arun-gupta/repo-pulse/issues/194). Raw `discussionsRecentCreatedAt` is now preserved on `AnalysisResult`; `DiscussionsCard` accepts `windowDays` and recomputes locally. Covered by `components/activity/DiscussionsCard.test.tsx` test **"recomputes the count per windowDays prop from raw timestamps"** and `lib/analyzer/community-signals.test.ts` test **"returns different counts for windowDays 30 vs 365 on same fixture"**.
+- [x] No extra network requests fire on window switch (window is a local recompute — `DiscussionsCard` recomputes from the preserved raw array without calling any API)
 
 ## Step 4 — Private / limited-access repository
 

@@ -178,6 +178,17 @@ export interface AnalysisResult {
   hasDiscussionsEnabled?: boolean | Unavailable
   discussionsCountWindow?: number | Unavailable
   discussionsWindowDays?: ActivityWindowDays | Unavailable
+  // Raw `createdAt` timestamps for recent discussions, paginated to cover
+  // the full 365d window (or truncated at a safety cap — see
+  // `discussionsRecentTruncated`). Preserved so the Activity-tab Discussions
+  // card can recompute counts per selected window without re-running
+  // analysis (issue #194). Gated on `hasDiscussionsEnabled === true`;
+  // otherwise 'unavailable'.
+  discussionsRecentCreatedAt?: string[] | Unavailable
+  // True when pagination stopped at the safety cap (MAX_DISCUSSION_PAGES)
+  // while still inside the 365d window — counts for large windows should
+  // be rendered as e.g. `N+` rather than implying an exact total.
+  discussionsRecentTruncated?: boolean
   missingFields: string[]
 }
 

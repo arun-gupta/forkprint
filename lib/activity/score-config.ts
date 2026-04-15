@@ -120,7 +120,7 @@ export function getActivityScore(result: AnalysisResult, windowDays: ActivityWin
   //   Not enabled or unavailable → 0
   const discussionsBonus = computeDiscussionsBonus(
     result.hasDiscussionsEnabled,
-    result.discussionsCountWindow,
+    countDiscussionsInWindow(result, windowDays),
   )
 
   const percentile = Math.min(99, Math.max(0, compositePercentile + discussionsBonus))
@@ -152,6 +152,35 @@ function computeDiscussionsBonus(
     return Math.min(5, 1 + Math.floor(count / 2))
   }
   return 1 // enabled but no recent activity — a weak positive signal
+}
+
+/**
+ * Count discussions created within the last `windowDays` from the preserved
+ * raw `createdAt` timestamps. Returns 'unavailable' when the raw array was
+ * not captured (e.g., Discussions not enabled, older fixture). Callers may
+ * also fall back to the pre-computed `discussionsCountWindow` when it
+ * happens to match `windowDays`. Introduced for issue #194 so the Activity
+ * tab's window selector drives the Discussions card.
+ */
+export function countDiscussionsInWindow(
+  result: AnalysisResult,
+  windowDays: ActivityWindowDays,
+): number | Unavailable {
+  const raw = result.discussionsRecentCreatedAt
+  if (Array.isArray(raw)) {
+    const sinceMs = Date.now() - windowDays * 24 * 60 * 60 * 1000
+    return raw.filter((iso) => {
+      const created = Date.parse(iso)
+      return Number.isFinite(created) && created >= sinceMs
+    }).length
+  }
+  if (
+    typeof result.discussionsCountWindow === 'number' &&
+    result.discussionsWindowDays === windowDays
+  ) {
+    return result.discussionsCountWindow
+  }
+  return 'unavailable'
 }
 
 function getMissingActivityScoreInputs(result: AnalysisResult, windowDays: ActivityWindowDays) {

@@ -78,6 +78,8 @@ export const REPO_OVERVIEW_QUERY = `
       commPrTemplateGithub: object(expression: "HEAD:.github/PULL_REQUEST_TEMPLATE.md") { ... on Blob { oid } }
       commPrTemplateDocs: object(expression: "HEAD:docs/PULL_REQUEST_TEMPLATE.md") { ... on Blob { oid } }
       commDiscussionsRecent: discussions(first: 100, orderBy: { field: CREATED_AT, direction: DESC }) {
+        totalCount
+        pageInfo { hasNextPage endCursor }
         nodes { createdAt }
       }
       commGovernanceRoot: object(expression: "HEAD:GOVERNANCE.md") { ... on Blob { oid } }
@@ -324,6 +326,25 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
             }
           }
         }
+      }
+    }
+    rateLimit {
+      remaining
+      resetAt
+    }
+  }
+`
+
+export const REPO_DISCUSSIONS_PAGE_QUERY = `
+  query RepoDiscussionsPage(
+    $owner: String!
+    $name: String!
+    $after: String!
+  ) {
+    repository(owner: $owner, name: $name) {
+      discussions(first: 100, orderBy: { field: CREATED_AT, direction: DESC }, after: $after) {
+        pageInfo { hasNextPage endCursor }
+        nodes { createdAt }
       }
     }
     rateLimit {
