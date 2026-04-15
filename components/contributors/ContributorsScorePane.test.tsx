@@ -83,7 +83,7 @@ describe('ContributorsScorePane', () => {
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(screen.getByText('Single-vendor dependency ratio')).toBeInTheDocument()
     expect(screen.getByText('68.0%')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /show chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /expand organization chart/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /hide names/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /show numbers/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('list', { name: /attributed organization bars/i })).not.toBeInTheDocument()
@@ -114,9 +114,9 @@ describe('ContributorsScorePane', () => {
     expect(screen.getByRole('button', { name: /hide details/i })).toBeInTheDocument()
     expect(screen.getByText(/top-20% contributor share/i)).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /show chart/i }))
+    await userEvent.click(screen.getByRole('button', { name: /expand organization chart/i }))
 
-    expect(screen.getByRole('button', { name: /hide chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /collapse organization chart/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /hide names/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /show numbers/i })).toBeInTheDocument()
     expect(screen.getByRole('list', { name: /organization contribution bars/i })).toBeInTheDocument()

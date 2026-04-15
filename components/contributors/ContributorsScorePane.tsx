@@ -142,16 +142,10 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
             collapsed={!showExperimentalHeatmap}
             showLabels={showExperimentalNames}
             showValues={showExperimentalNumbers}
+            onToggleCollapsed={() => setShowExperimentalHeatmap((current) => !current)}
+            collapseToggleLabel={showExperimentalHeatmap ? 'Collapse organization chart' : 'Expand organization chart'}
             actions={
               <>
-                <button
-                  type="button"
-                  onClick={() => setShowExperimentalHeatmap((current) => !current)}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400"
-                  aria-pressed={showExperimentalHeatmap}
-                >
-                  {showExperimentalHeatmap ? 'Hide chart' : 'Show chart'}
-                </button>
                 {showExperimentalHeatmap ? (
                   <>
                     <button
