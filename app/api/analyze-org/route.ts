@@ -1,4 +1,5 @@
 import { analyzeOrgInventory } from '@/lib/analyzer/org-inventory'
+import { resolveServerToken } from '@/lib/auth/dev-pat'
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'A GitHub organization is required.' }, { status: 400 })
     }
 
-    const token = body.token
+    const token = resolveServerToken(body.token)
 
     if (!token) {
       return Response.json({ error: 'Authentication required.' }, { status: 401 })

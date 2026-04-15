@@ -82,6 +82,27 @@ This is the planned implementation order for Phase 1. It may differ from the fea
 
 ---
 
+## Multi-worktree local development
+
+GitHub OAuth Apps accept only one registered callback URL, so only the worktree bound to the OAuth App's registered port (typically `http://localhost:3000/api/auth/callback`) can complete sign-in. Worktrees on other ports would otherwise redirect back to port 3000 and fail auth.
+
+To unblock parallel worktrees, set a **dev-only, server-side PAT fallback** (Issue #207, constitution §III.4 v1.2):
+
+1. Generate a GitHub PAT with `public_repo` scope at <https://github.com/settings/tokens>.
+2. In the worktree's `.env.local`, add:
+   ```
+   DEV_GITHUB_PAT=ghp_...
+   ```
+3. Run `next dev` on any port. The app auto-signs you in and server-side API routes use this PAT for GitHub calls. OAuth is bypassed entirely for that worktree.
+
+Rules:
+- The PAT is read server-side only. It is never sent to the browser, never logged, never in the client bundle.
+- `NODE_ENV=production` + `DEV_GITHUB_PAT` set causes the server to throw at boot. Never put this variable in Vercel or any deployed environment.
+- `.env.local` is gitignored. Never commit the PAT.
+- The primary worktree on the registered OAuth callback port should continue to use OAuth (leave `DEV_GITHUB_PAT` unset there).
+
+---
+
 ## Testing
 
 Run these checks before opening a PR:

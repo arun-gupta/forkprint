@@ -1,5 +1,8 @@
 # RepoPulse Constitution
 
+**Version**: 1.2 — Amended 2026-04-14
+**Amendment (v1.2)**: Section III rule 4 carves out a narrow dev-only, server-side PAT fallback to unblock multi-worktree local testing (Issue #207). The fallback is gated on `NODE_ENV === 'development'` AND an explicit `DEV_GITHUB_PAT` env var, is read only in server-side code, and a startup assertion rejects `NODE_ENV=production` + `DEV_GITHUB_PAT`. OAuth remains the only supported auth path in production. User-facing PAT input remains prohibited. Signed off by: arun-gupta.
+
 **Version**: 1.1 — Amended 2026-04-06
 **Amendment**: Section III rules 4 and 6 updated to reflect OAuth-only authentication (P1-F14). PAT input and server-side `GITHUB_TOKEN` removed. Rationale: GitHub OAuth distributes rate limit consumption across individual user quotas, enabling the app to scale to any number of concurrent users without a shared API quota bottleneck. Storing the OAuth token in-memory only (never in localStorage or cookies) eliminates the XSS token-theft risk present in the previous PAT-based localStorage flow, improving security while preserving the stateless Phase 1 architecture. Signed off by: arun-gupta.
 
@@ -57,7 +60,7 @@ Response: { "results": AnalysisResult[] }
 1. **Primary source**: GitHub GraphQL API (`https://api.github.com/graphql`).
 2. Each repo requires 1–3 GraphQL requests. Precise field selection — no over-fetching.
 3. REST API may supplement only where GraphQL cannot reach a specific metric. This is an exception, not a pattern.
-4. Auth: GitHub OAuth App only — PAT input is not supported in Phase 1 (amended v1.1). OAuth token is held in-memory for the duration of the session; it is never written to localStorage, cookies, or any persistent storage. Minimum scope: `public_repo` read-only.
+4. Auth: GitHub OAuth App only — user-facing PAT input is not supported in Phase 1 (amended v1.1). OAuth token is held in-memory for the duration of the session; it is never written to localStorage, cookies, or any persistent storage. Minimum scope: `public_repo` read-only. **Narrow exception (v1.2, dev-only)**: when `NODE_ENV === 'development'` AND `DEV_GITHUB_PAT` is set in `.env.local`, server-side API routes may use that PAT in place of an OAuth session token to unblock multi-worktree local testing. The PAT must never be read in client code, never sent to the browser, and never logged. A startup assertion must throw if `NODE_ENV === 'production'` and `DEV_GITHUB_PAT` is set.
 5. No server-side `GITHUB_TOKEN` is used — each user authenticates via OAuth and their own quota is consumed (amended v1.1). Credentials are never hardcoded anywhere in the codebase.
 6. ~~Server-side `GITHUB_TOKEN` takes precedence~~ — removed in v1.1. All API calls use the authenticated user's OAuth token. `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are stored as server-side environment variables and never sent to the client.
 7. Token is never included in URLs, never exposed to the client bundle, never logged.

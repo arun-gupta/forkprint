@@ -15,10 +15,26 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     // Remove stale PAT key left by the pre-OAuth token-storage implementation
     localStorage.removeItem('forkprint_github_token')
 
-    // Read token and username from URL fragment after OAuth callback
     if (typeof window === 'undefined') return
+
+    // Dev-only server-side PAT fallback (Issue #207). The server gates the
+    // response; production always returns { enabled: false }.
+    let cancelled = false
+    fetch('/api/auth/dev-session')
+      .then((r) => (r.ok ? r.json() : { enabled: false }))
+      .then((data: { enabled?: boolean; username?: string }) => {
+        if (cancelled) return
+        if (data.enabled && data.username) {
+          signIn({ token: 'dev-pat', username: data.username })
+        }
+      })
+      .catch(() => {
+        // Ignore — fall through to OAuth flow.
+      })
+
+    // Read token and username from URL fragment after OAuth callback
     const hash = window.location.hash
-    if (!hash.startsWith('#')) return
+    if (!hash.startsWith('#')) return () => { cancelled = true }
 
     const params = new URLSearchParams(hash.slice(1))
     const token = params.get('token')
@@ -31,6 +47,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('oauth_return_search')
       router.replace(`/${savedSearch}`, { scroll: false })
     }
+
+    return () => { cancelled = true }
   }, [router, signIn])
 
   if (authError) {
