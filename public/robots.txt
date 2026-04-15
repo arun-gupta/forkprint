@@ -1,0 +1,6 @@
+# RepoPulse robots.txt
+# See issue #218 for context on edge request quota mitigation.
+
+User-agent: *
+Disallow: /index
+Disallow: /api/
