@@ -120,6 +120,44 @@ Safety layers:
 
 See issue #207 for the full rationale and constitution discussion.
 
+### Spawning worktrees with `scripts/claude-worktree.sh`
+
+`scripts/claude-worktree.sh` automates the parallel-worktree workflow: it provisions an isolated git worktree per issue, picks a free dev-server port, copies `.env.local` (so `DEV_GITHUB_PAT` flows through), starts `next dev`, and launches Claude with a kickoff prompt pointing at the issue.
+
+**Spawn:**
+
+```bash
+# interactive — slug auto-derived from the GitHub issue title
+scripts/claude-worktree.sh 207
+
+# headless — claude -p in background, log -> claude.log
+scripts/claude-worktree.sh --headless 207
+
+# batch
+for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
+```
+
+The script creates `../forkprint-<issue>-<slug>/` on a new branch, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`, PID: `.dev.pid`), and launches `claude` with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
+
+**Cleanup:**
+
+```bash
+# Post-merge: from the main repo on `main`, pull main, kill processes,
+# remove the worktree, delete the branch (refuses if unmerged).
+scripts/claude-worktree.sh --cleanup-merged 207
+
+# Discard unmerged work (kills processes + force-removes worktree, keeps branch).
+scripts/claude-worktree.sh --remove 207
+```
+
+If something gets stuck:
+
+```bash
+git worktree list                 # what's still registered
+git worktree prune                # drop stale entries for deleted paths
+lsof -iTCP:3010-3100 -sTCP:LISTEN # any dev servers still bound?
+```
+
 ---
 
 ## Phase 2 feature order
