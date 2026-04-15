@@ -23,13 +23,21 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
       ]
     : []
 
-  const scoreCells: ScorecardCellProps[] = card.scoreBadges.map((badge) => ({
-    label: badge.category,
-    percentileLabel: typeof badge.value === 'number' ? formatPercentileLabel(badge.value) : String(badge.value),
-    detail: badge.detail,
-    tooltip: badge.description,
-    toneClass: scoreToneClass(badge.tone),
-  }))
+  const scoreCells: ScorecardCellProps[] = card.scoreBadges.map((badge) => {
+    const tabId = badge.category.toLowerCase()
+    return {
+      label: badge.category,
+      percentileLabel: typeof badge.value === 'number' ? formatPercentileLabel(badge.value) : String(badge.value),
+      detail: badge.detail,
+      tooltip: badge.description,
+      toneClass: scoreToneClass(badge.tone),
+      onClick: () => {
+        const tab = document.querySelector<HTMLButtonElement>(`[role="tab"][data-tab-id="${tabId}"]`)
+        tab?.click()
+      },
+      ariaLabel: `Open ${badge.category} tab`,
+    }
+  })
 
   const hs = card.healthScore
 
@@ -106,6 +114,8 @@ interface ScorecardCellProps {
   detail?: string
   tooltip?: string
   toneClass: string
+  onClick?: () => void
+  ariaLabel?: string
 }
 
 const LENS_RING_COLORS: Record<string, string> = {
@@ -142,15 +152,36 @@ function LensPill({ lens, active, onClick }: { lens: LensReadout; active: boolea
   )
 }
 
-function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass }: ScorecardCellProps) {
-  return (
-    <div className={`flex min-h-[44px] flex-col justify-between rounded border px-2 py-1.5 ${toneClass}`} title={tooltip}>
+function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass, onClick, ariaLabel }: ScorecardCellProps) {
+  const baseClass = `flex min-h-[44px] flex-col justify-between rounded border px-2 py-1.5 ${toneClass}`
+  const content = (
+    <>
       <div className="flex items-baseline justify-between gap-1">
         <span className="text-[10px] font-medium uppercase tracking-wide">{label}</span>
         <span className="text-xs font-semibold">{percentileLabel}</span>
       </div>
       <p className="mt-0.5 text-[10px] opacity-60">{detail ?? '\u00A0'}</p>
-    </div>
+    </>
+  )
+
+  if (!onClick) {
+    return (
+      <div className={baseClass} title={tooltip}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={tooltip}
+      aria-label={ariaLabel}
+      className={`${baseClass} text-left transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1`}
+    >
+      {content}
+    </button>
   )
 }
 

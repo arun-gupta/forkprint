@@ -81,6 +81,38 @@ describe('MetricCard', () => {
     expect(onTagChange).toHaveBeenLastCalledWith(null)
   })
 
+  it('renders score-badge tiles as buttons that navigate to the matching tab', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+
+    // Fake results-shell tabs present in the DOM so the click-proxy finds them.
+    const tabs = document.createElement('div')
+    tabs.innerHTML = `
+      <button role="tab" data-tab-id="contributors"></button>
+      <button role="tab" data-tab-id="activity"></button>
+      <button role="tab" data-tab-id="responsiveness"></button>
+      <button role="tab" data-tab-id="security"></button>
+    `
+    document.body.appendChild(tabs)
+    const clicks: string[] = []
+    tabs.querySelectorAll('[role="tab"]').forEach((t) => {
+      t.addEventListener('click', () => clicks.push(t.getAttribute('data-tab-id')!))
+    })
+
+    try {
+      render(<MetricCard card={card} />)
+
+      for (const dim of ['Activity', 'Responsiveness', 'Security', 'Contributors'] as const) {
+        const btn = screen.getByRole('button', { name: `Open ${dim} tab` })
+        expect(btn.tagName).toBe('BUTTON')
+        fireEvent.click(btn)
+      }
+
+      expect(clicks).toEqual(['activity', 'responsiveness', 'security', 'contributors'])
+    } finally {
+      tabs.remove()
+    }
+  })
+
   it('handles unavailable ecosystem metrics gracefully', () => {
     const card = buildMetricCardViewModels([
       buildResult({ stars: 'unavailable', forks: 'unavailable', watchers: 'unavailable' }),
