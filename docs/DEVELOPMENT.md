@@ -162,6 +162,8 @@ scripts/claude-worktree.sh --cleanup-merged 207
 scripts/claude-worktree.sh --remove 207
 ```
 
+`--cleanup-merged` verifies merge status by querying the associated PR's state via `gh pr view <branch> --json state` — **not** by local ancestry. This matters because squash-merges and rebase-merges on GitHub produce a merge commit that is not an ancestor of the local feature branch, so the older ancestry check (`git branch -d`) would silently refuse even after a real merge. When the PR state is `MERGED`, the local branch is force-deleted. When the PR is `OPEN`, `CLOSED` without merge, missing, or `gh` cannot reach GitHub, the command refuses and points to `--remove`. Use `--remove` as the escape hatch for unmerged branches.
+
 If something gets stuck:
 
 ```bash

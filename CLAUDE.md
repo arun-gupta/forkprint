@@ -47,6 +47,8 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 - N/A (stateless, in-memory only) (174-report-search)
 - TypeScript 5.x (Next.js 16+) + Next.js (App Router), React, Tailwind CSS (180-community-scoring)
 - N/A (stateless, on-demand analysis per the constitution) (180-community-scoring)
+- Bash (POSIX-compatible portions + bash-specific features already used: `[[ ... ]]`, `set -euo pipefail`) + `git`, `gh` (GitHub CLI, already required by the surrounding script for `gh issue view`) (243-cleanup-merged-fix)
+- N/A (script operates on local git state and queries GitHub via `gh`) (243-cleanup-merged-fix)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library

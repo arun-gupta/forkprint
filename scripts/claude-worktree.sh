@@ -64,7 +64,7 @@ remove_worktree() {
 
 cleanup_merged() {
   local issue="$1"
-  local wt branch current_branch
+  local wt branch current_branch pr_state
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
@@ -84,6 +84,20 @@ cleanup_merged() {
     exit 1
   fi
 
+  # Verify merge via GitHub PR state, not local ancestry — squash/rebase merges
+  # produce a merge commit that is not an ancestor of the local feature branch.
+  if ! pr_state="$(cd "$REPO_ROOT" && gh pr view "$branch" --json state -q .state 2>/dev/null)"; then
+    echo "Could not determine PR state for $branch." >&2
+    echo "Is gh installed and authenticated? If this branch has no PR, use:" >&2
+    echo "  scripts/claude-worktree.sh --remove $issue" >&2
+    exit 1
+  fi
+  if [[ "$pr_state" != "MERGED" ]]; then
+    echo "PR for $branch is $pr_state, not MERGED." >&2
+    echo "Use: scripts/claude-worktree.sh --remove $issue" >&2
+    exit 1
+  fi
+
   echo "Pulling main in $REPO_ROOT ..."
   git -C "$REPO_ROOT" pull --ff-only origin main
 
@@ -96,15 +110,7 @@ cleanup_merged() {
   git -C "$REPO_ROOT" worktree remove --force "$wt"
   echo "Removed $wt"
 
-  # -d (not -D) so unmerged branches refuse — caller picked the wrong command.
-  if git -C "$REPO_ROOT" branch -d "$branch" 2>/dev/null; then
-    :  # git already prints "Deleted branch ..."
-  else
-    echo "Branch $branch was not deleted (likely not merged into main)." >&2
-    echo "If you intended to discard it, run: scripts/claude-worktree.sh --remove $issue" >&2
-    echo "(then 'git branch -D $branch' from $REPO_ROOT to force-delete)" >&2
-    exit 1
-  fi
+  git -C "$REPO_ROOT" branch -D "$branch"
 }
 
 if [[ "${1:-}" == "--remove" ]]; then
