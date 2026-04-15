@@ -1,28 +1,42 @@
 #!/usr/bin/env bash
 # Provision an isolated Claude worktree for an issue and launch Claude in it.
-#
-# Usage:
-#   scripts/claude-worktree.sh [--headless] <issue-number> [slug]
-#   scripts/claude-worktree.sh 210                      # slug auto-derived from issue title via gh
-#   scripts/claude-worktree.sh 210 feature-x            # slug explicit
-#   scripts/claude-worktree.sh --headless 210
-#
-# What it does:
-#   1. Creates ../forkprint-<issue>-<slug> as a git worktree on a new branch
-#   2. Picks the next free port >= 3010 and writes it to .env.local as PORT
-#   3. Runs npm install in the worktree
-#   4. Starts `npm run dev` on that port in the background (log -> dev.log)
-#   5. Launches `claude` with a kickoff prompt pointing at the issue
-#      (interactive by default; --headless runs `claude -p` in background -> claude.log)
-#
-# Batch example (headless):
-#   for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i" auto; done
-#
-# Cleanup:
-#   scripts/claude-worktree.sh --remove <issue-number>          # discard worktree (works on unmerged work)
-#   scripts/claude-worktree.sh --cleanup-merged <issue-number>  # post-merge: pull main + remove worktree + delete branch
+# Run `scripts/claude-worktree.sh --help` for usage.
 
 set -euo pipefail
+
+print_usage() {
+  cat <<'EOF'
+Provision an isolated Claude worktree for an issue and launch Claude in it.
+
+Usage:
+  scripts/claude-worktree.sh [--headless] <issue-number> [slug]
+  scripts/claude-worktree.sh --remove <issue-number>
+  scripts/claude-worktree.sh --cleanup-merged <issue-number>
+
+Options:
+  --headless          Run claude -p in background (log -> claude.log)
+  --remove            Discard worktree (works on unmerged work)
+  --cleanup-merged    Post-merge: pull main, remove worktree, delete branch
+  -h, --help          Show this help and exit
+
+Behavior:
+  1. Creates ../forkprint-<issue>-<slug> as a git worktree on a new branch
+     (slug auto-derived from the issue title via gh when omitted).
+  2. Picks the next free port >= 3010 and writes it to .env.local as PORT.
+  3. Runs npm install in the worktree.
+  4. Starts `npm run dev` on that port in the background (log -> dev.log).
+  5. Launches `claude` with a kickoff prompt pointing at the issue
+     (interactive by default; --headless runs `claude -p` -> claude.log).
+
+Batch example (headless):
+  for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
+EOF
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  print_usage
+  exit 0
+fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 PARENT_DIR="$(dirname "$REPO_ROOT")"
