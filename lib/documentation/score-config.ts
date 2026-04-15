@@ -1,6 +1,6 @@
 import type { DocumentationResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
-import { getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import { type CalibrationProfile, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 export interface DocumentationRecommendation {
@@ -167,6 +167,7 @@ export function getDocumentationScore(
   licensingResult: LicensingResult | 'unavailable',
   stars: number | 'unavailable',
   inclusiveNamingResult?: InclusiveNamingResult | 'unavailable',
+  profile: CalibrationProfile = 'community',
 ): DocumentationScoreDefinition {
   const recommendations: DocumentationRecommendation[] = []
 
@@ -273,12 +274,12 @@ export function getDocumentationScore(
     }
   }
 
-  const calibration = getCalibrationForStars(stars)
+  const calibration = getCalibrationForStars(stars, profile)
   const percentile = calibration?.documentationScore
     ? interpolatePercentile(compositeScore, calibration.documentationScore)
     : Math.round(compositeScore * 99)
   const tone = percentileToTone(percentile)
-  const bracketLabel = getBracketLabel(stars)
+  const bracketLabel = getBracketLabel(stars, profile)
 
   return {
     value: percentile,

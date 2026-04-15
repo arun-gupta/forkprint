@@ -1,6 +1,6 @@
 import type { ActivityWindowDays, AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { type BracketCalibration, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import { type BracketCalibration, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ActivityScoreDefinition {
   value: ScoreValue
@@ -73,7 +73,11 @@ const INSUFFICIENT_SCORE: ActivityScoreDefinition = {
   missingInputs: [],
 }
 
-export function getActivityScore(result: AnalysisResult, windowDays: ActivityWindowDays = 90): ActivityScoreDefinition {
+export function getActivityScore(
+  result: AnalysisResult,
+  windowDays: ActivityWindowDays = 90,
+  profile: CalibrationProfile = 'community',
+): ActivityScoreDefinition {
   const missingInputs = getMissingActivityScoreInputs(result, windowDays)
   if (missingInputs.length > 0) {
     return {
@@ -93,8 +97,8 @@ export function getActivityScore(result: AnalysisResult, windowDays: ActivityWin
     }
   }
 
-  const cal = getCalibrationForStars(result.stars)
-  const bracketLabel = getBracketLabel(result.stars)
+  const cal = getCalibrationForStars(result.stars, profile)
+  const bracketLabel = getBracketLabel(result.stars, profile)
 
   const subPercentiles = {
     prFlow: evaluatePrFlow(metrics.prsMerged, metrics.prsOpened, cal),

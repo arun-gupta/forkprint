@@ -1,6 +1,6 @@
 import type { SecurityResult, SecurityScoreDefinition, SecurityRecommendation, DirectSecurityCheck } from './analysis-result'
 import type { Unavailable } from '@/lib/analyzer/analysis-result'
-import { getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone, type PercentileSet } from '@/lib/scoring/config-loader'
+import { type CalibrationProfile, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone, type PercentileSet } from '@/lib/scoring/config-loader'
 import { getCatalogEntry, CATEGORY_DEFINITIONS } from './recommendation-catalog'
 
 const SCORECARD_WEIGHT = 0.60
@@ -91,6 +91,7 @@ function generateDirectCheckRecommendations(
 export function getSecurityScore(
   securityResult: SecurityResult,
   stars: number | Unavailable,
+  profile: CalibrationProfile = 'community',
 ): SecurityScoreDefinition {
   const hasScorecardData = securityResult.scorecard !== 'unavailable'
   const mode = hasScorecardData ? 'scorecard' as const : 'direct-only' as const
@@ -197,8 +198,8 @@ export function getSecurityScore(
   let bracketLabel: string | null = null
 
   if (stars !== 'unavailable') {
-    const cal = getCalibrationForStars(stars)
-    bracketLabel = getBracketLabel(stars)
+    const cal = getCalibrationForStars(stars, profile)
+    bracketLabel = getBracketLabel(stars, profile)
     const secCal = (cal as unknown as Record<string, unknown>).securityScore as PercentileSet | undefined
     if (secCal) {
       percentile = interpolatePercentile(compositeScore, secCal)

@@ -10,6 +10,7 @@ import {
   getCalibrationMeta,
   interpolatePercentile,
 } from '@/lib/scoring/config-loader'
+import calibrationData from '@/lib/scoring/calibration-data.json'
 import {
   GOVERNANCE_DOC_FILES,
   GOVERNANCE_SCORECARD_CHECKS,
@@ -26,9 +27,18 @@ const GOVERNANCE_SIGNAL_COUNT =
   GOVERNANCE_CONTRIBUTORS_METRICS.size +
   (LICENSING_IS_GOVERNANCE ? 1 : 0)
 
-const ALL_BRACKETS: BracketKey[] = ['emerging', 'growing', 'established', 'popular']
+// Solo brackets only appear in the selector once real calibration data has
+// been collected (sampleSize > 0). Placeholder entries are hidden so users
+// don't see fabricated percentile anchors — see issue #229.
+const CANDIDATE_BRACKETS: BracketKey[] = ['solo-tiny', 'solo-small', 'emerging', 'growing', 'established', 'popular']
+const ALL_BRACKETS: BracketKey[] = CANDIDATE_BRACKETS.filter((b) => {
+  const entry = (calibrationData.brackets as Record<string, { sampleSize?: number }>)[b]
+  return entry && (entry.sampleSize ?? 0) > 0
+})
 
 const BRACKET_LABELS: Record<BracketKey, string> = {
+  'solo-tiny': 'Solo (< 10 stars)',
+  'solo-small': 'Solo (10-99 stars)',
   emerging: 'Emerging (10-99 stars)',
   growing: 'Growing (100-999 stars)',
   established: 'Established (1k-10k stars)',

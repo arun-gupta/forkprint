@@ -18,10 +18,16 @@ All scores are computed relative to repositories in the same **star bracket**, n
 
 | Bracket | Star range | Description |
 |---|---|---|
+| Solo (tiny) | < 10 | Solo-maintained projects with minimal external visibility |
+| Solo (small) | 10 – 99 | Solo-maintained projects with modest external interest |
 | Emerging | 10 – 99 | Early-stage or niche projects with some external interest |
 | Growing | 100 – 999 | Projects with meaningful adoption |
 | Established | 1,000 – 9,999 | Well-known projects with active communities |
 | Popular | 10,000+ | Widely adopted, high-visibility projects |
+
+**Solo brackets (issue #229):** When a repo is classified as solo by `detectSoloProjectProfile` (the 3-of-4 heuristic in `lib/scoring/solo-profile.ts`), it is routed to the matching solo bracket based on stars. Solo-classified repos with ≥ 100 stars fall back to the nearest community bracket — the population above that threshold is too sparse to calibrate independently. The scorecard bracket label carries a "limited solo sample" note in that case. The community-scoring override toggle always routes to the normal star-tier bracket, regardless of detection.
+
+**Solo sampling:** `npm run calibrate -- --profile=solo` samples only repos that satisfy a lightweight solo heuristic at fetch time (≤ 2 recent commit authors, ≤ 2 contributors, no GOVERNANCE file — 2-of-3 required). Results are written into `lib/scoring/calibration-data.json` alongside community brackets, not in place of them.
 
 **Known limitation:** Stars correlate with maturity but are also influenced by marketing and virality. A single anchor metric will never be perfect. This is a pragmatic simplification chosen for explainability. Future calibration may stratify by additional dimensions such as repo age or domain.
 
@@ -267,6 +273,17 @@ GITHUB_TOKEN_5=ghp_...
 The script checkpoints to `scripts/calibrate-checkpoint.json` after every batch. If interrupted (network errors, rate limits), re-running resumes from where it left off. Delete the checkpoint file to start fresh.
 
 **Expected runtime:** ~20–30 minutes with 2 tokens. Socket errors from GitHub may require a few restarts — the checkpoint ensures no work is lost.
+
+### Solo calibration run
+
+```bash
+npm run calibrate -- --profile=solo --dry-run  # preview
+npm run calibrate -- --profile=solo            # full run
+```
+
+Solo runs use a separate checkpoint (`scripts/calibrate-solo-checkpoint.json`) and a separate repo list (`docs/calibrate-solo-repos.md`). Results are **merged** into `lib/scoring/calibration-data.json`: only the `solo-tiny` and `solo-small` entries are updated; community brackets are left alone.
+
+Each solo candidate is verified at sample time via three additional REST calls (contributors, recent commits, GOVERNANCE.md), so solo runs are slower per-candidate than community runs. Target sample size is ~200 per bracket (100 × 2 strata for `solo-tiny`, 80/70/50 for `solo-small`).
 
 ### Legacy script
 

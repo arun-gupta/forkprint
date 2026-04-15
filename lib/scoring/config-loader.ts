@@ -8,7 +8,10 @@ import type { Unavailable } from '@/lib/analyzer/analysis-result'
  */
 export const RECOMMENDATION_PERCENTILE_GATE = 50
 
-export type BracketKey = 'emerging' | 'growing' | 'established' | 'popular'
+export type BracketKey = 'solo-tiny' | 'solo-small' | 'emerging' | 'growing' | 'established' | 'popular'
+
+/** Profile override used by the scorecard to route solo repos to solo brackets. */
+export type CalibrationProfile = 'community' | 'solo'
 
 export interface PercentileSet {
   p25: number
@@ -48,7 +51,27 @@ export interface BracketCalibration {
   documentationScore?: PercentileSet
 }
 
-export function getBracket(stars: number | Unavailable): BracketKey {
+/**
+ * True when a solo bracket has calibration data collected from real solo
+ * repos (sampleSize > 0). Placeholder entries (sampleSize: 0) are treated
+ * as unavailable so the routing falls back to the community bracket and
+ * users aren't shown percentiles against fabricated anchors. See issue #229.
+ */
+function soloBracketHasData(bracket: 'solo-tiny' | 'solo-small'): boolean {
+  const entry = calibrationData.brackets[bracket] as { sampleSize?: number } | undefined
+  return !!entry && typeof entry.sampleSize === 'number' && entry.sampleSize > 0
+}
+
+export function getBracket(stars: number | Unavailable, profile: CalibrationProfile = 'community'): BracketKey {
+  if (profile === 'solo') {
+    if (stars === 'unavailable' || stars < 10) {
+      if (soloBracketHasData('solo-tiny')) return 'solo-tiny'
+    } else if (stars < 100) {
+      if (soloBracketHasData('solo-small')) return 'solo-small'
+    }
+    // Solo repos with ≥ 100 stars, or solo repos whose bracket has not yet
+    // been calibrated, fall back to the nearest community bracket.
+  }
   if (stars === 'unavailable' || stars < 100) return 'emerging'
   if (stars < 1000) return 'growing'
   if (stars < 10000) return 'established'
@@ -59,8 +82,11 @@ export function getCalibration(bracket: BracketKey): BracketCalibration {
   return calibrationData.brackets[bracket] as BracketCalibration
 }
 
-export function getCalibrationForStars(stars: number | Unavailable): BracketCalibration {
-  return getCalibration(getBracket(stars))
+export function getCalibrationForStars(
+  stars: number | Unavailable,
+  profile: CalibrationProfile = 'community',
+): BracketCalibration {
+  return getCalibration(getBracket(stars, profile))
 }
 
 export function getCalibrationMeta() {
@@ -71,15 +97,37 @@ export function getCalibrationMeta() {
   }
 }
 
-export function getBracketLabel(stars: number | Unavailable): string {
-  const bracket = getBracket(stars)
-  const labels: Record<BracketKey, string> = {
-    emerging: 'Emerging (10–99 stars)',
-    growing: 'Growing (100–999 stars)',
-    established: 'Established (1k–10k stars)',
-    popular: 'Popular (10k+ stars)',
+const BRACKET_LABELS: Record<BracketKey, string> = {
+  'solo-tiny': 'Solo (< 10 stars)',
+  'solo-small': 'Solo (10–99 stars)',
+  emerging: 'Emerging (10–99 stars)',
+  growing: 'Growing (100–999 stars)',
+  established: 'Established (1k–10k stars)',
+  popular: 'Popular (10k+ stars)',
+}
+
+/**
+ * Returns true when the caller requested a solo profile but the repo fell
+ * back to a community bracket — either because stars ≥ 100, or because the
+ * matching solo bracket has not yet been calibrated (sampleSize = 0). The
+ * scorecard uses this to add a "limited solo sample" note next to the label.
+ */
+export function isSoloFallback(stars: number | Unavailable, profile: CalibrationProfile): boolean {
+  if (profile !== 'solo') return false
+  if (typeof stars === 'number' && stars >= 100) return true
+  if (stars === 'unavailable' || stars < 10) return !soloBracketHasData('solo-tiny')
+  return !soloBracketHasData('solo-small')
+}
+
+export function getBracketLabel(
+  stars: number | Unavailable,
+  profile: CalibrationProfile = 'community',
+): string {
+  const base = BRACKET_LABELS[getBracket(stars, profile)]
+  if (isSoloFallback(stars, profile)) {
+    return `${base} — limited solo sample`
   }
-  return labels[bracket]
+  return base
 }
 
 /**

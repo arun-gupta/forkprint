@@ -4,7 +4,7 @@ import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/li
 import { getContributorsScore, type ContributorsScoreDefinition } from '@/lib/contributors/score-config'
 import { getDocumentationScore, type DocumentationRecommendation } from '@/lib/documentation/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
-import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, formatPercentileOrdinal, getBracketLabel, percentileToTone } from '@/lib/scoring/config-loader'
+import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, formatPercentileOrdinal, percentileToTone } from '@/lib/scoring/config-loader'
 import { SOLO_WEIGHTS, detectSoloProjectProfile, type SoloProjectDetection } from '@/lib/scoring/solo-profile'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
@@ -63,14 +63,18 @@ export function getHealthScore(result: AnalysisResult, options: HealthScoreOptio
       ? 'community'
       : soloDetection.isSolo ? 'solo' : 'community'
 
-  const activity = getActivityScore(result)
+  const activity = getActivityScore(result, 90, profile)
+  // Responsiveness and Contributors remain community-calibrated — solo profile
+  // hides those buckets from the scorecard, so rerouting their calibration
+  // would be wasted work. They still render on their own tabs at community
+  // scaling, which is correct because those tabs reflect community expectations.
   const responsiveness = getResponsivenessScore(result)
   const contributors = getContributorsScore(result)
   const documentation = result.documentationResult !== 'unavailable'
-    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult)
+    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult, profile)
     : null
   const security = result.securityResult !== 'unavailable'
-    ? getSecurityScore(result.securityResult, result.stars)
+    ? getSecurityScore(result.securityResult, result.stars, profile)
     : null
   const bracketLabel = activity.bracketLabel || responsiveness.bracketLabel || contributors.bracketLabel || ''
 

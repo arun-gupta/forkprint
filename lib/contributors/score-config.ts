@@ -1,6 +1,6 @@
 import type { AnalysisResult, ContributorWindowDays, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import { type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ContributorsScoreDefinition {
   value: ScoreValue
@@ -124,25 +124,30 @@ function fundingBonus(hasFundingConfig: AnalysisResult['hasFundingConfig']): num
   return hasFundingConfig === true ? 3 : 0
 }
 
-export function getContributorsScore(result: AnalysisResult): ContributorsScoreDefinition {
-  return computeContributorsScore(result.commitCountsByAuthor, result.stars, deriveExtras(result))
+export function getContributorsScore(
+  result: AnalysisResult,
+  profile: CalibrationProfile = 'community',
+): ContributorsScoreDefinition {
+  return computeContributorsScore(result.commitCountsByAuthor, result.stars, deriveExtras(result), profile)
 }
 
 export function getContributorsScoreFromCommitCounts(
   commitCountsByAuthor: Record<string, number> | Unavailable,
   stars: number | Unavailable = 'unavailable',
   extras: ContributorsScoreExtras = {},
+  profile: CalibrationProfile = 'community',
 ): ContributorsScoreDefinition {
-  return computeContributorsScore(commitCountsByAuthor, stars, extras)
+  return computeContributorsScore(commitCountsByAuthor, stars, extras, profile)
 }
 
 function computeContributorsScore(
   commitCountsByAuthor: Record<string, number> | Unavailable,
   stars: number | Unavailable,
   extras: ContributorsScoreExtras,
+  profile: CalibrationProfile,
 ): ContributorsScoreDefinition {
-  const cal = getCalibrationForStars(stars)
-  const bracketLabel = getBracketLabel(stars)
+  const cal = getCalibrationForStars(stars, profile)
+  const bracketLabel = getBracketLabel(stars, profile)
   const concentration = getContributionConcentrationDetails(commitCountsByAuthor)
 
   if (concentration === 'unavailable') {

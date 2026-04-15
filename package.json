@@ -12,6 +12,8 @@
     "test:e2e": "playwright test",
     "calibrate": "tsx scripts/calibrate.ts",
     "calibrate:dry-run": "tsx scripts/calibrate.ts --dry-run",
+    "calibrate:solo": "tsx scripts/calibrate.ts --profile=solo",
+    "calibrate:solo:dry-run": "tsx scripts/calibrate.ts --profile=solo --dry-run",
     "calibrate:legacy": "tsx scripts/calibrate-legacy.ts",
     "list-candidates": "tsx scripts/list-candidates.ts"
   },
