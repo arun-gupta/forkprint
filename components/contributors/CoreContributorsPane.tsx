@@ -17,6 +17,7 @@ interface CoreContributorsPaneProps {
 export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots, onToggleIncludeBots }: CoreContributorsPaneProps) {
   const [showNames, setShowNames] = useState(true)
   const [showNumbers, setShowNumbers] = useState(false)
+  const [showChart, setShowChart] = useState(true)
 
   return (
     <section aria-label="Core contributors pane" className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -82,34 +83,48 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
         emptyText="—"
         tone="cyan"
         entityLabel="contributors"
+        collapsed={!showChart}
         showLabels={showNames}
         showValues={showNumbers}
         actions={
           <>
             <button
               type="button"
-              onClick={onToggleIncludeBots}
+              onClick={() => setShowChart((current) => !current)}
               className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
-              aria-pressed={includeBots}
+              aria-pressed={showChart}
+              aria-expanded={showChart}
             >
-              {includeBots ? 'Exclude bots from chart' : 'Include bots in chart'}
+              {showChart ? 'Hide chart' : 'Show chart'}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowNames((current) => !current)}
-              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
-              aria-pressed={showNames}
-            >
-              {showNames ? 'Hide names' : 'Show names'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowNumbers((current) => !current)}
-              className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
-              aria-pressed={showNumbers}
-            >
-              {showNumbers ? 'Hide numbers' : 'Show numbers'}
-            </button>
+            {showChart ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onToggleIncludeBots}
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  aria-pressed={includeBots}
+                >
+                  {includeBots ? 'Exclude bots from chart' : 'Include bots in chart'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowNames((current) => !current)}
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  aria-pressed={showNames}
+                >
+                  {showNames ? 'Hide names' : 'Show names'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowNumbers((current) => !current)}
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  aria-pressed={showNumbers}
+                >
+                  {showNumbers ? 'Hide numbers' : 'Show numbers'}
+                </button>
+              </>
+            ) : null}
           </>
         }
       />

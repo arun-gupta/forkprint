@@ -77,4 +77,44 @@ describe('CoreContributorsPane', () => {
 
     expect(onToggleIncludeBots).toHaveBeenCalledTimes(1)
   })
+
+  it('collapses the contribution chart and hides sub-controls when toggled', async () => {
+    render(
+      <CoreContributorsPane
+        metrics={[]}
+        heatmap={[
+          { contributor: 'alice', commits: 5, commitsLabel: '5 commits', intensity: 'max' },
+          { contributor: 'bob', commits: 2, commitsLabel: '2 commits', intensity: 'medium' },
+        ]}
+        windowDays={90}
+        includeBots={false}
+        onToggleIncludeBots={vi.fn()}
+      />,
+    )
+
+    const toggle = screen.getByRole('button', { name: /hide chart/i })
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('list', { name: /contribution activity bars/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /include bots in chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /hide names/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /show numbers/i })).toBeInTheDocument()
+
+    await userEvent.click(toggle)
+
+    const reopen = screen.getByRole('button', { name: /show chart/i })
+    expect(reopen).toHaveAttribute('aria-pressed', 'false')
+    expect(reopen).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('list', { name: /contribution activity bars/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('alice')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /include bots in chart/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /hide names/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /show numbers/i })).not.toBeInTheDocument()
+
+    await userEvent.click(reopen)
+
+    expect(screen.getByRole('button', { name: /hide chart/i })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: /contribution activity bars/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /include bots in chart/i })).toBeInTheDocument()
+  })
 })
