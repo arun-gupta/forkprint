@@ -119,11 +119,26 @@ export function isSoloFallback(stars: number | Unavailable, profile: Calibration
   return !soloBracketHasData('solo-small')
 }
 
+/**
+ * Intended bracket for display purposes. In solo mode with stars < 100 this
+ * returns the solo bracket regardless of whether real solo calibration data
+ * has been collected — the label reflects the user's cohort. The calibration
+ * lookup (getCalibrationForStars) may still fall back to community anchors
+ * until solo sampling completes; isSoloFallback signals when that's the case.
+ */
+function intendedBracket(stars: number | Unavailable, profile: CalibrationProfile): BracketKey {
+  if (profile === 'solo') {
+    if (stars === 'unavailable' || stars < 10) return 'solo-tiny'
+    if (stars < 100) return 'solo-small'
+  }
+  return getBracket(stars, 'community')
+}
+
 export function getBracketLabel(
   stars: number | Unavailable,
   profile: CalibrationProfile = 'community',
 ): string {
-  const base = BRACKET_LABELS[getBracket(stars, profile)]
+  const base = BRACKET_LABELS[intendedBracket(stars, profile)]
   if (isSoloFallback(stars, profile)) {
     return `${base} — limited solo sample`
   }

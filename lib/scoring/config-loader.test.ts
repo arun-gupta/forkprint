@@ -31,10 +31,9 @@ describe('getBracket', () => {
 })
 
 describe('getBracketLabel', () => {
-  it('annotates placeholder solo brackets with a fallback note', () => {
-    // Placeholder solo entries route to community; label carries the note.
-    expect(getBracketLabel(5, 'solo')).toContain('limited solo sample')
-    expect(getBracketLabel(50, 'solo')).toContain('limited solo sample')
+  it('shows the solo label for solo repos < 100 stars with a fallback note while solo calibration is pending', () => {
+    expect(getBracketLabel(5, 'solo')).toBe('Solo (< 10 stars) — limited solo sample')
+    expect(getBracketLabel(50, 'solo')).toBe('Solo (10–99 stars) — limited solo sample')
   })
 
   it('adds fallback note for solo repos above 100 stars', () => {
