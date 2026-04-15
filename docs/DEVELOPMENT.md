@@ -143,13 +143,43 @@ The script creates `../forkprint-<issue>-<slug>/` on a new branch, picks the nex
 
 **Mandatory pause after `/speckit.specify`.** Both interactive and `--headless` spawns halt after `/speckit.specify` and wait for your explicit approval before continuing to `/speckit.plan`. The kickoff prompt tells Claude to report the generated spec path and wait for one of the phrases `"proceed"`, `"approved"`, or `"go to plan"`. Spec revisions re-enter the paused state; only an approval phrase releases it. This exists because the spec is the highest-leverage artifact — revisions applied after plan/tasks are generated force Claude to re-derive everything downstream.
 
-**Releasing a paused headless session.** For `--headless` spawns:
+**Permission model for headless spawns.** The repo commits a project-scoped Claude Code permission policy at `.claude/settings.json`. Every session launched inside this repo or any git worktree of it — interactive or `claude -p` — inherits that allowlist. This is what unblocks headless spawns from freezing on the first tool-approval prompt (issue #238).
 
-1. Tail the claude log to confirm the pause: `tail -f ../forkprint-<issue>-<slug>/claude.log`. You should see the spec path and a notice that Claude is waiting for approval.
-2. Open the spec file (`specs/NNN-feature-name/spec.md` inside the worktree) and review it.
-3. Release the session by resuming the `claude` CLI for that worktree (e.g. `cd ../forkprint-<issue>-<slug> && claude --resume`) and replying with `"proceed"` (or request revisions, then reply `"proceed"` once satisfied).
+The allowlist is intentionally narrow:
 
-The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done`) you will need to review and release each worktree independently.
+- `Bash(.specify/scripts/bash/*)` — SpecKit helpers (the original block point).
+- `Bash(git:*)`, `Bash(gh:*)`, `Bash(npm:*)`, `Bash(node:*)` — lifecycle commands.
+- Common read-only shell utilities (`ls`, `cat`, `mkdir`, `grep`, `find`, `awk`, `sed`, `echo`, `printf`, `lsof`, `uuidgen`) — scoped by command name, never as `Bash(*)`.
+- Claude Code built-ins: `Read`, `Edit`, `Write`, `Grep`, `Glob`.
+- `WebFetch(domain:github.com)` and `WebFetch(domain:api.github.com)` — read-only GitHub lookups.
+
+Explicitly not allowed: `Bash(rm:*)`, `Bash(curl:*)`, `Bash(wget:*)`, `Bash(sudo:*)`, `Bash(ssh:*)`, any MCP tools, any blanket wildcard, and `bypassPermissions`. A tool outside the allowlist falls through to the normal prompt path; in a headless session, that still blocks — which is the signal to extend the allowlist by PR, not to bypass it.
+
+**Extending the allowlist**: edit `.claude/settings.json` in a PR. The PR description must name the SpecKit helper, `git` subcommand, `npm` script, or `gh` subcommand that needs the new entry. No secrets, no blanket wildcards, no destructive shell commands.
+
+**Releasing a paused headless session.** For `--headless` spawns, use the fire-and-forget release commands:
+
+```bash
+# Approve the generated spec and run Stage 2 (plan → tasks → implement → PR) in the background:
+scripts/claude-worktree.sh --approve-spec <issue>
+
+# Or send revision feedback to the paused session; it edits the spec in place and re-enters the pause:
+scripts/claude-worktree.sh --revise-spec <issue> "Add an acceptance scenario for empty input."
+```
+
+Both commands resolve the worktree for `<issue>`, read the session UUID recorded by the spawn at `<worktree>/.claude.session-id`, and run `claude -p "<prompt>" --resume <uuid>` as a detached `nohup` process appending to the same `claude.log`. They return control to your shell in under 5 seconds — you do not need to keep the invoking terminal open.
+
+Preconditions (both commands exit non-zero with a clear error if unmet):
+
+- A worktree for `<issue>` exists.
+- `<worktree>/.claude.session-id` exists and is non-empty.
+- At least one `<worktree>/specs/*/spec.md` exists (the paused state has been reached).
+
+Additional rule for `--revise-spec`: empty feedback is rejected. Repeated `--revise-spec` rounds accumulate — each round edits the spec as it stands after the previous round.
+
+Manual fallback (still supported): `cd ../forkprint-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
+
+The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done`) you review and release each worktree independently, but the release itself is fire-and-forget, so `for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done` walks away with three PRs on the way.
 
 **Cleanup:**
 

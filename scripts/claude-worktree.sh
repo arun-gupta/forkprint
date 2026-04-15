@@ -10,11 +10,19 @@ Provision an isolated Claude worktree for an issue and launch Claude in it.
 
 Usage:
   scripts/claude-worktree.sh [--headless] <issue-number> [slug]
+  scripts/claude-worktree.sh --approve-spec <issue-number>
+  scripts/claude-worktree.sh --revise-spec <issue-number> <feedback>
   scripts/claude-worktree.sh --remove <issue-number>
   scripts/claude-worktree.sh --cleanup-merged <issue-number>
 
 Options:
   --headless          Run claude -p in background (log -> claude.log)
+  --approve-spec      Release the spec-review pause for a paused headless
+                      spawn; Stage 2 (plan/tasks/implement/PR) runs in the
+                      background. Fire-and-forget; returns immediately.
+  --revise-spec       Send revision feedback to a paused headless spawn;
+                      the session edits the spec in place and re-enters
+                      the pause. Fire-and-forget; feedback must be non-empty.
   --remove            Discard worktree (works on unmerged work)
   --cleanup-merged    Post-merge: pull main, remove worktree, delete branch
   -h, --help          Show this help and exit
@@ -25,11 +33,21 @@ Behavior:
   2. Picks the next free port >= 3010 and writes it to .env.local as PORT.
   3. Runs npm install in the worktree.
   4. Starts `npm run dev` on that port in the background (log -> dev.log).
-  5. Launches `claude` with a kickoff prompt pointing at the issue
+  5. Generates a UUID, records it in .claude.session-id inside the worktree,
+     and launches `claude --session-id <uuid>` with a kickoff prompt
      (interactive by default; --headless runs `claude -p` -> claude.log).
+     The recorded session ID lets --approve-spec and --revise-spec resume
+     the same session non-interactively.
 
-Batch example (headless):
+Permissions:
+  Headless spawns inherit the allowlist in .claude/settings.json at the
+  repo root. See docs/DEVELOPMENT.md for the permission model and how to
+  extend the allowlist when the SpecKit lifecycle needs a new tool.
+
+Batch example (headless, fully unattended through PR):
   for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
+  # review each generated spec
+  for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done
 EOF
 }
 
@@ -113,6 +131,37 @@ cleanup_merged() {
   git -C "$REPO_ROOT" branch -D "$branch"
 }
 
+release_paused_session() {
+  local issue="$1"
+  local prompt="$2"
+  local wt session_id
+  wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
+    | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
+  if [[ -z "${wt:-}" ]]; then
+    echo "No worktree found for issue $issue" >&2
+    exit 1
+  fi
+  if [[ ! -f "$wt/.claude.session-id" ]]; then
+    echo "No session ID recorded for issue $issue; cannot resume non-interactively." >&2
+    echo "Use 'cd $wt && claude --resume' instead." >&2
+    exit 1
+  fi
+  session_id="$(cat "$wt/.claude.session-id")"
+  if [[ -z "$session_id" ]]; then
+    echo "Session ID file for issue $issue is empty; cannot resume." >&2
+    exit 1
+  fi
+  # Paused state is reached once /speckit.specify has written a spec file.
+  if ! compgen -G "$wt/specs/*/spec.md" > /dev/null; then
+    echo "Spec not yet generated for issue $issue; paused state not reached." >&2
+    echo "Tail $wt/claude.log to confirm and retry once the pause is reported." >&2
+    exit 1
+  fi
+  ( cd "$wt" && nohup claude -p "$prompt" --resume "$session_id" >> claude.log 2>&1 & )
+  echo "Released pause for issue $issue; Stage 2 running in background."
+  echo "Tail: $wt/claude.log"
+}
+
 if [[ "${1:-}" == "--remove" ]]; then
   [[ -n "${2:-}" ]] || { echo "Usage: $0 --remove <issue>" >&2; exit 1; }
   remove_worktree "$2"
@@ -122,6 +171,22 @@ fi
 if [[ "${1:-}" == "--cleanup-merged" ]]; then
   [[ -n "${2:-}" ]] || { echo "Usage: $0 --cleanup-merged <issue>" >&2; exit 1; }
   cleanup_merged "$2"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--approve-spec" ]]; then
+  [[ -n "${2:-}" ]] || { echo "Usage: $0 --approve-spec <issue>" >&2; exit 1; }
+  release_paused_session "$2" "proceed"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--revise-spec" ]]; then
+  [[ -n "${2:-}" ]] || { echo "Usage: $0 --revise-spec <issue> <feedback>" >&2; exit 1; }
+  if [[ -z "${3:-}" ]]; then
+    echo "--revise-spec requires non-empty feedback" >&2
+    exit 1
+  fi
+  release_paused_session "$2" "$3"
   exit 0
 fi
 
@@ -194,6 +259,15 @@ echo "PORT=$port" >> "$WT_PATH/.env.local"
 echo "Dev server: http://localhost:$port (log: $WT_PATH/dev.log)"
 
 # 5. Launch Claude with a kickoff prompt
+# Pre-generate a session UUID so --approve-spec / --revise-spec can resume
+# this exact session non-interactively without probing the CLI's session store.
+if ! command -v uuidgen >/dev/null 2>&1; then
+  echo "uuidgen not found; required for session addressability" >&2
+  exit 1
+fi
+SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
+echo "$SESSION_ID" > "$WT_PATH/.claude.session-id"
+
 KICKOFF="Work on GitHub issue #${ISSUE}. Follow CLAUDE.md (read constitution, DEVELOPMENT.md, PRODUCT.md). Run the SpecKit lifecycle in two stages with a mandatory human-in-the-loop pause in between:
 
 STAGE 1: Run /speckit.specify. When it completes, report the generated spec file path and STOP. Do NOT proceed to /speckit.plan. Wait for explicit user approval — one of the phrases \"proceed\", \"approved\", or \"go to plan\". If the user replies with spec revisions instead of an approval phrase, update the spec and re-enter the paused state (report the updated spec path and wait again). Only an explicit approval phrase releases the pause.
@@ -204,9 +278,11 @@ Dev server is already running on port ${port}."
 
 cd "$WT_PATH"
 if (( HEADLESS )); then
-  nohup claude -p "$KICKOFF" > claude.log 2>&1 &
+  nohup claude -p "$KICKOFF" --session-id "$SESSION_ID" > claude.log 2>&1 &
   echo $! > .claude.pid
   echo "Claude (headless) PID $(cat .claude.pid) — log: $WT_PATH/claude.log"
+  echo "Session ID: $SESSION_ID (recorded in $WT_PATH/.claude.session-id)"
+  echo "Release the pause with: scripts/claude-worktree.sh --approve-spec $ISSUE"
 else
-  exec claude "$KICKOFF"
+  exec claude --session-id "$SESSION_ID" "$KICKOFF"
 fi
