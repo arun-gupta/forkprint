@@ -962,9 +962,82 @@ async function isSoloCandidate(fullName: string, token: string): Promise<boolean
 // ─── Dry-run support ─────────────────────────────────────────────────────────
 
 const DRY_RUN = process.argv.includes('--dry-run')
-const REPOS_OUTPUT_PATH = SOLO_PROFILE ? 'docs/calibrate-solo-repos.md' : 'docs/calibrate-repos.md'
+const REPOS_OUTPUT_PATH = 'docs/calibrate-repos.md'
+
+// Read the existing repo file (if any) as a map of canonical header → section
+// text so a dry-run for one profile can replace only its own sections and
+// leave the other profile's sections intact. Section text starts at `## `
+// and includes all lines up to but not including the next `## ` or `---`.
+function readSectionsByHeader(): Map<string, string[]> {
+  const sections = new Map<string, string[]>()
+  if (!existsSync(REPOS_OUTPUT_PATH)) return sections
+  const content = readFileSync(REPOS_OUTPUT_PATH, 'utf8').split('\n')
+  let currentHeader: string | null = null
+  let currentLines: string[] = []
+  for (const line of content) {
+    if (line.startsWith('## ')) {
+      if (currentHeader) sections.set(currentHeader, currentLines)
+      currentHeader = line
+      currentLines = [line]
+    } else if (line.startsWith('---')) {
+      if (currentHeader) {
+        sections.set(currentHeader, currentLines)
+        currentHeader = null
+        currentLines = []
+      }
+    } else if (currentHeader) {
+      currentLines.push(line)
+    }
+  }
+  if (currentHeader) sections.set(currentHeader, currentLines)
+  return sections
+}
+
+// Canonical header order across both profiles. Sections not in this list
+// are preserved but pushed to the end.
+const CANONICAL_ORDER = [
+  'Solo Tiny',
+  'Solo Small',
+  'Emerging',
+  'Growing',
+  'Established',
+  'Popular',
+]
+
+function headerSortKey(header: string): number {
+  const stripped = header.replace(/^##\s+/, '').trim()
+  for (let i = 0; i < CANONICAL_ORDER.length; i++) {
+    if (stripped.toLowerCase().startsWith(CANONICAL_ORDER[i]!.toLowerCase())) return i
+  }
+  return CANONICAL_ORDER.length
+}
 
 function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
+  const existingSections = readSectionsByHeader()
+
+  // Replace the sections owned by the active profile.
+  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
+    const bracket = BRACKETS[bracketKey]
+    const repos = sampledRepos[bracketKey]
+    const header = `## ${bracket.label} (${repos.length} repos)`
+    const sectionLines = [header, '']
+    for (const repo of repos) sectionLines.push(`- [${repo}](https://github.com/${repo})`)
+    sectionLines.push('')
+    // Drop any old section for this bracket (match by label prefix, since the
+    // count in parens may differ between runs).
+    for (const key of [...existingSections.keys()]) {
+      const stripped = key.replace(/^##\s+/, '').trim()
+      if (stripped.toLowerCase().startsWith(bracket.label.toLowerCase().split(' (')[0]!)) {
+        existingSections.delete(key)
+      }
+    }
+    existingSections.set(header, sectionLines)
+  }
+
+  const orderedHeaders = [...existingSections.keys()].sort(
+    (a, b) => headerSortKey(a) - headerSortKey(b),
+  )
+
   const lines: string[] = [
     '# Calibration Repos (dry-run)',
     '',
@@ -973,18 +1046,11 @@ function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
   ]
 
   let total = 0
-  for (const bracketKey of Object.keys(BRACKETS) as BracketKey[]) {
-    const bracket = BRACKETS[bracketKey]
-    const repos = sampledRepos[bracketKey]
-    total += repos.length
-
-    lines.push(`## ${bracket.label} (${repos.length} repos)`)
-    lines.push('')
-
-    for (const repo of repos) {
-      lines.push(`- [${repo}](https://github.com/${repo})`)
-    }
-    lines.push('')
+  for (const header of orderedHeaders) {
+    const section = existingSections.get(header)!
+    lines.push(...section)
+    // Count repos by counting lines starting with `- [`
+    total += section.filter((l) => l.startsWith('- [')).length
   }
 
   lines.push(`---`)
@@ -992,7 +1058,7 @@ function writeDryRunReport(sampledRepos: Record<BracketKey, string[]>) {
   lines.push('')
   lines.push('To proceed with full calibration using these repos, run:')
   lines.push('```')
-  lines.push('npm run calibrate')
+  lines.push(SOLO_PROFILE ? 'npm run calibrate:solo' : 'npm run calibrate')
   lines.push('```')
   lines.push('The checkpoint already contains the sampled repos — the full run will skip re-sampling.')
 

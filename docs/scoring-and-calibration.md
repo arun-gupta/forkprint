@@ -281,7 +281,7 @@ npm run calibrate -- --profile=solo --dry-run  # preview
 npm run calibrate -- --profile=solo            # full run
 ```
 
-Solo runs use a separate checkpoint (`scripts/calibrate-solo-checkpoint.json`) and a separate repo list (`docs/calibrate-solo-repos.md`). Results are **merged** into `lib/scoring/calibration-data.json`: only the `solo-tiny` and `solo-small` entries are updated; community brackets are left alone.
+Solo runs use a separate checkpoint (`scripts/calibrate-solo-checkpoint.json`) but write their sampled repos into the same `docs/calibrate-repos.md` file alongside the community sections (bracket headers don't overlap). Results are **merged** into `lib/scoring/calibration-data.json`: only the `solo-tiny` and `solo-small` entries are updated; community brackets are left alone.
 
 Each solo candidate is verified at sample time via three additional REST calls (contributors, recent commits, GOVERNANCE.md), so solo runs are slower per-candidate than community runs. Target sample size is 400 per bracket: `solo-tiny` uses 2 strata × 200 (1–4 stars, 5–9 stars); `solo-small` uses 160+140+100 across 10–29, 30–59, 60–99 stars. Expect ~3 hours with 5 tokens for a full run.
 
