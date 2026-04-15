@@ -49,11 +49,20 @@ export function buildContributorsViewModels(
   return results.map((result) => {
     const windowMetrics = getContributorWindowMetrics(result, windowDays)
     const filteredCommitCountsByAuthor = filterCommitCountsByAuthorBots(windowMetrics.commitCountsByAuthor, includeBots)
-    const contributorsScore = getContributorsScoreFromCommitCounts(filteredCommitCountsByAuthor, result.stars)
     const concentration = computeContributionConcentration(filteredCommitCountsByAuthor)
     const repeatContributors = computeRepeatContributors(filteredCommitCountsByAuthor)
     const activeContributors = getActiveContributorCount(filteredCommitCountsByAuthor)
     const contributionTypes = computeContributionTypes(result)
+    const contributorsScore = getContributorsScoreFromCommitCounts(filteredCommitCountsByAuthor, result.stars, {
+      maintainerCount: result.maintainerCount,
+      repeatContributors,
+      newContributors: windowMetrics.newContributors,
+      activeContributors,
+      commitsPresent: contributionTypes.includes('Commits'),
+      prsPresent: contributionTypes.includes('Pull requests'),
+      issuesPresent: contributionTypes.includes('Issues'),
+      hasFundingConfig: result.hasFundingConfig,
+    })
     const experimentalCommitCounts = windowMetrics.commitCountsByExperimentalOrg
     const elephantFactor = computeElephantFactor(experimentalCommitCounts)
     const singleVendorDependencyRatio = computeSingleVendorDependencyRatio(experimentalCommitCounts)

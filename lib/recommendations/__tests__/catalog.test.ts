@@ -46,8 +46,8 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Responsiveness')).toHaveLength(3)
   })
 
-  it('has 3 contributors entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(3)
+  it('has 7 contributors entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(7)
   })
 
   it('has 16 documentation entries', () => {
@@ -106,7 +106,7 @@ describe('getCatalogEntriesByTag', () => {
     const governance = getCatalogEntriesByTag('governance')
     const ids = governance.map((e) => e.id).sort()
     expect(ids).toEqual([
-      'CTR-2', 'CTR-3',
+      'CTR-2', 'CTR-3', 'CTR-4',
       'DOC-12', 'DOC-13', 'DOC-14',
       'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-17', 'SEC-3', 'SEC-5',
@@ -144,6 +144,7 @@ describe('getCatalogEntriesByTag', () => {
     const ids = entries.map((e) => e.id).sort()
     expect(ids).toEqual([
       'ACT-2', 'ACT-5',
+      'CTR-5', 'CTR-6', 'CTR-7',
       'DOC-1', 'DOC-10', 'DOC-11', 'DOC-15', 'DOC-16', 'DOC-3', 'DOC-4',
       'DOC-7', 'DOC-8', 'DOC-9',
       'RSP-1',

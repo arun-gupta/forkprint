@@ -80,6 +80,11 @@ function computeContributors(result: AnalysisResult) {
   if (!section) return undefined
   return {
     contributorsScore: section.contributorsScore.value,
+    contributorsScoreFactors: section.contributorsScore.weightedFactors.map((f) => ({
+      label: f.label,
+      weightLabel: f.weightLabel,
+      percentile: f.percentile ?? null,
+    })),
     contributorsMetrics: section.contributorsMetrics.map((m) => ({ label: m.label, value: m.value })),
     coreMetrics: section.coreMetrics.map((m) => ({ label: m.label, value: m.value })),
     experimentalMetrics: section.experimentalMetrics.map((m) => ({ label: m.label, value: m.value })),

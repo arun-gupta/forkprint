@@ -1,7 +1,7 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getActivityScore, type ActivityScoreDefinition } from '@/lib/activity/score-config'
 import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/lib/responsiveness/score-config'
-import { getContributorsScore } from '@/lib/contributors/score-config'
+import { getContributorsScore, type ContributorsScoreDefinition } from '@/lib/contributors/score-config'
 import { getDocumentationScore, type DocumentationRecommendation } from '@/lib/documentation/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { formatPercentileLabel, formatPercentileOrdinal, getBracketLabel, percentileToTone } from '@/lib/scoring/config-loader'
@@ -80,13 +80,7 @@ export function getHealthScore(result: AnalysisResult): HealthScoreDefinition {
     recommendations.push(...getResponsivenessRecommendations(responsiveness))
   }
   if (contributorsPercentile !== null) {
-    recommendations.push({
-      bucket: 'Contributors',
-      key: 'contributor_diversity',
-      percentile: contributorsPercentile,
-      message: 'Onboard more contributors to reduce single-maintainer risk. The top 20% of contributors account for a disproportionate share of commits.',
-      tab: 'contributors',
-    })
+    recommendations.push(...getContributorsRecommendations(contributors))
   }
   if (result.maintainerCount === 'unavailable') {
     recommendations.push({
@@ -201,6 +195,68 @@ function getResponsivenessRecommendations(score: ResponsivenessScoreDefinition):
   const backlog = categories.find((c) => c.label === 'Volume & backlog health')
   if (backlog?.percentile !== undefined) {
     recs.push({ bucket: 'Responsiveness', key: 'backlog_health', percentile: backlog.percentile, message: 'Address stale issues and PRs to improve backlog health.', tab: 'responsiveness' })
+  }
+
+  return recs
+}
+
+function getContributorsRecommendations(score: ContributorsScoreDefinition): HealthScoreRecommendation[] {
+  const recs: HealthScoreRecommendation[] = []
+  const factors = score.weightedFactors
+
+  const concentration = factors.find((f) => f.label === 'Contributor concentration')
+  if (concentration?.percentile !== undefined) {
+    recs.push({
+      bucket: 'Contributors',
+      key: 'contributor_diversity',
+      percentile: concentration.percentile,
+      message: 'Onboard more contributors to reduce single-maintainer risk. The top 20% of contributors account for a disproportionate share of commits.',
+      tab: 'contributors',
+    })
+  }
+
+  const maintainerDepth = factors.find((f) => f.label === 'Maintainer depth')
+  if (maintainerDepth?.percentile !== undefined) {
+    recs.push({
+      bucket: 'Contributors',
+      key: 'maintainer_depth',
+      percentile: maintainerDepth.percentile,
+      message: 'Grow maintainer depth by documenting additional owners in CODEOWNERS, MAINTAINERS.md, or GOVERNANCE.md so responsibility is not concentrated in a single person.',
+      tab: 'contributors',
+    })
+  }
+
+  const repeatRatio = factors.find((f) => f.label === 'Repeat-contributor ratio')
+  if (repeatRatio?.percentile !== undefined) {
+    recs.push({
+      bucket: 'Contributors',
+      key: 'repeat_contributor_ratio',
+      percentile: repeatRatio.percentile,
+      message: 'Invest in contributor retention — a higher share of repeat contributors signals durable engagement beyond one-time drive-bys.',
+      tab: 'contributors',
+    })
+  }
+
+  const newInflow = factors.find((f) => f.label === 'New-contributor inflow')
+  if (newInflow?.percentile !== undefined) {
+    recs.push({
+      bucket: 'Contributors',
+      key: 'new_contributor_inflow',
+      percentile: newInflow.percentile,
+      message: 'Surface good-first-issues and contributor onboarding so new contributors keep arriving alongside the returning base.',
+      tab: 'contributors',
+    })
+  }
+
+  const breadth = factors.find((f) => f.label === 'Contribution breadth')
+  if (breadth?.percentile !== undefined) {
+    recs.push({
+      bucket: 'Contributors',
+      key: 'contribution_breadth',
+      percentile: breadth.percentile,
+      message: 'Encourage contributions across commits, pull requests, and issues so engagement is not limited to a single surface.',
+      tab: 'contributors',
+    })
   }
 
   return recs

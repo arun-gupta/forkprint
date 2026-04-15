@@ -1,4 +1,4 @@
-import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
+import type { AnalysisResult, ContributorWindowDays, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
@@ -6,22 +6,113 @@ export interface ContributorsScoreDefinition {
   value: ScoreValue
   tone: ScoreTone
   description: string
+  summary: string
   percentile: number
   bracketLabel: string
   concentration: number | Unavailable
   topContributorCount: number | Unavailable
   contributorCount: number | Unavailable
+  weightedFactors: Array<{
+    label: string
+    weightLabel: string
+    description: string
+    percentile?: number
+  }>
+  missingInputs: string[]
 }
+
+type FactorKey =
+  | 'concentration'
+  | 'maintainerDepth'
+  | 'repeatRatio'
+  | 'newInflow'
+  | 'contributionBreadth'
+
+interface ContributorsFactorDefinition {
+  key: FactorKey
+  label: string
+  weight: number
+  description: string
+}
+
+const CONTRIBUTORS_FACTORS: ContributorsFactorDefinition[] = [
+  {
+    key: 'concentration',
+    label: 'Contributor concentration',
+    weight: 40,
+    description: 'Top-20% contributor commit share, scored relative to the repo\'s star bracket. Lower concentration is healthier.',
+  },
+  {
+    key: 'maintainerDepth',
+    label: 'Maintainer depth',
+    weight: 15,
+    description: 'Count of maintainers or owners parsed from public CODEOWNERS, MAINTAINERS, OWNERS, or GOVERNANCE files.',
+  },
+  {
+    key: 'repeatRatio',
+    label: 'Repeat-contributor ratio',
+    weight: 20,
+    description: 'Share of recent active contributors with more than one commit in the window.',
+  },
+  {
+    key: 'newInflow',
+    label: 'New-contributor inflow',
+    weight: 10,
+    description: 'Share of recent active contributors who are new to the repo. Presence is healthy; dominance is project-lifecycle sensitive.',
+  },
+  {
+    key: 'contributionBreadth',
+    label: 'Contribution breadth',
+    weight: 15,
+    description: 'Presence of recent commits, pull requests, and issues — a repo with all three surfaces is more broadly engaged.',
+  },
+]
 
 const INSUFFICIENT_SCORE: ContributorsScoreDefinition = {
   value: 'Insufficient verified public data',
   tone: 'neutral',
   description: 'RepoPulse cannot verify enough contributor-distribution data to score contributors yet.',
+  summary: 'Verified contributor-distribution inputs are incomplete.',
   percentile: 0,
   bracketLabel: '',
   concentration: 'unavailable',
   topContributorCount: 'unavailable',
   contributorCount: 'unavailable',
+  weightedFactors: CONTRIBUTORS_FACTORS.map((factor) => ({
+    label: factor.label,
+    weightLabel: `${factor.weight}%`,
+    description: factor.description,
+  })),
+  missingInputs: [],
+}
+
+export interface ContributorsScoreExtras {
+  maintainerCount?: number | Unavailable
+  newContributors?: number | Unavailable
+  repeatContributors?: number | Unavailable
+  activeContributors?: number | Unavailable
+  commitsPresent?: boolean
+  prsPresent?: boolean
+  issuesPresent?: boolean
+  hasFundingConfig?: AnalysisResult['hasFundingConfig']
+}
+
+function deriveExtras(result: AnalysisResult, windowDays: ContributorWindowDays = 90): ContributorsScoreExtras {
+  const windowMetrics = result.contributorMetricsByWindow?.[windowDays]
+  return {
+    maintainerCount: result.maintainerCount,
+    newContributors: windowMetrics?.newContributors ?? 'unavailable',
+    repeatContributors: windowMetrics?.repeatContributors ?? 'unavailable',
+    activeContributors: windowMetrics?.uniqueCommitAuthors ?? result.uniqueCommitAuthors90d,
+    commitsPresent: isPositive(result.commits90d),
+    prsPresent: isPositive(result.prsOpened90d) || isPositive(result.prsMerged90d),
+    issuesPresent: isPositive(result.issuesOpen) || isPositive(result.issuesClosed90d),
+    hasFundingConfig: result.hasFundingConfig,
+  }
+}
+
+function isPositive(value: number | Unavailable | undefined): boolean {
+  return typeof value === 'number' && value > 0
 }
 
 /**
@@ -34,33 +125,21 @@ function fundingBonus(hasFundingConfig: AnalysisResult['hasFundingConfig']): num
 }
 
 export function getContributorsScore(result: AnalysisResult): ContributorsScoreDefinition {
-  const cal = getCalibrationForStars(result.stars)
-  const bracketLabel = getBracketLabel(result.stars)
-  const concentration = getContributionConcentrationDetails(result.commitCountsByAuthor)
-
-  if (concentration === 'unavailable') {
-    return INSUFFICIENT_SCORE
-  }
-
-  // Inverted: lower concentration = higher percentile (better contributor diversity)
-  const basePercentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
-  const percentile = Math.min(99, basePercentile + fundingBonus(result.hasFundingConfig))
-
-  return {
-    value: percentile,
-    tone: percentileToTone(percentile),
-    description: `Contributor concentration ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
-    percentile,
-    bracketLabel,
-    concentration: concentration.share,
-    topContributorCount: concentration.topContributorCount,
-    contributorCount: concentration.contributorCount,
-  }
+  return computeContributorsScore(result.commitCountsByAuthor, result.stars, deriveExtras(result))
 }
 
 export function getContributorsScoreFromCommitCounts(
   commitCountsByAuthor: Record<string, number> | Unavailable,
   stars: number | Unavailable = 'unavailable',
+  extras: ContributorsScoreExtras = {},
+): ContributorsScoreDefinition {
+  return computeContributorsScore(commitCountsByAuthor, stars, extras)
+}
+
+function computeContributorsScore(
+  commitCountsByAuthor: Record<string, number> | Unavailable,
+  stars: number | Unavailable,
+  extras: ContributorsScoreExtras,
 ): ContributorsScoreDefinition {
   const cal = getCalibrationForStars(stars)
   const bracketLabel = getBracketLabel(stars)
@@ -70,18 +149,135 @@ export function getContributorsScoreFromCommitCounts(
     return INSUFFICIENT_SCORE
   }
 
-  const percentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
+  // Inverted: lower concentration = higher percentile (better contributor diversity)
+  const concentrationPercentile = interpolatePercentile(concentration.share, cal.topContributorShare, true)
+
+  // Prefer provided activeContributors; fall back to the commit-author set size.
+  const activeContributors =
+    typeof extras.activeContributors === 'number'
+      ? extras.activeContributors
+      : concentration.contributorCount
+
+  const subPercentiles: Partial<Record<FactorKey, number>> = {
+    concentration: concentrationPercentile,
+  }
+
+  const maintainerPercentile = evaluateMaintainerDepth(extras.maintainerCount)
+  if (maintainerPercentile !== undefined) subPercentiles.maintainerDepth = maintainerPercentile
+
+  const repeatPercentile = evaluateRepeatRatio(extras.repeatContributors, activeContributors)
+  if (repeatPercentile !== undefined) subPercentiles.repeatRatio = repeatPercentile
+
+  const newInflowPercentile = evaluateNewInflow(extras.newContributors, activeContributors)
+  if (newInflowPercentile !== undefined) subPercentiles.newInflow = newInflowPercentile
+
+  const breadthPercentile = evaluateContributionBreadth(extras)
+  if (breadthPercentile !== undefined) subPercentiles.contributionBreadth = breadthPercentile
+
+  // Weighted composite — renormalize across available factors so 'unavailable'
+  // is excluded (not counted as zero), per issue #184 acceptance criteria.
+  let totalWeight = 0
+  let weightedSum = 0
+  for (const factor of CONTRIBUTORS_FACTORS) {
+    const p = subPercentiles[factor.key]
+    if (p === undefined) continue
+    totalWeight += factor.weight
+    weightedSum += p * factor.weight
+  }
+  const compositePercentile = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : concentrationPercentile
+
+  const percentile = Math.min(99, Math.max(0, compositePercentile + fundingBonus(extras.hasFundingConfig)))
+
+  const missingInputs = getMissingInputs(extras)
 
   return {
     value: percentile,
     tone: percentileToTone(percentile),
-    description: `Contributor concentration ranks at the ${formatPercentileLabel(percentile)} percentile among ${bracketLabel} repositories.`,
+    description: `Contributors rank at the ${formatPercentileLabel(percentile)} among ${bracketLabel} repositories.`,
+    summary: `Contributors combines contributor concentration, maintainer depth, repeat and new-contributor signals, and contribution breadth, scored relative to ${bracketLabel} repositories.`,
     percentile,
     bracketLabel,
     concentration: concentration.share,
     topContributorCount: concentration.topContributorCount,
     contributorCount: concentration.contributorCount,
+    weightedFactors: CONTRIBUTORS_FACTORS.map((factor) => ({
+      label: factor.label,
+      weightLabel: `${factor.weight}%`,
+      description: factor.description,
+      percentile: subPercentiles[factor.key],
+    })),
+    missingInputs,
   }
+}
+
+function getMissingInputs(extras: ContributorsScoreExtras): string[] {
+  const missing: string[] = []
+  if (extras.maintainerCount === 'unavailable' || extras.maintainerCount === undefined) {
+    missing.push('Maintainer count')
+  }
+  if (extras.repeatContributors === 'unavailable' || extras.repeatContributors === undefined) {
+    missing.push('Repeat contributors')
+  }
+  if (extras.newContributors === 'unavailable' || extras.newContributors === undefined) {
+    missing.push('New contributors')
+  }
+  return missing
+}
+
+/**
+ * Maintainer depth heuristic (pending #152 calibration).
+ * Approximates a percentile from raw count: 0 → 0, 1 → 25, 2 → 45,
+ * 3–4 → 60, 5–9 → 78, 10+ → 92. Monotonic-increasing and bounded at 99.
+ */
+function evaluateMaintainerDepth(maintainerCount: number | Unavailable | undefined): number | undefined {
+  if (maintainerCount === 'unavailable' || maintainerCount === undefined) return undefined
+  if (maintainerCount <= 0) return 0
+  if (maintainerCount === 1) return 25
+  if (maintainerCount === 2) return 45
+  if (maintainerCount <= 4) return 60
+  if (maintainerCount <= 9) return 78
+  return 92
+}
+
+function evaluateRepeatRatio(
+  repeatContributors: number | Unavailable | undefined,
+  activeContributors: number | Unavailable | undefined,
+): number | undefined {
+  if (repeatContributors === 'unavailable' || repeatContributors === undefined) return undefined
+  if (activeContributors === 'unavailable' || activeContributors === undefined) return undefined
+  if (activeContributors <= 0) return 0
+  const ratio = Math.min(1, repeatContributors / activeContributors)
+  // Linear approximation pending calibration data. 0 → 0, 0.5 → 50, 1 → 99.
+  return Math.round(ratio * 99)
+}
+
+/**
+ * New-contributor inflow is project-lifecycle sensitive: both "no new contributors"
+ * and "100% new contributors" are weaker signals than a healthy mix. Peak at ~40%
+ * new (fresh inflow + returning base), drop off on either side.
+ */
+function evaluateNewInflow(
+  newContributors: number | Unavailable | undefined,
+  activeContributors: number | Unavailable | undefined,
+): number | undefined {
+  if (newContributors === 'unavailable' || newContributors === undefined) return undefined
+  if (activeContributors === 'unavailable' || activeContributors === undefined) return undefined
+  if (activeContributors <= 0) return 0
+  const ratio = Math.min(1, newContributors / activeContributors)
+  // Triangular curve: peak 80 at ratio 0.4, 40 at 0, 40 at 1.
+  if (ratio <= 0.4) return Math.round(40 + (ratio / 0.4) * 40)
+  return Math.round(80 - ((ratio - 0.4) / 0.6) * 40)
+}
+
+function evaluateContributionBreadth(extras: ContributorsScoreExtras): number | undefined {
+  // Presence bonus — only emit when at least one signal is verifiably observed.
+  const signals = [extras.commitsPresent, extras.prsPresent, extras.issuesPresent]
+  if (signals.every((s) => s === undefined)) return undefined
+  const presentCount = signals.filter(Boolean).length
+  if (presentCount === 0) return 0
+  if (presentCount === 1) return 33
+  if (presentCount === 2) return 66
+  return 99
 }
 
 export function computeContributionConcentration(
@@ -136,4 +332,3 @@ export function formatPercentage(value: number | Unavailable) {
 
   return `${(value * 100).toFixed(1)}%`
 }
-

@@ -6,6 +6,7 @@ import { HelpLabel } from '@/components/shared/HelpLabel'
 import { MetricValue } from '@/components/shared/MetricValue'
 import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import { formatPercentage } from '@/lib/contributors/score-config'
+import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model'
 import { GOVERNANCE_CONTRIBUTORS_METRICS } from '@/lib/tags/governance'
 import { COMMUNITY_CONTRIBUTORS_METRICS } from '@/lib/tags/community'
@@ -47,7 +48,7 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this scored?</p>
             <p className="mt-1 text-sm text-slate-700">
-              RepoPulse scores contributor diversity from recent commit concentration, ranked as a percentile against repos in the same star bracket. Lower top-20% share means the active contributor base is more distributed.
+              {section.contributorsScore.summary ?? 'Contributors combines contributor concentration, maintainer depth, repeat and new-contributor signals, and contribution breadth, scored relative to the repo\'s star bracket.'}
             </p>
           </div>
           <button
@@ -59,13 +60,40 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
             {showDetails ? 'Hide details' : 'Show details'}
           </button>
         </div>
+        {section.contributorsScore.weightedFactors && section.contributorsScore.weightedFactors.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {section.contributorsScore.weightedFactors.map((factor) => (
+              <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
+                <span className="font-semibold text-slate-900">{factor.label}</span> <span>{factor.weightLabel}</span>
+                {factor.percentile !== undefined ? (
+                  <span className="ml-1 text-slate-500">({formatPercentileLabel(factor.percentile)})</span>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
         {showDetails ? (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Concentration</p>
-            <p className="mt-1 text-sm text-slate-700">
-              Top-20% contributor share: {formatPercentage(section.contributorsScore.concentration)}
-              {section.contributorsScore.bracketLabel ? ` — scored relative to ${section.contributorsScore.bracketLabel} repositories` : ''}
-            </p>
+          <div className="mt-3 grid gap-2">
+            {section.contributorsScore.weightedFactors && section.contributorsScore.weightedFactors.length > 0 ? (
+              section.contributorsScore.weightedFactors.map((factor) => (
+                <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{factor.label} ({factor.weightLabel})</p>
+                    {factor.percentile !== undefined ? (
+                      <p className="text-sm font-semibold text-slate-900">{formatPercentileLabel(factor.percentile)}</p>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{factor.description}</p>
+                </div>
+              ))
+            ) : null}
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Top-20% contributor share</p>
+              <p className="mt-1 text-sm text-slate-700">
+                {formatPercentage(section.contributorsScore.concentration)}
+                {section.contributorsScore.bracketLabel ? ` — scored relative to ${section.contributorsScore.bracketLabel} repositories` : ''}
+              </p>
+            </div>
           </div>
         ) : null}
       </div>

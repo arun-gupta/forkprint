@@ -84,9 +84,10 @@ export function getScoreBadges(result?: AnalysisResult): ScoreBadgeDefinition[] 
           value: contributorsScore.value,
           tone: contributorsScore.tone,
           description: contributorsScore.description,
-          detail: typeof contributorsScore.contributorCount === 'number'
-            ? `${contributorsScore.contributorCount.toLocaleString()} contributors`
-            : undefined,
+          detail: getTopFactorDetail(contributorsScore.weightedFactors)
+            ?? (typeof contributorsScore.contributorCount === 'number'
+              ? `${contributorsScore.contributorCount.toLocaleString()} contributors`
+              : undefined),
         }
       : badge.category === 'Responsiveness'
       ? {

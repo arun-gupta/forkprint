@@ -83,6 +83,10 @@ const CTR: CatalogEntry[] = [
   { id: 'CTR-1', bucket: 'Contributors', key: 'contributor_diversity', title: 'Onboard more contributors to reduce single-maintainer risk' },
   { id: 'CTR-2', bucket: 'Contributors', key: 'no_maintainers', title: 'Add a CODEOWNERS or MAINTAINERS.md file', tags: ['governance'] },
   { id: 'CTR-3', bucket: 'Contributors', key: 'file:funding', title: 'Add a FUNDING.yml to disclose funding channels', tags: ['community', 'governance'] },
+  { id: 'CTR-4', bucket: 'Contributors', key: 'maintainer_depth', title: 'Grow maintainer depth by documenting additional owners', tags: ['governance'] },
+  { id: 'CTR-5', bucket: 'Contributors', key: 'repeat_contributor_ratio', title: 'Invest in contributor retention to grow repeat-contributor share', tags: ['contrib-ex'] },
+  { id: 'CTR-6', bucket: 'Contributors', key: 'new_contributor_inflow', title: 'Surface good-first-issues and onboarding to attract new contributors', tags: ['contrib-ex'] },
+  { id: 'CTR-7', bucket: 'Contributors', key: 'contribution_breadth', title: 'Encourage contributions across commits, pull requests, and issues', tags: ['contrib-ex'] },
 ]
 
 // ── Documentation ─────────────────────────────────────────────────────
