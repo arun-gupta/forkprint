@@ -320,7 +320,7 @@ describe('RepoInputClient', () => {
     let resolveAnalysis: ((value: {
       results: never[]
       failures: never[]
-      rateLimit: { remaining: number; resetAt: string; retryAfter: 'unavailable' }
+      rateLimit: { limit: number; remaining: number; resetAt: string; retryAfter: 'unavailable' }
     }) => void) | null = null
     const onAnalyze = vi.fn(
       () =>
@@ -341,10 +341,10 @@ describe('RepoInputClient', () => {
     resolveAnalysis?.({
       results: [],
       failures: [],
-      rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 800, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
 
-    expect(await screen.findByText(/remaining api calls: 4,999/i)).toBeInTheDocument()
+    expect(await screen.findByText(/remaining api calls: 800/i)).toBeInTheDocument()
     expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
     expect(screen.queryByText(/retry after:/i)).not.toBeInTheDocument()
   })
@@ -353,7 +353,7 @@ describe('RepoInputClient', () => {
     const onAnalyze = vi.fn().mockResolvedValue({
       results: [],
       failures: [],
-      rateLimit: { remaining: 'unavailable', resetAt: 'unavailable', retryAfter: 60 },
+      rateLimit: { limit: 5000, remaining: 500, resetAt: '2026-03-31T23:59:59Z', retryAfter: 60 },
     })
 
     renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)

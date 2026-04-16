@@ -97,6 +97,7 @@ export const REPO_OVERVIEW_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -164,6 +165,7 @@ export const REPO_COMMIT_AND_RELEASES_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -290,6 +292,7 @@ export const REPO_ACTIVITY_COUNTS_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -329,6 +332,7 @@ export const REPO_COMMIT_HISTORY_PAGE_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -348,6 +352,7 @@ export const REPO_DISCUSSIONS_PAGE_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -446,6 +451,7 @@ export const REPO_RESPONSIVENESS_METADATA_QUERY = `
       issueCount
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }
@@ -497,6 +503,6 @@ export function buildResponsivenessDetailQuery(
 
   return `{
     ${aliases}
-    rateLimit { remaining resetAt }
+    rateLimit { limit remaining resetAt }
   }`
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { AnalysisResult, RateLimitState } from '@/lib/analyzer/analysis-result'
+import { isRateLimitLow, type AnalysisResult, type RateLimitState } from '@/lib/analyzer/analysis-result'
 import {
   buildComparisonSections,
   getComparisonLimitMessage,
@@ -148,7 +148,7 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
         </div>
       )}
 
-      {rateLimit ? (
+      {rateLimit && isRateLimitLow(rateLimit) ? (
         <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
           <p>Remaining API calls: {rateLimit.remaining.toLocaleString('en-US')}</p>
           <p>Rate limit resets at: {new Date(rateLimit.resetAt).toLocaleTimeString()}</p>

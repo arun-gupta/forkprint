@@ -212,9 +212,18 @@ export interface AnalysisDiagnostic {
 }
 
 export interface RateLimitState {
+  limit: number | Unavailable
   remaining: number | Unavailable
   resetAt: string | Unavailable
   retryAfter: number | Unavailable
+}
+
+/** Returns true when remaining calls are at or below 25% of the total limit. */
+export function isRateLimitLow(rateLimit: RateLimitState): boolean {
+  if (typeof rateLimit.limit !== 'number' || typeof rateLimit.remaining !== 'number') {
+    return false
+  }
+  return rateLimit.remaining <= rateLimit.limit * 0.25
 }
 
 export interface AnalyzeResponse {
