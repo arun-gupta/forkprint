@@ -10,60 +10,26 @@ Provision an isolated Claude worktree for an issue and launch Claude in it.
 
 Usage:
   scripts/claude-worktree.sh [--headless] [--no-speckit] <issue-number> [slug]
-  scripts/claude-worktree.sh --approve-spec <issue-number>
-  scripts/claude-worktree.sh --revise-spec <issue-number> <feedback>
+  scripts/claude-worktree.sh --approve-spec   <issue-number>
+  scripts/claude-worktree.sh --revise-spec    <issue-number> <feedback>
   scripts/claude-worktree.sh --remove         [<issue-number>]
   scripts/claude-worktree.sh --cleanup-merged [<issue-number>]
 
 Options:
-  --headless          Run claude -p in background (log -> claude.log)
-  --no-speckit        Skip the SpecKit lifecycle; Claude works the issue
-                      directly and opens a PR. No spec-review pause, so
-                      --approve-spec / --revise-spec do not apply.
-  --approve-spec      Release the spec-review pause for a paused headless
-                      spawn; Stage 2 (plan/tasks/implement/PR) runs in the
-                      background. Fire-and-forget; returns immediately.
-  --revise-spec       Send revision feedback to a paused headless spawn;
-                      the session edits the spec in place and re-enters
-                      the pause. Fire-and-forget; feedback must be non-empty.
-  --remove            Discard worktree (works on unmerged work)
-  --cleanup-merged    Post-merge: pull main, remove worktree, delete branch
-  -h, --help          Show this help and exit
+  --headless        Run claude -p in background (log -> claude.log)
+  --no-speckit      Skip SpecKit lifecycle; Claude opens a PR directly (no spec pause)
+  --approve-spec    Release the spec-review pause for a paused headless spawn
+  --revise-spec     Send non-empty revision feedback to a paused spawn
+  --remove          Discard worktree (works on unmerged work)
+  --cleanup-merged  Post-merge: pull main, remove worktree, delete branch
+  -h, --help        Show this help and exit
 
-Cleanup from inside a worktree:
-  Run `--cleanup-merged` or `--remove` with no issue number from inside a
-  linked worktree (the one the script spawned) and the issue number is
-  inferred from the current branch's `^[0-9]+-` prefix. The script chdirs
-  to the main repo before any destructive operation, auto-checks out `main`
-  if needed (refuses on dirty state — never force-discards), and on success
-  prints a final-line notice if the removed worktree was the caller's CWD:
-      note: your shell's previous CWD (...) no longer exists — run `cd ...`
-  From the main repo clone, the no-argument form still errors — inference
-  only fires from inside a linked worktree.
+For --remove and --cleanup-merged, the issue number is inferred from the branch
+when run from inside a linked worktree. See docs/DEVELOPMENT.md for full behavior,
+the numbering rule, and the permission model.
 
-Behavior:
-  1. Creates ../forkprint-<issue>-<slug> as a git worktree on a new branch
-     named <issue>-<slug> (slug auto-derived from the issue title via gh
-     when omitted). /speckit.specify inside the worktree reuses this branch
-     verbatim so branch, spec directory, and issue number all agree — see
-     docs/DEVELOPMENT.md for the numbering rule.
-  2. Picks the next free port >= 3010 and writes it to .env.local as PORT.
-  3. Runs npm install in the worktree.
-  4. Starts `npm run dev` on that port in the background (log -> dev.log).
-  5. Generates a UUID, records it in .claude.session-id inside the worktree,
-     and launches `claude --session-id <uuid>` with a kickoff prompt
-     (interactive by default; --headless runs `claude -p` -> claude.log).
-     The recorded session ID lets --approve-spec and --revise-spec resume
-     the same session non-interactively.
-
-Permissions:
-  Headless spawns inherit the allowlist in .claude/settings.json at the
-  repo root. See docs/DEVELOPMENT.md for the permission model and how to
-  extend the allowlist when the SpecKit lifecycle needs a new tool.
-
-Batch example (headless, fully unattended through PR):
+Batch example:
   for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
-  # review each generated spec
   for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done
 EOF
 }
