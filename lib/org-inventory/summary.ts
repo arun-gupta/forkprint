@@ -25,11 +25,11 @@ export function buildOrgInventorySummary(results: OrgRepoSummary[]): OrgInventor
     totalStars,
     mostStarredRepos: [...results]
       .sort((left, right) => compareNumeric(right.stars, left.stars) || left.repo.localeCompare(right.repo))
-      .slice(0, 3)
+      .slice(0, 5)
       .map((result) => ({ repo: result.repo, stars: result.stars })),
     mostRecentlyActiveRepos: [...results]
       .sort((left, right) => compareDate(right.pushedAt, left.pushedAt) || left.repo.localeCompare(right.repo))
-      .slice(0, 3)
+      .slice(0, 5)
       .map((result) => ({ repo: result.repo, pushedAt: result.pushedAt })),
     languageDistribution: [...languageCounts.entries()]
       .map(([language, repoCount]) => ({ language, repoCount }))

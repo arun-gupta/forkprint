@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { OrgInventorySummary } from './OrgInventorySummary'
 
 describe('OrgInventorySummary', () => {
-  it('collapses language distribution to the top ten languages with a show-more control', async () => {
+  it('collapses language distribution to the top 5 languages with a show-more control', async () => {
     render(
       <OrgInventorySummary
         summary={{
@@ -22,9 +22,9 @@ describe('OrgInventorySummary', () => {
       />,
     )
 
-    expect(screen.getByText('Language 10')).toBeInTheDocument()
-    expect(screen.queryByText('Language 11')).not.toBeInTheDocument()
-    expect(screen.getByText('2 more languages hidden')).toBeInTheDocument()
+    expect(screen.getByText('Language 5')).toBeInTheDocument()
+    expect(screen.queryByText('Language 6')).not.toBeInTheDocument()
+    expect(screen.getByText('7 more languages hidden')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /show more languages/i }))
 
@@ -34,6 +34,6 @@ describe('OrgInventorySummary', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /show fewer languages/i }))
 
-    expect(screen.queryByText('Language 11')).not.toBeInTheDocument()
+    expect(screen.queryByText('Language 6')).not.toBeInTheDocument()
   })
 })

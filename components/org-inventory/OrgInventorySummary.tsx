@@ -48,7 +48,7 @@ export function OrgInventorySummary({ summary }: OrgInventorySummaryProps) {
             value: new Intl.NumberFormat('en-US').format(language.repoCount),
           }))}
           emptyLabel="No primary languages available."
-          collapsedItemCount={10}
+          collapsedItemCount={5}
           collapsedLabel="Show more languages"
           expandedLabel="Show fewer languages"
         />
