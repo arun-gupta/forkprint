@@ -32,7 +32,7 @@ Never run `gh pr merge` automatically. PR merging is always a manual user action
 Do not infer confirmation from phrases like "manual check confirmed" if any checkbox remains unchecked — ask explicitly before merging.
 
 ## On Ambiguity
-If a spec is missing, incomplete, or conflicts with the constitution — 
+If a spec is missing, incomplete, or conflicts with the constitution —
 stop and ask. Do not infer. Do not proceed.
 
 ## Signoff Metadata
