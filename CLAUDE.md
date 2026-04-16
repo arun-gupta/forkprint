@@ -38,25 +38,3 @@ stop and ask. Do not infer. Do not proceed.
 ## Signoff Metadata
 When filling manual checklist signoff or similar metadata, use the authenticated GitHub username when it can be verified locally. Do not infer identity from the filesystem path alone. If no verified username is available, leave the field blank or ask the user.
 
-## Active Technologies
-- TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library (032-doc-scoring)
-- N/A (stateless) (032-doc-scoring)
-- TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Reac (128-licensing-compliance)
-- N/A (stateless, on-demand analysis) (128-licensing-compliance)
-- TypeScript 5.x (Next.js 16+) + React, Tailwind CSS (174-report-search)
-- N/A (stateless, in-memory only) (174-report-search)
-- TypeScript 5.x (Next.js 16+) + Next.js (App Router), React, Tailwind CSS (180-community-scoring)
-- N/A (stateless, on-demand analysis per the constitution) (180-community-scoring)
-- Bash (POSIX-compatible portions + bash-specific features already used: `[[ ... ]]`, `set -euo pipefail`) + `git`, `gh` (GitHub CLI, already required by the surrounding script for `gh issue view`) (243-cleanup-merged-fix)
-- N/A (script operates on local git state and queries GitHub via `gh`) (243-cleanup-merged-fix)
-- Bash (script), JSON (settings), Markdown (docs). No application-code change in this feature. + Claude Code CLI (version installed on the maintainer's machine), `git`, `npm`, `gh`, `uuidgen` (macOS/Linux standard). (244-headless-worktree-permissions)
-- N/A — settings file committed to git; session ID recorded as a plain file inside the worktree (not persisted beyond worktree lifetime). (244-headless-worktree-permissions)
-- TypeScript 5.x, Next.js 16+ (App Router) — matches existing stack + React 18, Tailwind CSS, Vitest, React Testing Library, Playwright (E2E). No new runtime dependencies. (231-org-aggregation)
-- N/A (stateless — in-browser memory only for the duration of the run, per constitution §I) (231-org-aggregation)
-- Bash (POSIX-compatible for portable bits, bash-specific features already in use: `[[ ... ]]`, `set -euo pipefail`, `${BASH_REMATCH}`) + `git`, `gh` (GitHub CLI, already required by the surrounding tooling), `uuidgen` (macOS/Linux standard) (249-speckit-branch-spec-numbering-should-ali)
-- N/A (all state lives in git + local filesystem: spec dirs under `specs/`, worktrees as siblings of the repo) (249-speckit-branch-spec-numbering-should-ali)
-- TypeScript 5.x on Node 20+ (Next.js 16+, App Router) + React, `@testing-library/react` (`renderHook`, `act`, `waitFor`), Vitest — all already in `package.json` (264-investigate-skipped-test-per-repo-status)
-- N/A (stateless hook; test uses injected deferred promises) (264-investigate-skipped-test-per-repo-status)
-
-## Recent Changes
-- 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library
