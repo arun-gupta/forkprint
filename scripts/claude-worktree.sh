@@ -12,8 +12,8 @@ Usage:
   scripts/claude-worktree.sh [--headless] [--no-speckit] <issue-number> [slug]
   scripts/claude-worktree.sh --approve-spec <issue-number>
   scripts/claude-worktree.sh --revise-spec <issue-number> <feedback>
-  scripts/claude-worktree.sh --remove <issue-number>
-  scripts/claude-worktree.sh --cleanup-merged <issue-number>
+  scripts/claude-worktree.sh --remove         [<issue-number>]
+  scripts/claude-worktree.sh --cleanup-merged [<issue-number>]
 
 Options:
   --headless          Run claude -p in background (log -> claude.log)
@@ -29,6 +29,17 @@ Options:
   --remove            Discard worktree (works on unmerged work)
   --cleanup-merged    Post-merge: pull main, remove worktree, delete branch
   -h, --help          Show this help and exit
+
+Cleanup from inside a worktree:
+  Run `--cleanup-merged` or `--remove` with no issue number from inside a
+  linked worktree (the one the script spawned) and the issue number is
+  inferred from the current branch's `^[0-9]+-` prefix. The script chdirs
+  to the main repo before any destructive operation, auto-checks out `main`
+  if needed (refuses on dirty state — never force-discards), and on success
+  prints a final-line notice if the removed worktree was the caller's CWD:
+      note: your shell's previous CWD (...) no longer exists — run `cd ...`
+  From the main repo clone, the no-argument form still errors — inference
+  only fires from inside a linked worktree.
 
 Behavior:
   1. Creates ../forkprint-<issue>-<slug> as a git worktree on a new branch
@@ -62,13 +73,62 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   exit 0
 fi
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
+# REPO_ROOT is the primary worktree (main repo clone), regardless of whether
+# the script is invoked from there or from a linked worktree. `git worktree list`
+# emits the primary first by contract; fall back to show-toplevel for non-worktree
+# checkouts or older git versions.
+REPO_ROOT="$(git worktree list --porcelain 2>/dev/null | awk '/^worktree/ {print $2; exit}')"
+if [[ -z "${REPO_ROOT:-}" ]]; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+fi
 PARENT_DIR="$(dirname "$REPO_ROOT")"
 BASE_PORT=3010
 MAX_PORT=3100
 
+# Populates globals describing the caller's worktree context:
+#   CTX_IS_IN_LINKED_WT  0|1 — are we inside a linked (non-primary) worktree?
+#   CTX_MAIN_REPO        absolute path to the primary worktree (== REPO_ROOT)
+#   CTX_CURRENT_WT       absolute path to the caller's current worktree toplevel
+#   CTX_INFERRED_ISSUE   digit string from ^[0-9]+- branch prefix, or empty
+# Writes nothing to stdout on success; a helper, not UI.
+resolve_worktree_context() {
+  CTX_IS_IN_LINKED_WT=0
+  CTX_MAIN_REPO=""
+  CTX_CURRENT_WT=""
+  CTX_INFERRED_ISSUE=""
+  local git_common_dir git_dir branch
+  git_common_dir="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+  git_dir="$(git rev-parse --git-dir 2>/dev/null || true)"
+  [[ -z "$git_common_dir" || -z "$git_dir" ]] && return 0
+  # Canonicalize — --git-dir can return a relative path
+  [[ "$git_common_dir" = /* ]] || git_common_dir="$(cd "$git_common_dir" 2>/dev/null && pwd)"
+  [[ "$git_dir" = /* ]]        || git_dir="$(cd "$git_dir" 2>/dev/null && pwd)"
+  if [[ "$git_common_dir" != "$git_dir" ]]; then
+    CTX_IS_IN_LINKED_WT=1
+  fi
+  CTX_MAIN_REPO="$REPO_ROOT"
+  CTX_CURRENT_WT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [[ "$branch" =~ ^([0-9]+)- ]]; then
+    CTX_INFERRED_ISSUE="${BASH_REMATCH[1]}"
+  fi
+}
+
+# Emit the stranded-shell warning as the final line of a successful cleanup,
+# iff the worktree just removed was the caller's CWD (or a subdir of it).
+print_stranded_shell_notice_if_needed() {
+  local removed_wt="$1"
+  local caller_cwd="$2"
+  local main_repo="$3"
+  if [[ "$caller_cwd" == "$removed_wt" || "$caller_cwd" == "$removed_wt"/* ]]; then
+    echo "note: your shell's previous CWD ($removed_wt) no longer exists — run \`cd $main_repo\` to continue"
+  fi
+}
+
 remove_worktree() {
   local issue="$1"
+  local caller_cwd
+  caller_cwd="$(pwd -P)"  # physical path so we match git's canonical worktree paths (macOS /tmp -> /private/tmp)
   local wt
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
@@ -84,10 +144,13 @@ remove_worktree() {
   fi
   git -C "$REPO_ROOT" worktree remove --force "$wt"
   echo "Removed $wt"
+  print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
 }
 
 cleanup_merged() {
   local issue="$1"
+  local caller_cwd
+  caller_cwd="$(pwd -P)"  # physical path so we match git's canonical worktree paths (macOS /tmp -> /private/tmp)
   local wt branch current_branch pr_state
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
@@ -101,11 +164,16 @@ cleanup_merged() {
     exit 1
   fi
 
+  # If the primary worktree isn't on main, attempt a clean checkout. Refuse on
+  # dirty state — never force-discard the maintainer's in-flight work.
   current_branch="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
   if [[ "$current_branch" != "main" ]]; then
-    echo "Primary worktree at $REPO_ROOT is on '$current_branch', not main." >&2
-    echo "Switch it to main before running --cleanup-merged." >&2
-    exit 1
+    echo "Primary worktree at $REPO_ROOT is on '$current_branch'; checking out main..."
+    if ! git -C "$REPO_ROOT" checkout main; then
+      echo "Cannot check out main in $REPO_ROOT — primary worktree has uncommitted changes or a conflict." >&2
+      echo "Resolve it manually (commit/stash/revert) and re-run." >&2
+      exit 1
+    fi
   fi
 
   # Verify merge via GitHub PR state, not local ancestry — squash/rebase merges
@@ -135,6 +203,7 @@ cleanup_merged() {
   echo "Removed $wt"
 
   git -C "$REPO_ROOT" branch -D "$branch"
+  print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
 }
 
 release_paused_session() {
@@ -168,15 +237,45 @@ release_paused_session() {
   echo "Tail: $wt/claude.log"
 }
 
+# Populates RESOLVED_CLEANUP_ISSUE from an explicit CLI arg or, failing that,
+# from branch-name inference when the caller is inside a linked worktree.
+# Exits non-zero (no destructive action) when no arg is given and the caller
+# is either outside a linked worktree, or on a branch without a numeric prefix.
+# Uses a global rather than stdout because `exit` inside $() only exits the
+# subshell, which would let the caller proceed with an empty issue value.
+resolve_cleanup_issue() {
+  local flag="$1"      # "--cleanup-merged" or "--remove"
+  local explicit="$2"  # the positional arg from the CLI, possibly empty
+  RESOLVED_CLEANUP_ISSUE=""
+  if [[ -n "$explicit" ]]; then
+    RESOLVED_CLEANUP_ISSUE="$explicit"
+    return 0
+  fi
+  resolve_worktree_context
+  if (( CTX_IS_IN_LINKED_WT == 0 )); then
+    echo "Usage: $0 $flag <issue>" >&2
+    exit 1
+  fi
+  if [[ -z "$CTX_INFERRED_ISSUE" ]]; then
+    local current_branch
+    current_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '<unknown>')"
+    echo "Cannot infer issue number from branch '$current_branch' (expected prefix matching ^[0-9]+-)." >&2
+    echo "Re-run with an explicit issue number:" >&2
+    echo "  $0 $flag <issue>" >&2
+    exit 1
+  fi
+  RESOLVED_CLEANUP_ISSUE="$CTX_INFERRED_ISSUE"
+}
+
 if [[ "${1:-}" == "--remove" ]]; then
-  [[ -n "${2:-}" ]] || { echo "Usage: $0 --remove <issue>" >&2; exit 1; }
-  remove_worktree "$2"
+  resolve_cleanup_issue --remove "${2:-}"
+  remove_worktree "$RESOLVED_CLEANUP_ISSUE"
   exit 0
 fi
 
 if [[ "${1:-}" == "--cleanup-merged" ]]; then
-  [[ -n "${2:-}" ]] || { echo "Usage: $0 --cleanup-merged <issue>" >&2; exit 1; }
-  cleanup_merged "$2"
+  resolve_cleanup_issue --cleanup-merged "${2:-}"
+  cleanup_merged "$RESOLVED_CLEANUP_ISSUE"
   exit 0
 fi
 

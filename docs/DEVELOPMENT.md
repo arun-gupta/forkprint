@@ -198,13 +198,22 @@ The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/c
 **Cleanup:**
 
 ```bash
-# Post-merge: from the main repo on `main`, pull main, kill processes,
+# Post-merge, from the main repo: pull main, kill processes,
 # remove the worktree, delete the branch (refuses if unmerged).
 scripts/claude-worktree.sh --cleanup-merged 207
 
 # Discard unmerged work (kills processes + force-removes worktree, keeps branch).
 scripts/claude-worktree.sh --remove 207
 ```
+
+```bash
+# From inside the worktree (e.g. the same shell the Claude session ran in),
+# the issue number is inferred from the current branch's `^[0-9]+-` prefix:
+cd ../forkprint-207-<slug>
+scripts/claude-worktree.sh --cleanup-merged    # no arg needed
+```
+
+When invoked with no argument from a linked worktree, the script chdirs to the main repo, auto-checks out `main` if the primary worktree is on another branch (refuses on dirty state — never force-discards), then runs the standard cleanup flow. On success, if the caller's current working directory was the removed worktree, the script prints a final-line notice of the form `note: your shell's previous CWD (...) no longer exists — run \`cd <main-repo-path>\` to continue` so the stranded shell knows where to go. Inference only fires from inside a linked worktree — the no-argument form from the main repo clone still prints the existing usage error and takes no destructive action.
 
 `--cleanup-merged` verifies merge status by querying the associated PR's state via `gh pr view <branch> --json state` — **not** by local ancestry. This matters because squash-merges and rebase-merges on GitHub produce a merge commit that is not an ancestor of the local feature branch, so the older ancestry check (`git branch -d`) would silently refuse even after a real merge. When the PR state is `MERGED`, the local branch is force-deleted. When the PR is `OPEN`, `CLOSED` without merge, missing, or `gh` cannot reach GitHub, the command refuses and points to `--remove`. Use `--remove` as the escape hatch for unmerged branches.
 
