@@ -149,6 +149,179 @@ export async function fetchPublicUserOrganizations(
   }
 }
 
+export type OrgAdminListResult =
+  | { kind: 'ok'; admins: { login: string }[] }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'scope-insufficient' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgAdmins(token: string, org: string): Promise<OrgAdminListResult> {
+  const admins: { login: string }[] = []
+  let url: string | null = `https://api.github.com/orgs/${encodeURIComponent(org)}/members?role=admin&per_page=100`
+
+  try {
+    while (url) {
+      const response: Response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      })
+
+      const status = classifyRestStatus(response)
+      if (status !== 'ok') return status
+
+      const payload = (await response.json()) as Array<{ login?: unknown }>
+      if (!Array.isArray(payload)) return { kind: 'unknown' }
+      for (const member of payload) {
+        if (typeof member.login === 'string' && member.login.length > 0) {
+          admins.push({ login: member.login })
+        }
+      }
+
+      url = parseNextLink(response.headers.get('Link'))
+    }
+  } catch {
+    return { kind: 'network' }
+  }
+
+  return { kind: 'ok', admins }
+}
+
+export type UserPublicEventsResult =
+  | { kind: 'ok'; lastActivityAt: string | null }
+  | { kind: 'admin-account-404' }
+  | { kind: 'rate-limited' }
+  | { kind: 'events-fetch-failed' }
+
+export async function fetchUserPublicEvents(
+  token: string,
+  username: string,
+): Promise<UserPublicEventsResult> {
+  try {
+    const response = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(username)}/events/public?per_page=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    )
+
+    if (response.status === 404) return { kind: 'admin-account-404' }
+    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+    if (!response.ok) return { kind: 'events-fetch-failed' }
+
+    const payload = (await response.json()) as Array<{ created_at?: unknown }>
+    if (!Array.isArray(payload) || payload.length === 0) {
+      return { kind: 'ok', lastActivityAt: null }
+    }
+    const first = payload[0]
+    if (!first || typeof first.created_at !== 'string') {
+      return { kind: 'ok', lastActivityAt: null }
+    }
+    return { kind: 'ok', lastActivityAt: first.created_at }
+  } catch {
+    return { kind: 'events-fetch-failed' }
+  }
+}
+
+export type UserLatestOrgCommitResult =
+  | { kind: 'ok'; lastActivityAt: string | null }
+  | { kind: 'rate-limited' }
+  | { kind: 'commit-search-failed' }
+
+export async function fetchUserLatestOrgCommit(
+  token: string,
+  username: string,
+  org: string,
+): Promise<UserLatestOrgCommitResult> {
+  try {
+    const q = `author:${username}+org:${org}`
+    const response = await fetch(
+      `https://api.github.com/search/commits?q=${encodeURIComponent(q)}&sort=author-date&order=desc&per_page=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    )
+
+    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+    if (!response.ok) return { kind: 'commit-search-failed' }
+
+    const payload = (await response.json()) as {
+      total_count?: number
+      items?: Array<{ commit?: { author?: { date?: unknown } } }>
+    }
+    if (!payload || typeof payload.total_count !== 'number' || payload.total_count === 0) {
+      return { kind: 'ok', lastActivityAt: null }
+    }
+    const first = payload.items?.[0]
+    const date = first?.commit?.author?.date
+    if (typeof date !== 'string') return { kind: 'ok', lastActivityAt: null }
+    return { kind: 'ok', lastActivityAt: date }
+  } catch {
+    return { kind: 'commit-search-failed' }
+  }
+}
+
+export interface UserOrgMembershipResult {
+  isMember: boolean
+  reason?: 'unknown'
+}
+
+export async function fetchUserOrgMembership(
+  token: string,
+  org: string,
+): Promise<UserOrgMembershipResult> {
+  try {
+    const response = await fetch(
+      `https://api.github.com/user/memberships/orgs/${encodeURIComponent(org)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      },
+    )
+
+    if (response.status === 404) return { isMember: false }
+    if (!response.ok) return { isMember: false, reason: 'unknown' }
+
+    const payload = (await response.json()) as { state?: unknown }
+    return { isMember: payload?.state === 'active' }
+  } catch {
+    return { isMember: false, reason: 'unknown' }
+  }
+}
+
+function classifyRestStatus(response: Response): 'ok' | OrgAdminListResult {
+  if (response.ok) return 'ok'
+  if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+  if (response.status === 401) return { kind: 'auth-failed' }
+  if (response.status === 404) return { kind: 'unknown' }
+  return { kind: 'unknown' }
+}
+
+function isRateLimited(response: Response): boolean {
+  return response.headers.get('X-RateLimit-Remaining') === '0'
+}
+
+function parseNextLink(linkHeader: string | null): string | null {
+  if (!linkHeader) return null
+  const match = linkHeader.match(/<([^>]+)>; rel="next"/)
+  return match ? match[1]! : null
+}
+
 function parseContributorCount(contributors: unknown[], linkHeader: string | null): number | 'unavailable' {
   if (!Array.isArray(contributors)) {
     return 'unavailable'

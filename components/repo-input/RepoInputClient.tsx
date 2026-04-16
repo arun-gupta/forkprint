@@ -635,7 +635,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       }
       documentation={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
-          <OrgBucketContent bucketId="documentation" view={orgAggregation.view} selectedWindow={orgWindow} />
+          <OrgBucketContent
+            bucketId="documentation"
+            view={orgAggregation.view}
+            selectedWindow={orgWindow}
+            org={orgInventoryResponse?.org ?? null}
+          />
         ) : analysisResponse ? (
           <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from './AuthContext'
 import { SignInButton } from './SignInButton'
@@ -10,6 +10,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const authError = searchParams.get('auth_error')
+  const [elevatedOptIn, setElevatedOptIn] = useState(false)
 
   useEffect(() => {
     // Remove stale PAT key left by the pre-OAuth token-storage implementation
@@ -23,9 +24,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     const params = new URLSearchParams(hash.slice(1))
     const token = params.get('token')
     const username = params.get('username')
+    const scopesParam = params.get('scopes')
 
     if (token && username) {
-      signIn({ token, username })
+      const scopes = scopesParam
+        ? scopesParam
+            .split(/[\s,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : ['public_repo']
+      signIn({ token, username, scopes })
       // Restore any query params saved before the OAuth redirect (e.g. ?repos=...)
       const savedSearch = sessionStorage.getItem('oauth_return_search') ?? ''
       sessionStorage.removeItem('oauth_return_search')
@@ -80,7 +88,21 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <SignInButton />
+        <SignInButton elevated={elevatedOptIn} />
+
+        <label className="flex max-w-md cursor-pointer items-start gap-2 px-4 text-left text-xs text-slate-600">
+          <input
+            type="checkbox"
+            checked={elevatedOptIn}
+            onChange={(e) => setElevatedOptIn(e.target.checked)}
+            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300"
+          />
+          <span>
+            Request a <span className="font-semibold">deeper GitHub permission</span> (<code>read:org</code>)
+            to see concealed admins of orgs you belong to. Unlocks the full Stale Admin panel for
+            your own orgs. Default: off.
+          </span>
+        </label>
 
         <div className="max-w-md space-y-2 text-center">
           <p className="text-xs italic text-slate-400">

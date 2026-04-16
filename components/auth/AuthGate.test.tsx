@@ -57,4 +57,36 @@ describe('AuthGate', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /sign in with github/i })).toBeInTheDocument()
   })
+
+  it('renders an opt-in deeper-permission checkbox on the unauthenticated branch', () => {
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <p>Protected content</p>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    const checkbox = screen.getByRole('checkbox', { name: /deeper github permission/i })
+    expect(checkbox).toBeInTheDocument()
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it('sign-in link includes ?elevated=1 when the checkbox is checked, and omits it when unchecked', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <p>Protected content</p>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    const link = screen.getByRole('link', { name: /sign in with github/i })
+    expect(link.getAttribute('href')).toBe('/api/auth/login')
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /deeper github permission/i }))
+    expect(link.getAttribute('href')).toBe('/api/auth/login?elevated=1')
+
+    await userEvent.click(screen.getByRole('checkbox', { name: /deeper github permission/i }))
+    expect(link.getAttribute('href')).toBe('/api/auth/login')
+  })
 })

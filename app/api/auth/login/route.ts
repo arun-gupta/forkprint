@@ -5,7 +5,15 @@ export const runtime = 'nodejs'
 
 const OAUTH_STATE_COOKIE = 'repo_pulse_oauth_state'
 
+export function buildOAuthScope(elevated: boolean): string {
+  return elevated ? 'public_repo read:org' : 'public_repo'
+}
+
 export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const elevated = url.searchParams.get('elevated') === '1'
+  const scope = buildOAuthScope(elevated)
+
   // Dev-only short-circuit (#207): bypass GitHub OAuth when DEV_GITHUB_PAT is
   // set in `next dev`. Resolves the multi-worktree port-mismatch problem
   // without requiring OAuth App reconfiguration.
@@ -14,10 +22,8 @@ export async function GET(request: Request) {
     const username = await fetchGithubUsername(devPat)
     if (username) {
       const base = new URL('/', request.url)
-      return Response.redirect(
-        `${base.toString()}#token=${encodeURIComponent(devPat)}&username=${encodeURIComponent(username)}`,
-        302,
-      )
+      const fragment = `token=${encodeURIComponent(devPat)}&username=${encodeURIComponent(username)}&scopes=${encodeURIComponent(scope)}`
+      return Response.redirect(`${base.toString()}#${fragment}`, 302)
     }
     return Response.json(
       { error: 'DEV_GITHUB_PAT is set but rejected by GitHub (invalid or lacking public_repo scope).' },
@@ -44,7 +50,7 @@ export async function GET(request: Request) {
 
   const params = new URLSearchParams({
     client_id: clientId,
-    scope: 'public_repo',
+    scope,
     state,
   })
 
