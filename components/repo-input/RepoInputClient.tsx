@@ -480,6 +480,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                 org={orgInventoryResponse.org}
                 summary={orgInventoryResponse.summary}
                 results={orgInventoryResponse.results}
+                rateLimit={orgInventoryResponse.rateLimit}
                 onAnalyzeRepo={(repo) => {
                   void handleSubmit([repo])
                 }}
