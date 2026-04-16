@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CollapseChevron } from '@/components/shared/CollapseChevron'
 import type { LensReadout, MetricCardViewModel } from '@/lib/metric-cards/view-model'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 import { scoreToneClass } from '@/lib/metric-cards/score-config'
@@ -18,6 +19,7 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
     onTagChange(activeTag === key ? null : key)
   }
 
+  const [paneCollapsed, setPaneCollapsed] = useState(false)
   // Session-scoped override for the solo-project scoring surface. null =
   // use the auto-detected profile from the precomputed health score.
   const [profileOverride, setProfileOverride] = useState<HealthScoreProfile | null>(null)
@@ -60,10 +62,18 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
 
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900" data-testid={`metric-card-${card.repo}`}>
-      <div className="flex items-baseline justify-between">
+      <button
+        type="button"
+        onClick={() => setPaneCollapsed((prev) => !prev)}
+        className="flex w-full items-center gap-2 text-left"
+        aria-expanded={!paneCollapsed}
+      >
+        <CollapseChevron expanded={!paneCollapsed} />
         <h3 className="font-semibold text-slate-900 dark:text-slate-100">{card.repo}</h3>
-        <p className="text-xs text-slate-400 dark:text-slate-500">Created: {card.createdAtLabel}</p>
-      </div>
+        <p className="ml-auto text-xs text-slate-400 dark:text-slate-500">Created: {card.createdAtLabel}</p>
+      </button>
+      {!paneCollapsed ? (
+      <>
       <p className={`mt-1 line-clamp-2 text-xs italic text-slate-400 dark:text-slate-500 ${card.description === '—' ? '' : 'not-italic text-slate-500 dark:text-slate-400'}`}>{card.description === '—' ? 'No description found' : card.description}</p>
 
       {showOverrideToggle ? (
@@ -157,6 +167,8 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
             </button>
           </p>
         </div>
+      ) : null}
+      </>
       ) : null}
     </article>
   )
