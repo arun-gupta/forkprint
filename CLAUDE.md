@@ -53,6 +53,8 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 - N/A — settings file committed to git; session ID recorded as a plain file inside the worktree (not persisted beyond worktree lifetime). (244-headless-worktree-permissions)
 - TypeScript 5.x, Next.js 16+ (App Router) — matches existing stack + React 18, Tailwind CSS, Vitest, React Testing Library, Playwright (E2E). No new runtime dependencies. (231-org-aggregation)
 - N/A (stateless — in-browser memory only for the duration of the run, per constitution §I) (231-org-aggregation)
+- TypeScript 5.x on Node 20+ (Next.js 16+, App Router) + React, `@testing-library/react` (`renderHook`, `act`, `waitFor`), Vitest — all already in `package.json` (264-investigate-skipped-test-per-repo-status)
+- N/A (stateless hook; test uses injected deferred promises) (264-investigate-skipped-test-per-repo-status)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library
