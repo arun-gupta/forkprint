@@ -3,14 +3,21 @@
 import { useState } from 'react'
 import type {
   OrgSummaryViewModel,
+  RunStatus,
 } from '@/lib/org-aggregation/types'
+import { triggerDownload } from '@/lib/export/json-export'
+import { buildOrgSummaryJsonExport } from '@/lib/export/org-summary-json-export'
+import { buildOrgSummaryMarkdownExport } from '@/lib/export/org-summary-markdown-export'
 import { PANEL_BUCKETS, isRealPanel, renderPanel, type PanelBucketId } from './panels/registry'
 import { PerRepoStatusList } from './PerRepoStatusList'
+import { ProgressIndicator } from './ProgressIndicator'
+import { RateLimitPausePanel } from './RateLimitPausePanel'
 import { RunStatusHeader } from './RunStatusHeader'
 
 interface Props {
   org: string
   view: OrgSummaryViewModel
+  startedAt?: Date
   onCancel?: () => void
   onPause?: () => void
   onResume?: () => void
@@ -19,7 +26,9 @@ interface Props {
   showRunStatus?: boolean
 }
 
-export function OrgSummaryView({ org, view, onCancel, onPause, onResume, onRetry, notificationToggle, showRunStatus = true }: Props) {
+const SHOW_PROGRESS_STATUSES: RunStatus[] = ['in-progress', 'paused', 'complete', 'cancelled']
+
+export function OrgSummaryView({ org, view, startedAt, onCancel, onPause, onResume, onRetry, notificationToggle, showRunStatus = true }: Props) {
   const visibleBuckets = PANEL_BUCKETS
     .filter((b) => b.id !== 'repos' && b.id !== 'recommendations')
     .map((bucket) => ({
@@ -47,6 +56,27 @@ export function OrgSummaryView({ org, view, onCancel, onPause, onResume, onRetry
           onPause={onPause}
           onResume={onResume}
           notificationToggle={notificationToggle}
+        />
+      ) : null}
+
+      {showRunStatus && startedAt && SHOW_PROGRESS_STATUSES.includes(view.status.status) ? (
+        <ProgressIndicator
+          succeeded={view.status.succeeded}
+          failed={view.status.failed}
+          total={view.status.total}
+          status={view.status.status}
+          startedAt={startedAt}
+          etaMs={view.status.etaMs}
+        />
+      ) : null}
+
+      {showRunStatus && view.status.pause && view.status.status === 'paused' ? (
+        <RateLimitPausePanel
+          kind={view.status.pause.kind}
+          resumesAt={view.status.pause.resumesAt}
+          reposToReDispatch={view.status.queued}
+          pausesSoFar={view.status.pause.pausesSoFar}
+          onCancel={onCancel}
         />
       ) : null}
 
@@ -113,6 +143,25 @@ export function OrgSummaryView({ org, view, onCancel, onPause, onResume, onRetry
                 ))}
               </ul>
             </section>
+          ) : null}
+
+          {(view.status.status === 'complete' || view.status.status === 'cancelled') ? (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => triggerDownload(buildOrgSummaryJsonExport(org, view))}
+                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                Export JSON
+              </button>
+              <button
+                type="button"
+                onClick={() => triggerDownload(buildOrgSummaryMarkdownExport(org, view))}
+                className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                Export Markdown
+              </button>
+            </div>
           ) : null}
         </>
       ) : null}

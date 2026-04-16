@@ -18,13 +18,16 @@ import { SearchProvider } from '@/components/search/SearchContext'
 import type { TabMatchCounts } from '@/lib/search/types'
 import { computeTabTagCounts } from '@/lib/tags/tab-counts'
 import { useAuth } from '@/components/auth/AuthContext'
+import { NotificationToggle } from '@/components/org-summary/NotificationToggle'
 import { OrgSummaryView } from '@/components/org-summary/OrgSummaryView'
 import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
 import { OrgWindowSelector } from '@/components/org-summary/OrgWindowSelector'
+import { PreRunWarningDialog } from '@/components/org-summary/PreRunWarningDialog'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
+import { isLargeOrg } from '@/lib/config/org-aggregation'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import { decodeRepos } from '@/lib/export/shareable-url'
@@ -53,6 +56,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [preRunDialogRepos, setPreRunDialogRepos] = useState<string[] | null>(null)
+  const [notificationOptIn, setNotificationOptIn] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -465,16 +470,23 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           ) : (
             <>
               {orgAggregation.view ? (
-                <section className="flex items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
-                  <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 flex-shrink-0 text-sky-600 dark:text-sky-400">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clipRule="evenodd" />
-                  </svg>
-                  <span>
-                    {orgAggregation.view.status.status === 'complete' || orgAggregation.view.status.status === 'cancelled'
-                      ? <>Analysis complete — detailed per-repo results are in the <strong>Repositories</strong> tab.</>
-                      : <>Analyzing {orgAggregation.view.status.total} repos — detailed per-repo analysis is available in the <strong>Repositories</strong> tab.</>}
-                  </span>
-                </section>
+                <div ref={orgSummaryRef}>
+                  <OrgSummaryView
+                    org={orgInventoryResponse.org}
+                    view={orgAggregation.view}
+                    startedAt={orgAggregation.run?.startedAt}
+                    onCancel={orgAggregation.cancel}
+                    onPause={orgAggregation.pause}
+                    onResume={orgAggregation.resume}
+                    onRetry={orgAggregation.retry}
+                    notificationToggle={
+                      <NotificationToggle
+                        enabled={notificationOptIn}
+                        onChange={setNotificationOptIn}
+                      />
+                    }
+                  />
+                </div>
               ) : null}
               <OrgInventoryView
                 org={orgInventoryResponse.org}
@@ -488,10 +500,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   void handleSubmit(repos)
                 }}
                 onAnalyzeAllActive={(repos) => {
-                  void orgAggregation.start({
-                    org: orgInventoryResponse.org,
-                    repos,
-                  })
+                  if (isLargeOrg(repos.length)) {
+                    setPreRunDialogRepos(repos)
+                  } else {
+                    void orgAggregation.start({
+                      org: orgInventoryResponse.org,
+                      repos,
+                      notificationOptIn,
+                    })
+                  }
                 }}
               />
             </>
@@ -511,6 +528,23 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   return (
     <SearchProvider query={debouncedQuery}>
+    {preRunDialogRepos && orgInventoryResponse ? (
+      <PreRunWarningDialog
+        repoCount={preRunDialogRepos.length}
+        onConfirm={({ concurrency, notificationOptIn: notifOpt }) => {
+          const repos = preRunDialogRepos
+          setPreRunDialogRepos(null)
+          setNotificationOptIn(notifOpt)
+          void orgAggregation.start({
+            org: orgInventoryResponse.org,
+            repos,
+            concurrency,
+            notificationOptIn: notifOpt,
+          })
+        }}
+        onCancel={() => setPreRunDialogRepos(null)}
+      />
+    ) : null}
     <ResultsShell
       resetKey={resultsResetKey}
       initialActiveTab="overview"
