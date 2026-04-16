@@ -67,6 +67,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">🔒 Security</span>
           </div>
 
+          <p className="text-center text-xs font-medium text-slate-600">
+            ✨ Plus tailored recommendations to improve each dimension
+          </p>
+
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500">
             <span>Compare up to 4 repos</span>
             <span className="text-slate-300">|</span>
