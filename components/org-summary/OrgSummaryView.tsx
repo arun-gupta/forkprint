@@ -101,6 +101,16 @@ export function OrgSummaryView({ org, view, startedAt, onCancel, onPause, onResu
         />
       ) : null}
 
+      {!showPanels && visibleBuckets.length > 0 ? (
+        <div className="space-y-3">
+          {visibleBuckets
+            .find((b) => b.bucket.id === 'overview')
+            ?.bucketPanels.map(({ panelId, panel }) => (
+              <div key={panelId}>{renderPanel(panelId, panel)}</div>
+            ))}
+        </div>
+      ) : null}
+
       {showPanels && visibleBuckets.length > 0 ? (
         <>
           <div
