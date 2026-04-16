@@ -31,6 +31,7 @@ interface OrgInventoryViewProps {
   onAnalyzeRepo: (repo: string) => void
   onAnalyzeSelected: (repos: string[]) => void
   onAnalyzeAllActive?: (repos: string[]) => void
+  afterSummary?: React.ReactNode
 }
 
 export function OrgInventoryView({
@@ -41,6 +42,7 @@ export function OrgInventoryView({
   onAnalyzeRepo,
   onAnalyzeSelected,
   onAnalyzeAllActive,
+  afterSummary,
 }: OrgInventoryViewProps) {
   const [filters, setFilters] = useState<OrgInventoryFilters>({
     repoQuery: '',
@@ -121,6 +123,7 @@ export function OrgInventoryView({
       ) : (
         <>
           <OrgInventorySummary summary={summary} />
+          {afterSummary}
           <section className="rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
             <button
               type="button"

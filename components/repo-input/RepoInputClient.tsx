@@ -534,27 +534,27 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                 onAnalyzeAllActive={(repos) => {
                   setPreRunDialogRepos(repos)
                 }}
+                afterSummary={orgAggregation.view ? (
+                  <div ref={orgSummaryRef}>
+                    <OrgSummaryView
+                      org={orgInventoryResponse.org}
+                      view={orgAggregation.view}
+                      startedAt={orgAggregation.run?.startedAt}
+                      onCancel={orgAggregation.cancel}
+                      onPause={orgAggregation.pause}
+                      onResume={orgAggregation.resume}
+                      onRetry={orgAggregation.retry}
+                      showPanels={false}
+                      notificationToggle={
+                        <NotificationToggle
+                          enabled={notificationOptIn}
+                          onChange={setNotificationOptIn}
+                        />
+                      }
+                    />
+                  </div>
+                ) : undefined}
               />
-              {orgAggregation.view ? (
-                <div ref={orgSummaryRef}>
-                  <OrgSummaryView
-                    org={orgInventoryResponse.org}
-                    view={orgAggregation.view}
-                    startedAt={orgAggregation.run?.startedAt}
-                    onCancel={orgAggregation.cancel}
-                    onPause={orgAggregation.pause}
-                    onResume={orgAggregation.resume}
-                    onRetry={orgAggregation.retry}
-                    showPanels={false}
-                    notificationToggle={
-                      <NotificationToggle
-                        enabled={notificationOptIn}
-                        onChange={setNotificationOptIn}
-                      />
-                    }
-                  />
-                </div>
-              ) : null}
             </>
           )}
         </section>
