@@ -144,185 +144,187 @@ export function OrgInventoryView({
                 Repositories ({sortedRows.length})
               </span>
             </button>
-            {repoTableExpanded ? <div className="px-3 pb-3">
-            <div className="flex flex-wrap items-end gap-2">
-              <label className="flex-1 min-w-[140px]">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
-                <input
-                  value={filters.repoQuery}
-                  onChange={(event) => {
-                    setCurrentPage(1)
-                    setFilters((current) => ({ ...current, repoQuery: event.target.value }))
-                  }}
-                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                  placeholder="Repo name"
-                />
-              </label>
-              <label className="min-w-[120px]">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Language</span>
-                <select
-                  value={filters.language}
-                  onChange={(event) => {
-                    setCurrentPage(1)
-                    setFilters((current) => ({ ...current, language: event.target.value }))
-                  }}
-                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                >
-                  <option value="all">All</option>
-                  {languageOptions.map((language) => (
-                    <option key={language} value={language}>{language}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="min-w-[100px]">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Archived</span>
-                <select
-                  value={filters.archived}
-                  onChange={(event) => {
-                    setCurrentPage(1)
-                    setFilters((current) => ({ ...current, archived: event.target.value as OrgInventoryFilters['archived'] }))
-                  }}
-                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                >
-                  <option value="all">All</option>
-                  <option value="active">Active</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </label>
-              <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
-                <label className="inline-flex items-center gap-1">
-                  <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />
-                  No archived
-                </label>
-                <label className="inline-flex items-center gap-1">
-                  <input type="checkbox" checked={excludeForks} onChange={(e) => setExcludeForks(e.target.checked)} aria-label="Exclude forks" />
-                  No forks
-                </label>
-              </div>
-            </div>
+            {repoTableExpanded ? (
+              <div className="space-y-4 px-3 pb-3">
+                <div className="flex flex-wrap items-end gap-2">
+                  <label className="flex-1 min-w-[140px]">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
+                    <input
+                      value={filters.repoQuery}
+                      onChange={(event) => {
+                        setCurrentPage(1)
+                        setFilters((current) => ({ ...current, repoQuery: event.target.value }))
+                      }}
+                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="Repo name"
+                    />
+                  </label>
+                  <label className="min-w-[120px]">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Language</span>
+                    <select
+                      value={filters.language}
+                      onChange={(event) => {
+                        setCurrentPage(1)
+                        setFilters((current) => ({ ...current, language: event.target.value }))
+                      }}
+                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      <option value="all">All</option>
+                      {languageOptions.map((language) => (
+                        <option key={language} value={language}>{language}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="min-w-[100px]">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Archived</span>
+                    <select
+                      value={filters.archived}
+                      onChange={(event) => {
+                        setCurrentPage(1)
+                        setFilters((current) => ({ ...current, archived: event.target.value as OrgInventoryFilters['archived'] }))
+                      }}
+                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                    >
+                      <option value="all">All</option>
+                      <option value="active">Active</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                  </label>
+                  <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
+                    <label className="inline-flex items-center gap-1">
+                      <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />
+                      No archived
+                    </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input type="checkbox" checked={excludeForks} onChange={(e) => setExcludeForks(e.target.checked)} aria-label="Exclude forks" />
+                      No forks
+                    </label>
+                  </div>
+                </div>
 
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">{selectedRepos.length} selected · {activeRunRepos.length} after filters</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRepos(sortedRows.map((r) => r.repo))}
-                  className="text-xs text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
-                >
-                  Select all
-                </button>
-                {selectedRepos.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRepos([])}
-                    className="text-xs text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
-                  >
-                    Clear
-                  </button>
-                ) : null}
-              </div>
-              <div className="flex items-center gap-2">
-                {onAnalyzeAllActive ? (
-                  <button
-                    type="button"
-                    disabled={activeRunRepos.length === 0}
-                    className="rounded border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
-                    onClick={() => onAnalyzeAllActive(activeRunRepos)}
-                  >
-                    Analyze all ({activeRunRepos.length})
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  disabled={selectedRepos.length === 0}
-                  className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
-                  onClick={() => onAnalyzeSelected(selectedRepos)}
-                >
-                  Analyze selected ({selectedRepos.length})
-                </button>
-              </div>
-            </div>
-            {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{selectionError}</p> : null}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{selectedRepos.length} selected · {activeRunRepos.length} after filters</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRepos(sortedRows.map((r) => r.repo))}
+                      className="text-xs text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                    >
+                      Select all
+                    </button>
+                    {selectedRepos.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRepos([])}
+                        className="text-xs text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {onAnalyzeAllActive ? (
+                      <button
+                        type="button"
+                        disabled={activeRunRepos.length === 0}
+                        className="rounded border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                        onClick={() => onAnalyzeAllActive(activeRunRepos)}
+                      >
+                        Analyze all ({activeRunRepos.length})
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={selectedRepos.length === 0}
+                      className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
+                      onClick={() => onAnalyzeSelected(selectedRepos)}
+                    >
+                      Analyze selected ({selectedRepos.length})
+                    </button>
+                  </div>
+                </div>
+                {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{selectionError}</p> : null}
 
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Showing {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}
-              </p>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                <span>Rows per page</span>
-                <select
-                  aria-label="Rows per page"
-                  value={pageSize}
-                  onChange={(event) => {
-                    setCurrentPage(1)
-                    setPageSize(clampOrgInventoryPageSize(Number(event.target.value)))
-                  }}
-                  className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-                >
-                  {ORG_INVENTORY_CONFIG.pageSizeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </div> : null}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Showing {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}
+                  </p>
+                  <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                    <span>Rows per page</span>
+                    <select
+                      aria-label="Rows per page"
+                      value={pageSize}
+                      onChange={(event) => {
+                        setCurrentPage(1)
+                        setPageSize(clampOrgInventoryPageSize(Number(event.target.value)))
+                      }}
+                      className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+                    >
+                      {ORG_INVENTORY_CONFIG.pageSizeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {sortedRows.length === 0 ? (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>
+                    <p className="mt-2 text-sm text-slate-600">
+                      Try widening the repo, language, or archived filters to see more repositories.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <OrgInventoryTable
+                      results={paginatedRows}
+                      visibleColumns={visibleColumns}
+                      sortState={effectiveSortState}
+                      selectedRepos={selectedRepos}
+                      onToggleSort={(column) => {
+                        setCurrentPage(1)
+                        setSortState((current) => getNextSortState(current, column))
+                      }}
+                      onToggleRepoSelection={(repo) => {
+                        const next = toggleRepoSelection(selectedRepos, repo, selectionLimit)
+                        setSelectedRepos(next.selectedRepos)
+                        setSelectionError(next.error)
+                      }}
+                      onAnalyzeRepo={onAnalyzeRepo}
+                    />
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-sm text-slate-600">
+                        Page {safeCurrentPage} of {totalPages}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={safeCurrentPage === 1}
+                          onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
+                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          disabled={safeCurrentPage === totalPages}
+                          onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
+                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : null}
           </section>
         </>
       )}
-      {repoTableExpanded && results.length > 0 && sortedRows.length === 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Try widening the repo, language, or archived filters to see more repositories.
-          </p>
-        </section>
-      ) : null}
-      {repoTableExpanded && results.length > 0 && sortedRows.length > 0 ? (
-        <div className="space-y-4">
-          <OrgInventoryTable
-            results={paginatedRows}
-            visibleColumns={visibleColumns}
-            sortState={effectiveSortState}
-            selectedRepos={selectedRepos}
-            onToggleSort={(column) => {
-              setCurrentPage(1)
-              setSortState((current) => getNextSortState(current, column))
-            }}
-            onToggleRepoSelection={(repo) => {
-              const next = toggleRepoSelection(selectedRepos, repo, selectionLimit)
-              setSelectedRepos(next.selectedRepos)
-              setSelectionError(next.error)
-            }}
-            onAnalyzeRepo={onAnalyzeRepo}
-          />
-
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-sm text-slate-600">
-              Page {safeCurrentPage} of {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={safeCurrentPage === 1}
-                onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
-                className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                type="button"
-                disabled={safeCurrentPage === totalPages}
-                onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
-                className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
       {rateLimit && isRateLimitLow(rateLimit) ? (
         <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
           <p>Remaining API calls: {formatDisplayValue(rateLimit.remaining)}</p>
