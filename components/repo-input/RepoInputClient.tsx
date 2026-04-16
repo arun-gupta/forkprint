@@ -445,7 +445,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </ul>
             </section>
           ) : null}
-          {analysisResponse.rateLimit ? (
+          {analysisResponse.rateLimit && !orgInventoryResponse ? (
             <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
               <p>Remaining API calls: {formatDisplayValue(analysisResponse.rateLimit.remaining)}</p>
               <p>Rate limit resets at: {formatRateLimitReset(analysisResponse.rateLimit.resetAt)}</p>
@@ -480,7 +480,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                 org={orgInventoryResponse.org}
                 summary={orgInventoryResponse.summary}
                 results={orgInventoryResponse.results}
-                rateLimit={orgInventoryResponse.rateLimit}
                 onAnalyzeRepo={(repo) => {
                   void handleSubmit([repo])
                 }}
