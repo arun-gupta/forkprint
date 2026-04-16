@@ -86,9 +86,27 @@ print_stranded_shell_notice_if_needed() {
   local removed_wt="$1"
   local caller_cwd="$2"
   local main_repo="$3"
+  [[ -z "$removed_wt" ]] && return 0  # recovery path may have no dir to compare against
   if [[ "$caller_cwd" == "$removed_wt" || "$caller_cwd" == "$removed_wt"/* ]]; then
     echo "note: your shell's previous CWD ($removed_wt) no longer exists — run \`cd $main_repo\` to continue"
   fi
+}
+
+# Poll for a PID to exit, up to timeout_s seconds. Returns 0 when gone, 1 on timeout.
+# Used before `git worktree remove` to let `next dev` drop its .next/ file descriptors
+# — otherwise macOS raises ENOTEMPTY and the remove fails mid-sequence, leaving an
+# orphan directory even though git has already unregistered the worktree admin dir.
+wait_for_pid_exit() {
+  local pid="$1"
+  local timeout_s="${2:-5}"
+  local i=0
+  local max=$(( timeout_s * 10 ))
+  while (( i < max )); do
+    kill -0 "$pid" 2>/dev/null || return 0
+    sleep 0.1
+    ((i++))
+  done
+  return 1
 }
 
 remove_worktree() {
@@ -117,17 +135,34 @@ cleanup_merged() {
   local issue="$1"
   local caller_cwd
   caller_cwd="$(pwd -P)"  # physical path so we match git's canonical worktree paths (macOS /tmp -> /private/tmp)
-  local wt branch current_branch pr_state push_err
+  local wt branch current_branch pr_state push_err dev_pid
+  local wt_registered=1
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
-    echo "No worktree found for issue $issue" >&2
-    exit 1
-  fi
-  branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD)"
-  if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
-    echo "Could not determine branch for $wt" >&2
-    exit 1
+    # Partial-failure recovery: worktree is no longer registered, but the
+    # physical dir, local branch, and/or remote branch may still be around
+    # from a prior run that failed mid-sequence. Locate the branch by issue
+    # prefix and derive the expected dir path from it.
+    branch="$(git -C "$REPO_ROOT" for-each-ref --format='%(refname:short)' "refs/heads/${issue}-*" | head -1)"
+    if [[ -z "${branch:-}" ]]; then
+      echo "No worktree or local branch found for issue $issue" >&2
+      exit 1
+    fi
+    wt_registered=0
+    local candidate="$PARENT_DIR/forkprint-$branch"
+    if [[ -d "$candidate" ]]; then
+      echo "Detected orphaned worktree dir at $candidate (not registered with git); recovering."
+      wt="$candidate"
+    else
+      wt=""
+    fi
+  else
+    branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD)"
+    if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
+      echo "Could not determine branch for $wt" >&2
+      exit 1
+    fi
   fi
 
   # If the primary worktree isn't on main, attempt a clean checkout. Refuse on
@@ -159,16 +194,49 @@ cleanup_merged() {
   echo "Pulling main in $REPO_ROOT ..."
   git -C "$REPO_ROOT" pull --ff-only origin main
 
-  if [[ -f "$wt/.dev.pid" ]]; then
-    kill "$(cat "$wt/.dev.pid")" 2>/dev/null || true
+  if [[ -n "$wt" && -d "$wt" ]]; then
+    dev_pid=""
+    if [[ -f "$wt/.dev.pid" ]]; then
+      dev_pid="$(cat "$wt/.dev.pid")"
+      kill "$dev_pid" 2>/dev/null || true
+    fi
+    if [[ -f "$wt/.claude.pid" ]]; then
+      kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
+    fi
+    # kill(2) is asynchronous — give next dev a beat to release .next/ handles
+    # before git tries to rmdir them, so we don't hit ENOTEMPTY mid-sequence.
+    if [[ -n "$dev_pid" ]]; then
+      wait_for_pid_exit "$dev_pid" 5 || true
+    fi
   fi
-  if [[ -f "$wt/.claude.pid" ]]; then
-    kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
-  fi
-  git -C "$REPO_ROOT" worktree remove --force "$wt"
-  echo "Removed $wt"
 
-  git -C "$REPO_ROOT" branch -D "$branch"
+  if (( wt_registered )); then
+    if git -C "$REPO_ROOT" worktree remove --force "$wt" 2>/dev/null; then
+      echo "Removed $wt"
+    else
+      # If git has already unregistered the worktree but failed to rmdir the
+      # physical path (classic ENOTEMPTY with a lingering dev-server fd), the
+      # admin side is done — finish the job with a plain rm -rf so the caller
+      # doesn't have to chase the orphan manually.
+      if git -C "$REPO_ROOT" worktree list --porcelain \
+          | awk '/^worktree/ {print $2}' | grep -qxF "$wt"; then
+        echo "git worktree remove failed and the worktree is still registered; aborting." >&2
+        exit 1
+      fi
+      echo "git worktree remove left an orphan dir at $wt; removing it now."
+      rm -rf "$wt"
+      echo "Removed $wt"
+    fi
+  elif [[ -n "$wt" && -d "$wt" ]]; then
+    rm -rf "$wt"
+    echo "Removed $wt"
+  fi
+
+  if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$branch"; then
+    git -C "$REPO_ROOT" branch -D "$branch"
+  else
+    echo "Local branch $branch already removed"
+  fi
 
   # Treat "remote ref does not exist" as success — GitHub's "Automatically
   # delete head branches" setting removes the remote at merge time in most
