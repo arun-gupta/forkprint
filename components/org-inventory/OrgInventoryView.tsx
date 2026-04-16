@@ -214,7 +214,7 @@ export function OrgInventoryView({
                   className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
                   onClick={() => onAnalyzeSelected(selectedRepos)}
                 >
-                  Analyze selected
+                  Analyze selected ({selectedRepos.length})
                 </button>
               </div>
             </div>
