@@ -42,7 +42,7 @@ describe('useOrgAggregation — start flow (US1)', () => {
     expect(panel?.status).toBe('final')
   })
 
-  it.skip('per-repo status list updates live as repos complete (FR-016a)', async () => {
+  it('per-repo status list updates live as repos complete (FR-016a)', async () => {
     const deferred: Array<(r: DispatchResult) => void> = []
     const dispatch = vi.fn(
       (_repo: string) =>
@@ -57,23 +57,41 @@ describe('useOrgAggregation — start flow (US1)', () => {
       }),
     )
 
-    const startPromise = act(async () => {
-      await result.current.start({ org: 'test', repos: ['o/a', 'o/b'], concurrency: 1 })
+    // Kick off the run without awaiting: queue.run() only resolves on `complete`,
+    // so awaiting it here would block the test from observing intermediate state.
+    // perRepoStatusList is sorted alphabetically by repo name; for ['o/a', 'o/b']
+    // that matches input/dispatch order, so [0] = o/a (first dispatched) and
+    // [1] = o/b (still queued under concurrency: 1).
+    let startPromise!: Promise<void>
+    await act(async () => {
+      startPromise = result.current.start({
+        org: 'test',
+        repos: ['o/a', 'o/b'],
+        concurrency: 1,
+      })
+      await waitFor(() => expect(deferred).toHaveLength(1))
     })
 
-    await waitFor(() => expect(deferred.length).toBe(1))
-    // First repo in flight, second still queued
-    expect(result.current.view?.perRepoStatusList[0]?.status).toBe('in-progress')
-    expect(result.current.view?.perRepoStatusList[1]?.status).toBe('queued')
+    await waitFor(() => {
+      expect(result.current.view?.perRepoStatusList[0]?.status).toBe('in-progress')
+      expect(result.current.view?.perRepoStatusList[1]?.status).toBe('queued')
+    })
 
     await act(async () => {
       deferred[0]!({ kind: 'ok', result: stub('o/a') })
+      await waitFor(() => expect(deferred).toHaveLength(2))
     })
-    await waitFor(() => expect(deferred.length).toBe(2))
+
+    await waitFor(() => {
+      expect(result.current.view?.perRepoStatusList[0]?.status).toBe('done')
+      expect(result.current.view?.perRepoStatusList[1]?.status).toBe('in-progress')
+    })
+
     await act(async () => {
       deferred[1]!({ kind: 'ok', result: stub('o/b') })
+      await startPromise
     })
-    await startPromise
+
     await waitFor(() => {
       expect(result.current.view?.status.succeeded).toBe(2)
     })
