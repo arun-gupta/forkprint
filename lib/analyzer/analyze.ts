@@ -59,9 +59,16 @@ interface RepoOverviewResponse {
     docContributing?: DocBlob | null
     docContributingRst?: DocBlob | null
     docContributingTxt?: DocBlob | null
+    docContributingLower?: DocBlob | null
+    docContributingDocs?: DocBlob | null
+    docContributingGithub?: DocBlob | null
     docCodeOfConduct?: DocBlob | null
     docCodeOfConductRst?: DocBlob | null
     docCodeOfConductTxt?: DocBlob | null
+    docCodeOfConductHyphenLower?: DocBlob | null
+    docCodeOfConductUnderscoreLower?: DocBlob | null
+    docCodeOfConductDocs?: DocBlob | null
+    docCodeOfConductGithub?: DocBlob | null
     docLicenseRst?: DocBlob | null
     docSecurity?: DocBlob | null
     docSecurityLower?: DocBlob | null
@@ -73,6 +80,7 @@ interface RepoOverviewResponse {
     docSecurityContacts?: DocBlob | null
     docChangelog?: DocBlob | null
     docChangelogPlain?: DocBlob | null
+    docChangelogDocs?: DocBlob | null
     docChanges?: DocBlob | null
     docChangesRst?: DocBlob | null
     docHistory?: DocBlob | null
@@ -774,15 +782,15 @@ export function extractDocumentationResult(repo: RepoOverviewResponse['repositor
 
   const readmeBlob = findFirst(repo.docReadmeMd, repo.docReadmeLower, repo.docReadmeRst, repo.docReadmeTxt, repo.docReadmePlain)
   const licenseBlob = findFirst(repo.docLicense, repo.docLicenseMd, repo.docLicenseTxt, repo.docLicenseRst, repo.docCopying, repo.docLicenseMit, repo.docLicenseApache, repo.docLicenseBsd)
-  const contributingBlob = findFirst(repo.docContributing, repo.docContributingRst, repo.docContributingTxt)
-  const codeOfConductBlob = findFirst(repo.docCodeOfConduct, repo.docCodeOfConductRst, repo.docCodeOfConductTxt)
+  const contributingBlob = findFirst(repo.docContributing, repo.docContributingRst, repo.docContributingTxt, repo.docContributingLower, repo.docContributingDocs, repo.docContributingGithub)
+  const codeOfConductBlob = findFirst(repo.docCodeOfConduct, repo.docCodeOfConductRst, repo.docCodeOfConductTxt, repo.docCodeOfConductHyphenLower, repo.docCodeOfConductUnderscoreLower, repo.docCodeOfConductDocs, repo.docCodeOfConductGithub)
   const securityBlob = findFirst(
     repo.docSecurity, repo.docSecurityLower, repo.docSecurityRst,
     repo.docSecurityGithub, repo.docSecurityGithubLower,
     repo.docSecurityDocs, repo.docSecurityDocsLower,
     repo.docSecurityContacts,
   )
-  const changelogBlob = findFirst(repo.docChangelog, repo.docChangelogPlain, repo.docChanges, repo.docChangesRst, repo.docHistory, repo.docNews)
+  const changelogBlob = findFirst(repo.docChangelog, repo.docChangelogPlain, repo.docChangelogDocs, repo.docChanges, repo.docChangesRst, repo.docHistory, repo.docNews)
 
   const readmePathMap: [string, DocBlob | null | undefined][] = [
     ['README.md', repo.docReadmeMd], ['readme.md', repo.docReadmeLower], ['README.rst', repo.docReadmeRst],
@@ -794,10 +802,16 @@ export function extractDocumentationResult(repo: RepoOverviewResponse['repositor
   ]
   const contributingPathMap: [string, DocBlob | null | undefined][] = [
     ['CONTRIBUTING.md', repo.docContributing], ['CONTRIBUTING.rst', repo.docContributingRst], ['CONTRIBUTING.txt', repo.docContributingTxt],
+    ['contributing.md', repo.docContributingLower], ['docs/CONTRIBUTING.md', repo.docContributingDocs], ['.github/CONTRIBUTING.md', repo.docContributingGithub],
+  ]
+  const codeOfConductPathMap: [string, DocBlob | null | undefined][] = [
+    ['CODE_OF_CONDUCT.md', repo.docCodeOfConduct], ['CODE_OF_CONDUCT.rst', repo.docCodeOfConductRst], ['CODE_OF_CONDUCT.txt', repo.docCodeOfConductTxt],
+    ['code-of-conduct.md', repo.docCodeOfConductHyphenLower], ['code_of_conduct.md', repo.docCodeOfConductUnderscoreLower],
+    ['docs/CODE_OF_CONDUCT.md', repo.docCodeOfConductDocs], ['.github/CODE_OF_CONDUCT.md', repo.docCodeOfConductGithub],
   ]
   const changelogPathMap: [string, DocBlob | null | undefined][] = [
-    ['CHANGELOG.md', repo.docChangelog], ['CHANGELOG', repo.docChangelogPlain], ['CHANGES.md', repo.docChanges],
-    ['CHANGES.rst', repo.docChangesRst], ['HISTORY.md', repo.docHistory], ['NEWS.md', repo.docNews],
+    ['CHANGELOG.md', repo.docChangelog], ['CHANGELOG', repo.docChangelogPlain], ['docs/CHANGELOG.md', repo.docChangelogDocs],
+    ['CHANGES.md', repo.docChanges], ['CHANGES.rst', repo.docChangesRst], ['HISTORY.md', repo.docHistory], ['NEWS.md', repo.docNews],
   ]
 
   function foundPath(pathMap: [string, DocBlob | null | undefined][]): string | null {
@@ -847,7 +861,7 @@ export function extractDocumentationResult(repo: RepoOverviewResponse['repositor
     { name: 'readme', found: readmeBlob !== null, path: foundPath(readmePathMap) },
     { name: 'license', found: licenseBlob !== null, path: foundPath(licensePathMap) },
     { name: 'contributing', found: contributingBlob !== null, path: foundPath(contributingPathMap) },
-    { name: 'code_of_conduct', found: codeOfConductBlob !== null, path: foundPath([['CODE_OF_CONDUCT.md', repo.docCodeOfConduct], ['CODE_OF_CONDUCT.rst', repo.docCodeOfConductRst], ['CODE_OF_CONDUCT.txt', repo.docCodeOfConductTxt]]) },
+    { name: 'code_of_conduct', found: codeOfConductBlob !== null, path: foundPath(codeOfConductPathMap) },
     { name: 'security', found: securityBlob !== null, path: foundPath([
       ['SECURITY.md', repo.docSecurity], ['security.md', repo.docSecurityLower], ['SECURITY.rst', repo.docSecurityRst],
       ['.github/SECURITY.md', repo.docSecurityGithub], ['.github/security.md', repo.docSecurityGithubLower],
