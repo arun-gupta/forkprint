@@ -520,6 +520,21 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             </section>
           ) : (
             <>
+              <OrgInventoryView
+                org={orgInventoryResponse.org}
+                summary={orgInventoryResponse.summary}
+                results={orgInventoryResponse.results}
+                rateLimit={orgInventoryResponse.rateLimit}
+                onAnalyzeRepo={(repo) => {
+                  void handleSubmit([repo])
+                }}
+                onAnalyzeSelected={(repos) => {
+                  setPreRunDialogRepos(repos)
+                }}
+                onAnalyzeAllActive={(repos) => {
+                  setPreRunDialogRepos(repos)
+                }}
+              />
               {orgAggregation.view ? (
                 <div ref={orgSummaryRef}>
                   <OrgSummaryView
@@ -539,21 +554,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   />
                 </div>
               ) : null}
-              <OrgInventoryView
-                org={orgInventoryResponse.org}
-                summary={orgInventoryResponse.summary}
-                results={orgInventoryResponse.results}
-                rateLimit={orgInventoryResponse.rateLimit}
-                onAnalyzeRepo={(repo) => {
-                  void handleSubmit([repo])
-                }}
-                onAnalyzeSelected={(repos) => {
-                  setPreRunDialogRepos(repos)
-                }}
-                onAnalyzeAllActive={(repos) => {
-                  setPreRunDialogRepos(repos)
-                }}
-              />
             </>
           )}
         </section>
