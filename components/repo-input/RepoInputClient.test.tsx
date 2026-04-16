@@ -286,6 +286,10 @@ describe('RepoInputClient', () => {
     await screen.findByRole('region', { name: /org inventory view/i })
     await userEvent.click(screen.getByRole('button', { name: /analyze all/i }))
 
+    // Pre-run dialog appears — confirm to start the run
+    await screen.findByRole('dialog', { name: /pre-run warning/i })
+    await userEvent.click(screen.getByRole('button', { name: /start analysis/i }))
+
     await vi.waitFor(() => {
       expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], 'gho_test_token')
       expect(onAnalyze).toHaveBeenCalledWith(['facebook/jest'], 'gho_test_token')

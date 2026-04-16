@@ -27,7 +27,6 @@ import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregato
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
-import { isLargeOrg } from '@/lib/config/org-aggregation'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import { decodeRepos } from '@/lib/export/shareable-url'
@@ -522,15 +521,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   void handleSubmit(repos)
                 }}
                 onAnalyzeAllActive={(repos) => {
-                  if (isLargeOrg(repos.length)) {
-                    setPreRunDialogRepos(repos)
-                  } else {
-                    void orgAggregation.start({
-                      org: orgInventoryResponse.org,
-                      repos,
-                      notificationOptIn,
-                    })
-                  }
+                  setPreRunDialogRepos(repos)
                 }}
               />
             </>
