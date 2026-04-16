@@ -149,6 +149,10 @@ export interface AnalysisResult {
   totalContributors: number | Unavailable
   totalContributorsSource?: 'api' | 'commit-history'
   maintainerCount: number | Unavailable
+  // Typed token list backing the count. Kind distinguishes individual
+  // users from GitHub team handles (`@org/team`). Optional — older
+  // fixtures predate this field.
+  maintainerTokens?: Array<{ token: string; kind: 'user' | 'team' }> | Unavailable
   commitCountsByAuthor: Record<string, number> | Unavailable
   commitCountsByExperimentalOrg: Record<string, number> | Unavailable
   experimentalAttributedAuthors90d: number | Unavailable

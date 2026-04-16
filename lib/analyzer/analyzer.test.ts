@@ -34,7 +34,15 @@ describe('analyze', () => {
       rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
     fetchMaintainerCountMock.mockResolvedValue({
-      data: 4,
+      data: {
+        count: 4,
+        tokens: [
+          { token: 'alice', kind: 'user' },
+          { token: 'bob', kind: 'user' },
+          { token: 'carol', kind: 'user' },
+          { token: 'dave', kind: 'user' },
+        ],
+      },
       rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
     fetchPublicUserOrganizationsMock.mockResolvedValue({
@@ -647,7 +655,7 @@ describe('analyze', () => {
 
   it('keeps maintainer count unavailable when no supported maintainer or owner file can be verified', async () => {
     fetchMaintainerCountMock.mockResolvedValueOnce({
-      data: 'unavailable',
+      data: { count: 'unavailable', tokens: 'unavailable' },
       rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
 

@@ -2,8 +2,8 @@
 
 import type { ComponentType } from 'react'
 import type { AggregatePanel, PanelId } from '@/lib/org-aggregation/types'
-import type { ContributorDiversityValue } from '@/lib/org-aggregation/aggregators/types'
 import { ContributorDiversityPanel } from './ContributorDiversityPanel'
+import { MaintainersPanel } from './MaintainersPanel'
 import { PlaceholderPanel } from './PlaceholderPanel'
 
 // Bucket groupings mirror the per-repo ResultsShell tabs (overview /
@@ -113,12 +113,13 @@ export const PANEL_LABELS: Record<PanelId, string> = {
 // PlaceholderPanel. As each US2 aggregator + panel lands, add its entry.
 const REAL_PANELS: Partial<Record<PanelId, ComponentType<{ panel: AggregatePanel<never> }>>> = {
   'contributor-diversity': ContributorDiversityPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  maintainers: MaintainersPanel as ComponentType<{ panel: AggregatePanel<never> }>,
 }
 
 export function renderPanel(panelId: PanelId, panel: AggregatePanel<unknown>) {
   const Real = REAL_PANELS[panelId]
   if (Real) {
-    return <Real panel={panel as AggregatePanel<ContributorDiversityValue> & AggregatePanel<never>} />
+    return <Real panel={panel as AggregatePanel<never>} />
   }
   return <PlaceholderPanel panelId={panelId} label={PANEL_LABELS[panelId]} panel={panel} />
 }

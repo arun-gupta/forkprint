@@ -23,6 +23,7 @@ function placeholderPanels(
   const map: AggregatePanelMap = {}
   for (const id of PANEL_ORDER) {
     if (id === 'contributor-diversity') continue // real fixture added by caller
+    if (id === 'maintainers') continue // real fixture added by caller
     map[id] = {
       panelId: id,
       contributingReposCount,
@@ -33,6 +34,34 @@ function placeholderPanels(
     }
   }
   return map
+}
+
+function buildMaintainersFixture(
+  contributingReposCount: number,
+  totalReposInRun: number,
+  status: 'in-progress' | 'final',
+): AggregatePanel<unknown> {
+  const projectWide = [
+    { token: 'alice', kind: 'user' as const, reposListed: ['konveyor/konveyor', 'konveyor/kantra', 'konveyor/analyzer-lsp'] },
+    { token: 'bob', kind: 'user' as const, reposListed: ['konveyor/konveyor', 'konveyor/kantra'] },
+    { token: 'konveyor/maintainers', kind: 'team' as const, reposListed: ['konveyor/konveyor', 'konveyor/tackle2-hub', 'konveyor/tackle2-ui'] },
+    { token: 'carol', kind: 'user' as const, reposListed: ['konveyor/move2kube'] },
+    { token: 'dave', kind: 'user' as const, reposListed: ['konveyor/operator'] },
+  ]
+  return {
+    panelId: 'maintainers',
+    contributingReposCount,
+    totalReposInRun,
+    status,
+    lastUpdatedAt: new Date(),
+    value: {
+      projectWide,
+      perRepo: [
+        { repo: 'konveyor/konveyor', tokens: [{ token: 'alice', kind: 'user' }, { token: 'bob', kind: 'user' }, { token: 'konveyor/maintainers', kind: 'team' }] },
+        { repo: 'konveyor/kantra', tokens: [{ token: 'alice', kind: 'user' }, { token: 'bob', kind: 'user' }] },
+      ],
+    },
+  }
 }
 
 function buildContributorDiversityValue(
@@ -104,6 +133,13 @@ function viewForScenario(scenario: Scenario): OrgSummaryViewModel {
             status: 'in-progress',
             value: null,
           },
+          maintainers: {
+            panelId: 'maintainers',
+            contributingReposCount: 0,
+            totalReposInRun: 8,
+            status: 'in-progress',
+            value: null,
+          },
         },
         missingData: [],
         perRepoStatusList: [
@@ -148,6 +184,7 @@ function viewForScenario(scenario: Scenario): OrgSummaryViewModel {
               365: { top: 0.52, elephant: 9, unique: 61, repeat: 22, oneTime: 39 },
             }),
           },
+          maintainers: buildMaintainersFixture(3, 8, 'in-progress'),
         },
         missingData: [],
         perRepoStatusList: [
@@ -192,6 +229,7 @@ function viewForScenario(scenario: Scenario): OrgSummaryViewModel {
               365: { top: 0.47, elephant: 14, unique: 132, repeat: 55, oneTime: 77 },
             }),
           },
+          maintainers: buildMaintainersFixture(8, 8, 'final'),
         },
         missingData: [
           { repo: 'konveyor/rulesets', signalKey: 'scorecard', reason: 'scorecard not published' },
@@ -239,6 +277,7 @@ function viewForScenario(scenario: Scenario): OrgSummaryViewModel {
               365: { top: 0.55, elephant: 7, unique: 44, repeat: 17, oneTime: 27 },
             }),
           },
+          maintainers: buildMaintainersFixture(3, 5, 'in-progress'),
         },
         missingData: [],
         perRepoStatusList: [
@@ -284,6 +323,7 @@ function viewForScenario(scenario: Scenario): OrgSummaryViewModel {
               365: { top: 0.42, elephant: 10, unique: 52, repeat: 20, oneTime: 32 },
             }),
           },
+          maintainers: buildMaintainersFixture(4, 10, 'in-progress'),
         },
         missingData: [],
         perRepoStatusList: [

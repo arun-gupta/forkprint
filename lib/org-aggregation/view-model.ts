@@ -1,5 +1,6 @@
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { contributorDiversityAggregator } from './aggregators/contributor-diversity'
+import { maintainersAggregator } from './aggregators/maintainers'
 import { composeMissingData, type PanelMissingRecord } from './missing-data'
 import type {
   AggregatePanelMap,
@@ -121,6 +122,7 @@ export function buildOrgSummaryViewModel(
 
   const panels: AggregatePanelMap = {
     'contributor-diversity': stamp(contributorDiversityAggregator(completedResults, context)),
+    maintainers: stamp(maintainersAggregator(completedResults, context)),
   }
 
   const missingRecords: PanelMissingRecord[] = []

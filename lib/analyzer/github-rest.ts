@@ -39,11 +39,18 @@ export async function fetchContributorCount(
   }
 }
 
+export type MaintainerToken = { token: string; kind: 'user' | 'team' }
+
+export interface MaintainersResult {
+  count: number | 'unavailable'
+  tokens: MaintainerToken[] | 'unavailable'
+}
+
 export async function fetchMaintainerCount(
   token: string,
   owner: string,
   name: string,
-): Promise<GitHubRestSuccess<number | 'unavailable'>> {
+): Promise<GitHubRestSuccess<MaintainersResult>> {
   const candidatePaths = [
     'OWNERS',
     'OWNERS_ALIASES',
@@ -57,7 +64,10 @@ export async function fetchMaintainerCount(
     'docs/CODEOWNERS',
     'GOVERNANCE.md',
   ]
-  const maintainers = new Set<string>()
+  // Dedup across all source files by the canonical token string. A token
+  // seen as both 'user' and 'team' (shouldn't happen in practice) prefers
+  // 'team' since a '/'-containing token is unambiguously team.
+  const tokens = new Map<string, MaintainerToken>()
   let rateLimit: RateLimitState | null = null
 
   for (const path of candidatePaths) {
@@ -86,13 +96,20 @@ export async function fetchMaintainerCount(
     const payload = (await response.json()) as { content?: string; encoding?: string }
     rateLimit = extractRateLimit(response) ?? rateLimit
 
-    for (const maintainer of parseMaintainers(path, payload)) {
-      maintainers.add(maintainer)
+    for (const t of parseMaintainerTokens(path, payload)) {
+      const existing = tokens.get(t.token)
+      if (!existing || (existing.kind === 'user' && t.kind === 'team')) {
+        tokens.set(t.token, t)
+      }
     }
   }
 
+  const tokenList = Array.from(tokens.values())
   return {
-    data: maintainers.size > 0 ? maintainers.size : 'unavailable',
+    data: {
+      count: tokenList.length > 0 ? tokenList.length : 'unavailable',
+      tokens: tokenList.length > 0 ? tokenList : 'unavailable',
+    },
     rateLimit,
   }
 }
@@ -159,9 +176,17 @@ function parseLastPage(linkHeader: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function parseMaintainers(path: string, payload: { content?: string; encoding?: string }): Set<string> {
+// Matches @handle and @org/team. The `/team` path is optional and, when
+// present, binds the token to 'team' kind per FR-009 (team handles are
+// treated as a single unit, not expanded to member logins).
+const AT_HANDLE_RE = /@([A-Za-z0-9][A-Za-z0-9-]*)(?:\/([A-Za-z0-9][A-Za-z0-9_.-]*))?/g
+
+function parseMaintainerTokens(
+  path: string,
+  payload: { content?: string; encoding?: string },
+): MaintainerToken[] {
   if (!payload.content || payload.encoding !== 'base64') {
-    return new Set()
+    return []
   }
 
   const decoded = Buffer.from(payload.content, 'base64').toString('utf8')
@@ -176,92 +201,62 @@ function parseMaintainers(path: string, payload: { content?: string; encoding?: 
   return parseGenericMaintainers(decoded)
 }
 
-function parseCodeownersMaintainers(decoded: string) {
-  const maintainers = new Set<string>()
-
-  for (const rawLine of decoded.split('\n')) {
-    const line = rawLine.trim()
-    if (!line || line.startsWith('#')) {
-      continue
-    }
-
-    for (const match of line.matchAll(/@([A-Za-z0-9][A-Za-z0-9-]*)/g)) {
-      const handle = match[1]?.toLowerCase()
-      if (handle) {
-        maintainers.add(handle)
-      }
+function collectAtHandles(line: string, into: Map<string, MaintainerToken>) {
+  for (const match of line.matchAll(AT_HANDLE_RE)) {
+    const owner = match[1]?.toLowerCase()
+    const team = match[2]?.toLowerCase()
+    if (!owner) continue
+    if (team) {
+      const token = `${owner}/${team}`
+      if (!into.has(token)) into.set(token, { token, kind: 'team' })
+    } else {
+      if (!into.has(owner)) into.set(owner, { token: owner, kind: 'user' })
     }
   }
-
-  return maintainers
 }
 
-function parseOwnersMaintainers(decoded: string) {
-  const maintainers = new Set<string>()
-
+function parseCodeownersMaintainers(decoded: string): MaintainerToken[] {
+  const out = new Map<string, MaintainerToken>()
   for (const rawLine of decoded.split('\n')) {
     const line = rawLine.trim()
-    if (!line || line.startsWith('#') || /^---+$/.test(line)) {
-      continue
-    }
-
-    for (const match of line.matchAll(/@([A-Za-z0-9][A-Za-z0-9-]*)/g)) {
-      const handle = match[1]?.toLowerCase()
-      if (handle) {
-        maintainers.add(handle)
-      }
-    }
-
-    const candidate = line
-      .replace(/\[[^\]]+\]/g, ' ')
-      .replace(/[:,]/g, ' ')
-      .trim()
-
-    for (const token of candidate.split(/\s+/)) {
-      const normalized = token.replace(/^@/, '').trim().toLowerCase()
-      if (!isLikelyMaintainerToken(normalized)) {
-        continue
-      }
-
-      maintainers.add(normalized)
-    }
+    if (!line || line.startsWith('#')) continue
+    collectAtHandles(line, out)
   }
-
-  return maintainers
+  return Array.from(out.values())
 }
 
-function parseGenericMaintainers(decoded: string) {
-  const maintainers = new Set<string>()
-
+function parseOwnersMaintainers(decoded: string): MaintainerToken[] {
+  const out = new Map<string, MaintainerToken>()
   for (const rawLine of decoded.split('\n')) {
     const line = rawLine.trim()
-    if (!line || line.startsWith('#') || /^---+$/.test(line)) {
-      continue
-    }
+    if (!line || line.startsWith('#') || /^---+$/.test(line)) continue
+    collectAtHandles(line, out)
 
-    for (const match of line.matchAll(/@([A-Za-z0-9][A-Za-z0-9-]*)/g)) {
-      const handle = match[1]?.toLowerCase()
-      if (handle) {
-        maintainers.add(handle)
-      }
-    }
-
-    const candidate = line
-      .replace(/\[[^\]]+\]/g, ' ')
-      .replace(/[:,]/g, ' ')
-      .trim()
-
+    const candidate = line.replace(/\[[^\]]+\]/g, ' ').replace(/[:,]/g, ' ').trim()
     for (const token of candidate.split(/\s+/)) {
       const normalized = token.replace(/^@/, '').trim().toLowerCase()
-      if (!isLikelyMaintainerToken(normalized)) {
-        continue
-      }
-
-      maintainers.add(normalized)
+      if (!isLikelyMaintainerToken(normalized)) continue
+      if (!out.has(normalized)) out.set(normalized, { token: normalized, kind: 'user' })
     }
   }
+  return Array.from(out.values())
+}
 
-  return maintainers
+function parseGenericMaintainers(decoded: string): MaintainerToken[] {
+  const out = new Map<string, MaintainerToken>()
+  for (const rawLine of decoded.split('\n')) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('#') || /^---+$/.test(line)) continue
+    collectAtHandles(line, out)
+
+    const candidate = line.replace(/\[[^\]]+\]/g, ' ').replace(/[:,]/g, ' ').trim()
+    for (const token of candidate.split(/\s+/)) {
+      const normalized = token.replace(/^@/, '').trim().toLowerCase()
+      if (!isLikelyMaintainerToken(normalized)) continue
+      if (!out.has(normalized)) out.set(normalized, { token: normalized, kind: 'user' })
+    }
+  }
+  return Array.from(out.values())
 }
 
 function isLikelyMaintainerToken(token: string) {

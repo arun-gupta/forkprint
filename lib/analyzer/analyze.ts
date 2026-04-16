@@ -17,7 +17,7 @@ import type {
 } from './analysis-result'
 import { CONTRIBUTOR_WINDOW_DAYS } from './analysis-result'
 import { queryGitHubGraphQL } from './github-graphql'
-import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
+import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations, type MaintainerToken } from './github-rest'
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_DISCUSSIONS_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
 import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
@@ -472,16 +472,16 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       })
       latestRateLimit = contributorCount.rateLimit ?? latestRateLimit
 
-      const maintainerCount = await fetchMaintainerCount(input.token, owner, name).catch((error) => {
+      const maintainers = await fetchMaintainerCount(input.token, owner, name).catch((error) => {
         latestRateLimit = extractRateLimitFromError(error) ?? latestRateLimit
         diagnostics.push(buildDiagnostic(repo, 'github-rest:maintainers', error))
 
         return {
-          data: 'unavailable' as const,
+          data: { count: 'unavailable' as const, tokens: 'unavailable' as const },
           rateLimit: extractRateLimitFromError(error),
         }
       })
-      latestRateLimit = maintainerCount.rateLimit ?? latestRateLimit
+      latestRateLimit = maintainers.rateLimit ?? latestRateLimit
 
       console.log(`[analyzer] ${repo} — collecting commit history`)
       const commitHistory = await collectRecentCommitHistory({
@@ -529,7 +529,8 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         contributorMetricsByWindow,
         activityMetricsByWindow,
         contributorCount.data,
-        maintainerCount.data,
+        maintainers.data.count,
+        maintainers.data.tokens,
         experimentalOrgAttribution.data,
         commitHistory.nodes,
         discussionTimestamps,
@@ -598,6 +599,7 @@ function buildAnalysisResult(
   activityMetricsByWindow: Record<ActivityWindowDays, ActivityWindowMetrics>,
   totalContributorCount: number | Unavailable,
   maintainerCount: number | Unavailable,
+  maintainerTokens: MaintainerToken[] | Unavailable,
   experimentalMetricsByWindow: Record<ContributorWindowDays, ContributorWindowMetrics>,
   recentCommitNodes: CommitNode[],
   discussionTimestamps?: string[],
@@ -694,6 +696,7 @@ function buildAnalysisResult(
         : 'unavailable',
     totalContributorsSource: totalContributorCount !== 'unavailable' ? 'api' : 'commit-history',
     maintainerCount,
+    maintainerTokens,
     commitCountsByAuthor: contributorMetrics.commitCountsByAuthor,
     commitCountsByExperimentalOrg: experimentalMetrics.commitCountsByExperimentalOrg,
     experimentalAttributedAuthors90d: experimentalMetrics.experimentalAttributedAuthors,
