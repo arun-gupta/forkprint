@@ -146,6 +146,7 @@ export function OrgInventoryView({
             </button>
             {repoTableExpanded ? (
               <div className="space-y-4 px-3 pb-3">
+                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="flex-1 min-w-[140px]">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
@@ -267,6 +268,7 @@ export function OrgInventoryView({
                       ))}
                     </select>
                   </label>
+                </div>
                 </div>
 
                 {sortedRows.length === 0 ? (
