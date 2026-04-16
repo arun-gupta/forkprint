@@ -21,7 +21,7 @@ Options:
   --approve-spec    Release the spec-review pause for a paused headless spawn
   --revise-spec     Send non-empty revision feedback to a paused spawn
   --remove          Discard worktree (works on unmerged work)
-  --cleanup-merged  Post-merge: pull main, remove worktree, delete branch
+  --cleanup-merged  Post-merge: pull main, remove worktree, delete local+remote branch
   -h, --help        Show this help and exit
 
 For --remove and --cleanup-merged, the issue number is inferred from the branch
@@ -117,7 +117,7 @@ cleanup_merged() {
   local issue="$1"
   local caller_cwd
   caller_cwd="$(pwd -P)"  # physical path so we match git's canonical worktree paths (macOS /tmp -> /private/tmp)
-  local wt branch current_branch pr_state
+  local wt branch current_branch pr_state push_err
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
@@ -169,6 +169,25 @@ cleanup_merged() {
   echo "Removed $wt"
 
   git -C "$REPO_ROOT" branch -D "$branch"
+
+  # Treat "remote ref does not exist" as success — GitHub's "Automatically
+  # delete head branches" setting removes the remote at merge time in most
+  # repos, so an explicit delete becomes a documented no-op. Any other failure
+  # (network, auth, protected branch) warns and exits non-zero; local state
+  # is already clean, so only a manual remote delete remains.
+  if push_err="$(git -C "$REPO_ROOT" push origin --delete "$branch" 2>&1)"; then
+    echo "Deleted remote branch origin/$branch"
+  elif grep -q "remote ref does not exist" <<<"$push_err"; then
+    echo "Remote branch $branch already removed"
+  else
+    echo "WARNING: could not delete remote branch $branch" >&2
+    echo "$push_err" >&2
+    echo "Worktree and local branch were removed; delete the remote manually with:" >&2
+    echo "  git push origin --delete $branch" >&2
+    print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
+    exit 1
+  fi
+
   print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
 }
 
