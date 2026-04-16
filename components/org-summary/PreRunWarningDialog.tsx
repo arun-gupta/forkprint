@@ -78,26 +78,24 @@ export function PreRunWarningDialog({ repoCount, onConfirm, onCancel }: PreRunWa
           </label>
         </div>
 
-        <div className="mt-5 flex items-center justify-between">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Cancel to go back and adjust repo filters.
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => onConfirm({ concurrency, notificationOptIn })}
-              className="rounded border border-sky-500 bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 dark:border-sky-400 dark:bg-sky-500 dark:hover:bg-sky-600"
-            >
-              Start analysis
-            </button>
-          </div>
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Cancel to go back and adjust repo filters.
+        </p>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm({ concurrency, notificationOptIn })}
+            className="rounded border border-sky-500 bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 dark:border-sky-400 dark:bg-sky-500 dark:hover:bg-sky-600"
+          >
+            Start analysis
+          </button>
         </div>
       </div>
     </div>
