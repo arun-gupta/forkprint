@@ -233,32 +233,72 @@ else
     BRANCH_SUFFIX=$(generate_branch_name "$FEATURE_DESCRIPTION")
 fi
 
+# Validate --number input (must be a positive integer) before any mutation.
+# Accepts forms that decode to >= 1 in base 10; rejects non-numeric, zero,
+# negatives, and leading-zero forms that decode to 0.
+if [ -n "$BRANCH_NUMBER" ]; then
+    if ! [[ "$BRANCH_NUMBER" =~ ^[0-9]+$ ]] || [ "$((10#$BRANCH_NUMBER))" -lt 1 ]; then
+        >&2 echo "Error: --number must be a positive integer (got: '$BRANCH_NUMBER')"
+        exit 1
+    fi
+fi
+
 # Warn if --number and --timestamp are both specified
 if [ "$USE_TIMESTAMP" = true ] && [ -n "$BRANCH_NUMBER" ]; then
     >&2 echo "[specify] Warning: --number is ignored when --timestamp is used"
     BRANCH_NUMBER=""
 fi
 
-# Determine branch prefix
-if [ "$USE_TIMESTAMP" = true ]; then
-    FEATURE_NUM=$(date +%Y%m%d-%H%M%S)
-    BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
-else
-    # Determine branch number
-    if [ -z "$BRANCH_NUMBER" ]; then
-        if [ "$HAS_GIT" = true ]; then
-            # Check existing branches on remotes
-            BRANCH_NUMBER=$(check_existing_branches "$SPECS_DIR")
-        else
-            # Fall back to local directory check
-            HIGHEST=$(get_highest_from_specs "$SPECS_DIR")
-            BRANCH_NUMBER=$((HIGHEST + 1))
-        fi
+# Detect whether the currently checked-out branch already has a recognised
+# feature prefix — if so, reuse it verbatim instead of creating a new branch.
+# This is what aligns spec dir + branch with the GitHub issue number when
+# claude-worktree.sh has already created the gh<N>-<slug> branch for us.
+# Recognised prefixes (order matters — gh<N>- is checked first so it isn't
+# mistakenly consumed by the sequential <NNN>- regex):
+#   gh<N>-<slug>   — issue-driven work (e.g. gh249-align-spec-numbering)
+#   <NNN>-<slug>   — sequential/manual (e.g. 001-repo-input)
+#   <YYYYMMDD>-<HHMMSS>-<slug> — timestamp mode
+REUSE_CURRENT_BRANCH=false
+CURRENT_BRANCH=""
+if [ "$HAS_GIT" = true ] && [ "$USE_TIMESTAMP" = false ] && [ -z "$BRANCH_NUMBER" ]; then
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [[ "$CURRENT_BRANCH" =~ ^gh([0-9]+)-.+$ ]]; then
+        REUSE_CURRENT_BRANCH=true
+        BRANCH_NAME="$CURRENT_BRANCH"
+        FEATURE_NUM="${BASH_REMATCH[1]}"
+    elif [[ "$CURRENT_BRANCH" =~ ^([0-9]{8}-[0-9]{6})-.+$ ]]; then
+        REUSE_CURRENT_BRANCH=true
+        BRANCH_NAME="$CURRENT_BRANCH"
+        FEATURE_NUM="${BASH_REMATCH[1]}"
+    elif [[ "$CURRENT_BRANCH" =~ ^([0-9]{3,})-.+$ ]]; then
+        REUSE_CURRENT_BRANCH=true
+        BRANCH_NAME="$CURRENT_BRANCH"
+        FEATURE_NUM="${BASH_REMATCH[1]}"
     fi
+fi
 
-    # Force base-10 interpretation to prevent octal conversion (e.g., 010 → 8 in octal, but should be 10 in decimal)
-    FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
-    BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+# Determine branch prefix (only if we aren't reusing the current branch)
+if [ "$REUSE_CURRENT_BRANCH" = false ]; then
+    if [ "$USE_TIMESTAMP" = true ]; then
+        FEATURE_NUM=$(date +%Y%m%d-%H%M%S)
+        BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+    else
+        # Determine branch number
+        if [ -z "$BRANCH_NUMBER" ]; then
+            if [ "$HAS_GIT" = true ]; then
+                # Check existing branches on remotes
+                BRANCH_NUMBER=$(check_existing_branches "$SPECS_DIR")
+            else
+                # Fall back to local directory check
+                HIGHEST=$(get_highest_from_specs "$SPECS_DIR")
+                BRANCH_NUMBER=$((HIGHEST + 1))
+            fi
+        fi
+
+        # Force base-10 interpretation to prevent octal conversion (e.g., 010 → 8 in octal, but should be 10 in decimal)
+        FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
+        BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
+    fi
 fi
 
 # GitHub enforces a 244-byte limit on branch names
@@ -284,13 +324,19 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
 fi
 
 if [ "$HAS_GIT" = true ]; then
-    if ! git checkout -b "$BRANCH_NAME" 2>/dev/null; then
+    if [ "$REUSE_CURRENT_BRANCH" = true ]; then
+        # The branch was already created and checked out (e.g. by claude-worktree.sh).
+        # Nothing to do — reusing verbatim is the whole point of this path.
+        :
+    elif ! git checkout -b "$BRANCH_NAME" 2>/dev/null; then
         # Check if branch already exists
         if git branch --list "$BRANCH_NAME" | grep -q .; then
             if [ "$USE_TIMESTAMP" = true ]; then
                 >&2 echo "Error: Branch '$BRANCH_NAME' already exists. Rerun to get a new timestamp or use a different --short-name."
             else
-                >&2 echo "Error: Branch '$BRANCH_NAME' already exists. Please use a different feature name or specify a different number with --number."
+                >&2 echo "Error: Branch '$BRANCH_NAME' already exists but is not the currently checked-out branch."
+                >&2 echo "Accepted feature-branch forms: gh<N>-<slug>, <NNN>-<slug>, <YYYYMMDD>-<HHMMSS>-<slug>."
+                >&2 echo "Resolution: check out '$BRANCH_NAME' to reuse it, delete it, or pick a different --number/--short-name."
             fi
             exit 1
         else
@@ -303,10 +349,20 @@ else
 fi
 
 FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
+SPEC_FILE="$FEATURE_DIR/spec.md"
+
+# Collision check: if the target spec directory already has a populated
+# spec.md, refuse rather than overwrite. An empty or missing spec.md (e.g.
+# from a prior partial run) is fine — we fall through and write the template.
+if [ -s "$SPEC_FILE" ]; then
+    >&2 echo "Error: $SPEC_FILE already exists and is non-empty."
+    >&2 echo "Resolution: rename or remove $FEATURE_DIR, or run /speckit.specify for a different feature."
+    exit 1
+fi
+
 mkdir -p "$FEATURE_DIR"
 
 TEMPLATE=$(resolve_template "spec-template" "$REPO_ROOT") || true
-SPEC_FILE="$FEATURE_DIR/spec.md"
 if [ -n "$TEMPLATE" ] && [ -f "$TEMPLATE" ]; then
     cp "$TEMPLATE" "$SPEC_FILE"
 else

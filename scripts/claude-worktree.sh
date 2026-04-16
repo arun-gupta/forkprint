@@ -31,8 +31,12 @@ Options:
   -h, --help          Show this help and exit
 
 Behavior:
-  1. Creates ../forkprint-<issue>-<slug> as a git worktree on a new branch
-     (slug auto-derived from the issue title via gh when omitted).
+  1. Creates ../forkprint-gh<issue>-<slug> as a git worktree on a new branch
+     named gh<issue>-<slug> (slug auto-derived from the issue title via gh
+     when omitted). The gh<issue>- prefix gives issue-driven work a namespace
+     disjoint from manual sequential (<NNN>-) and timestamp specs, so the
+     branch, spec directory, and worktree path always agree on the issue
+     number. See docs/DEVELOPMENT.md for the full naming convention.
   2. Picks the next free port >= 3010 and writes it to .env.local as PORT.
   3. Runs npm install in the worktree.
   4. Starts `npm run dev` on that port in the background (log -> dev.log).
@@ -67,8 +71,10 @@ MAX_PORT=3100
 remove_worktree() {
   local issue="$1"
   local wt
+  # Match both new gh<issue>- worktrees and legacy <issue>- worktrees (transition
+  # compat — legacy fallback can be dropped once no pre-fix worktrees remain).
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
-    | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
+    | awk -v i1="-gh${issue}-" -v i2="-${issue}-" '/^worktree/ && ($2 ~ i1 || $2 ~ i2) {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
     echo "No worktree found for issue $issue" >&2
     exit 1
@@ -86,8 +92,10 @@ remove_worktree() {
 cleanup_merged() {
   local issue="$1"
   local wt branch current_branch pr_state
+  # Match both new gh<issue>- worktrees and legacy <issue>- worktrees (transition
+  # compat — legacy fallback can be dropped once no pre-fix worktrees remain).
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
-    | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
+    | awk -v i1="-gh${issue}-" -v i2="-${issue}-" '/^worktree/ && ($2 ~ i1 || $2 ~ i2) {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
     echo "No worktree found for issue $issue" >&2
     exit 1
@@ -138,8 +146,10 @@ release_paused_session() {
   local issue="$1"
   local prompt="$2"
   local wt session_id
+  # Match both new gh<issue>- worktrees and legacy <issue>- worktrees (transition
+  # compat — legacy fallback can be dropped once no pre-fix worktrees remain).
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
-    | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
+    | awk -v i1="-gh${issue}-" -v i2="-${issue}-" '/^worktree/ && ($2 ~ i1 || $2 ~ i2) {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
     echo "No worktree found for issue $issue" >&2
     exit 1
@@ -232,8 +242,8 @@ if [[ -z "$SLUG" ]]; then
   echo "Derived slug from issue title: $SLUG"
 fi
 
-BRANCH="${ISSUE}-${SLUG}"
-WT_PATH="${PARENT_DIR}/forkprint-${ISSUE}-${SLUG}"
+BRANCH="gh${ISSUE}-${SLUG}"
+WT_PATH="${PARENT_DIR}/forkprint-gh${ISSUE}-${SLUG}"
 
 # 1. Find a free port
 port=$BASE_PORT

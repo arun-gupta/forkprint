@@ -53,6 +53,8 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 - N/A — settings file committed to git; session ID recorded as a plain file inside the worktree (not persisted beyond worktree lifetime). (244-headless-worktree-permissions)
 - TypeScript 5.x, Next.js 16+ (App Router) — matches existing stack + React 18, Tailwind CSS, Vitest, React Testing Library, Playwright (E2E). No new runtime dependencies. (231-org-aggregation)
 - N/A (stateless — in-browser memory only for the duration of the run, per constitution §I) (231-org-aggregation)
+- Bash (POSIX-compatible for portable bits, bash-specific features already in use: `[[ ... ]]`, `set -euo pipefail`, `${BASH_REMATCH}`) + `git`, `gh` (GitHub CLI, already required by the surrounding tooling), `uuidgen` (macOS/Linux standard) (249-speckit-branch-spec-numbering-should-ali)
+- N/A (all state lives in git + local filesystem: spec dirs under `specs/`, worktrees as siblings of the repo) (249-speckit-branch-spec-numbering-should-ali)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library

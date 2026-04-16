@@ -139,7 +139,19 @@ scripts/claude-worktree.sh --headless 207
 for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
 ```
 
-The script creates `../forkprint-<issue>-<slug>/` on a new branch, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`, PID: `.dev.pid`), and launches `claude` with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
+The script creates `../forkprint-gh<issue>-<slug>/` on a new branch named `gh<issue>-<slug>`, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`, PID: `.dev.pid`), and launches `claude` with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
+
+### Naming convention
+
+Issue-driven worktrees, branches, and spec directories all use the `gh<issue>-<slug>` prefix. Manual sequential SpecKit work (invoked outside the worktree flow) continues to use the legacy `<NNN>-<slug>` prefix. The two namespaces are disjoint by construction: a name starting with `gh` cannot also start with a digit, so collisions are impossible regardless of how issue numbers or sequential counters grow.
+
+| Flow | Worktree path | Branch | Spec directory |
+|---|---|---|---|
+| Worktree-driven (issue) | `../forkprint-gh249-align-numbering` | `gh249-align-numbering` | `specs/gh249-align-numbering/` |
+| Manual sequential | *(none)* | `230-some-refactor` | `specs/230-some-refactor/` |
+| Timestamp (opt-in) | *(none)* | `20260416-143022-refactor` | `specs/20260416-143022-refactor/` |
+
+`--cleanup-merged` and `--remove` accept both `gh<issue>-` and legacy unprefixed `<issue>-` worktree paths during the transition, so in-flight worktrees spawned before the `gh`-prefix convention shipped remain cleanable.
 
 **Mandatory pause after `/speckit.specify`.** Both interactive and `--headless` spawns halt after `/speckit.specify` and wait for your explicit approval before continuing to `/speckit.plan`. The kickoff prompt tells Claude to report the generated spec path and wait for one of the phrases `"proceed"`, `"approved"`, or `"go to plan"`. Spec revisions re-enter the paused state; only an approval phrase releases it. This exists because the spec is the highest-leverage artifact — revisions applied after plan/tasks are generated force Claude to re-derive everything downstream.
 
@@ -177,7 +189,7 @@ Preconditions (both commands exit non-zero with a clear error if unmet):
 
 Additional rule for `--revise-spec`: empty feedback is rejected. Repeated `--revise-spec` rounds accumulate — each round edits the spec as it stands after the previous round.
 
-Manual fallback (still supported): `cd ../forkprint-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
+Manual fallback (still supported): `cd ../forkprint-gh<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
 
 The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done`) you review and release each worktree independently, but the release itself is fire-and-forget, so `for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done` walks away with three PRs on the way.
 
@@ -193,6 +205,8 @@ scripts/claude-worktree.sh --remove 207
 ```
 
 `--cleanup-merged` verifies merge status by querying the associated PR's state via `gh pr view <branch> --json state` — **not** by local ancestry. This matters because squash-merges and rebase-merges on GitHub produce a merge commit that is not an ancestor of the local feature branch, so the older ancestry check (`git branch -d`) would silently refuse even after a real merge. When the PR state is `MERGED`, the local branch is force-deleted. When the PR is `OPEN`, `CLOSED` without merge, missing, or `gh` cannot reach GitHub, the command refuses and points to `--remove`. Use `--remove` as the escape hatch for unmerged branches.
+
+The worktree lookup accepts both `forkprint-gh<issue>-*` (current convention) and legacy `forkprint-<issue>-*` (pre-`gh`-prefix worktrees) so that in-flight legacy worktrees remain cleanable during the transition. The legacy fallback can be removed from `claude-worktree.sh` once no pre-fix worktrees remain in the parent directory.
 
 If something gets stuck:
 

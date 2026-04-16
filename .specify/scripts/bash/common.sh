@@ -78,6 +78,16 @@ get_current_branch() {
                         latest_timestamp="$ts"
                         latest_feature=$dirname
                     fi
+                elif [[ "$dirname" =~ ^gh([0-9]+)- ]]; then
+                    # Issue-driven branch (GitHub issue number): rank numerically with sequential.
+                    local number=${BASH_REMATCH[1]}
+                    number=$((10#$number))
+                    if [[ "$number" -gt "$highest" ]]; then
+                        highest=$number
+                        if [[ -z "$latest_timestamp" ]]; then
+                            latest_feature=$dirname
+                        fi
+                    fi
                 elif [[ "$dirname" =~ ^([0-9]{3})- ]]; then
                     local number=${BASH_REMATCH[1]}
                     number=$((10#$number))
@@ -124,9 +134,9 @@ check_feature_branch() {
         return 0
     fi
 
-    if [[ ! "$branch" =~ ^[0-9]{3}- ]] && [[ ! "$branch" =~ ^[0-9]{8}-[0-9]{6}- ]]; then
+    if [[ ! "$branch" =~ ^gh[0-9]+- ]] && [[ ! "$branch" =~ ^[0-9]{3}- ]] && [[ ! "$branch" =~ ^[0-9]{8}-[0-9]{6}- ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
-        echo "Feature branches should be named like: 001-feature-name or 20260319-143022-feature-name" >&2
+        echo "Feature branches should be named like: gh249-feature-name, 001-feature-name, or 20260319-143022-feature-name" >&2
         return 1
     fi
 
@@ -142,9 +152,14 @@ find_feature_dir_by_prefix() {
     local branch_name="$2"
     local specs_dir="$repo_root/specs"
 
-    # Extract prefix from branch (e.g., "004" from "004-whatever" or "20260319-143022" from timestamp branches)
+    # Extract prefix from branch. Recognised forms:
+    #   - Issue-driven: "gh249-whatever" → prefix "gh249" (GitHub issue #249)
+    #   - Sequential:   "004-whatever"   → prefix "004"
+    #   - Timestamp:    "20260319-143022-whatever" → prefix "20260319-143022"
     local prefix=""
-    if [[ "$branch_name" =~ ^([0-9]{8}-[0-9]{6})- ]]; then
+    if [[ "$branch_name" =~ ^(gh[0-9]+)- ]]; then
+        prefix="${BASH_REMATCH[1]}"
+    elif [[ "$branch_name" =~ ^([0-9]{8}-[0-9]{6})- ]]; then
         prefix="${BASH_REMATCH[1]}"
     elif [[ "$branch_name" =~ ^([0-9]{3})- ]]; then
         prefix="${BASH_REMATCH[1]}"
