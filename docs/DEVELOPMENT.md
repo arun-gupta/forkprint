@@ -246,6 +246,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 11 | P2-F11 | Project maturity | #74 | |
 | 12 | P2-F12 | Ecosystem Reach | #118 | |
 | 13 | P2-F01b | Documentation scoring (advanced) | #110, #67 | |
+| 14 | P2-F13 | Org governance audit — stale admin detection | #287 (child of #285) | ✅ Done |
 
 ## Phase 3 feature order
 

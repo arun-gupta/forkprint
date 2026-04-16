@@ -1,6 +1,6 @@
 'use client'
 
-export function SignInButton() {
+export function SignInButton({ elevated = false }: { elevated?: boolean }) {
   function handleClick() {
     if (typeof window === 'undefined') return
     if (window.location.search) {
@@ -10,9 +10,11 @@ export function SignInButton() {
     }
   }
 
+  const href = elevated ? '/api/auth/login?elevated=1' : '/api/auth/login'
+
   return (
     <a
-      href="/api/auth/login"
+      href={href}
       onClick={handleClick}
       className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
     >

@@ -41,7 +41,11 @@ export async function GET(request: Request) {
     body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code }),
   })
 
-  const tokenData = (await tokenResponse.json()) as { access_token?: string; error?: string }
+  const tokenData = (await tokenResponse.json()) as {
+    access_token?: string
+    scope?: string
+    error?: string
+  }
 
   if (!tokenData.access_token) {
     return Response.redirect(`${appUrl}/?auth_error=token_exchange_failed`, 302)
@@ -57,8 +61,9 @@ export async function GET(request: Request) {
 
   const userData = (await userResponse.json()) as { login?: string }
   const username = userData.login ?? 'unknown'
+  const scopes = tokenData.scope ?? 'public_repo'
 
   // Return token to client via URL fragment (never sent to server)
-  const fragment = `token=${encodeURIComponent(tokenData.access_token)}&username=${encodeURIComponent(username)}`
+  const fragment = `token=${encodeURIComponent(tokenData.access_token)}&username=${encodeURIComponent(username)}&scopes=${encodeURIComponent(scopes)}`
   return Response.redirect(`${appUrl}/#${fragment}`, 302)
 }

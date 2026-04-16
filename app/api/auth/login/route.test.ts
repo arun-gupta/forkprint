@@ -103,4 +103,47 @@ describe('GET /api/auth/login', () => {
     const location = response.headers.get('location') ?? ''
     expect(location).toContain('github.com/login/oauth/authorize')
   })
+
+  it('requests public_repo scope only on the baseline path (no ?elevated=1)', async () => {
+    const response = await GET(mockRequest('http://localhost:3010/api/auth/login'))
+    const location = response.headers.get('location') ?? ''
+    const scopeMatch = location.match(/scope=([^&]+)/)
+    expect(scopeMatch).not.toBeNull()
+    const scope = decodeURIComponent(scopeMatch![1]!)
+    expect(scope).toBe('public_repo')
+  })
+
+  it('adds read:org scope when ?elevated=1 is passed', async () => {
+    const response = await GET(mockRequest('http://localhost:3010/api/auth/login?elevated=1'))
+    const location = response.headers.get('location') ?? ''
+    const scopeMatch = location.match(/scope=([^&]+)/)
+    expect(scopeMatch).not.toBeNull()
+    const scope = decodeURIComponent(scopeMatch![1]!).replace(/\+/g, ' ')
+    expect(scope).toBe('public_repo read:org')
+  })
+
+  it('treats ?elevated=0 as baseline', async () => {
+    const response = await GET(mockRequest('http://localhost:3010/api/auth/login?elevated=0'))
+    const location = response.headers.get('location') ?? ''
+    const scope = decodeURIComponent(location.match(/scope=([^&]+)/)![1]!).replace(/\+/g, ' ')
+    expect(scope).toBe('public_repo')
+  })
+
+  it('dev-PAT short-circuit also encodes scope on the redirect fragment', async () => {
+    vi.stubEnv('DEV_GITHUB_PAT', 'ghp_devtesttoken')
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ login: 'dev-user' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    )
+
+    const response = await GET(mockRequest('http://localhost:3010/api/auth/login?elevated=1'))
+    const location = response.headers.get('location') ?? ''
+    expect(location).toContain('scopes=')
+    expect(decodeURIComponent(location)).toContain('scopes=public_repo read:org')
+  })
 })
