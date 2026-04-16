@@ -107,7 +107,6 @@ export function OrgInventoryView({
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
         <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Organization</p>
         <h2 className="mt-0.5 text-xl font-semibold text-slate-900 dark:text-slate-100">{org}</h2>
-        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">Browse lightweight public repository metadata and launch repo analysis from any row.</p>
       </div>
 
       {results.length === 0 ? (
@@ -120,155 +119,93 @@ export function OrgInventoryView({
       ) : (
         <>
           <OrgInventorySummary summary={summary} />
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <label className="space-y-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Repo filter</span>
+          <section className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="flex-1 min-w-[140px]">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
                 <input
                   value={filters.repoQuery}
                   onChange={(event) => {
                     setCurrentPage(1)
                     setFilters((current) => ({ ...current, repoQuery: event.target.value }))
                   }}
-                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
-                  placeholder="Filter by repo name"
+                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder="Repo name"
                 />
               </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Language</span>
+              <label className="min-w-[120px]">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Language</span>
                 <select
                   value={filters.language}
                   onChange={(event) => {
                     setCurrentPage(1)
                     setFilters((current) => ({ ...current, language: event.target.value }))
                   }}
-                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
+                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 >
-                  <option value="all">All languages</option>
+                  <option value="all">All</option>
                   {languageOptions.map((language) => (
-                    <option key={language} value={language}>
-                      {language}
-                    </option>
+                    <option key={language} value={language}>{language}</option>
                   ))}
                 </select>
               </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Archived status</span>
+              <label className="min-w-[100px]">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Archived</span>
                 <select
                   value={filters.archived}
                   onChange={(event) => {
                     setCurrentPage(1)
-                    setFilters((current) => ({
-                      ...current,
-                      archived: event.target.value as OrgInventoryFilters['archived'],
-                    }))
+                    setFilters((current) => ({ ...current, archived: event.target.value as OrgInventoryFilters['archived'] }))
                   }}
-                  className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900"
+                  className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                 >
-                  <option value="all">All repos</option>
-                  <option value="active">Active only</option>
-                  <option value="archived">Archived only</option>
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="archived">Archived</option>
                 </select>
               </label>
-              {!onAnalyzeAllActive ? (
-                <label className="space-y-2">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Bulk selection limit</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={ORG_INVENTORY_CONFIG.maxBulkSelectionLimit}
-                    value={selectionLimit}
-                    onChange={(event) => {
-                      const nextLimit = Number(event.target.value)
-                      const validation = validateSelectionLimit(selectedRepos, nextLimit)
-                      const nextSelection = applySelectionLimit(selectedRepos, nextLimit)
-                      setSelectedRepos(nextSelection.selectedRepos)
-                      setSelectionError(nextSelection.error ?? validation.error)
-                      setSelectionLimit(nextLimit)
-                    }}
-                    aria-label="Bulk selection limit"
-                  />
-                  <p className="text-sm text-slate-600">Select up to {selectionLimit} repositories for bulk analysis.</p>
+              <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
+                <label className="inline-flex items-center gap-1">
+                  <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />
+                  No archived
                 </label>
-              ) : null}
-              <div className="space-y-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Org aggregation pre-filters</span>
-                <div className="space-y-2">
-                  <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={excludeArchivedRepos}
-                      onChange={(event) => setExcludeArchivedRepos(event.target.checked)}
-                      aria-label="Exclude archived repos"
-                    />
-                    Exclude archived repos
-                  </label>
-                  <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={excludeForks}
-                      onChange={(event) => setExcludeForks(event.target.checked)}
-                      aria-label="Exclude forks"
-                    />
-                    Exclude forks
-                  </label>
-                </div>
-                <p className="text-sm text-slate-600">
-                  Analyze-all will use {activeRunRepos.length} repo{activeRunRepos.length === 1 ? '' : 's'} after pre-filters.
-                </p>
+                <label className="inline-flex items-center gap-1">
+                  <input type="checkbox" checked={excludeForks} onChange={(e) => setExcludeForks(e.target.checked)} aria-label="Exclude forks" />
+                  No forks
+                </label>
               </div>
             </div>
 
-            <div className="mt-4 space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Visible columns</p>
-              <div className="flex flex-wrap gap-3">
-                {OPTIONAL_ORG_INVENTORY_COLUMNS.map((column) => (
-                  <label key={column} className="inline-flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={visibleColumns.includes(column)}
-                      onChange={() =>
-                        setVisibleColumns((current) => {
-                          const next = toggleVisibleColumn(current, column)
-                          setSortState((sortCurrent) => getEffectiveSortState(sortCurrent, next))
-                          return next
-                        })
-                      }
-                    />
-                    {columnLabels[column]}
-                  </label>
-                ))}
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500 dark:text-slate-400">{selectedRepos.length} selected · {activeRunRepos.length} after filters · {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}</span>
               </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-600">{selectedRepos.length} selected</p>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
                 {onAnalyzeAllActive ? (
                   <button
                     type="button"
                     disabled={activeRunRepos.length === 0}
-                    className="rounded border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
                     onClick={() => onAnalyzeAllActive(activeRunRepos)}
                   >
-                    Analyze all active repos
+                    Analyze all ({activeRunRepos.length})
                   </button>
                 ) : null}
                 <button
                   type="button"
                   disabled={selectedRepos.length === 0}
-                  className="rounded border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
                   onClick={() => onAnalyzeSelected(selectedRepos)}
                 >
                   Analyze selected
                 </button>
               </div>
             </div>
-            {selectionError ? <p className="mt-2 text-sm text-amber-700">{selectionError}</p> : null}
+            {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{selectionError}</p> : null}
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-              <p className="text-sm text-slate-600">
-                Showing {visibleRangeStart}-{visibleRangeEnd} of {sortedRows.length} matching repositories
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Showing {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}
               </p>
               <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <span>Rows per page</span>

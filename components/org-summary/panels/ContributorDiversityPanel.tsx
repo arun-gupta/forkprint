@@ -32,15 +32,17 @@ const WINDOW_LABEL: Record<ContributorDiversityWindow, string> = {
 
 interface Props {
   panel: AggregatePanel<ContributorDiversityValue>
+  externalWindow?: ContributorDiversityWindow
 }
 
 function pct(n: number): string {
   return `${(n * 100).toFixed(1)}%`
 }
 
-export function ContributorDiversityPanel({ panel }: Props) {
+export function ContributorDiversityPanel({ panel, externalWindow }: Props) {
   const defaultWindow: ContributorDiversityWindow = panel.value?.defaultWindow ?? 90
-  const [selectedWindow, setSelectedWindow] = useState<ContributorDiversityWindow>(defaultWindow)
+  const [internalWindow, setInternalWindow] = useState<ContributorDiversityWindow>(defaultWindow)
+  const selectedWindow = externalWindow ?? internalWindow
   const partialCoverageLabel =
     panel.value && panel.contributingReposCount < panel.totalReposInRun
       ? `${panel.contributingReposCount} of ${panel.totalReposInRun} repos`
@@ -56,8 +58,8 @@ export function ContributorDiversityPanel({ panel }: Props) {
           Contributor diversity
         </h3>
         <div className="flex items-center gap-3">
-          {panel.value ? (
-            <WindowSelector selected={selectedWindow} onChange={setSelectedWindow} />
+          {panel.value && !externalWindow ? (
+            <WindowSelector selected={selectedWindow} onChange={setInternalWindow} />
           ) : null}
           {panel.status === 'unavailable' ? (
             <span className="text-xs text-slate-500 dark:text-slate-400">unavailable</span>

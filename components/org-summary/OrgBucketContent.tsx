@@ -1,14 +1,16 @@
 'use client'
 
 import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
+import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { PANEL_BUCKETS, isRealPanel, renderPanel, type PanelBucketId } from './panels/registry'
 
 interface Props {
   bucketId: PanelBucketId
   view: OrgSummaryViewModel
+  selectedWindow?: ContributorDiversityWindow
 }
 
-export function OrgBucketContent({ bucketId, view }: Props) {
+export function OrgBucketContent({ bucketId, view, selectedWindow }: Props) {
   const bucket = PANEL_BUCKETS.find((b) => b.id === bucketId)
   if (!bucket) return null
 
@@ -29,7 +31,7 @@ export function OrgBucketContent({ bucketId, view }: Props) {
   return (
     <div className="space-y-3">
       {bucketPanels.map(({ panelId, panel }) => (
-        <div key={panelId}>{renderPanel(panelId, panel)}</div>
+        <div key={panelId}>{renderPanel(panelId, panel, selectedWindow)}</div>
       ))}
     </div>
   )

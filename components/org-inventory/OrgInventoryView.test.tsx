@@ -98,55 +98,11 @@ describe('OrgInventoryView', () => {
     const rows = screen.getAllByRole('row')
     expect(rows[1]).toHaveTextContent('facebook/react')
 
-    await userEvent.click(screen.getByLabelText('Description'))
-    expect(screen.getByText('React UI library')).toBeInTheDocument()
-    expect(screen.getByText('Jest testing framework')).toBeInTheDocument()
-
-    await userEvent.click(screen.getByLabelText('Description'))
-    expect(screen.queryByText('React UI library')).not.toBeInTheDocument()
-    expect(screen.queryByText('Jest testing framework')).not.toBeInTheDocument()
-
     await userEvent.click(screen.getByLabelText('Select facebook/react'))
     await userEvent.click(screen.getByRole('button', { name: /analyze selected/i }))
     expect(onAnalyzeSelected).toHaveBeenCalledWith(['facebook/react'])
   })
 
-  it('trims selected repos deterministically when the slider limit is lowered', async () => {
-    render(
-      <OrgInventoryView
-        org="facebook"
-        summary={{
-          totalPublicRepos: 3,
-          totalStars: 240,
-          mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
-          mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
-          languageDistribution: [{ language: 'TypeScript', repoCount: 3 }],
-          archivedRepoCount: 0,
-          activeRepoCount: 3,
-        }}
-        results={[
-          buildRepo('facebook/react'),
-          buildRepo('facebook/jest'),
-          buildRepo('facebook/relay'),
-        ]}
-        rateLimit={null}
-        onAnalyzeRepo={vi.fn()}
-        onAnalyzeSelected={vi.fn()}
-      />,
-    )
-
-    await userEvent.click(screen.getByLabelText('Select facebook/react'))
-    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
-    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
-
-    const slider = screen.getByLabelText('Bulk selection limit')
-    fireEvent.change(slider, { target: { value: '2' } })
-    expect(screen.getByText('Selection trimmed to the first 2 repositories.')).toBeInTheDocument()
-    expect(screen.getByText('2 selected')).toBeInTheDocument()
-    expect(screen.getByLabelText('Select facebook/react')).toBeChecked()
-    expect(screen.getByLabelText('Select facebook/jest')).toBeChecked()
-    expect(screen.getByLabelText('Select facebook/relay')).not.toBeChecked()
-  })
 
   it('shows a clear no-match state when local filters remove every repo', async () => {
     render(
@@ -168,7 +124,7 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    await userEvent.type(screen.getByPlaceholderText('Filter by repo name'), 'missing')
+    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'missing')
 
     expect(screen.getByText('No matching repositories')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -198,18 +154,18 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    expect(screen.getByText('Showing 1-25 of 30 matching repositories')).toBeInTheDocument()
+    expect(screen.getByText(/Showing 1–25 of 30/)).toBeInTheDocument()
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument()
     expect(screen.queryByText('facebook/repo-26')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument()
     expect(screen.getByText('facebook/repo-26')).toBeInTheDocument()
-    expect(screen.getByText('Showing 26-30 of 30 matching repositories')).toBeInTheDocument()
+    expect(screen.getByText(/Showing 26–30 of 30/)).toBeInTheDocument()
 
     await userEvent.selectOptions(screen.getByLabelText('Rows per page'), '50')
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
-    expect(screen.getByText('Showing 1-30 of 30 matching repositories')).toBeInTheDocument()
+    expect(screen.getByText(/Showing 1–30 of 30/)).toBeInTheDocument()
     expect(screen.getByText('facebook/repo-26')).toBeInTheDocument()
   })
 
@@ -259,8 +215,7 @@ describe('OrgInventoryView', () => {
 
     expect(screen.getByText('No public repositories found')).toBeInTheDocument()
     expect(screen.queryByText('Total public repos')).not.toBeInTheDocument()
-    expect(screen.queryByText('Repo filter')).not.toBeInTheDocument()
-    expect(screen.queryByText('Bulk selection limit')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Repo name')).not.toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
@@ -294,8 +249,9 @@ describe('OrgInventoryView', () => {
 
     expect(screen.getByLabelText('Exclude archived repos')).toBeChecked()
     expect(screen.getByLabelText('Exclude forks')).toBeChecked()
+    // Note: checkbox aria-labels preserved even though visible text shortened
 
-    await userEvent.click(screen.getByRole('button', { name: /analyze all active repos/i }))
+    await userEvent.click(screen.getByRole('button', { name: /analyze all/i }))
 
     expect(onAnalyzeAllActive).toHaveBeenCalledWith(['facebook/react', 'facebook/rocksdb'])
   })
@@ -324,7 +280,7 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /analyze all active repos/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /analyze all/i })).toBeDisabled()
   })
 })
 

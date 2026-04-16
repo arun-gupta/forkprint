@@ -284,7 +284,7 @@ describe('RepoInputClient', () => {
     await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
 
     await screen.findByRole('region', { name: /org inventory view/i })
-    await userEvent.click(screen.getByRole('button', { name: /analyze all active repos/i }))
+    await userEvent.click(screen.getByRole('button', { name: /analyze all/i }))
 
     await vi.waitFor(() => {
       expect(onAnalyze).toHaveBeenCalledWith(['facebook/react'], 'gho_test_token')

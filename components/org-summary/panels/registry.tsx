@@ -2,6 +2,7 @@
 
 import type { ComponentType } from 'react'
 import type { AggregatePanel, PanelId } from '@/lib/org-aggregation/types'
+import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { ActivityRollupPanel } from './ActivityRollupPanel'
 import { AdoptersPanel } from './AdoptersPanel'
 import { BusFactorPanel } from './BusFactorPanel'
@@ -152,7 +153,10 @@ export function isRealPanel(panelId: PanelId): boolean {
   return panelId in REAL_PANELS
 }
 
-export function renderPanel(panelId: PanelId, panel: AggregatePanel<unknown>) {
+export function renderPanel(panelId: PanelId, panel: AggregatePanel<unknown>, selectedWindow?: number) {
+  if (panelId === 'contributor-diversity') {
+    return <ContributorDiversityPanel panel={panel as AggregatePanel<never>} externalWindow={selectedWindow as ContributorDiversityWindow | undefined} />
+  }
   const Real = REAL_PANELS[panelId]
   if (Real) {
     return <Real panel={panel as AggregatePanel<never>} />
