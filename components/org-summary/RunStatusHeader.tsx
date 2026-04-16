@@ -29,12 +29,12 @@ export function RunStatusHeader({ org, header, onCancel, onPause, onResume, noti
   const [expanded, setExpanded] = useState(true)
   const statusLabel =
     header.status === 'complete'
-      ? `complete — ${header.succeeded} of ${header.total} succeeded, ${header.failed} failed`
+      ? 'Complete'
       : header.status === 'cancelled'
-        ? `cancelled (${header.succeeded + header.failed} of ${header.total} completed)`
+        ? 'Cancelled'
         : header.status === 'paused'
-          ? `rate-limited — auto-resumes at ${header.pause?.resumesAt.toLocaleTimeString() ?? ''}`
-          : `in progress (${header.succeeded + header.failed} of ${header.total})`
+          ? `Rate-limited — auto-resumes at ${header.pause?.resumesAt.toLocaleTimeString() ?? ''}`
+          : `In progress (${header.succeeded + header.failed} of ${header.total})`
 
   const showCancel = header.status === 'in-progress' || header.status === 'paused'
   const showPause = header.status === 'in-progress' && Boolean(onPause)
