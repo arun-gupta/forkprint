@@ -57,6 +57,24 @@ Once done, open a PR and merge before starting the next feature.
 
 ---
 
+## Workflow sub-agents
+
+Three project-scoped sub-agents in `.claude/agents/` encode the RepoPulse workflow rules that live in `CLAUDE.md`, `.specify/memory/constitution.md`, and this document. Each is a bounded, read-heavy check; running them is how the rule becomes mechanical instead of a thing you have to remember.
+
+| Agent | When to invoke | How to invoke |
+|---|---|---|
+| `spec-reviewer` | After `/speckit.specify`, before the mandatory approval gate in `CLAUDE.md`. | Mention `spec-reviewer` in a prompt, or `@spec-reviewer (agent) review specs/<N>-<slug>/spec.md`. |
+| `dod-verifier` | Before `git push` / PR open. Runs the Definition of Done checklist from constitution §XII against the current branch. | `@dod-verifier (agent) walk the DoD for this branch`. |
+| `pr-test-plan-checker` | After PR open, before asking the user to merge. Verifies every `## Test plan` checkbox is checked. | `@pr-test-plan-checker (agent) check PR #<N>`. |
+
+Each agent returns a structured report. `spec-reviewer` returns `PASS` / `FAIL` with citations into the constitution and `docs/PRODUCT.md`; `dod-verifier` returns a per-item `SATISFIED` / `BLOCKED` / `REQUIRES HUMAN SIGN-OFF` punch list with command output as evidence; `pr-test-plan-checker` returns `READY` / `BLOCKED` with the verbatim list of unchecked items.
+
+**PR merge discipline**: `pr-test-plan-checker`'s tool allowlist is narrowed to `Bash(gh pr view:*)` only, and its prompt explicitly forbids `gh pr merge` / `gh pr close` / `gh pr edit` / `gh pr review` / `gh pr comment`. The `CLAUDE.md` rule that PR merging is a manual user action is intact — none of the three agents is permitted to merge.
+
+Sub-agents inherit the parent session's `.claude/settings.json` allowlist as a ceiling; they cannot widen it. No entry was added to `settings.json` for these three agents — the existing allowlist already covers every tool they need.
+
+---
+
 ## Phase 1 feature order
 
 This is the planned implementation order for Phase 1. It may differ from the feature listing order in `docs/PRODUCT.md`, which remains the canonical product definition.

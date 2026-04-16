@@ -52,4 +52,3 @@ scripts/calibrate-checkpoint.json
 .claude.session-id
 dev.log
 claude.log
-.claude/
