@@ -2,7 +2,7 @@ export const ORG_INVENTORY_CONFIG = {
   defaultBulkSelectionLimit: 5,
   maxBulkSelectionLimit: 5,
   defaultPageSize: 25,
-  pageSizeOptions: [25, 50, 100],
+  pageSizeOptions: [10, 25, 50, 100],
 } as const
 
 export function clampBulkSelectionLimit(requested: number) {
