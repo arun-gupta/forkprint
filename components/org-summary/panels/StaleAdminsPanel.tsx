@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useAuth } from '@/components/auth/AuthContext'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
 import { useStaleAdmins, type OwnerType } from '@/components/shared/hooks/useStaleAdmins'
@@ -18,6 +17,56 @@ interface Props {
   sectionOverride?: StaleAdminsSection | null
   /** Override for tests. */
   loadingOverride?: boolean
+}
+
+// Risk-first ordering: the user's attention should go to Stale and Unavailable
+// first. Active and No-public-activity are lower-attention and start collapsed.
+const GROUP_ORDER: StaleAdminClassification[] = [
+  'stale',
+  'unavailable',
+  'no-public-activity',
+  'active',
+]
+
+const DEFAULT_OPEN: Record<StaleAdminClassification, boolean> = {
+  stale: true,
+  unavailable: true,
+  'no-public-activity': false,
+  active: false,
+}
+
+const GROUP_CONFIG: Record<
+  StaleAdminClassification,
+  { label: string; icon: string; pillClassName: string; groupAriaLabel: string; headerBorderClassName: string }
+> = {
+  stale: {
+    label: 'Stale',
+    icon: '⚠',
+    pillClassName: 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
+    groupAriaLabel: 'Stale admins — past threshold',
+    headerBorderClassName: 'border-l-4 border-rose-500',
+  },
+  unavailable: {
+    label: 'Unavailable',
+    icon: '?',
+    pillClassName: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+    groupAriaLabel: 'Admins with unavailable activity',
+    headerBorderClassName: 'border-l-4 border-amber-500',
+  },
+  'no-public-activity': {
+    label: 'No public activity',
+    icon: '–',
+    pillClassName: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+    groupAriaLabel: 'Admins with no public activity — status cannot be determined',
+    headerBorderClassName: 'border-l-4 border-slate-400',
+  },
+  active: {
+    label: 'Active',
+    icon: '✓',
+    pillClassName: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+    groupAriaLabel: 'Active admins — within threshold',
+    headerBorderClassName: 'border-l-4 border-emerald-500',
+  },
 }
 
 export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverride }: Props) {
@@ -92,95 +141,144 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
     )
   }
 
+  const counts = countByClassification(section.admins)
+  const grouped = groupByClassification(section.admins)
+
   return (
-    <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
-      {section.admins.map((admin) => (
-        <AdminRow key={admin.username} admin={admin} />
+    <div className="space-y-3">
+      <CountStrip counts={counts} total={section.admins.length} />
+      {GROUP_ORDER.filter((c) => grouped[c].length > 0).map((classification) => (
+        <GroupSection
+          key={classification}
+          classification={classification}
+          admins={grouped[classification]}
+          defaultOpen={DEFAULT_OPEN[classification]}
+        />
       ))}
-    </ul>
+    </div>
   )
 }
 
-function AdminRow({ admin }: { admin: StaleAdminRecord }) {
-  const relativeText = useMemo(() => formatRelative(admin.lastActivityAt), [admin.lastActivityAt])
+function CountStrip({
+  counts,
+  total,
+}: {
+  counts: Record<StaleAdminClassification, number>
+  total: number
+}) {
   return (
-    <li
-      className="flex flex-wrap items-center justify-between gap-2 py-2"
-      data-testid={`stale-admin-row-${admin.classification}`}
+    <div
+      className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-800"
+      data-testid="stale-admins-count-strip"
+      aria-label={`Admin summary — ${total} admins`}
     >
-      <div className="flex flex-col">
-        <a
-          href={`https://github.com/${admin.username}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium text-slate-900 hover:underline dark:text-slate-100"
-        >
-          {admin.username}
-        </a>
-        {admin.lastActivityAt ? (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Last public activity: {admin.lastActivityAt.slice(0, 10)} ({relativeText})
-            {admin.lastActivitySource === 'org-commit-search' ? (
-              <span className="ml-1 text-slate-400">(commit search)</span>
-            ) : null}
-          </span>
-        ) : admin.classification === 'no-public-activity' ? (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            No public activity available.
-          </span>
-        ) : admin.classification === 'unavailable' ? (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Activity could not be retrieved ({admin.unavailableReason ?? 'unknown'}).
-          </span>
-        ) : null}
-      </div>
-      <ClassificationBadge classification={admin.classification} />
-    </li>
+      <span className="font-medium text-slate-700 dark:text-slate-200">{total} admin{total === 1 ? '' : 's'}</span>
+      <span className="text-slate-300 dark:text-slate-600">·</span>
+      {GROUP_ORDER.map((c) => (
+        <CountPill key={c} classification={c} count={counts[c]} />
+      ))}
+    </div>
   )
 }
 
-function ClassificationBadge({ classification }: { classification: StaleAdminClassification }) {
-  const config = BADGE_CONFIG[classification]
+function CountPill({
+  classification,
+  count,
+}: {
+  classification: StaleAdminClassification
+  count: number
+}) {
+  const config = GROUP_CONFIG[classification]
+  const dim = count === 0
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.className}`}
-      data-testid={`stale-admin-badge-${classification}`}
-      aria-label={config.ariaLabel}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${config.pillClassName} ${dim ? 'opacity-40' : ''}`}
+      data-testid={`stale-admins-count-${classification}`}
     >
-      {config.icon ? <span className="mr-1">{config.icon}</span> : null}
-      {config.label}
+      <span aria-hidden="true">{config.icon}</span>
+      {count} {config.label.toLowerCase()}
     </span>
   )
 }
 
-const BADGE_CONFIG: Record<
-  StaleAdminClassification,
-  { label: string; ariaLabel: string; className: string; icon: string | null }
-> = {
-  active: {
-    label: 'Active',
-    ariaLabel: 'Active admin',
-    className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
-    icon: null,
-  },
-  stale: {
-    label: 'Stale',
-    ariaLabel: 'Stale admin past threshold',
-    className: 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
-    icon: '⚠',
-  },
-  'no-public-activity': {
-    label: 'No public activity',
-    ariaLabel: 'No public activity visible; stale status cannot be determined',
-    className: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-    icon: '–',
-  },
-  unavailable: {
-    label: 'Unavailable',
-    ariaLabel: 'Activity data unavailable',
-    className: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-    icon: '?',
-  },
+function GroupSection({
+  classification,
+  admins,
+  defaultOpen,
+}: {
+  classification: StaleAdminClassification
+  admins: StaleAdminRecord[]
+  defaultOpen: boolean
+}) {
+  const config = GROUP_CONFIG[classification]
+  return (
+    <details
+      open={defaultOpen}
+      className={`rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      data-testid={`stale-admins-group-${classification}`}
+    >
+      <summary
+        className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100"
+        aria-label={config.groupAriaLabel}
+      >
+        <span aria-hidden="true">{config.icon}</span>
+        <span>{config.label}</span>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${config.pillClassName}`}>
+          {admins.length}
+        </span>
+      </summary>
+      <ul role="list" className="divide-y divide-slate-200 px-3 pb-2 dark:divide-slate-700">
+        {admins.map((admin) => (
+          <AdminRow key={admin.username} admin={admin} />
+        ))}
+      </ul>
+    </details>
+  )
+}
+
+function AdminRow({ admin }: { admin: StaleAdminRecord }) {
+  return (
+    <li
+      className="flex flex-wrap items-baseline justify-between gap-2 py-1.5"
+      data-testid={`stale-admin-row-${admin.classification}`}
+    >
+      <a
+        href={`https://github.com/${admin.username}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm font-medium text-slate-900 hover:underline dark:text-slate-100"
+      >
+        {admin.username}
+      </a>
+      <RowDetail admin={admin} />
+    </li>
+  )
+}
+
+function RowDetail({ admin }: { admin: StaleAdminRecord }) {
+  if (admin.lastActivityAt) {
+    return (
+      <span className="text-xs text-slate-500 dark:text-slate-400">
+        Last public activity: {admin.lastActivityAt.slice(0, 10)} ({formatRelative(admin.lastActivityAt)})
+        {admin.lastActivitySource === 'org-commit-search' ? (
+          <span className="ml-1 text-slate-400">(commit search)</span>
+        ) : null}
+      </span>
+    )
+  }
+  if (admin.classification === 'no-public-activity') {
+    return (
+      <span className="text-xs text-slate-500 dark:text-slate-400">No public activity available.</span>
+    )
+  }
+  if (admin.classification === 'unavailable') {
+    return (
+      <span className="text-xs text-slate-500 dark:text-slate-400">
+        Activity could not be retrieved ({admin.unavailableReason ?? 'unknown'}).
+      </span>
+    )
+  }
+  return null
 }
 
 function ModeBadge({ mode }: { mode: StaleAdminMode }) {
@@ -246,4 +344,28 @@ function formatRelative(iso: string | null): string {
   if (days < 30) return `${days} days ago`
   if (days < 365) return `${Math.floor(days / 30)} months ago`
   return `${Math.floor(days / 365)} years ago`
+}
+
+function countByClassification(admins: StaleAdminRecord[]): Record<StaleAdminClassification, number> {
+  const counts: Record<StaleAdminClassification, number> = {
+    active: 0,
+    stale: 0,
+    'no-public-activity': 0,
+    unavailable: 0,
+  }
+  for (const a of admins) counts[a.classification]++
+  return counts
+}
+
+function groupByClassification(
+  admins: StaleAdminRecord[],
+): Record<StaleAdminClassification, StaleAdminRecord[]> {
+  const groups: Record<StaleAdminClassification, StaleAdminRecord[]> = {
+    active: [],
+    stale: [],
+    'no-public-activity': [],
+    unavailable: [],
+  }
+  for (const a of admins) groups[a.classification].push(a)
+  return groups
 }

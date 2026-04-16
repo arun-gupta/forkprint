@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { StaleAdminsPanel } from './StaleAdminsPanel'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
@@ -30,7 +30,7 @@ function makeSection(override: Partial<StaleAdminsSection> = {}): StaleAdminsSec
 }
 
 describe('StaleAdminsPanel — baseline rendering', () => {
-  it('renders each admin row with classification and public-activity timestamp', () => {
+  it('renders admins grouped by classification, with username and last-activity date inside the row', () => {
     const section = makeSection({
       admins: [
         {
@@ -51,13 +51,19 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     })
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
 
+    // Each row present somewhere in the doc.
     expect(screen.getByText('alice')).toBeInTheDocument()
     expect(screen.getByText('bob')).toBeInTheDocument()
-    expect(screen.getByText(/2026-04-10/)).toBeInTheDocument()
-    expect(screen.getByText(/2025-09-01/)).toBeInTheDocument()
 
-    expect(screen.getByTestId('stale-admin-badge-active')).toBeInTheDocument()
-    expect(screen.getByTestId('stale-admin-badge-stale')).toBeInTheDocument()
+    // Stale group is the one that contains bob.
+    const staleGroup = screen.getByTestId('stale-admins-group-stale')
+    expect(within(staleGroup).getByText('bob')).toBeInTheDocument()
+    expect(within(staleGroup).getByText(/2025-09-01/)).toBeInTheDocument()
+
+    // Active group is the one that contains alice.
+    const activeGroup = screen.getByTestId('stale-admins-group-active')
+    expect(within(activeGroup).getByText('alice')).toBeInTheDocument()
+    expect(within(activeGroup).getByText(/2026-04-10/)).toBeInTheDocument()
   })
 
   it('renders the baseline mode indicator', () => {
@@ -67,62 +73,79 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     expect(badge.textContent).toMatch(/baseline/i)
     expect(badge.textContent).toMatch(/public admins only/i)
   })
+
+  it('renders a risk-first count strip summarizing every classification', () => {
+    const section = makeSection({
+      admins: [
+        mkAdmin('a1', 'active'),
+        mkAdmin('a2', 'active'),
+        mkAdmin('s1', 'stale'),
+        mkAdmin('n1', 'no-public-activity'),
+        mkAdmin('u1', 'unavailable'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const strip = screen.getByTestId('stale-admins-count-strip')
+    expect(strip).toBeInTheDocument()
+    expect(within(strip).getByTestId('stale-admins-count-stale').textContent).toMatch(/\b1\b/)
+    expect(within(strip).getByTestId('stale-admins-count-active').textContent).toMatch(/\b2\b/)
+    expect(within(strip).getByTestId('stale-admins-count-no-public-activity').textContent).toMatch(/\b1\b/)
+    expect(within(strip).getByTestId('stale-admins-count-unavailable').textContent).toMatch(/\b1\b/)
+    expect(strip.textContent).toMatch(/5 admins/i)
+  })
+
+  it('renders Stale and Unavailable groups open by default, No-public-activity and Active closed', () => {
+    const section = makeSection({
+      admins: [
+        mkAdmin('s1', 'stale'),
+        mkAdmin('u1', 'unavailable'),
+        mkAdmin('n1', 'no-public-activity'),
+        mkAdmin('a1', 'active'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    expect(screen.getByTestId('stale-admins-group-stale')).toHaveAttribute('open')
+    expect(screen.getByTestId('stale-admins-group-unavailable')).toHaveAttribute('open')
+    expect(screen.getByTestId('stale-admins-group-no-public-activity')).not.toHaveAttribute('open')
+    expect(screen.getByTestId('stale-admins-group-active')).not.toHaveAttribute('open')
+  })
+
+  it('omits a group entirely when that classification has zero admins', () => {
+    const section = makeSection({
+      admins: [mkAdmin('a1', 'active')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    expect(screen.queryByTestId('stale-admins-group-stale')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('stale-admins-group-unavailable')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('stale-admins-group-no-public-activity')).not.toBeInTheDocument()
+    expect(screen.getByTestId('stale-admins-group-active')).toBeInTheDocument()
+  })
 })
 
 describe('StaleAdminsPanel — distinctness of no-public-activity vs stale (US2)', () => {
-  it('uses a distinct badge and distinct aria-label for no-public-activity vs stale', () => {
+  it('renders Stale and No-public-activity groups with distinct headers and distinct aria-labels', () => {
     const section = makeSection({
-      admins: [
-        {
-          username: 'stale-user',
-          classification: 'stale',
-          lastActivityAt: '2025-01-01T00:00:00Z',
-          lastActivitySource: 'public-events',
-          unavailableReason: null,
-        },
-        {
-          username: 'silent-user',
-          classification: 'no-public-activity',
-          lastActivityAt: null,
-          lastActivitySource: null,
-          unavailableReason: null,
-        },
-      ],
+      admins: [mkAdmin('s', 'stale'), mkAdmin('n', 'no-public-activity')],
     })
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
 
-    const staleBadge = screen.getByTestId('stale-admin-badge-stale')
-    const noActivityBadge = screen.getByTestId('stale-admin-badge-no-public-activity')
+    const staleGroup = screen.getByTestId('stale-admins-group-stale')
+    const noActivityGroup = screen.getByTestId('stale-admins-group-no-public-activity')
 
-    // Distinct accessible labels.
-    expect(staleBadge.getAttribute('aria-label')).not.toBe(noActivityBadge.getAttribute('aria-label'))
+    // Distinct visual treatment — different left-border color class.
+    expect(staleGroup.className).not.toBe(noActivityGroup.className)
 
-    // Distinct visible text.
-    expect(staleBadge.textContent).not.toBe(noActivityBadge.textContent)
-    expect(staleBadge.textContent).toMatch(/stale/i)
-    expect(noActivityBadge.textContent).toMatch(/no public activity/i)
-
-    // Distinct CSS class tokens (the critical visual-distinctness check).
-    expect(staleBadge.className).not.toBe(noActivityBadge.className)
-  })
-
-  it('uses a distinct badge for unavailable too (third distinct treatment)', () => {
-    const section = makeSection({
-      admins: [
-        {
-          username: 'broken',
-          classification: 'unavailable',
-          lastActivityAt: null,
-          lastActivitySource: null,
-          unavailableReason: 'rate-limited',
-        },
-      ],
-    })
-    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
-
-    const badge = screen.getByTestId('stale-admin-badge-unavailable')
-    expect(badge.textContent).toMatch(/unavailable/i)
-    expect(badge.getAttribute('aria-label')).toMatch(/unavailable/i)
+    // Distinct group header text.
+    const staleSummary = staleGroup.querySelector('summary')!
+    const noActivitySummary = noActivityGroup.querySelector('summary')!
+    expect(staleSummary.textContent).toMatch(/stale/i)
+    expect(noActivitySummary.textContent).toMatch(/no public activity/i)
+    expect(staleSummary.getAttribute('aria-label')).not.toBe(
+      noActivitySummary.getAttribute('aria-label'),
+    )
   })
 })
 
@@ -131,7 +154,7 @@ describe('StaleAdminsPanel — US4 N/A for non-org targets', () => {
     const section = makeSection({ applicability: 'not-applicable-non-org', admins: [] })
     renderWithSession(<StaleAdminsPanel org={null} ownerType="User" sectionOverride={section} />)
     expect(screen.getByTestId('stale-admins-na')).toBeInTheDocument()
-    expect(screen.queryByTestId(/stale-admin-badge-/)).not.toBeInTheDocument()
+    expect(screen.queryByTestId(/stale-admins-group-/)).not.toBeInTheDocument()
   })
 })
 
@@ -180,3 +203,28 @@ describe('StaleAdminsPanel — US5 freshness disclosure', () => {
     expect(screen.getByText(/eventually consistent/i)).toBeInTheDocument()
   })
 })
+
+function mkAdmin(
+  username: string,
+  classification: 'active' | 'stale' | 'no-public-activity' | 'unavailable',
+) {
+  if (classification === 'no-public-activity') {
+    return { username, classification, lastActivityAt: null, lastActivitySource: null, unavailableReason: null }
+  }
+  if (classification === 'unavailable') {
+    return {
+      username,
+      classification,
+      lastActivityAt: null,
+      lastActivitySource: null,
+      unavailableReason: 'rate-limited' as const,
+    }
+  }
+  return {
+    username,
+    classification,
+    lastActivityAt: classification === 'stale' ? '2025-09-01T00:00:00Z' : '2026-04-10T00:00:00Z',
+    lastActivitySource: 'public-events' as const,
+    unavailableReason: null,
+  }
+}
