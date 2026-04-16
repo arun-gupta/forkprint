@@ -62,7 +62,9 @@ export function RunStatusHeader({ org, header, onCancel, onPause, onResume, noti
             <ChevronIcon expanded={expanded} />
           </button>
           <div>
-            {hideHeading ? null : (
+            {hideHeading ? (
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Analysis run</p>
+            ) : (
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 Org summary — {org}
               </h2>
