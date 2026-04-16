@@ -47,9 +47,16 @@ export const REPO_OVERVIEW_QUERY = `
       docContributing: object(expression: "HEAD:CONTRIBUTING.md") { ... on Blob { oid } }
       docContributingRst: object(expression: "HEAD:CONTRIBUTING.rst") { ... on Blob { oid } }
       docContributingTxt: object(expression: "HEAD:CONTRIBUTING.txt") { ... on Blob { oid } }
+      docContributingLower: object(expression: "HEAD:contributing.md") { ... on Blob { oid } }
+      docContributingDocs: object(expression: "HEAD:docs/CONTRIBUTING.md") { ... on Blob { oid } }
+      docContributingGithub: object(expression: "HEAD:.github/CONTRIBUTING.md") { ... on Blob { oid } }
       docCodeOfConduct: object(expression: "HEAD:CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docCodeOfConductRst: object(expression: "HEAD:CODE_OF_CONDUCT.rst") { ... on Blob { oid } }
       docCodeOfConductTxt: object(expression: "HEAD:CODE_OF_CONDUCT.txt") { ... on Blob { oid } }
+      docCodeOfConductHyphenLower: object(expression: "HEAD:code-of-conduct.md") { ... on Blob { oid } }
+      docCodeOfConductUnderscoreLower: object(expression: "HEAD:code_of_conduct.md") { ... on Blob { oid } }
+      docCodeOfConductDocs: object(expression: "HEAD:docs/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
+      docCodeOfConductGithub: object(expression: "HEAD:.github/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docLicenseRst: object(expression: "HEAD:LICENSE.rst") { ... on Blob { oid text } }
       docSecurity: object(expression: "HEAD:SECURITY.md") { ... on Blob { oid } }
       docSecurityLower: object(expression: "HEAD:security.md") { ... on Blob { oid } }
@@ -61,6 +68,7 @@ export const REPO_OVERVIEW_QUERY = `
       docSecurityContacts: object(expression: "HEAD:SECURITY_CONTACTS") { ... on Blob { oid } }
       docChangelog: object(expression: "HEAD:CHANGELOG.md") { ... on Blob { oid } }
       docChangelogPlain: object(expression: "HEAD:CHANGELOG") { ... on Blob { oid } }
+      docChangelogDocs: object(expression: "HEAD:docs/CHANGELOG.md") { ... on Blob { oid } }
       docChanges: object(expression: "HEAD:CHANGES.md") { ... on Blob { oid } }
       docChangesRst: object(expression: "HEAD:CHANGES.rst") { ... on Blob { oid } }
       docHistory: object(expression: "HEAD:HISTORY.md") { ... on Blob { oid } }
