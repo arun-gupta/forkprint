@@ -31,7 +31,7 @@ describe('analyze', () => {
     vi.clearAllMocks()
     fetchContributorCountMock.mockResolvedValue({
       data: 1742,
-      rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
     fetchMaintainerCountMock.mockResolvedValue({
       data: {
@@ -43,11 +43,11 @@ describe('analyze', () => {
           { token: 'dave', kind: 'user' },
         ],
       },
-      rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
     fetchPublicUserOrganizationsMock.mockResolvedValue({
       data: ['meta'],
-      rateLimit: { remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
   })
 
@@ -65,9 +65,9 @@ describe('analyze', () => {
             watchers: { totalCount: 10 },
             issues: { totalCount: 5 },
           },
-          rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 1: commit history + releases
       .mockResolvedValueOnce({
@@ -100,9 +100,9 @@ describe('analyze', () => {
               },
             },
           },
-          rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 2: search-based counts
       .mockResolvedValueOnce({
@@ -114,9 +114,9 @@ describe('analyze', () => {
           staleIssues30: { issueCount: 0 }, staleIssues60: { issueCount: 0 }, staleIssues90: { issueCount: 0 }, staleIssues180: { issueCount: 0 }, staleIssues365: { issueCount: 0 },
           recentMergedPullRequests: { nodes: [] },
           recentClosedIssues: { nodes: [] },
-          rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Responsiveness metadata query (pass 1) — empty for this test
       .mockResolvedValueOnce({
@@ -130,9 +130,9 @@ describe('analyze', () => {
           staleOpenPullRequests90: { issueCount: 0 },
           staleOpenPullRequests180: { issueCount: 0 },
           staleOpenPullRequests365: { issueCount: 0 },
-          rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -178,6 +178,7 @@ describe('analyze', () => {
     expect(result.results[0]?.missingFields).not.toContain('commitCountsByAuthor')
     expect(result.results[0]?.missingFields).not.toContain('commitCountsByExperimentalOrg')
     expect(result.rateLimit).toEqual({
+      limit: 5000,
       remaining: 4995,
       resetAt: '2026-03-31T23:59:59Z',
       retryAfter: 'unavailable',
@@ -208,7 +209,7 @@ describe('analyze', () => {
             issues: { totalCount: 5 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 1: commit history + releases
       .mockResolvedValueOnce({
@@ -229,7 +230,7 @@ describe('analyze', () => {
             },
           },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 2: search-based counts
       .mockResolvedValueOnce({
@@ -242,7 +243,7 @@ describe('analyze', () => {
           recentMergedPullRequests: { nodes: [] },
           recentClosedIssues: { nodes: [] },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -256,7 +257,7 @@ describe('analyze', () => {
           staleOpenPullRequests180: { issueCount: 0 },
           staleOpenPullRequests365: { issueCount: 0 },
         },
-        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -271,7 +272,7 @@ describe('analyze', () => {
             },
           },
         },
-        rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -298,7 +299,7 @@ describe('analyze', () => {
             pullRequests: { totalCount: 4 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 1: commit history + releases
       .mockResolvedValueOnce({
@@ -324,7 +325,7 @@ describe('analyze', () => {
             },
           },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Activity pass 2: search-based counts
       .mockResolvedValueOnce({
@@ -337,7 +338,7 @@ describe('analyze', () => {
           recentMergedPullRequests: { nodes: [{ createdAt: '2026-03-01T00:00:00Z', mergedAt: '2026-03-02T12:00:00Z' }] },
           recentClosedIssues: { nodes: [{ createdAt: '2026-03-03T00:00:00Z', closedAt: '2026-03-05T00:00:00Z' }] },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Responsiveness pass 1: metadata (no nested comment/review nodes)
       .mockResolvedValueOnce({
@@ -366,9 +367,9 @@ describe('analyze', () => {
           staleOpenPullRequests90: { issueCount: 1 },
           staleOpenPullRequests180: { issueCount: 1 },
           staleOpenPullRequests365: { issueCount: 1 },
-          rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // Responsiveness pass 2: detail query for nodes with comments/reviews
       .mockResolvedValueOnce({
@@ -386,9 +387,9 @@ describe('analyze', () => {
             comments: { totalCount: 0, nodes: [] },
             reviews: { totalCount: 2, nodes: [{ createdAt: '2026-03-12T12:00:00Z', author: { login: 'erin' } }] },
           },
-          rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4996, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -436,9 +437,9 @@ describe('analyze', () => {
             watchers: { totalCount: 10 },
             issues: { totalCount: 5 },
           },
-          rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z' },
+          rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z' },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // react: activity pass 1
       .mockResolvedValueOnce({
@@ -464,7 +465,7 @@ describe('analyze', () => {
             },
           },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // react: activity pass 2
       .mockResolvedValueOnce({
@@ -477,7 +478,7 @@ describe('analyze', () => {
           recentMergedPullRequests: { nodes: [] },
           recentClosedIssues: { nodes: [] },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // react: responsiveness pass 1
       .mockResolvedValueOnce({
@@ -492,7 +493,7 @@ describe('analyze', () => {
           staleOpenPullRequests180: { issueCount: 0 },
           staleOpenPullRequests365: { issueCount: 0 },
         },
-        rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       // missing-repo: overview fails
       .mockRejectedValueOnce(new Error('not found'))
@@ -554,7 +555,7 @@ describe('analyze', () => {
             issues: { totalCount: 5 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -574,7 +575,7 @@ describe('analyze', () => {
           prsMerged: { issueCount: 3 },
           issuesClosed: { issueCount: 6 },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -596,7 +597,7 @@ describe('analyze', () => {
   it('falls back to commit-based contributor count when REST API contributor count is unavailable', async () => {
     fetchContributorCountMock.mockResolvedValueOnce({
       data: 'unavailable',
-      rateLimit: { remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
 
     queryGitHubGraphQLMock
@@ -613,7 +614,7 @@ describe('analyze', () => {
             issues: { totalCount: 5 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -638,7 +639,7 @@ describe('analyze', () => {
           prsMerged: { issueCount: 3 },
           issuesClosed: { issueCount: 6 },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -656,7 +657,7 @@ describe('analyze', () => {
   it('keeps maintainer count unavailable when no supported maintainer or owner file can be verified', async () => {
     fetchMaintainerCountMock.mockResolvedValueOnce({
       data: { count: 'unavailable', tokens: 'unavailable' },
-      rateLimit: { remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4996, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
 
     queryGitHubGraphQLMock
@@ -673,7 +674,7 @@ describe('analyze', () => {
             issues: { totalCount: 5 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -698,7 +699,7 @@ describe('analyze', () => {
           prsMerged: { issueCount: 3 },
           issuesClosed: { issueCount: 6 },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -715,7 +716,7 @@ describe('analyze', () => {
   it('shows Unaffiliated in org metrics when contributors have no public organization', async () => {
     fetchPublicUserOrganizationsMock.mockResolvedValueOnce({
       data: [],
-      rateLimit: { remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
 
     queryGitHubGraphQLMock
@@ -732,7 +733,7 @@ describe('analyze', () => {
             issues: { totalCount: 5 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -757,7 +758,7 @@ describe('analyze', () => {
           prsMerged: { issueCount: 3 },
           issuesClosed: { issueCount: 6 },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({
@@ -774,7 +775,7 @@ describe('analyze', () => {
     fetchPublicUserOrganizationsMock
       .mockResolvedValueOnce({
         data: ['kubernetes'],
-        rateLimit: { remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockRejectedValueOnce(Object.assign(new Error('GitHub REST request failed with status 404'), { status: 404 }))
 
@@ -792,7 +793,7 @@ describe('analyze', () => {
             issues: { totalCount: 7 },
           },
         },
-        rateLimit: { remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
       .mockResolvedValueOnce({
         data: {
@@ -821,7 +822,7 @@ describe('analyze', () => {
           prsMerged: { issueCount: 1 },
           issuesClosed: { issueCount: 1 },
         },
-        rateLimit: { remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
       })
 
     const result = await analyze({

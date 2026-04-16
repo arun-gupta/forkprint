@@ -584,6 +584,7 @@ function extractRateLimitFromError(error: unknown): RateLimitState | null {
   }
 
   return {
+    limit: 'unavailable',
     remaining: 'unavailable',
     resetAt: 'unavailable',
     retryAfter: maybeError.retryAfter ?? 'unavailable',

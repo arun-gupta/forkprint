@@ -57,9 +57,10 @@ function extractRateLimit(data: unknown): RateLimitState | null {
     return null
   }
 
-  const rateLimit = (data as { rateLimit?: { remaining?: number; resetAt?: string } }).rateLimit
+  const rateLimit = (data as { rateLimit?: { limit?: number; remaining?: number; resetAt?: string } }).rateLimit
 
   return {
+    limit: typeof rateLimit?.limit === 'number' ? rateLimit.limit : 'unavailable',
     remaining: typeof rateLimit?.remaining === 'number' ? rateLimit.remaining : 'unavailable',
     resetAt: typeof rateLimit?.resetAt === 'string' ? rateLimit.resetAt : 'unavailable',
     retryAfter: 'unavailable',

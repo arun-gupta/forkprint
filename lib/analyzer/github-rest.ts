@@ -287,10 +287,12 @@ function isLikelyMaintainerToken(token: string) {
 }
 
 function extractRateLimit(response: Response): RateLimitState | null {
+  const limit = response.headers.get('X-RateLimit-Limit')
   const remaining = response.headers.get('X-RateLimit-Remaining')
   const resetAt = response.headers.get('X-RateLimit-Reset')
 
   return {
+    limit: limit ? Number(limit) : 'unavailable',
     remaining: remaining ? Number(remaining) : 'unavailable',
     resetAt: resetAt ? new Date(Number(resetAt) * 1000).toISOString() : 'unavailable',
     retryAfter: 'unavailable',

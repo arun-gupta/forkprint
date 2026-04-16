@@ -169,8 +169,8 @@ describe('OrgInventoryView', () => {
     expect(screen.getByText('facebook/repo-26')).toBeInTheDocument()
   })
 
-  it('shows the remaining API-call footer when rate-limit metadata is available', () => {
-    render(
+  it('shows the remaining API-call footer only when rate limit is low (<= 25%)', () => {
+    const { rerender } = render(
       <OrgInventoryView
         org="facebook"
         summary={{
@@ -183,13 +183,36 @@ describe('OrgInventoryView', () => {
           activeRepoCount: 1,
         }}
         results={[buildRepo('facebook/react')]}
-        rateLimit={{ remaining: 4963, resetAt: '2026-04-03T00:50:00Z', retryAfter: 'unavailable' }}
+        rateLimit={{ limit: 5000, remaining: 4963, resetAt: '2026-04-03T00:50:00Z', retryAfter: 'unavailable' }}
         onAnalyzeRepo={vi.fn()}
         onAnalyzeSelected={vi.fn()}
       />,
     )
 
-    expect(screen.getAllByText('Remaining API calls: 4,963')).toHaveLength(1)
+    // Above 25% — hidden
+    expect(screen.queryByText(/remaining api calls/i)).not.toBeInTheDocument()
+
+    rerender(
+      <OrgInventoryView
+        org="facebook"
+        summary={{
+          totalPublicRepos: 1,
+          totalStars: 100,
+          mostStarredRepos: [{ repo: 'facebook/react', stars: 100 }],
+          mostRecentlyActiveRepos: [{ repo: 'facebook/react', pushedAt: '2026-04-02T00:00:00Z' }],
+          languageDistribution: [{ language: 'TypeScript', repoCount: 1 }],
+          archivedRepoCount: 0,
+          activeRepoCount: 1,
+        }}
+        results={[buildRepo('facebook/react')]}
+        rateLimit={{ limit: 5000, remaining: 800, resetAt: '2026-04-03T00:50:00Z', retryAfter: 'unavailable' }}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    // At or below 25% — visible
+    expect(screen.getAllByText('Remaining API calls: 800')).toHaveLength(1)
     expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
   })
 

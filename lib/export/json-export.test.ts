@@ -43,7 +43,7 @@ const MINIMAL_RESPONSE: AnalyzeResponse = {
     },
   ],
   failures: [],
-  rateLimit: { remaining: 4000, resetAt: '2026-04-06T20:00:00Z', retryAfter: 'unavailable' },
+  rateLimit: { limit: 5000, remaining: 4000, resetAt: '2026-04-06T20:00:00Z', retryAfter: 'unavailable' },
 }
 
 describe('buildJsonExport', () => {

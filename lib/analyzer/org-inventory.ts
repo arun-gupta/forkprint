@@ -218,6 +218,7 @@ const ORG_INVENTORY_QUERY = `
       }
     }
     rateLimit {
+      limit
       remaining
       resetAt
     }

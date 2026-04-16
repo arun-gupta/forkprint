@@ -23,7 +23,7 @@ import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
 import { OrgWindowSelector } from '@/components/org-summary/OrgWindowSelector'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
-import type { AnalysisResult, AnalyzeResponse } from '@/lib/analyzer/analysis-result'
+import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
@@ -445,7 +445,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </ul>
             </section>
           ) : null}
-          {analysisResponse.rateLimit ? (
+          {analysisResponse.rateLimit && !orgInventoryResponse && isRateLimitLow(analysisResponse.rateLimit) ? (
             <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
               <p>Remaining API calls: {formatDisplayValue(analysisResponse.rateLimit.remaining)}</p>
               <p>Rate limit resets at: {formatRateLimitReset(analysisResponse.rateLimit.resetAt)}</p>

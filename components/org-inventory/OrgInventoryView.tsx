@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { isRateLimitLow } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import { ORG_AGGREGATION_CONFIG } from '@/lib/config/org-aggregation'
 import { clampOrgInventoryPageSize, ORG_INVENTORY_CONFIG } from '@/lib/config/org-inventory'
@@ -297,7 +298,7 @@ export function OrgInventoryView({
           </div>
         </div>
       ) : null}
-      {rateLimit ? (
+      {rateLimit && isRateLimitLow(rateLimit) ? (
         <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
           <p>Remaining API calls: {formatDisplayValue(rateLimit.remaining)}</p>
           <p>Rate limit resets at: {formatRateLimitReset(rateLimit.resetAt)}</p>
@@ -312,7 +313,6 @@ function formatDisplayValue(value: number | string) {
   if (typeof value === 'number') {
     return new Intl.NumberFormat('en-US').format(value)
   }
-
   return value
 }
 
@@ -320,12 +320,10 @@ function formatRateLimitReset(value: string) {
   if (value === 'unavailable') {
     return value
   }
-
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     return value
   }
-
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -336,6 +334,5 @@ function formatRetryAfter(value: number | string) {
   if (typeof value !== 'number') {
     return value
   }
-
   return `${new Intl.NumberFormat('en-US').format(value)}s`
 }
