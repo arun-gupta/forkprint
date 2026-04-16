@@ -55,6 +55,7 @@ When filling manual checklist signoff or similar metadata, use the authenticated
 - N/A (stateless — in-browser memory only for the duration of the run, per constitution §I) (231-org-aggregation)
 - TypeScript 5.x on Node 20+ (Next.js 16+, App Router) + React, `@testing-library/react` (`renderHook`, `act`, `waitFor`), Vitest — all already in `package.json` (264-investigate-skipped-test-per-repo-status)
 - N/A (stateless hook; test uses injected deferred promises) (264-investigate-skipped-test-per-repo-status)
+- Bash (POSIX-compatible portions + bash-specific features already used by the script: `[[ ... ]]`, `set -euo pipefail`, `${var:-}` parameter expansion, `local` variables). No new bash features required beyond what the script already uses. + `git` (plumbing commands: `rev-parse --git-common-dir`, `rev-parse --git-dir`, `rev-parse --abbrev-ref HEAD`, `worktree list --porcelain`, `worktree remove`, `branch -D`, `checkout`, `pull`). `gh` (existing `gh pr view <branch> --json state`). No new binaries. (278-claude-worktree-sh-allow-cleanup-merged)
 
 ## Recent Changes
 - 032-doc-scoring: Added TypeScript 5.x (Next.js 16+) + Next.js (App Router), Tailwind CSS, Vitest, React Testing Library
