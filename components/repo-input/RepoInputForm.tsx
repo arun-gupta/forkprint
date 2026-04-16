@@ -85,7 +85,9 @@ export function RepoInputForm({
         <button
           type="button"
           className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-            mode === 'repos' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
+            mode === 'repos'
+              ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900'
+              : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
           }`}
           onClick={() => {
             updateMode('repos')
@@ -97,7 +99,9 @@ export function RepoInputForm({
         <button
           type="button"
           className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-            mode === 'org' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700'
+            mode === 'org'
+              ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900'
+              : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
           }`}
           onClick={() => {
             updateMode('org')
@@ -114,7 +118,7 @@ export function RepoInputForm({
               <button
                 type="button"
                 aria-label="Accepted input formats"
-                className="flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-500 dark:hover:text-slate-300"
                 onMouseEnter={() => setTooltipOpen(true)}
                 onMouseLeave={() => setTooltipOpen(false)}
                 onTouchStart={() => setTooltipOpen((prev) => !prev)}
@@ -127,15 +131,15 @@ export function RepoInputForm({
                 <div
                   role="tooltip"
                   data-testid="format-tooltip"
-                  className="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-lg"
+                  className="absolute right-0 top-full z-10 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                 >
-                  <p className="mb-2 font-medium text-slate-900">Accepted formats</p>
+                  <p className="mb-2 font-medium text-slate-900 dark:text-slate-100">Accepted formats</p>
                   <ul className="space-y-1 font-mono text-xs">
-                    <li><span className="text-slate-500">Slug:</span> owner/repo</li>
-                    <li><span className="text-slate-500">URL:</span> https://github.com/owner/repo</li>
-                    <li><span className="text-slate-500">URL (.git):</span> https://github.com/owner/repo.git</li>
+                    <li><span className="text-slate-500 dark:text-slate-400">Slug:</span> owner/repo</li>
+                    <li><span className="text-slate-500 dark:text-slate-400">URL:</span> https://github.com/owner/repo</li>
+                    <li><span className="text-slate-500 dark:text-slate-400">URL (.git):</span> https://github.com/owner/repo.git</li>
                   </ul>
-                  <p className="mt-2 text-xs text-slate-500">Separate multiple repos with spaces, commas, or newlines.</p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Separate multiple repos with spaces, commas, or newlines.</p>
                 </div>
               )}
             </div>
@@ -146,7 +150,7 @@ export function RepoInputForm({
           onChange={(e) => setRepoValue(e.target.value)}
           placeholder={'facebook/react ollama/ollama\ngithub.com/kubernetes/kubernetes\nhttps://github.com/pytorch/pytorch'}
           rows={3}
-          className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           aria-label="Repository list"
           aria-describedby={error ? 'repo-input-error' : undefined}
         />
@@ -156,20 +160,20 @@ export function RepoInputForm({
           value={orgValue}
           onChange={(e) => setOrgValue(e.target.value)}
           placeholder="facebook, github.com/facebook, or https://github.com/facebook"
-          className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           aria-label="Organization input"
           aria-describedby={error ? 'repo-input-error' : undefined}
         />
       )}
       {error && (
-        <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600">
+        <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       )}
       <button
         type="submit"
         title="Run the full repo health dashboard for any valid set of repositories."
-        className="mt-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="mt-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-2 dark:focus:ring-offset-slate-900"
       >
         Analyze
       </button>
