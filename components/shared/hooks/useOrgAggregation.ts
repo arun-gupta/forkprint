@@ -123,14 +123,35 @@ export function useOrgAggregation(options: UseOrgAggregationOptions = {}): UseOr
   const completedCountRef = useRef(0)
   const totalReposRef = useRef(0)
   const lastTickBucketRef = useRef(-1)
-  const [tick, setTick] = useState(0)
+  const [now, setNow] = useState<number>(() => Date.now())
 
   // Wall-clock tick so elapsed/remaining keep updating between completions (FR-017d).
   useEffect(() => {
     if (!run || run.status !== 'in-progress') return
-    const id = setInterval(() => setTick((n) => n + 1), ORG_AGGREGATION_CONFIG.wallClockTickIntervalMs)
+    const id = setInterval(() => setNow(Date.now()), ORG_AGGREGATION_CONFIG.wallClockTickIntervalMs)
     return () => clearInterval(id)
   }, [run?.status, run])
+
+  const maybeFireCompletionNotification = useCallback(() => {
+    dispatchReducer({
+      type: 'apply',
+      mutate: (r) => {
+        if (!r.notificationOptIn) return r
+        if (typeof window === 'undefined' || !('Notification' in window)) return r
+        if (Notification.permission !== 'granted') return r
+        const done = Array.from(r.perRepo.values()).filter((s) => s.status === 'done').length
+        const total = r.repos.length
+        try {
+          new Notification('RepoPulse — org analysis complete', {
+            body: `${done} of ${total} repos succeeded for ${r.org}`,
+          })
+        } catch {
+          // Notifications can throw in service-worker-only contexts; ignore.
+        }
+        return r
+      },
+    })
+  }, [])
 
   const applyEvent = useCallback(
     (event: QueueEvent) => {
@@ -178,24 +199,24 @@ export function useOrgAggregation(options: UseOrgAggregationOptions = {}): UseOr
         completedSinceRerenderRef.current++
         completedCountRef.current++
         if (cadence.kind === 'per-completion') {
-          setTick((n) => n + 1)
+          setNow(Date.now())
         } else if (cadence.kind === 'every-n-completions') {
           if (completedSinceRerenderRef.current >= cadence.n) {
             completedSinceRerenderRef.current = 0
-            setTick((n) => n + 1)
+            setNow(Date.now())
           }
         } else if (cadence.kind === 'every-n-percent' && totalReposRef.current > 0) {
           const percentComplete = (completedCountRef.current / totalReposRef.current) * 100
           const bucket = Math.floor(percentComplete / cadence.percentStep)
           if (bucket > lastTickBucketRef.current) {
             lastTickBucketRef.current = bucket
-            setTick((n) => n + 1)
+            setNow(Date.now())
           }
         }
         // 'on-completion-only' deliberately omits mid-run ticks.
       }
       if (event.type === 'complete' || event.type === 'cancelled') {
-        setTick((n) => n + 1)
+        setNow(Date.now())
       }
 
       // Completion notification (FR-018) — fire exactly once on terminal.
@@ -203,32 +224,8 @@ export function useOrgAggregation(options: UseOrgAggregationOptions = {}): UseOr
         maybeFireCompletionNotification()
       }
     },
-    [cadence],
+    [cadence, maybeFireCompletionNotification],
   )
-
-  const fireTick = useCallback(() => setTick((n) => n + 1), [])
-  void fireTick
-
-  function maybeFireCompletionNotification() {
-    dispatchReducer({
-      type: 'apply',
-      mutate: (r) => {
-        if (!r.notificationOptIn) return r
-        if (typeof window === 'undefined' || !('Notification' in window)) return r
-        if (Notification.permission !== 'granted') return r
-        const done = Array.from(r.perRepo.values()).filter((s) => s.status === 'done').length
-        const total = r.repos.length
-        try {
-          new Notification('RepoPulse — org analysis complete', {
-            body: `${done} of ${total} repos succeeded for ${r.org}`,
-          })
-        } catch {
-          // Notifications can throw in service-worker-only contexts; ignore.
-        }
-        return r
-      },
-    })
-  }
 
   const start = useCallback(
     async (input: StartRunInput) => {
@@ -300,9 +297,8 @@ export function useOrgAggregation(options: UseOrgAggregationOptions = {}): UseOr
 
   const view = useMemo(() => {
     if (!run) return null
-    void tick // read tick so this memo refreshes on wall-clock ticks too
-    return buildOrgSummaryViewModel(run, Date.now())
-  }, [run, tick])
+    return buildOrgSummaryViewModel(run, now)
+  }, [run, now])
 
   const reset = useCallback(() => {
     queueRef.current?.cancel()

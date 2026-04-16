@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import type { TabMatchCounts } from '@/lib/search/types'
 
@@ -14,17 +14,28 @@ interface ResultsTabsProps {
 const COLLAPSED_COUNT_MOBILE = 3
 const COLLAPSED_COUNT_DESKTOP = 6
 
+const MOBILE_QUERY = '(max-width: 639px)'
+
+function subscribeMobile(callback: () => void) {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return () => {}
+  }
+  const mql = window.matchMedia(MOBILE_QUERY)
+  mql.addEventListener('change', callback)
+  return () => mql.removeEventListener('change', callback)
+}
+
+function getMobileSnapshot() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  return window.matchMedia(MOBILE_QUERY).matches
+}
+
+function getMobileServerSnapshot() {
+  return false
+}
+
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return
-    const mql = window.matchMedia('(max-width: 639px)')
-    setIsMobile(mql.matches)
-    function onChange(e: MediaQueryListEvent) { setIsMobile(e.matches) }
-    mql.addEventListener('change', onChange)
-    return () => mql.removeEventListener('change', onChange)
-  }, [])
-  return isMobile
+  return useSyncExternalStore(subscribeMobile, getMobileSnapshot, getMobileServerSnapshot)
 }
 
 export function ResultsTabs({ tabs, activeTab, onChange, matchCounts }: ResultsTabsProps) {

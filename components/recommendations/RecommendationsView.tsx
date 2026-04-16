@@ -331,7 +331,7 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                 ) : null}
 
                 {filteredTotal === 0 && activeTag ? (
-                  <p className="mt-4 text-center text-sm text-slate-400">No recommendations match the "{activeTag}" tag.</p>
+                  <p className="mt-4 text-center text-sm text-slate-400">No recommendations match the &ldquo;{activeTag}&rdquo; tag.</p>
                 ) : null}
 
                 <div className="mt-4 space-y-4">
