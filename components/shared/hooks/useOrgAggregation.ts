@@ -42,6 +42,7 @@ export interface UseOrgAggregationReturn {
   pause: () => void
   resume: () => void
   retry: (repo: string) => Promise<void>
+  reset: () => void
 }
 
 async function defaultDispatch(repo: string): Promise<DispatchResult> {

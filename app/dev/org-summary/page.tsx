@@ -29,7 +29,7 @@ function placeholderPanels(
       contributingReposCount,
       totalReposInRun,
       status,
-      value: status === 'final' || status === 'in-progress' ? ({} as never) : null,
+      value: null,
       lastUpdatedAt,
     }
   }

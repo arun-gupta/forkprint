@@ -47,7 +47,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
     const results = [
       partialResult('o/alpha', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 4,
+          issueFirstResponseMedianHours: 4,
           medianTimeToMerge: 24,
         },
         issuesOpen: 50,
@@ -56,7 +56,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
       }),
       partialResult('o/bravo', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 12,
+          issueFirstResponseMedianHours: 12,
           medianTimeToMerge: 48,
         },
         issuesOpen: 100,
@@ -65,7 +65,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
       }),
       partialResult('o/charlie', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 8,
+          issueFirstResponseMedianHours: 8,
           medianTimeToMerge: 36,
         },
         issuesOpen: 30,
@@ -102,7 +102,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
     const results = [
       partialResult('o/alpha', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 6,
+          issueFirstResponseMedianHours: 6,
           medianTimeToMerge: 30,
         },
         issuesOpen: 20,
@@ -112,7 +112,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
       partialResult('o/bravo'), // all unavailable
       partialResult('o/charlie', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 'unavailable',
+          issueFirstResponseMedianHours: 'unavailable',
           medianTimeToMerge: 'unavailable',
         },
         medianTimeToMergeHours: 'unavailable',
@@ -163,7 +163,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
     const results = [
       partialResult('o/alpha', {
         responsivenessMetrics: {
-          medianTimeToFirstResponse: 10,
+          issueFirstResponseMedianHours: 10,
           medianTimeToMerge: 20,
         },
         issuesOpen: 'unavailable',

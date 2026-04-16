@@ -56,10 +56,10 @@ export function OrgInventoryView({
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRepos, setSelectedRepos] = useState<string[]>([])
   const [selectionError, setSelectionError] = useState<string | null>(null)
-  const [excludeArchivedRepos, setExcludeArchivedRepos] = useState(
+  const [excludeArchivedRepos, setExcludeArchivedRepos] = useState<boolean>(
     ORG_AGGREGATION_CONFIG.preFilters.excludeArchivedByDefault,
   )
-  const [excludeForks, setExcludeForks] = useState(
+  const [excludeForks, setExcludeForks] = useState<boolean>(
     ORG_AGGREGATION_CONFIG.preFilters.excludeForksByDefault,
   )
 

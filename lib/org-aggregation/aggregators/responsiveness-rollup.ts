@@ -51,7 +51,7 @@ export const responsivenessRollupAggregator: Aggregator<ResponsivenessRollupValu
     let contributes = false
 
     // First response hours — weighted by issuesOpen
-    const firstResponse = ar.responsivenessMetrics?.medianTimeToFirstResponse
+    const firstResponse = ar.responsivenessMetrics?.issueFirstResponseMedianHours
     if (typeof firstResponse === 'number') {
       const issuesOpen = typeof ar.issuesOpen === 'number' && ar.issuesOpen > 0 ? ar.issuesOpen : 1
       firstResponsePairs.push({ value: firstResponse, weight: issuesOpen })
