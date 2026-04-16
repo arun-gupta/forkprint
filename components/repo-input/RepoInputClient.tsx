@@ -548,7 +548,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   void handleSubmit([repo])
                 }}
                 onAnalyzeSelected={(repos) => {
-                  void handleSubmit(repos)
+                  setPreRunDialogRepos(repos)
                 }}
                 onAnalyzeAllActive={(repos) => {
                   setPreRunDialogRepos(repos)
