@@ -10,7 +10,7 @@ interface OrgInventorySummaryProps {
 export function OrgInventorySummary({ summary }: OrgInventorySummaryProps) {
   return (
     <section aria-label="Org inventory summary" className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <SummaryCard label="Total public repos" value={String(summary.totalPublicRepos)} />
         <SummaryCard
           label="Total stars"
@@ -24,7 +24,7 @@ export function OrgInventorySummary({ summary }: OrgInventorySummaryProps) {
         High-level stats from GitHub metadata. Run <strong>Analyze all active repos</strong> for deeper org-level insights — contributor diversity, maintainers, security rollup, and more.
       </p>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-2 lg:grid-cols-3">
         <SummaryListCard
           title="Most starred repos"
           items={summary.mostStarredRepos.map((repo) => ({
@@ -59,9 +59,9 @@ export function OrgInventorySummary({ summary }: OrgInventorySummaryProps) {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold text-slate-900 dark:text-slate-100">{value}</p>
     </div>
   )
 }
@@ -87,28 +87,28 @@ function SummaryListCard({
   const remainingCount = shouldCollapse ? items.length - collapsedItemCount : 0
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{title}</p>
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{title}</p>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-600">{emptyLabel}</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{emptyLabel}</p>
       ) : (
         <>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          <ul className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
             {visibleItems.map((item) => (
               <li key={`${title}-${item.label}`} className="flex items-center justify-between gap-3">
-                <span className="truncate text-slate-900">{item.label}</span>
-                <span className="shrink-0 text-slate-600">{item.value}</span>
+                <span className="truncate text-slate-900 dark:text-slate-100">{item.label}</span>
+                <span className="shrink-0 text-slate-600 dark:text-slate-400">{item.value}</span>
               </li>
             ))}
           </ul>
           {shouldCollapse ? (
             <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {expanded ? `Showing all ${items.length} languages` : `${remainingCount} more languages hidden`}
               </p>
               <button
                 type="button"
-                className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
                 onClick={() => setExpanded((current) => !current)}
               >
                 {expanded ? expandedLabel ?? 'Show less' : collapsedLabel ?? 'Show more'}

@@ -103,11 +103,11 @@ export function OrgInventoryView({
   }, [excludeArchivedRepos, excludeForks, sortedRows])
 
   return (
-    <section aria-label="Org inventory view" className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Organization</p>
-        <h2 className="mt-2 text-2xl font-semibold text-slate-900">{org}</h2>
-        <p className="mt-2 text-sm text-slate-600">Browse lightweight public repository metadata and launch repo analysis from any row.</p>
+    <section aria-label="Org inventory view" className="space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Organization</p>
+        <h2 className="mt-0.5 text-xl font-semibold text-slate-900 dark:text-slate-100">{org}</h2>
+        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">Browse lightweight public repository metadata and launch repo analysis from any row.</p>
       </div>
 
       {results.length === 0 ? (

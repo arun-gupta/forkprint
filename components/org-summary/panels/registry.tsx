@@ -4,15 +4,23 @@ import type { ComponentType } from 'react'
 import type { AggregatePanel, PanelId } from '@/lib/org-aggregation/types'
 import { ActivityRollupPanel } from './ActivityRollupPanel'
 import { AdoptersPanel } from './AdoptersPanel'
+import { BusFactorPanel } from './BusFactorPanel'
 import { ContributorDiversityPanel } from './ContributorDiversityPanel'
+import { DocumentationCoveragePanel } from './DocumentationCoveragePanel'
 import { GovernancePanel } from './GovernancePanel'
+import { InactiveReposPanel } from './InactiveReposPanel'
+import { InclusiveNamingRollupPanel } from './InclusiveNamingRollupPanel'
+import { LanguagesPanel } from './LanguagesPanel'
+import { LicenseConsistencyPanel } from './LicenseConsistencyPanel'
 import { MaintainersPanel } from './MaintainersPanel'
 import { OrgAffiliationsPanel } from './OrgAffiliationsPanel'
 import { PlaceholderPanel } from './PlaceholderPanel'
 import { ProjectFootprintPanel } from './ProjectFootprintPanel'
 import { ReleaseCadencePanel } from './ReleaseCadencePanel'
+import { RepoAgePanel } from './RepoAgePanel'
 import { ResponsivenessRollupPanel } from './ResponsivenessRollupPanel'
 import { SecurityRollupPanel } from './SecurityRollupPanel'
+import { StaleWorkPanel } from './StaleWorkPanel'
 
 // Bucket groupings mirror the per-repo ResultsShell tabs (overview /
 // contributors / activity / responsiveness / documentation / security).
@@ -130,6 +138,14 @@ const REAL_PANELS: Partial<Record<PanelId, ComponentType<{ panel: AggregatePanel
   'project-footprint': ProjectFootprintPanel as ComponentType<{ panel: AggregatePanel<never> }>,
   'activity-rollup': ActivityRollupPanel as ComponentType<{ panel: AggregatePanel<never> }>,
   'responsiveness-rollup': ResponsivenessRollupPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'license-consistency': LicenseConsistencyPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'inclusive-naming-rollup': InclusiveNamingRollupPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'documentation-coverage': DocumentationCoveragePanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  languages: LanguagesPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'stale-work': StaleWorkPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'bus-factor': BusFactorPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'repo-age': RepoAgePanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'inactive-repos': InactiveReposPanel as ComponentType<{ panel: AggregatePanel<never> }>,
 }
 
 export function isRealPanel(panelId: PanelId): boolean {

@@ -19,6 +19,7 @@ import type { TabMatchCounts } from '@/lib/search/types'
 import { computeTabTagCounts } from '@/lib/tags/tab-counts'
 import { useAuth } from '@/components/auth/AuthContext'
 import { OrgSummaryView } from '@/components/org-summary/OrgSummaryView'
+import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import type { AnalysisResult, AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
@@ -331,14 +332,20 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     </div>
   ) : null
 
-  const orgInventoryTabs: ResultTabDefinition[] = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      status: 'implemented',
-      description: 'Organization inventory summary and lightweight public repository metadata.',
-    },
-  ]
+  const orgAnalysisComplete = orgAggregation.view && (orgAggregation.view.status.status === 'complete' || orgAggregation.view.status.status === 'cancelled')
+
+  const orgInventoryTabs: ResultTabDefinition[] = orgAnalysisComplete
+    ? [
+        { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory and footprint.' },
+        { id: 'contributors', label: 'Contributors', status: 'implemented', description: 'Org-level contributor diversity, maintainers, and affiliations.' },
+        { id: 'activity', label: 'Activity', status: 'implemented', description: 'Org-level activity, release cadence, and stale work.' },
+        { id: 'responsiveness', label: 'Responsiveness', status: 'implemented', description: 'Org-level responsiveness metrics.' },
+        { id: 'documentation', label: 'Documentation', status: 'implemented', description: 'Org-level documentation coverage, governance, and adopters.' },
+        { id: 'security', label: 'Security', status: 'implemented', description: 'Org-level OpenSSF Scorecard rollup.' },
+      ]
+    : [
+        { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
+      ]
 
   const showOrgWorkspace = inputMode === 'org'
   const successfulRepoCount = analysisResponse?.results.length ?? 0
@@ -472,13 +479,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   </span>
                 </section>
               ) : null}
-              {orgAggregation.view && (orgAggregation.view.status.status === 'complete' || orgAggregation.view.status.status === 'cancelled') ? (
-                <OrgSummaryView
-                  org={orgInventoryResponse.org}
-                  view={orgAggregation.view}
-                  showRunStatus={false}
-                />
-              ) : null}
             </>
           )}
         </section>
@@ -508,7 +508,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
       overview={overviewContent}
       contributors={
-        analysisResponse ? (
+        orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="contributors" view={orgAggregation.view} />
+        ) : analysisResponse ? (
           <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
@@ -517,7 +519,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
       activity={
-        analysisResponse ? (
+        orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="activity" view={orgAggregation.view} />
+        ) : analysisResponse ? (
           <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
@@ -526,7 +530,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
       responsiveness={
-        analysisResponse ? (
+        orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="responsiveness" view={orgAggregation.view} />
+        ) : analysisResponse ? (
           <ResponsivenessView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
@@ -535,7 +541,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
       documentation={
-        analysisResponse ? (
+        orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="documentation" view={orgAggregation.view} />
+        ) : analysisResponse ? (
           <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">
@@ -544,7 +552,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
       security={
-        analysisResponse ? (
+        orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="security" view={orgAggregation.view} />
+        ) : analysisResponse ? (
           <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500">

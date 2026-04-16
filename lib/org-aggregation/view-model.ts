@@ -2,13 +2,21 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { contributorDiversityAggregator } from './aggregators/contributor-diversity'
 import { activityRollupAggregator } from './aggregators/activity-rollup'
 import { adoptersAggregator } from './aggregators/adopters'
+import { busFactorAggregator } from './aggregators/bus-factor'
+import { documentationCoverageAggregator } from './aggregators/documentation-coverage'
 import { governanceAggregator } from './aggregators/governance'
+import { inactiveReposAggregator } from './aggregators/inactive-repos'
+import { inclusiveNamingRollupAggregator } from './aggregators/inclusive-naming-rollup'
+import { languagesAggregator } from './aggregators/languages'
+import { licenseConsistencyAggregator } from './aggregators/license-consistency'
 import { maintainersAggregator } from './aggregators/maintainers'
 import { orgAffiliationsAggregator } from './aggregators/org-affiliations'
 import { projectFootprintAggregator } from './aggregators/project-footprint'
 import { releaseCadenceAggregator } from './aggregators/release-cadence'
+import { repoAgeAggregator } from './aggregators/repo-age'
 import { responsivenessRollupAggregator } from './aggregators/responsiveness-rollup'
 import { securityRollupAggregator } from './aggregators/security-rollup'
+import { staleWorkAggregator } from './aggregators/stale-work'
 import { composeMissingData, type PanelMissingRecord } from './missing-data'
 import type {
   AggregatePanelMap,
@@ -139,6 +147,14 @@ export function buildOrgSummaryViewModel(
     'project-footprint': stamp(projectFootprintAggregator(completedResults, context)),
     'activity-rollup': stamp(activityRollupAggregator(completedResults, context)),
     'responsiveness-rollup': stamp(responsivenessRollupAggregator(completedResults, context)),
+    'license-consistency': stamp(licenseConsistencyAggregator(completedResults, context)),
+    'inclusive-naming-rollup': stamp(inclusiveNamingRollupAggregator(completedResults, context)),
+    'documentation-coverage': stamp(documentationCoverageAggregator(completedResults, context)),
+    languages: stamp(languagesAggregator(completedResults, context)),
+    'stale-work': stamp(staleWorkAggregator(completedResults, context)),
+    'bus-factor': stamp(busFactorAggregator(completedResults, context)),
+    'repo-age': stamp(repoAgeAggregator(completedResults, context)),
+    'inactive-repos': stamp(inactiveReposAggregator(completedResults, context)),
   }
 
   const missingRecords: PanelMissingRecord[] = []
