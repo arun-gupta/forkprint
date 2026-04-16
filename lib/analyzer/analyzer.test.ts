@@ -534,6 +534,7 @@ describe('analyze', () => {
       },
     ])
     expect(result.rateLimit).toEqual({
+      limit: 'unavailable',
       remaining: 'unavailable',
       resetAt: 'unavailable',
       retryAfter: 60,
