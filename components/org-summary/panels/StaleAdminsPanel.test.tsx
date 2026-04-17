@@ -124,7 +124,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     expect(within(strip).getByTestId('stale-admins-count-active').textContent).toMatch(/2 active/i)
   })
 
-  it('hides the description, summary strip, and group list when the panel is collapsed', () => {
+  it('hides the description and group list when the panel is collapsed, keeps the summary count strip visible', () => {
     const section = makeSection({
       admins: [mkAdmin('s1', 'stale'), mkAdmin('a1', 'active')],
     })
@@ -138,9 +138,9 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     fireEvent.click(toggle)
 
     expect(screen.queryByTestId('stale-admins-group-stale')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
     expect(screen.queryByText(/stale admin detection/i)).not.toBeInTheDocument()
-    // Title stays visible.
+    // Summary strip and title stay visible so the signal is still readable at a glance.
+    expect(screen.getByTestId('stale-admins-count-strip')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /org admin activity/i })).toBeInTheDocument()
   })
 

@@ -122,7 +122,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
           </div>
           {section ? <ModeBadge mode={section.mode} /> : null}
         </div>
-        {expanded && section ? <HeaderCountStrip section={section} /> : null}
+        {section ? <HeaderCountStrip section={section} /> : null}
       </header>
 
       {expanded ? (

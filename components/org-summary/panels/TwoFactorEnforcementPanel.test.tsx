@@ -72,6 +72,20 @@ describe('TwoFactorEnforcementPanel — applicable states', () => {
     expect(explain.textContent).toMatch(/not the same as not enforced/i)
     expect(explain.textContent).toMatch(/organization owner/i)
   })
+
+  it('tells owners how to read the flag — hint at the elevated-scope landing-page checkbox', () => {
+    renderWithSession(
+      <TwoFactorEnforcementPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={makeSection({ status: 'unknown' })}
+      />,
+    )
+    const explain = screen.getByTestId('two-factor-unknown-explain')
+    expect(explain.textContent).toMatch(/read:org/)
+    expect(explain.textContent).toMatch(/deeper GitHub permission/i)
+    expect(explain.textContent).toMatch(/public_repo/)
+  })
 })
 
 describe('TwoFactorEnforcementPanel — N/A for non-org targets', () => {

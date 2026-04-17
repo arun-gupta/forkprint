@@ -174,14 +174,20 @@ function SectionBody({ section }: { section: TwoFactorEnforcementSection }) {
 
   if (section.status === 'unknown') {
     return (
-      <p
-        className="text-sm text-slate-600 dark:text-slate-300"
-        data-testid="two-factor-unknown-explain"
-      >
-        GitHub does not expose the <code className="font-mono text-xs">two_factor_requirement_enabled</code>{' '}
-        field to this session. Unknown is <span className="font-medium">not the same as not enforced</span> —
-        only an organization owner can read this flag.
-      </p>
+      <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300" data-testid="two-factor-unknown-explain">
+        <p>
+          GitHub does not expose the <code className="font-mono text-xs">two_factor_requirement_enabled</code>{' '}
+          field to this session. Unknown is <span className="font-medium">not the same as not enforced</span> —
+          only an organization owner with the <code className="font-mono text-xs">read:org</code> scope can
+          read this flag.
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          If you own this org: sign out, check <span className="font-medium">&ldquo;Request deeper GitHub
+          permission&rdquo;</span> on the landing page, and sign back in. Baseline{' '}
+          <code className="font-mono text-[11px]">public_repo</code> scope returns{' '}
+          <code className="font-mono text-[11px]">null</code> for this field even for owners.
+        </p>
+      </div>
     )
   }
 
