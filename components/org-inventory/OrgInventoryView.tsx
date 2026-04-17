@@ -65,6 +65,7 @@ export function OrgInventoryView({
   const [excludeForks, setExcludeForks] = useState<boolean>(
     ORG_AGGREGATION_CONFIG.preFilters.excludeForksByDefault,
   )
+  const [selectedOnly, setSelectedOnly] = useState<boolean>(false)
   const [repoTableExpanded, setRepoTableExpanded] = useState(true)
 
   const columnLabels: Record<OrgInventoryVisibleColumn, string> = {
@@ -79,7 +80,10 @@ export function OrgInventoryView({
     url: 'Repo URL',
   }
 
-  const filteredRows = useMemo(() => filterOrgInventoryRows(results, filters), [results, filters])
+  const filteredRows = useMemo(
+    () => filterOrgInventoryRows(results, filters, { selectedOnly, selectedRepos }),
+    [results, filters, selectedOnly, selectedRepos],
+  )
   const effectiveSortState = useMemo(
     () => getEffectiveSortState(sortState, visibleColumns),
     [sortState, visibleColumns],
@@ -203,6 +207,18 @@ export function OrgInventoryView({
                       <input type="checkbox" checked={excludeForks} onChange={(e) => setExcludeForks(e.target.checked)} aria-label="Exclude forks" />
                       No forks
                     </label>
+                    <label className="inline-flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedOnly}
+                        onChange={(e) => {
+                          setCurrentPage(1)
+                          setSelectedOnly(e.target.checked)
+                        }}
+                        aria-label="Show only selected repositories"
+                      />
+                      Selected only
+                    </label>
                   </div>
                 </div>
 
@@ -275,12 +291,48 @@ export function OrgInventoryView({
                 </div>
 
                 {sortedRows.length === 0 ? (
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>
-                    <p className="mt-2 text-sm text-slate-600">
-                      Try widening the repo, language, or archived filters to see more repositories.
-                    </p>
-                  </div>
+                  selectedOnly && selectedRepos.length === 0 ? (
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No repositories are currently selected</h3>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        Check a row&apos;s box to add it to your selection, or turn off the filter to see the full list.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentPage(1)
+                          setSelectedOnly(false)
+                        }}
+                        className="mt-3 rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200"
+                      >
+                        Turn off Selected only
+                      </button>
+                    </div>
+                  ) : selectedOnly ? (
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Your current filters hide every selected repository</h3>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        Widen the filters or turn off the filter to see your selection.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentPage(1)
+                          setSelectedOnly(false)
+                        }}
+                        className="mt-3 rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200"
+                      >
+                        Turn off Selected only
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>
+                      <p className="mt-2 text-sm text-slate-600">
+                        Try widening the repo, language, or archived filters to see more repositories.
+                      </p>
+                    </div>
+                  )
                 ) : (
                   <>
                     <OrgInventoryTable

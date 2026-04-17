@@ -30,6 +30,11 @@ export interface OrgInventoryFilters {
   archived: 'all' | 'active' | 'archived'
 }
 
+export interface SelectedOnlyOptions {
+  selectedOnly: boolean
+  selectedRepos: string[]
+}
+
 export interface OrgInventorySortState {
   sortColumn: OrgInventorySortColumn
   sortDirection: 'asc' | 'desc'
@@ -59,8 +64,13 @@ export const DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS: OrgInventoryVisibleColumn[] 
   'archived',
 ]
 
-export function filterOrgInventoryRows(rows: OrgRepoSummary[], filters: OrgInventoryFilters) {
+export function filterOrgInventoryRows(
+  rows: OrgRepoSummary[],
+  filters: OrgInventoryFilters,
+  options?: SelectedOnlyOptions,
+) {
   const repoQuery = filters.repoQuery.trim().toLowerCase()
+  const selectedSet = options?.selectedOnly ? new Set(options.selectedRepos) : null
 
   return rows.filter((row) => {
     if (repoQuery && !row.repo.toLowerCase().includes(repoQuery) && !row.name.toLowerCase().includes(repoQuery)) {
@@ -76,6 +86,10 @@ export function filterOrgInventoryRows(rows: OrgRepoSummary[], filters: OrgInven
     }
 
     if (filters.archived === 'archived' && !row.archived) {
+      return false
+    }
+
+    if (selectedSet && !selectedSet.has(row.repo)) {
       return false
     }
 

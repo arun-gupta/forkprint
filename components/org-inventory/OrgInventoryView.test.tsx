@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { OrgInventoryView } from './OrgInventoryView'
@@ -279,6 +279,421 @@ describe('OrgInventoryView', () => {
     expect(onAnalyzeAllActive).toHaveBeenCalledWith(['facebook/react', 'facebook/rocksdb'])
   })
 
+  it('US1 — Selected only collapses the table to exactly the selected repos', async () => {
+    const results = Array.from({ length: 6 }, (_, i) =>
+      buildRepo(`facebook/repo-${i + 1}`, { name: `repo-${i + 1}` }),
+    )
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-1'))
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-3'))
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-5'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    const rows = screen.getAllByRole('row').slice(1)
+    const rowSlugs = rows.map((row) => row.textContent ?? '')
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-1'))).toBe(true)
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-3'))).toBe(true)
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-5'))).toBe(true)
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-2'))).toBe(false)
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-4'))).toBe(false)
+    expect(rowSlugs.some((text) => text.includes('facebook/repo-6'))).toBe(false)
+    expect(rows).toHaveLength(3)
+  })
+
+  it('US1 — counter still reports the full selection size when Selected only is on', async () => {
+    const results = [
+      buildRepo('facebook/react'),
+      buildRepo('facebook/jest'),
+      buildRepo('facebook/relay'),
+      buildRepo('facebook/rocksdb'),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    expect(screen.getByText(/3 selected ·/)).toBeInTheDocument()
+  })
+
+  it('US1 — deselecting a visible row while Selected only is on removes it and decrements the counter', async () => {
+    const results = [
+      buildRepo('facebook/react'),
+      buildRepo('facebook/jest'),
+      buildRepo('facebook/relay'),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(3)
+
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(2)
+    expect(screen.getByText(/2 selected ·/)).toBeInTheDocument()
+  })
+
+  it('US1 — turning Selected only off restores prior filter state and preserves the full selection', async () => {
+    const results = [
+      buildRepo('facebook/react', { name: 'react' }),
+      buildRepo('facebook/jest', { name: 'jest' }),
+      buildRepo('facebook/relay', { name: 'relay' }),
+      buildRepo('facebook/cursor', { name: 'cursor' }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+
+    const toggle = screen.getByLabelText('Show only selected repositories')
+    await userEvent.click(toggle)
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(2)
+
+    await userEvent.click(toggle)
+
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(4)
+    expect(screen.getByLabelText('Select facebook/jest')).toBeChecked()
+    expect(screen.getByLabelText('Select facebook/relay')).toBeChecked()
+    expect(screen.getByLabelText('Select facebook/react')).not.toBeChecked()
+    expect(screen.getByLabelText('Select facebook/cursor')).not.toBeChecked()
+  })
+
+  it('US1 — toggling Selected only resets currentPage to 1', async () => {
+    const results = Array.from({ length: 22 }, (_, i) =>
+      buildRepo(`facebook/repo-${String(i + 1).padStart(2, '0')}`, { name: `repo-${String(i + 1).padStart(2, '0')}` }),
+    )
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.selectOptions(screen.getByLabelText('Rows per page'), '10')
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-01'))
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-02'))
+    await userEvent.click(screen.getByLabelText('Select facebook/repo-03'))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByText(/Page 2 of /)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    expect(screen.getByText('Page 1 of 1')).toBeInTheDocument()
+  })
+
+  it('US1 — Analyze selected sends the full selection regardless of Selected only state', async () => {
+    const onAnalyzeSelected = vi.fn()
+    const results = [
+      buildRepo('facebook/react'),
+      buildRepo('facebook/jest'),
+      buildRepo('facebook/relay'),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={onAnalyzeSelected}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    await userEvent.click(screen.getByRole('button', { name: /analyze selected/i }))
+
+    expect(onAnalyzeSelected).toHaveBeenCalledWith(['facebook/react', 'facebook/jest', 'facebook/relay'])
+  })
+
+  it('US1 — sort column changes still work while Selected only is on', async () => {
+    const results = [
+      buildRepo('facebook/jest', { stars: 80 }),
+      buildRepo('facebook/react', { stars: 200 }),
+      buildRepo('facebook/relay', { stars: 50 }),
+      buildRepo('facebook/rocksdb', { stars: 150 }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    // Sort by stars descending (click twice)
+    await userEvent.click(screen.getByRole('button', { name: /^Stars/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Stars/ }))
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(3)
+    expect(rows[0].textContent).toContain('facebook/react')
+    expect(rows[1].textContent).toContain('facebook/jest')
+    expect(rows[2].textContent).toContain('facebook/relay')
+  })
+
+  it('US2 — Selected only with zero selected shows the nothing-selected empty state', async () => {
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary([buildRepo('facebook/react'), buildRepo('facebook/jest')])}
+        results={[buildRepo('facebook/react'), buildRepo('facebook/jest')]}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    expect(screen.getByText(/no repositories are currently selected/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /turn off selected only/i })).toBeInTheDocument()
+  })
+
+  it('US2 — clicking the empty-state affordance turns off Selected only', async () => {
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary([buildRepo('facebook/react'), buildRepo('facebook/jest')])}
+        results={[buildRepo('facebook/react'), buildRepo('facebook/jest')]}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    const toggle = screen.getByLabelText('Show only selected repositories')
+    await userEvent.click(toggle)
+
+    await userEvent.click(screen.getByRole('button', { name: /turn off selected only/i }))
+
+    expect(toggle).not.toBeChecked()
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(2)
+  })
+
+  it('US2 — deselecting the last visible row transitions into the nothing-selected empty state', async () => {
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary([buildRepo('facebook/react')])}
+        results={[buildRepo('facebook/react')]}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(1)
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+
+    expect(screen.getByText(/no repositories are currently selected/i)).toBeInTheDocument()
+  })
+
+  it('US2 — Selected only with intersection empty shows the filters-hide-all variant', async () => {
+    const results = [
+      buildRepo('facebook/react', { name: 'react' }),
+      buildRepo('facebook/jest', { name: 'jest' }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'zzznomatch')
+
+    expect(screen.getByText(/filters hide every selected repository/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /turn off selected only/i })).toBeInTheDocument()
+  })
+
+  it('US3 — Selected only composes with the archived filter (intersection)', async () => {
+    const results = [
+      buildRepo('facebook/react', { archived: false }),
+      buildRepo('facebook/jest', { archived: false }),
+      buildRepo('facebookarchive/old', { archived: true }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebookarchive/old'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+
+    const selects = screen.getAllByRole('combobox')
+    const archivedSelect = selects.find((el) => {
+      const option = Array.from((el as HTMLSelectElement).options).map((o) => o.value)
+      return option.includes('active') && option.includes('archived')
+    })!
+    await userEvent.selectOptions(archivedSelect, 'active')
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(2)
+    expect(rows[0].textContent).toContain('facebook/jest')
+    expect(rows[1].textContent).toContain('facebook/react')
+    expect(screen.getByText(/3 selected ·/)).toBeInTheDocument()
+  })
+
+  it('US3 — Selected only composes with a name search and counter stays at full selection size', async () => {
+    const results = [
+      buildRepo('facebook/react', { name: 'react' }),
+      buildRepo('facebook/jest', { name: 'jest' }),
+      buildRepo('facebook/relay', { name: 'relay' }),
+      buildRepo('facebook/rocksdb', { name: 'rocksdb' }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/react'))
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Select facebook/relay'))
+    await userEvent.click(screen.getByLabelText('Select facebook/rocksdb'))
+
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+    await userEvent.type(screen.getByPlaceholderText('Repo name'), 're')
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(2)
+    expect(rows.map((r) => r.textContent).some((t) => t?.includes('facebook/react'))).toBe(true)
+    expect(rows.map((r) => r.textContent).some((t) => t?.includes('facebook/relay'))).toBe(true)
+    expect(screen.getByText(/4 selected ·/)).toBeInTheDocument()
+  })
+
+  it('US3 — turning Selected only off preserves other active filters', async () => {
+    const results = [
+      buildRepo('facebook/react', { name: 'react' }),
+      buildRepo('facebook/jest', { name: 'jest' }),
+      buildRepo('facebook/relay', { name: 'relay' }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByLabelText('Select facebook/jest'))
+    await userEvent.click(screen.getByLabelText('Show only selected repositories'))
+    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'jest')
+
+    const toggle = screen.getByLabelText('Show only selected repositories')
+    await userEvent.click(toggle)
+
+    expect(screen.getByPlaceholderText('Repo name')).toHaveValue('jest')
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].textContent).toContain('facebook/jest')
+  })
+
   it('disables analyze-all when the pre-filters exclude every repo', () => {
     render(
       <OrgInventoryView
@@ -322,5 +737,27 @@ function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
     isFork: false,
     url: `https://github.com/${repo}`,
     ...overrides,
+  }
+}
+
+function makeSummary(results: ReturnType<typeof buildRepo>[]) {
+  return {
+    totalPublicRepos: results.length,
+    totalStars: results.reduce(
+      (sum, r) => (typeof r.stars === 'number' ? sum + r.stars : sum),
+      0,
+    ),
+    mostStarredRepos: results
+      .slice()
+      .sort((a, b) => (typeof b.stars === 'number' ? b.stars : 0) - (typeof a.stars === 'number' ? a.stars : 0))
+      .slice(0, 3)
+      .map((r) => ({ repo: r.repo, stars: typeof r.stars === 'number' ? r.stars : 0 })),
+    mostRecentlyActiveRepos: results.slice(0, 3).map((r) => ({
+      repo: r.repo,
+      pushedAt: typeof r.pushedAt === 'string' ? r.pushedAt : '2026-04-02T00:00:00Z',
+    })),
+    languageDistribution: [{ language: 'TypeScript', repoCount: results.length }],
+    archivedRepoCount: results.filter((r) => r.archived).length,
+    activeRepoCount: results.filter((r) => !r.archived).length,
   }
 }
