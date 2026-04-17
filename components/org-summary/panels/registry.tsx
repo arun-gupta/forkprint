@@ -24,15 +24,18 @@ import { SecurityRollupPanel } from './SecurityRollupPanel'
 import { StaleWorkPanel } from './StaleWorkPanel'
 
 // Bucket groupings mirror the per-repo ResultsShell tabs (overview /
-// contributors / activity / responsiveness / documentation / security).
-// The per-repo 'recommendations' and 'comparison' tabs don't apply at
-// the org level — no recommendations engine and no repo-vs-repo matrix.
+// contributors / activity / responsiveness / documentation / security)
+// plus an org-only 'governance' bucket for org-level hygiene + policy
+// signals (issue #303). The per-repo 'recommendations' and 'comparison'
+// tabs don't apply at the org level — no recommendations engine and no
+// repo-vs-repo matrix.
 export type PanelBucketId =
   | 'overview'
   | 'contributors'
   | 'activity'
   | 'responsiveness'
   | 'documentation'
+  | 'governance'
   | 'security'
   | 'recommendations'
   | 'repos'
@@ -54,8 +57,8 @@ export const PANEL_BUCKETS: PanelBucket[] = [
   {
     id: 'contributors',
     label: 'Contributors',
-    description: 'Who contributes, maintains, and concentrates risk across the org.',
-    panels: ['contributor-diversity', 'maintainers', 'org-affiliations', 'bus-factor'],
+    description: 'Who contributes and how concentrated contribution is across the org.',
+    panels: ['contributor-diversity', 'org-affiliations', 'bus-factor'],
   },
   {
     id: 'activity',
@@ -73,14 +76,19 @@ export const PANEL_BUCKETS: PanelBucket[] = [
     id: 'documentation',
     label: 'Documentation',
     description:
-      'Docs coverage, licensing, inclusive naming, governance, and adopters — mirrors the per-repo Documentation tab.',
+      'Docs coverage, inclusive naming, and adopters across the repo set.',
     panels: [
       'documentation-coverage',
-      'license-consistency',
       'inclusive-naming-rollup',
-      'governance',
       'adopters',
     ],
+  },
+  {
+    id: 'governance',
+    label: 'Governance',
+    description:
+      'Org-level hygiene and policy signals — account activity, designated maintainers, governance file presence, and license consistency.',
+    panels: ['maintainers', 'governance', 'license-consistency'],
   },
   {
     id: 'security',

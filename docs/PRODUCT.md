@@ -161,6 +161,7 @@ User can provide a GitHub organization and get a high-level inventory of its pub
 - Each repo row links into the existing repo-level analysis flow so users can drill into a specific repository
 - Users can select multiple repositories from the org inventory table and launch the existing repo-analysis flow for that selection, up to the configured bulk-selection limit
 - Empty orgs, invalid orgs, and rate-limit states are handled clearly without fabricating results
+- Once an org analysis run completes, the org-summary view exposes a tabbed result area whose tab strip mirrors the per-repo Results Shell (Overview, Contributors, Activity, Responsiveness, Documentation, Security) plus an org-only **Governance** tab, positioned between Documentation and Security, that gathers org-level hygiene and policy signals (org admin activity, designated maintainers, governance file presence, license consistency). The Governance tab is org-summary-only — there is no per-repo Governance tab.
 
 **Design constraints**
 - This is a high-level organization inventory view, not a full CHAOSS analysis computed for every repo in the org

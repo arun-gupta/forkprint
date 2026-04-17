@@ -23,7 +23,7 @@ export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props)
     )
 
   const extraPanels =
-    bucketId === 'documentation' ? (
+    bucketId === 'governance' ? (
       <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
     ) : null
 
@@ -37,10 +37,10 @@ export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props)
 
   return (
     <div className="space-y-3">
+      {extraPanels}
       {bucketPanels.map(({ panelId, panel }) => (
         <div key={panelId}>{renderPanel(panelId, panel, selectedWindow)}</div>
       ))}
-      {extraPanels}
     </div>
   )
 }

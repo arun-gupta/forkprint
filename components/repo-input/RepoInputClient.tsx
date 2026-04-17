@@ -370,10 +370,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const orgInventoryTabs: ResultTabDefinition[] = orgAnalysisComplete
     ? [
         { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory and footprint.' },
-        { id: 'contributors', label: 'Contributors', status: 'implemented', description: 'Org-level contributor diversity, maintainers, and affiliations.' },
+        { id: 'contributors', label: 'Contributors', status: 'implemented', description: 'Org-level contributor diversity and affiliations.' },
         { id: 'activity', label: 'Activity', status: 'implemented', description: 'Org-level activity, release cadence, and stale work.' },
         { id: 'responsiveness', label: 'Responsiveness', status: 'implemented', description: 'Org-level responsiveness metrics.' },
-        { id: 'documentation', label: 'Documentation', status: 'implemented', description: 'Org-level documentation coverage, governance, and adopters.' },
+        { id: 'documentation', label: 'Documentation', status: 'implemented', description: 'Org-level documentation coverage, inclusive naming, and adopters.' },
+        { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level hygiene and policy — account activity, maintainers, governance files, license consistency.' },
         { id: 'security', label: 'Security', status: 'implemented', description: 'Org-level OpenSSF Scorecard rollup.' },
       ]
     : [
@@ -639,7 +640,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             bucketId="documentation"
             view={orgAggregation.view}
             selectedWindow={orgWindow}
-            org={orgInventoryResponse?.org ?? null}
           />
         ) : analysisResponse ? (
           <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
@@ -648,6 +648,16 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
           </p>
         )
+      }
+      governance={
+        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent
+            bucketId="governance"
+            view={orgAggregation.view}
+            selectedWindow={orgWindow}
+            org={orgInventoryResponse?.org ?? null}
+          />
+        ) : null
       }
       security={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (

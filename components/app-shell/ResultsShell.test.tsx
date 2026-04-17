@@ -149,4 +149,31 @@ describe('ResultsShell', () => {
     expect(screen.getByRole('tab', { name: 'Comparison' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('Comparison content')).toBeInTheDocument()
   })
+
+  it('renders a governance tab body when the governance tab is provided (#303)', async () => {
+    render(
+      <ResultsShell
+        analysisPanel={<div>Analysis panel</div>}
+        tabs={[
+          { id: 'overview', label: 'Overview', status: 'implemented', description: 'Org inventory' },
+          { id: 'documentation', label: 'Documentation', status: 'implemented', description: 'Org docs' },
+          { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level hygiene and policy' },
+          { id: 'security', label: 'Security', status: 'implemented', description: 'Org security' },
+        ]}
+        overview={<div>Org overview</div>}
+        contributors={null}
+        activity={null}
+        responsiveness={null}
+        documentation={<div>Org documentation</div>}
+        governance={<div>Org governance content</div>}
+        security={<div>Org security</div>}
+        recommendations={null}
+        comparison={null}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Governance' }))
+    expect(screen.getByText('Org governance content')).toBeInTheDocument()
+    expect(screen.getByText('Org governance content').closest('[data-tab-content="governance"]')).not.toHaveStyle('display: none')
+  })
 })

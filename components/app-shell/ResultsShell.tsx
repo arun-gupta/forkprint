@@ -18,6 +18,7 @@ interface ResultsShellProps {
   activity: React.ReactNode
   responsiveness: React.ReactNode
   documentation: React.ReactNode
+  governance?: React.ReactNode
   security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
@@ -38,6 +39,7 @@ export function ResultsShell({
   activity,
   responsiveness,
   documentation,
+  governance,
   security,
   recommendations,
   comparison,
@@ -218,6 +220,7 @@ export function ResultsShell({
               <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
               <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
               <div data-tab-content="documentation" style={{ display: currentActiveTab === 'documentation' ? 'contents' : 'none' }}>{documentation}</div>
+              <div data-tab-content="governance" style={{ display: currentActiveTab === 'governance' ? 'contents' : 'none' }}>{governance}</div>
               <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
               <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
               <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>

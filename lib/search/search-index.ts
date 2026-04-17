@@ -302,6 +302,7 @@ const EXTRACTORS: Record<ResultTabId, Extractor> = {
   activity: extractActivity,
   responsiveness: extractResponsiveness,
   documentation: extractDocumentation,
+  governance: () => [],
   security: extractSecurity,
   recommendations: extractRecommendations,
   comparison: extractComparison,
