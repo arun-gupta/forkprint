@@ -69,7 +69,7 @@ export function RunStatusHeader({ org, header, onCancel, onPause, onResume, noti
                 Org summary — {org}
               </h2>
             )}
-            <p className="text-sm text-slate-600 dark:text-slate-400">{statusLabel}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-300">{statusLabel}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export function RunStatusHeader({ org, header, onCancel, onPause, onResume, noti
             <Stat label="Queued" value={header.queued} />
           </dl>
 
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400">
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-300">
             <span>Elapsed: {formatDuration(header.elapsedMs)}</span>
             {header.etaMs !== null ? <span>ETA: {formatDuration(header.etaMs)}</span> : null}
             <span>Concurrency: {concurrencyLabel}</span>

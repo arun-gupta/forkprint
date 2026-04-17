@@ -31,7 +31,7 @@ export function RateLimitPausePanel({ kind, resumesAt, reposToReDispatch, pauses
   return (
     <section
       aria-label="Rate limit pause"
-      className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-800 dark:bg-amber-950/30"
+      className="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:bg-amber-900/20 dark:border-amber-800/60"
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 text-amber-600 dark:text-amber-400">
@@ -56,7 +56,7 @@ export function RateLimitPausePanel({ kind, resumesAt, reposToReDispatch, pauses
               onClick={onCancel}
               aria-label="Cancel run"
               title="Cancel run"
-              className="mt-3 inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
+              className="mt-3 inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
             >
               <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                 <rect x="3.5" y="3.5" width="9" height="9" rx="1" />

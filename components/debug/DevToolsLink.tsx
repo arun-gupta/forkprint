@@ -84,11 +84,7 @@ function LogPanel() {
             <button
               key={level}
               onClick={() => setFilter(level)}
-              className={`px-2 py-0.5 rounded text-xs ${
-                filter === level
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:text-gray-200'
-              }`}
+              className={`px-2 py-0.5 rounded text-xs ${ filter === level ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200' }`}
             >
               {level || 'all'}
             </button>

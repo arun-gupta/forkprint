@@ -51,7 +51,7 @@ function Body({ value }: { value: SecurityRollupValue }) {
           <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
             <HelpLabel label="Worst score" helpText="Lowest OpenSSF Scorecard score across the repo set." />
           </dt>
-          <dd className={`text-2xl font-semibold ${value.worstScore !== null ? scoreTone(value.worstScore) : 'text-slate-400'}`}>
+          <dd className={`text-2xl font-semibold ${value.worstScore !== null ? scoreTone(value.worstScore) : 'text-slate-400'} dark:text-slate-500 dark:text-slate-400 `}>
             {value.worstScore !== null ? value.worstScore.toFixed(1) : '—'}
           </dd>
         </div>
@@ -79,7 +79,7 @@ function Body({ value }: { value: SecurityRollupValue }) {
       <ul role="list" className="mt-2 divide-y divide-slate-200 dark:divide-slate-700">
         {value.perRepo.map((r) => (
           <li key={r.repo} className="flex items-center justify-between gap-3 py-2">
-            <span className="truncate text-sm text-slate-800 dark:text-slate-200">{r.repo}</span>
+            <span className="truncate text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">{r.repo}</span>
             {typeof r.score === 'number' ? (
               <span className={`text-sm font-semibold ${scoreTone(r.score)}`}>{r.score.toFixed(1)}</span>
             ) : (
@@ -98,7 +98,7 @@ function DirectCheckCard({ label, present, total }: { label: string; present: nu
   return (
     <div className="rounded border border-slate-200 p-2 dark:border-slate-700">
       <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
-      <p className={`text-lg font-semibold ${total > 0 ? tone : 'text-slate-400'}`}>
+      <p className={`text-lg font-semibold ${total > 0 ? tone : 'text-slate-400'} dark:text-slate-500 dark:text-slate-400 `}>
         {pct(present, total)}
       </p>
       <p className="text-[10px] text-slate-400 dark:text-slate-500">{present} of {total}</p>

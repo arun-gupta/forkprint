@@ -11,7 +11,7 @@ export function EmptyState({ label = 'Waiting for first result' }: { label?: str
   return (
     <div
       role="status"
-      className="flex h-full min-h-[96px] items-center justify-center rounded border-2 border-dashed border-slate-300 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400"
+      className="flex h-full min-h-[96px] items-center justify-center rounded border-2 border-dashed border-slate-300 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 dark:border-slate-600"
     >
       {label}
     </div>

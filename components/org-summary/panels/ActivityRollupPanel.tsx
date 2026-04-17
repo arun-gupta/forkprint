@@ -49,14 +49,14 @@ function Body({ value }: { value: ActivityRollupValue }) {
           {value.mostActiveRepo ? (
             <div className="rounded border border-slate-200 p-2 dark:border-slate-700">
               <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Most active</p>
-              <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{value.mostActiveRepo.repo}</p>
+              <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-100">{value.mostActiveRepo.repo}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{value.mostActiveRepo.commits} commits</p>
             </div>
           ) : null}
           {value.leastActiveRepo ? (
             <div className="rounded border border-slate-200 p-2 dark:border-slate-700">
               <p className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">Least active</p>
-              <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{value.leastActiveRepo.repo}</p>
+              <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-100">{value.leastActiveRepo.repo}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{value.leastActiveRepo.commits} commits</p>
             </div>
           ) : null}

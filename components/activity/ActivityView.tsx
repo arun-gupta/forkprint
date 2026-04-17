@@ -44,11 +44,11 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
 
   return (
     <section aria-label="Activity view" className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Recent activity window</p>
-            <p className="mt-1 text-sm text-slate-600">Change the local activity window without rerunning repository analysis.</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Recent activity window</p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Change the local activity window without rerunning repository analysis.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {windowOptions.map((option) => (
@@ -56,11 +56,7 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
                 key={option.days}
                 type="button"
                 onClick={() => setWindowDays(option.days)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
-                  windowDays === option.days
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900'
-                }`}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${ windowDays === option.days ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900' : 'border-slate-300 text-slate-700 hover:border-slate-400 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-white' }`}
                 aria-pressed={windowDays === option.days}
               >
                 {option.label}
@@ -76,7 +72,7 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
         const score = getActivityScore(result, windowDays)
 
         return (
-          <article key={section.repo} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <article key={section.repo} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <button
               type="button"
               onClick={() => setCollapsed((prev) => { const next = new Set(prev); if (next.has(section.repo)) next.delete(section.repo); else next.add(section.repo); return next })}
@@ -84,16 +80,16 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
               aria-expanded={!isCollapsed}
             >
               <CollapseChevron expanded={!isCollapsed} />
-              <h2 className="text-lg font-semibold text-slate-900">{section.repo}</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{section.repo}</h2>
             </button>
             {!isCollapsed ? (
               <div className="mt-4 space-y-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
                       Recent repository activity and delivery flow derived from verified public GitHub data.
                     </p>
-                    <p className="mt-2 text-sm text-slate-700">{score.description}</p>
+                    <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{score.description}</p>
                   </div>
                   <div className="w-full md:max-w-xs">
                     <ScoreBadge category="Activity" value={score.value} tone={score.tone} />
@@ -110,9 +106,9 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
                     .map((card) => {
                       const tags = getActivityCardTags(card.title)
                       return (
-                    <div key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/60">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{card.title}</p>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{card.title}</p>
                         {tags.map((tag) => <TagPill key={tag} tag={tag} active={activeTag === tag} onClick={handleTagClick} />)}
                       </div>
                       {card.value ? <p className="mt-1 text-lg"><MetricValue value={card.value} /></p> : null}
@@ -120,33 +116,33 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
                         <dl className="mt-3 space-y-2">
                           {card.lines.map((line) => (
                             <div key={line.label} className="flex items-baseline justify-between gap-4">
-                              <dt className="text-sm text-slate-600">{line.label}</dt>
+                              <dt className="text-sm text-slate-600 dark:text-slate-300">{line.label}</dt>
                               <dd className="text-base"><MetricValue value={line.value} /></dd>
                             </div>
                           ))}
                           {card.title === 'Pull requests' ? (
-                            <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2">
-                              <dt className="text-sm text-slate-600">Median time to merge</dt>
+                            <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2 dark:border-slate-700">
+                              <dt className="text-sm text-slate-600 dark:text-slate-300">Median time to merge</dt>
                               <dd className="text-base"><MetricValue value={formatHours(section.metrics.medianTimeToMergeHours)} /></dd>
                             </div>
                           ) : null}
                           {card.title === 'Issues' ? (
                             <>
-                              <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2">
-                                <dt className="text-sm text-slate-600">
+                              <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2 dark:border-slate-700">
+                                <dt className="text-sm text-slate-600 dark:text-slate-300">
                                   <HelpLabel label="Stale issue ratio" helpText={staleIssueTooltip} />
                                 </dt>
                                 <dd className="text-base"><MetricValue value={formatPercentage(section.metrics.staleIssueRatio)} /></dd>
                               </div>
                               <div className="flex items-baseline justify-between gap-4">
-                                <dt className="text-sm text-slate-600">Median time to close</dt>
+                                <dt className="text-sm text-slate-600 dark:text-slate-300">Median time to close</dt>
                                 <dd className="text-base"><MetricValue value={formatHours(section.metrics.medianTimeToCloseHours)} /></dd>
                               </div>
                             </>
                           ) : null}
                         </dl>
                       ) : null}
-                      {card.detail ? <p className="mt-3 text-sm text-slate-600">{card.detail}</p> : null}
+                      {card.detail ? <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{card.detail}</p> : null}
                     </div>
                       )
                     })}

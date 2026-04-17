@@ -152,11 +152,11 @@ function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
     <details className="relative" data-testid="stale-admins-scoring-help">
       <summary
         aria-label="How is this scored?"
-        className="inline-flex h-4 w-4 cursor-pointer select-none items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 list-none hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200 [&::-webkit-details-marker]:hidden"
+        className="inline-flex h-4 w-4 cursor-pointer select-none items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 list-none hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200 [&::-webkit-details-marker]:hidden dark:bg-slate-900"
       >
         ?
       </summary>
-      <div className="absolute left-0 top-6 z-10 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+      <div className="absolute left-0 top-6 z-10 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:bg-slate-900">
         <p className="mb-1 font-medium text-slate-700 dark:text-slate-200">How is this scored?</p>
         <ThresholdDisclosure section={section} />
       </div>
@@ -176,7 +176,7 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
 
   if (section.applicability === 'admin-list-unavailable') {
     return (
-      <p className="text-sm text-rose-700 dark:text-rose-400" data-testid="stale-admins-unavailable">
+      <p className="text-sm text-rose-700 dark:text-rose-400 dark:text-rose-300" data-testid="stale-admins-unavailable">
         Admin list could not be retrieved —{' '}
         <span className="font-medium">{section.adminListUnavailableReason ?? 'unknown'}</span>.
       </p>
@@ -220,7 +220,7 @@ function GroupSection({
   return (
     <details
       open={defaultOpen}
-      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName} dark:bg-slate-800/60 `}
       data-testid={`stale-admins-group-${classification}`}
     >
       <summary
@@ -248,7 +248,7 @@ function GroupChevron() {
     <svg
       aria-hidden="true"
       data-testid="group-chevron"
-      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0"
+      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0 dark:text-slate-500"
       viewBox="0 0 20 20"
       fill="currentColor"
     >

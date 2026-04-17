@@ -21,15 +21,15 @@ export function InactiveReposPanel({ panel }: Props) {
       {panel.status === 'in-progress' && !panel.value ? <EmptyState /> : panel.status === 'unavailable' || !panel.value ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">No activity data available.</p>
       ) : panel.value.repos.length === 0 ? (
-        <p className="text-sm text-emerald-700 dark:text-emerald-400">All repos have recent default-branch commit activity.</p>
+        <p className="text-sm text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">All repos have recent default-branch commit activity.</p>
       ) : (
         <>
-          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400">
+          <p className="mb-3 text-sm text-amber-700 dark:text-amber-400 dark:text-amber-300">
             {panel.value.repos.length} repo(s) with no commits on the default branch in the last 90 days
           </p>
           <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
             {panel.value.repos.map((r) => (
-              <li key={r.repo} className="py-2 text-sm text-slate-800 dark:text-slate-200">{r.repo}</li>
+              <li key={r.repo} className="py-2 text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">{r.repo}</li>
             ))}
           </ul>
         </>

@@ -15,12 +15,12 @@ export function OrgAffiliationsPanel({ panel }: Props) {
   return (
     <section
       aria-label="Org affiliations"
-      className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-slate-900"
+      className="rounded-lg border border-amber-200 bg-white p-4 shadow-sm dark:border-amber-800 dark:bg-slate-900 dark:border-amber-800/60"
     >
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Org affiliations
-          <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+          <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 dark:text-amber-200">
             Experimental
           </span>
         </h3>
@@ -50,7 +50,7 @@ function Body({ value }: { value: OrgAffiliationsValue }) {
 
   return (
     <>
-      <p className="mb-3 text-xs text-amber-700 dark:text-amber-400">
+      <p className="mb-3 text-xs text-amber-700 dark:text-amber-400 dark:text-amber-300">
         Derived from publicly visible GitHub profile org membership. Not all contributors have public affiliations.
       </p>
       <dl className="mb-4 grid grid-cols-2 gap-3">
@@ -66,7 +66,7 @@ function Body({ value }: { value: OrgAffiliationsValue }) {
           <ul role="list" className="mt-2 divide-y divide-slate-200 dark:divide-slate-700">
             {topOrgs.map((o) => (
               <li key={o.org} className="flex items-center justify-between gap-3 py-2">
-                <span className="truncate text-sm font-mono text-slate-800 dark:text-slate-200">{o.org}</span>
+                <span className="truncate text-sm font-mono text-slate-800 dark:text-slate-200 dark:text-slate-100">{o.org}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   {o.commits.toLocaleString()} commits
                 </span>

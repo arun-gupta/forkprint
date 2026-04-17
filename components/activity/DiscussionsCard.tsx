@@ -54,13 +54,13 @@ export function DiscussionsCard({ result, activeTag, onTagClick, windowDays = 90
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:bg-slate-800/60 dark:border-slate-700">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Discussions</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Discussions</p>
         <TagPill tag="community" active={activeTag === 'community'} onClick={onTagClick} />
       </div>
-      <p className="mt-1 text-sm text-slate-700">{statusLine}</p>
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{statusLine}</p>
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
         GitHub Discussions is a forum for long-form community conversation. Presence and recent activity here signal an engaged community.
       </p>
     </div>

@@ -148,12 +148,12 @@ function getTopFactorDetail(factors: Array<{ label: string; percentile?: number 
 export function scoreToneClass(tone: ScoreTone) {
   switch (tone) {
     case 'success':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-800'
+      return 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/60 dark:bg-emerald-900/30 dark:text-emerald-200'
     case 'warning':
-      return 'border-amber-200 bg-amber-50 text-amber-800'
+      return 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/60 dark:bg-amber-900/30 dark:text-amber-200'
     case 'danger':
-      return 'border-red-200 bg-red-50 text-red-800'
+      return 'border-red-200 bg-red-50 text-red-800 dark:border-red-800/60 dark:bg-red-900/30 dark:text-red-200'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-700'
+      return 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
   }
 }

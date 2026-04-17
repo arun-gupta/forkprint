@@ -91,14 +91,14 @@ export function OrgSummaryView({ org, view, startedAt, onCancel, onPause, onResu
           <button
             type="button"
             onClick={() => triggerDownload(buildOrgSummaryJsonExport(org, view))}
-            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900"
           >
             Export JSON
           </button>
           <button
             type="button"
             onClick={() => triggerDownload(buildOrgSummaryMarkdownExport(org, view))}
-            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900"
           >
             Export Markdown
           </button>
@@ -170,7 +170,7 @@ export function OrgSummaryView({ org, view, startedAt, onCancel, onPause, onResu
               </h3>
               <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
                 {view.missingData.map((m) => (
-                  <li key={`${m.repo}:${m.signalKey}`} className="py-2 text-sm text-slate-700 dark:text-slate-300">
+                  <li key={`${m.repo}:${m.signalKey}`} className="py-2 text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
                     <span className="font-medium">{m.repo}</span>{' '}
                     <span className="text-slate-500 dark:text-slate-400">· {m.signalKey}</span>{' '}
                     <span className="text-slate-500 dark:text-slate-400">— {m.reason}</span>
@@ -267,7 +267,7 @@ function InlineOrgSummary({
         <div className="flex items-center gap-3">
           {showPause && onPause ? (
             <button type="button" onClick={onPause} aria-label="Pause run" title="Pause run"
-              className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+              className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900">
               <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor"><rect x="4" y="3" width="3" height="10" rx="0.5" /><rect x="9" y="3" width="3" height="10" rx="0.5" /></svg>
             </button>
           ) : null}
@@ -279,7 +279,7 @@ function InlineOrgSummary({
           ) : null}
           {showCancel && onCancel ? (
             <button type="button" onClick={onCancel} aria-label="Cancel run" title="Cancel run"
-              className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700">
+              className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900">
               <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor"><rect x="3.5" y="3.5" width="9" height="9" rx="1" /></svg>
             </button>
           ) : null}
@@ -299,7 +299,7 @@ function InlineOrgSummary({
           </dl>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400">
+            <div className="flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-300">
               <span>Elapsed: {formatDuration(view.status.elapsedMs)}</span>
               {view.status.etaMs !== null ? <span>ETA: {formatDuration(view.status.etaMs)}</span> : null}
               <span>Concurrency: {view.status.concurrency.chosen}</span>
@@ -309,11 +309,11 @@ function InlineOrgSummary({
               {isTerminal ? (
                 <div className="flex gap-2">
                   <button type="button" onClick={() => triggerDownload(buildOrgSummaryJsonExport(org, view))}
-                    className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                    className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900">
                     Export JSON
                   </button>
                   <button type="button" onClick={() => triggerDownload(buildOrgSummaryMarkdownExport(org, view))}
-                    className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                    className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900">
                     Export Markdown
                   </button>
                 </div>
@@ -369,7 +369,7 @@ function InlineOrgSummary({
               </h3>
               <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
                 {view.missingData.map((m) => (
-                  <li key={`${m.repo}:${m.signalKey}`} className="py-2 text-sm text-slate-700 dark:text-slate-300">
+                  <li key={`${m.repo}:${m.signalKey}`} className="py-2 text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
                     <span className="font-medium">{m.repo}</span>{' '}
                     <span className="text-slate-500 dark:text-slate-400">· {m.signalKey}</span>{' '}
                     <span className="text-slate-500 dark:text-slate-400">— {m.reason}</span>

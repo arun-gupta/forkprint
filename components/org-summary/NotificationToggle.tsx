@@ -49,7 +49,7 @@ export function NotificationToggle({ enabled, onChange }: Props) {
   if (permState === 'unsupported') return null
 
   return (
-    <label className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+    <label className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-300">
       <input
         type="checkbox"
         checked={enabled}

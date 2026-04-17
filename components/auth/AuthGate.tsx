@@ -44,7 +44,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   if (authError) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6">
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800/60 dark:text-red-200">
           Sign-in failed: {authError.replace(/_/g, ' ')}. Please try again.
         </p>
         <SignInButton />
@@ -54,48 +54,48 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-6 sm:gap-5">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-6 sm:gap-5 dark:bg-slate-800/60">
         <div className="text-center">
           <img src="/repo-pulse-banner.png" alt="RepoPulse" className="mx-auto h-16 rounded-xl shadow-lg sm:h-24" />
-          <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:mt-3 sm:text-3xl">RepoPulse</h1>
-          <p className="mt-1 text-sm text-slate-600 sm:text-base">Know the real health of any open source project — in seconds</p>
+          <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:mt-3 sm:text-3xl dark:text-slate-100">RepoPulse</h1>
+          <p className="mt-1 text-sm text-slate-600 sm:text-base dark:text-slate-300">Know the real health of any open source project — in seconds</p>
         </div>
 
         <div className="max-w-lg space-y-3">
-          <p className="text-center text-sm text-slate-600">
-            A single <span className="font-semibold text-slate-800">OSS Health Score</span> from
+          <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+            A single <span className="font-semibold text-slate-800 dark:text-slate-100">OSS Health Score</span> from
             five dimensions — percentile-ranked against 2,400+ real GitHub repos.
           </p>
 
           <div className="flex flex-wrap justify-center gap-1.5">
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">👥 Contributors</span>
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">⚡ Activity</span>
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">💬 Responsiveness</span>
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">📄 Documentation</span>
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">🔒 Security</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">👥 Contributors</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">⚡ Activity</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">💬 Responsiveness</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">📄 Documentation</span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400">🔒 Security</span>
           </div>
 
-          <p className="text-center text-xs font-medium text-slate-600">
+          <p className="text-center text-xs font-medium text-slate-600 dark:text-slate-300">
             ✨ Plus tailored recommendations to improve each dimension
           </p>
 
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
             <span>Compare up to 4 repos</span>
-            <span className="text-slate-300">|</span>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
             <span>Browse by org</span>
-            <span className="text-slate-300">|</span>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
             <span>Export JSON / Markdown</span>
           </div>
         </div>
 
         <SignInButton elevated={elevatedOptIn} />
 
-        <label className="flex max-w-md cursor-pointer items-start gap-2 px-4 text-left text-xs text-slate-600">
+        <label className="flex max-w-md cursor-pointer items-start gap-2 px-4 text-left text-xs text-slate-600 dark:text-slate-300">
           <input
             type="checkbox"
             checked={elevatedOptIn}
             onChange={(e) => setElevatedOptIn(e.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300"
+            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600"
           />
           <span>
             Request a <span className="font-semibold">deeper GitHub permission</span> (<code>read:org</code>)
@@ -105,11 +105,11 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         </label>
 
         <div className="max-w-md space-y-2 text-center">
-          <p className="text-xs italic text-slate-400">
+          <p className="text-xs italic text-slate-400 dark:text-slate-500">
             Built for community-oriented projects. Solo-maintainer repos are auto-detected and
             scored on Activity, Security, and Documentation instead.
           </p>
-          <a href="/baseline" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-slate-600 transition">View scoring methodology</a>
+          <a href="/baseline" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-slate-600 transition dark:text-slate-500">View scoring methodology</a>
         </div>
       </div>
     )

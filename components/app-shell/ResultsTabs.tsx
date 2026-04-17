@@ -121,7 +121,7 @@ export function ResultsTabs({ tabs, activeTab, onChange, matchCounts }: ResultsT
                     }}
                   >
                     {tab.label}
-                    {count ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700">{count}</span> : null}
+                    {count ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">{count}</span> : null}
                   </button>
                 )
               })}
@@ -160,7 +160,7 @@ function TabButton({ tab, active, onClick, badgeCount }: { tab: ResultTabDefinit
       onClick={onClick}
     >
       {tab.label}
-      {badgeCount ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700">{badgeCount}</span> : null}
+      {badgeCount ? <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-sky-100 px-1 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">{badgeCount}</span> : null}
     </button>
   )
 }

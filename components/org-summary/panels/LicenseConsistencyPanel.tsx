@@ -112,19 +112,19 @@ function PanelBody({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-700 dark:text-slate-300">
+      <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
         {contributingReposCount} of {totalReposInRun} repos contributed
         {value.nonOsiCount > 0 ? (
           <>
             {' · '}
-            <span className="text-amber-700 dark:text-amber-400">
+            <span className="text-amber-700 dark:text-amber-400 dark:text-amber-300">
               {value.nonOsiCount} use non-OSI-approved licenses
             </span>
           </>
         ) : (
           <>
             {' · '}
-            <span className="text-emerald-700 dark:text-emerald-400">All use OSI-approved licenses</span>
+            <span className="text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">All use OSI-approved licenses</span>
           </>
         )}
       </p>
@@ -156,7 +156,7 @@ function GroupSection({
   return (
     <details
       open={defaultOpen}
-      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName} dark:bg-slate-800/60 `}
       data-testid={`license-consistency-group-${classification}`}
     >
       <summary
@@ -184,7 +184,7 @@ function GroupChevron() {
     <svg
       aria-hidden="true"
       data-testid="group-chevron"
-      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0"
+      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0 dark:text-slate-500"
       viewBox="0 0 20 20"
       fill="currentColor"
     >

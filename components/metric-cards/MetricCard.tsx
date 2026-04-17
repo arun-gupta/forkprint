@@ -78,7 +78,7 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
 
       {showOverrideToggle ? (
         <div
-          className={`mt-3 flex flex-wrap items-start justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${isSolo ? 'border-amber-300 bg-amber-50 text-amber-900' : 'border-sky-300 bg-sky-50 text-sky-900'}`}
+          className={`mt-3 flex flex-wrap items-start justify-between gap-2 rounded-lg border px-3 py-2 text-xs ${isSolo ? 'border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-700/60 dark:bg-amber-900/20 dark:text-amber-200' : 'border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700/60 dark:bg-sky-900/20 dark:text-sky-200'}`}
           data-testid={`solo-profile-banner-${card.repo}`}
           role="status"
         >
@@ -98,7 +98,7 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
           <button
             type="button"
             onClick={() => setProfileOverride(isSolo ? 'community' : (autoSolo ? null : 'solo'))}
-            className="shrink-0 rounded border border-current px-2 py-0.5 font-medium hover:bg-white/50"
+            className="shrink-0 rounded border border-current px-2 py-0.5 font-medium hover:bg-white/50 dark:hover:bg-white/10"
             data-testid={`solo-profile-toggle-${card.repo}`}
           >
             {isSolo ? 'Use community scoring' : 'Use solo scoring'}
@@ -262,22 +262,22 @@ function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass, onC
 
 const PERCENTILE_TONE_CLASSES = {
   emerald: [
-    'bg-slate-100 text-slate-700 border-slate-200',
-    'bg-emerald-100 text-emerald-800 border-emerald-200',
-    'bg-emerald-200 text-emerald-900 border-emerald-300',
-    'bg-emerald-300 text-emerald-950 border-emerald-400',
+    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700',
+    'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800/60',
+    'bg-emerald-200 text-emerald-900 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-100 dark:border-emerald-700/70',
+    'bg-emerald-300 text-emerald-950 border-emerald-400 dark:bg-emerald-800/50 dark:text-emerald-50 dark:border-emerald-600/70',
   ],
   sky: [
-    'bg-slate-100 text-slate-700 border-slate-200',
-    'bg-sky-100 text-sky-800 border-sky-200',
-    'bg-sky-200 text-sky-900 border-sky-300',
-    'bg-sky-300 text-sky-950 border-sky-400',
+    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700',
+    'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800/60',
+    'bg-sky-200 text-sky-900 border-sky-300 dark:bg-sky-900/40 dark:text-sky-100 dark:border-sky-700/70',
+    'bg-sky-300 text-sky-950 border-sky-400 dark:bg-sky-800/50 dark:text-sky-50 dark:border-sky-600/70',
   ],
   violet: [
-    'bg-slate-100 text-slate-700 border-slate-200',
-    'bg-violet-100 text-violet-800 border-violet-200',
-    'bg-violet-200 text-violet-900 border-violet-300',
-    'bg-violet-300 text-violet-950 border-violet-400',
+    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700',
+    'bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-200 dark:border-violet-800/60',
+    'bg-violet-200 text-violet-900 border-violet-300 dark:bg-violet-900/40 dark:text-violet-100 dark:border-violet-700/70',
+    'bg-violet-300 text-violet-950 border-violet-400 dark:bg-violet-800/50 dark:text-violet-50 dark:border-violet-600/70',
   ],
 } as const
 

@@ -74,22 +74,16 @@ export function ProgressIndicator({ succeeded, failed, total, status, startedAt,
           className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
         >
           <div
-            className={`h-full rounded-full transition-all duration-300 ${
-              isTerminal
-                ? failed > 0
-                  ? 'bg-amber-500'
-                  : 'bg-emerald-500'
-                : 'bg-sky-500'
-            }`}
+            className={`h-full rounded-full transition-all duration-300 ${ isTerminal ? failed > 0 ? 'bg-amber-500' : 'bg-emerald-500' : 'bg-sky-500' }`}
             style={{ width: `${percent}%` }}
           />
         </div>
-        <span className="min-w-[3rem] text-right text-sm font-medium text-slate-700 dark:text-slate-300">
+        <span className="min-w-[3rem] text-right text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-200">
           {percent}%
         </span>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400">
+      <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-300">
         <span>{completed} of {total} repos</span>
         <span>Elapsed: {formatDuration(elapsed)}</span>
         {!isTerminal && etaMs !== null ? <span>ETA: {formatDuration(etaMs)}</span> : null}

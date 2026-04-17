@@ -47,9 +47,9 @@ function Body({ value }: { value: GovernanceValue }) {
             <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Org-level (.github)</dt>
             <dd className="text-lg font-semibold">
               {value.orgLevel.present ? (
-                <span className="text-emerald-700 dark:text-emerald-400">Present</span>
+                <span className="text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">Present</span>
               ) : (
-                <span className="text-slate-400">Not found</span>
+                <span className="text-slate-400 dark:text-slate-500">Not found</span>
               )}
             </dd>
           </div>
@@ -65,9 +65,9 @@ function Body({ value }: { value: GovernanceValue }) {
       <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
         {value.perRepo.map((r) => (
           <li key={r.repo} className="flex items-center justify-between gap-3 py-2">
-            <span className="truncate text-sm text-slate-800 dark:text-slate-200">{r.repo}</span>
+            <span className="truncate text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">{r.repo}</span>
             {r.present ? (
-              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 dark:text-emerald-200">
                 present
               </span>
             ) : (

@@ -32,29 +32,29 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
   }
 
   return (
-    <section aria-label="Contributors score pane" className="rounded-2xl border border-slate-200 bg-white p-4">
+    <section aria-label="Contributors score pane" className="rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Contributors score</h3>
-          <p className="mt-1 text-sm text-slate-600">{section.contributorsScore.description}</p>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Contributors score</h3>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{section.contributorsScore.description}</p>
         </div>
         <div className="w-full md:max-w-xs">
           <ScoreBadge category="Contributors" value={section.contributorsScore.value} tone={section.contributorsScore.tone} />
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:bg-slate-800/60 dark:border-slate-700">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this scored?</p>
-            <p className="mt-1 text-sm text-slate-700">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">How is this scored?</p>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
               {section.contributorsScore.summary ?? 'Contributors combines contributor concentration, maintainer depth, repeat and new-contributor signals, and contribution breadth, scored relative to the repo\'s star bracket.'}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowDetails((current) => !current)}
-            className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+            className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200"
             aria-pressed={showDetails}
           >
             {showDetails ? 'Hide details' : 'Show details'}
@@ -63,10 +63,10 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
         {section.contributorsScore.weightedFactors && section.contributorsScore.weightedFactors.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {section.contributorsScore.weightedFactors.map((factor) => (
-              <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
-                <span className="font-semibold text-slate-900">{factor.label}</span> <span>{factor.weightLabel}</span>
+              <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{factor.label}</span> <span>{factor.weightLabel}</span>
                 {factor.percentile !== undefined ? (
-                  <span className="ml-1 text-slate-500">({formatPercentileLabel(factor.percentile)})</span>
+                  <span className="ml-1 text-slate-500 dark:text-slate-400">({formatPercentileLabel(factor.percentile)})</span>
                 ) : null}
               </div>
             ))}
@@ -76,20 +76,20 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
           <div className="mt-3 grid gap-2">
             {section.contributorsScore.weightedFactors && section.contributorsScore.weightedFactors.length > 0 ? (
               section.contributorsScore.weightedFactors.map((factor) => (
-                <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3">
+                <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{factor.label} ({factor.weightLabel})</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{factor.label} ({factor.weightLabel})</p>
                     {factor.percentile !== undefined ? (
-                      <p className="text-sm font-semibold text-slate-900">{formatPercentileLabel(factor.percentile)}</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatPercentileLabel(factor.percentile)}</p>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{factor.description}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{factor.description}</p>
                 </div>
               ))
             ) : null}
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Top-20% contributor share</p>
-              <p className="mt-1 text-sm text-slate-700">
+            <div className="rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Top-20% contributor share</p>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
                 {formatPercentage(section.contributorsScore.concentration)}
                 {section.contributorsScore.bracketLabel ? ` — scored relative to ${section.contributorsScore.bracketLabel} repositories` : ''}
               </p>
@@ -116,8 +116,8 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
             const isGov = GOVERNANCE_CONTRIBUTORS_METRICS.has(metric.label)
             const isCommunity = COMMUNITY_CONTRIBUTORS_METRICS.has(metric.label)
             return (
-              <div key={metric.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <dt className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500">
+              <div key={metric.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:bg-slate-800/60 dark:border-slate-700">
+                <dt className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <HelpLabel label={metric.label} helpText={metric.hoverText} />
                   <span className="inline-flex gap-1">
                     {isGov ? <TagPill tag="governance" active={activeTag === 'governance'} onClick={handleTagClick} /> : null}
@@ -125,23 +125,23 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
                   </span>
                 </dt>
                 <dd className="mt-1 text-base"><MetricValue value={metric.value} /></dd>
-                {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}
+                {metric.supportingText ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.supportingText}</p> : null}
               </div>
             )
           })}
       </dl>
 
       {!activeTag ? (
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:bg-slate-800/60 dark:border-slate-700">
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-900">Organization Affiliation</p>
-          <p className="text-sm text-slate-600">{section.experimentalWarning}</p>
-          <p className="text-sm text-slate-600">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-900 dark:text-slate-100">Organization Affiliation</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{section.experimentalWarning}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             <a
               href="https://chaoss.community/kb/metric-elephant-factor/"
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-slate-700 underline underline-offset-2"
+              className="font-medium text-slate-700 underline underline-offset-2 dark:text-slate-200"
             >
               CHAOSS Elephant Factor reference
             </a>
@@ -149,8 +149,8 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
         </div>
         <dl className="mt-3 grid gap-3 md:grid-cols-2">
           {section.experimentalMetrics.map((metric) => (
-            <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <HelpLabel label={metric.label} helpText={metric.hoverText} />
               </dt>
               <dd className="mt-1 text-base"><MetricValue value={metric.value} /></dd>
@@ -179,7 +179,7 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
                     <button
                       type="button"
                       onClick={() => setShowExperimentalNames((current) => !current)}
-                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400"
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-200"
                       aria-pressed={showExperimentalNames}
                     >
                       {showExperimentalNames ? 'Hide names' : 'Show names'}
@@ -187,7 +187,7 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
                     <button
                       type="button"
                       onClick={() => setShowExperimentalNumbers((current) => !current)}
-                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400"
+                      className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 dark:border-slate-600 dark:text-slate-200"
                       aria-pressed={showExperimentalNumbers}
                     >
                       {showExperimentalNumbers ? 'Hide numbers' : 'Show numbers'}

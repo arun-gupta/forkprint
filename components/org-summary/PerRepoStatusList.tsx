@@ -32,7 +32,7 @@ export function PerRepoStatusList({ entries, onRetry }: Props) {
             onClick={() => failedEntries.forEach((e) => onRetry(e.repo))}
             aria-label={`Retry all failed (${failedEntries.length})`}
             title={`Retry all failed (${failedEntries.length})`}
-            className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:bg-slate-800 dark:text-rose-300 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:bg-slate-800 dark:text-rose-300 dark:hover:bg-slate-700 dark:bg-slate-900"
           >
             <RetryIcon />
             <span className="font-semibold">{failedEntries.length}</span>
@@ -45,16 +45,16 @@ export function PerRepoStatusList({ entries, onRetry }: Props) {
             <span className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${BADGE_STYLE[e.badge]}`}>
               {e.badge}
             </span>
-            <span className="flex-1 truncate text-sm text-slate-800 dark:text-slate-200">
+            <span className="flex-1 truncate text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">
               {e.repo}
               {e.isFlagship ? (
-                <span className="ml-2 inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-300">
+                <span className="ml-2 inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-300 dark:text-amber-200">
                   flagship
                 </span>
               ) : null}
             </span>
             {e.errorReason ? (
-              <span className="max-w-xs truncate text-xs text-rose-700 dark:text-rose-400" title={e.errorReason}>
+              <span className="max-w-xs truncate text-xs text-rose-700 dark:text-rose-400 dark:text-rose-300" title={e.errorReason}>
                 {e.errorReason}
               </span>
             ) : null}
@@ -64,7 +64,7 @@ export function PerRepoStatusList({ entries, onRetry }: Props) {
                 onClick={() => onRetry(e.repo)}
                 aria-label={`Retry ${e.repo}`}
                 title={`Retry ${e.repo}`}
-                className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900"
               >
                 <RetryIcon />
               </button>

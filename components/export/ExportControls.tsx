@@ -47,7 +47,7 @@ export function ExportControls({ analysisResponse, analyzedRepos }: ExportContro
         type="button"
         onClick={handleDownloadJson}
         disabled={disabled}
-        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
       >
         Download JSON
       </button>
@@ -56,7 +56,7 @@ export function ExportControls({ analysisResponse, analyzedRepos }: ExportContro
         type="button"
         onClick={handleDownloadMarkdown}
         disabled={disabled}
-        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
       >
         Download Markdown
       </button>
@@ -64,7 +64,7 @@ export function ExportControls({ analysisResponse, analyzedRepos }: ExportContro
       <button
         type="button"
         onClick={() => { void handleCopyLink() }}
-        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
       >
         {copyState === 'copied' ? 'Copied!' : 'Copy link'}
       </button>
@@ -75,7 +75,7 @@ export function ExportControls({ analysisResponse, analyzedRepos }: ExportContro
           readOnly
           value={fallbackUrl}
           aria-label="Shareable URL"
-          className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700"
+          className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           onFocus={(e) => e.currentTarget.select()}
         />
       ) : null}

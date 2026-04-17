@@ -118,9 +118,9 @@ export function OrgInventoryView({
       </div>
 
       {results.length === 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-900">No public repositories found</h3>
-          <p className="mt-2 text-sm text-slate-600">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:bg-slate-900 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No public repositories found</h3>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             RepoPulse did not find any public repositories for this organization.
           </p>
         </section>
@@ -143,7 +143,7 @@ export function OrgInventoryView({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`h-4 w-4 text-slate-500 transition-transform dark:text-slate-400 ${repoTableExpanded ? '' : '-rotate-90'}`}
+                className={`h-4 w-4 text-slate-500 transition-transform dark:text-slate-400 ${repoTableExpanded ? '' : '-rotate-90'} dark:text-slate-500 `}
               >
                 <path d="M4 6l4 4 4-4" />
               </svg>
@@ -153,7 +153,7 @@ export function OrgInventoryView({
             </button>
             {repoTableExpanded ? (
               <div className="space-y-4 px-3 pb-3">
-                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900">
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="flex-1 min-w-[140px]">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
@@ -198,7 +198,7 @@ export function OrgInventoryView({
                       <option value="archived">Archived</option>
                     </select>
                   </label>
-                  <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 dark:text-slate-200">
                     <label className="inline-flex items-center gap-1">
                       <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />
                       No archived
@@ -247,7 +247,7 @@ export function OrgInventoryView({
                       <button
                         type="button"
                         disabled={activeRunRepos.length === 0}
-                        className="rounded border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                        className="rounded border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 transition enabled:hover:border-sky-400 enabled:hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300 dark:bg-sky-900/20 dark:border-sky-700/70 dark:text-sky-200"
                         onClick={() => onAnalyzeAllActive(activeRunRepos)}
                       >
                         Analyze all ({activeRunRepos.length})
@@ -263,13 +263,13 @@ export function OrgInventoryView({
                     </button>
                   </div>
                 </div>
-                {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">{selectionError}</p> : null}
+                {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400 dark:text-amber-300">{selectionError}</p> : null}
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Showing {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}
                   </p>
-                  <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                  <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                     <span>Rows per page</span>
                     <select
                       aria-label="Rows per page"
@@ -278,7 +278,7 @@ export function OrgInventoryView({
                         setCurrentPage(1)
                         setPageSize(clampOrgInventoryPageSize(Number(event.target.value)))
                       }}
-                      className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+                      className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100"
                     >
                       {ORG_INVENTORY_CONFIG.pageSizeOptions.map((option) => (
                         <option key={option} value={option}>
@@ -327,8 +327,8 @@ export function OrgInventoryView({
                     </div>
                   ) : (
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">No matching repositories</h3>
-                      <p className="mt-2 text-sm text-slate-600">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No matching repositories</h3>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                         Try widening the repo, language, or archived filters to see more repositories.
                       </p>
                     </div>
@@ -352,8 +352,8 @@ export function OrgInventoryView({
                       onAnalyzeRepo={onAnalyzeRepo}
                     />
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-                      <p className="text-sm text-slate-600">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
+                      <p className="text-sm text-slate-600 dark:text-slate-300">
                         Page {safeCurrentPage} of {totalPages}
                       </p>
                       <div className="flex items-center gap-2">
@@ -361,7 +361,7 @@ export function OrgInventoryView({
                           type="button"
                           disabled={safeCurrentPage === 1}
                           onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
-                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
                         >
                           Previous
                         </button>
@@ -369,7 +369,7 @@ export function OrgInventoryView({
                           type="button"
                           disabled={safeCurrentPage === totalPages}
                           onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
-                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition enabled:hover:border-slate-400 enabled:hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
                         >
                           Next
                         </button>
@@ -383,7 +383,7 @@ export function OrgInventoryView({
         </>
       )}
       {rateLimit && isRateLimitLow(rateLimit) ? (
-        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
           <p>Remaining API calls: {formatDisplayValue(rateLimit.remaining)}</p>
           <p>Rate limit resets at: {formatRateLimitReset(rateLimit.resetAt)}</p>
           {rateLimit.retryAfter !== 'unavailable' ? <p>Retry after: {formatRetryAfter(rateLimit.retryAfter)}</p> : null}

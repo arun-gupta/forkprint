@@ -42,17 +42,17 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
   if (filtered.length === 0) return null
 
   return (
-    <section aria-label="OpenSSF Scorecard Checks" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">OpenSSF Scorecard Checks</h3>
+    <section aria-label="OpenSSF Scorecard Checks" className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">OpenSSF Scorecard Checks</h3>
       <div className="mt-3 space-y-1.5">
         {filtered.map((check) => {
           const tags = getAllScorecardTags(check.name)
           return (
             <div key={check.name}>
               <div className="grid grid-cols-[1fr_auto] gap-2">
-                <span className="text-sm text-slate-700">{check.name}</span>
+                <span className="text-sm text-slate-700 dark:text-slate-200">{check.name}</span>
                 {check.score === -1 ? (
-                  <span className="text-xs text-slate-400">indeterminate</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">indeterminate</span>
                 ) : (
                   <span className={`text-sm font-medium ${check.score >= 7 ? 'text-emerald-600' : check.score >= 4 ? 'text-amber-600' : 'text-red-500'}`}>
                     {check.score}/10
@@ -77,26 +77,26 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
   if (filtered.length === 0) return null
 
   return (
-    <section aria-label="Direct Security Checks" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Direct Security Checks</h3>
+    <section aria-label="Direct Security Checks" className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Direct Security Checks</h3>
       <ul className="mt-3 space-y-2">
         {filtered.map((check) => {
           const tags = getAllDirectCheckTags(check.name)
           return (
             <li key={check.name} className="flex items-start gap-2">
               {check.detected === 'unavailable' ? (
-                <span className="mt-0.5 text-sm text-slate-400">—</span>
+                <span className="mt-0.5 text-sm text-slate-400 dark:text-slate-500">—</span>
               ) : check.detected ? (
                 <span className="mt-0.5 text-sm text-emerald-600">✓</span>
               ) : (
                 <span className="mt-0.5 text-sm text-red-400">✗</span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-700">{DIRECT_CHECK_LABELS[check.name] ?? check.name}</p>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{DIRECT_CHECK_LABELS[check.name] ?? check.name}</p>
                 {check.details ? (
-                  <p className="text-xs text-slate-500">{check.details}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{check.details}</p>
                 ) : check.detected === 'unavailable' ? (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {check.name === 'branch_protection'
                       ? 'Requires admin access to the repository'
                       : 'Unavailable'}
@@ -131,17 +131,17 @@ function SecuritySummary({
         tone={score.tone}
       />
       <div className="min-w-0">
-        <p className="text-sm text-slate-500" data-testid="security-composite-score">
+        <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="security-composite-score">
           {typeof score.value === 'number'
             ? `${score.value}/100`
             : score.value}
         </p>
         {scorecardOverallScore !== null ? (
-          <p className="text-sm text-slate-500" data-testid="security-openssf-score">
+          <p className="text-sm text-slate-500 dark:text-slate-400" data-testid="security-openssf-score">
             OpenSSF Scorecard: {scorecardOverallScore}/10
           </p>
         ) : null}
-        <p className="text-xs text-slate-400" data-testid="security-mode">{modeLabel}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500" data-testid="security-mode">{modeLabel}</p>
       </div>
     </div>
   )
@@ -165,7 +165,7 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
         const isCollapsed = collapsed.has(result.repo)
         if (result.securityResult === 'unavailable') {
           return (
-            <div key={result.repo} className="rounded-xl border border-slate-200 bg-white p-6">
+            <div key={result.repo} className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
               <button
                 type="button"
                 onClick={() => setCollapsed((prev) => { const next = new Set(prev); if (next.has(result.repo)) next.delete(result.repo); else next.add(result.repo); return next })}
@@ -173,9 +173,9 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
                 aria-expanded={!isCollapsed}
               >
                 <CollapseChevron expanded={!isCollapsed} />
-                <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{result.repo}</h2>
               </button>
-              {!isCollapsed ? <p className="mt-2 text-sm text-slate-400">Security data unavailable.</p> : null}
+              {!isCollapsed ? <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">Security data unavailable.</p> : null}
             </div>
           )
         }
@@ -187,7 +187,7 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
           : null
 
         return (
-          <div key={result.repo} className="rounded-xl border border-slate-200 bg-white p-6">
+          <div key={result.repo} className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
             <button
               type="button"
               onClick={() => setCollapsed((prev) => { const next = new Set(prev); if (next.has(result.repo)) next.delete(result.repo); else next.add(result.repo); return next })}
@@ -195,7 +195,7 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
               aria-expanded={!isCollapsed}
             >
               <CollapseChevron expanded={!isCollapsed} />
-              <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{result.repo}</h2>
             </button>
             {!isCollapsed ? (
               <div className="mt-4">
@@ -215,9 +215,9 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
                       onTagClick={handleTagClick}
                     />
                   ) : !activeTag ? (
-                    <section aria-label="OpenSSF Scorecard" className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">OpenSSF Scorecard</h3>
-                      <p className="mt-3 text-sm text-slate-400">Scorecard data not available for this repository.</p>
+                    <section aria-label="OpenSSF Scorecard" className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                      <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">OpenSSF Scorecard</h3>
+                      <p className="mt-3 text-sm text-slate-400 dark:text-slate-500">Scorecard data not available for this repository.</p>
                     </section>
                   ) : null}
 

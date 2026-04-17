@@ -41,22 +41,22 @@ export function OrgInventoryTable({
       <table className="min-w-full border-separate border-spacing-y-2">
         <thead>
           <tr>
-            <th className="w-16 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Select</th>
+            <th className="w-16 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Select</th>
             {(['repo', ...visibleColumns] as OrgInventorySortColumn[]).map((column) => (
-              <th key={column} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+              <th key={column} className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <button type="button" className="inline-flex items-center gap-2" onClick={() => onToggleSort(column)}>
                   <span>{COLUMN_LABELS[column]}</span>
-                  {sortState.sortColumn === column ? <span className="text-[10px] text-slate-400">{sortState.sortDirection === 'asc' ? '↑' : '↓'}</span> : null}
+                  {sortState.sortColumn === column ? <span className="text-[10px] text-slate-400 dark:text-slate-500">{sortState.sortDirection === 'asc' ? '↑' : '↓'}</span> : null}
                 </button>
               </th>
             ))}
-            <th className="w-28 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Actions</th>
+            <th className="w-28 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
           </tr>
         </thead>
         <tbody>
           {results.map((result) => (
-            <tr key={result.repo} className="rounded-xl border border-slate-200 bg-slate-50">
-              <td className="rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            <tr key={result.repo} className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-800/60 dark:border-slate-700">
+              <td className="rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
                 <input
                   type="checkbox"
                   checked={selectedRepos.includes(result.repo)}
@@ -64,16 +64,16 @@ export function OrgInventoryTable({
                   aria-label={`Select ${result.repo}`}
                 />
               </td>
-              <th className="border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-medium text-slate-900">{result.repo}</th>
+              <th className="border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-left text-sm font-medium text-slate-900 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-100">{result.repo}</th>
               {visibleColumns.map((column) => (
-                <td key={`${result.repo}-${column}`} className="border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+                <td key={`${result.repo}-${column}`} className="border border-r-0 border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
                   {renderColumnValue(result, column)}
                 </td>
               ))}
-              <td className="rounded-r-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
+              <td className="rounded-r-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
                 <button
                   type="button"
-                  className="w-full whitespace-nowrap rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                  className="w-full whitespace-nowrap rounded border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200"
                   onClick={() => onAnalyzeRepo(result.repo)}
                   aria-label={`Analyze ${result.repo}`}
                 >

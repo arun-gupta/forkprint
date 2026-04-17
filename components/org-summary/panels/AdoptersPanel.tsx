@@ -31,11 +31,11 @@ export function AdoptersPanel({ panel }: Props) {
         </p>
       ) : (
         <div>
-          <p className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
             ADOPTERS.md found in <span className="font-medium">{panel.value.flagshipUsed}</span>
           </p>
           {panel.value.entries.length > 0 ? (
-            <ul className="mt-2 list-disc pl-5 text-sm text-slate-600 dark:text-slate-400">
+            <ul className="mt-2 list-disc pl-5 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-300">
               {panel.value.entries.map((entry, i) => (
                 <li key={i}>{entry}</li>
               ))}

@@ -99,7 +99,7 @@ function WindowSelector({
 }) {
   return (
     <div
-      className="inline-flex overflow-hidden rounded border border-slate-300 dark:border-slate-700"
+      className="inline-flex overflow-hidden rounded border border-slate-300 dark:border-slate-700 dark:border-slate-600"
       role="tablist"
       aria-label="Contributor diversity window"
     >
@@ -207,7 +207,7 @@ function CompositionBar({
         <span className="ml-1 text-slate-400 dark:text-slate-500">(last {windowDays} days)</span>
       </p>
       <div
-        className="mt-2 flex h-2 w-full overflow-hidden rounded bg-slate-200 dark:bg-slate-800"
+        className="mt-2 flex h-2 w-full overflow-hidden rounded bg-slate-200 dark:bg-slate-800 dark:bg-slate-700"
         role="img"
         aria-label={`Contributor composition: ${repeatContributors} repeat, ${oneTimeContributors} one-time, ${total} total over ${windowDays} days`}
       >
@@ -226,7 +226,7 @@ function CompositionBar({
           />
         ) : null}
       </div>
-      <ul className="mt-2 flex flex-wrap gap-3 text-xs text-slate-600 dark:text-slate-400">
+      <ul className="mt-2 flex flex-wrap gap-3 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-300">
         <LegendDot colorClass="bg-sky-600 dark:bg-sky-500" label={`Repeat ${repeatContributors}`} />
         <LegendDot colorClass="bg-sky-300 dark:bg-sky-700" label={`One-time ${oneTimeContributors}`} />
       </ul>

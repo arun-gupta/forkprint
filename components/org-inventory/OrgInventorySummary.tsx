@@ -90,14 +90,14 @@ function SummaryListCard({
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
       <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{title}</p>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{emptyLabel}</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-300">{emptyLabel}</p>
       ) : (
         <>
-          <ul className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+          <ul className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
             {visibleItems.map((item) => (
               <li key={`${title}-${item.label}`} className="flex items-center justify-between gap-3">
                 <span className="truncate text-slate-900 dark:text-slate-100">{item.label}</span>
-                <span className="shrink-0 text-slate-600 dark:text-slate-400">{item.value}</span>
+                <span className="shrink-0 text-slate-600 dark:text-slate-400 dark:text-slate-300">{item.value}</span>
               </li>
             ))}
           </ul>

@@ -19,7 +19,7 @@ export function DocumentationCoveragePanel({ panel }: Props) {
         <ul role="list" className="divide-y divide-slate-200 dark:divide-slate-700">
           {panel.value.perCheck.map((c) => (
             <li key={c.name} className="flex items-center justify-between gap-3 py-2">
-              <span className="text-sm text-slate-800 dark:text-slate-200 capitalize">{c.name.replace(/_/g, ' ')}</span>
+              <span className="text-sm text-slate-800 dark:text-slate-200 capitalize dark:text-slate-100">{c.name.replace(/_/g, ' ')}</span>
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div className="h-full bg-sky-600 dark:bg-sky-500" style={{ width: `${Math.min(c.presentInPercent, 100)}%` }} />

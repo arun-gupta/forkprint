@@ -50,7 +50,7 @@ function Body({ value }: { value: ReleaseCadenceValue }) {
           <ul role="list" className="mt-2 divide-y divide-slate-200 dark:divide-slate-700">
             {value.perFlagship.map((f) => (
               <li key={f.repo} className="flex items-center justify-between gap-3 py-2">
-                <span className="truncate text-sm text-slate-800 dark:text-slate-200">{f.repo}</span>
+                <span className="truncate text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">{f.repo}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   {f.releases12mo} releases
                 </span>

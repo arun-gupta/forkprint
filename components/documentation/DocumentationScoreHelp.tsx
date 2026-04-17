@@ -18,18 +18,18 @@ export function DocumentationScoreHelp({ score }: DocumentationScoreHelpProps) {
   ]
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:bg-slate-800/60 dark:border-slate-700">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">How is Documentation scored?</p>
-          <p className="mt-1 text-sm text-slate-700">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">How is Documentation scored?</p>
+          <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
             Composite of file presence (35%), README quality (30%), licensing compliance (25%), and inclusive naming (10%).
           </p>
         </div>
         <button
           type="button"
           onClick={() => setShowDetails((current) => !current)}
-          className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900"
+          className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-600 dark:text-slate-200"
           aria-pressed={showDetails}
         >
           {showDetails ? 'Hide details' : 'Show details'}
@@ -37,21 +37,21 @@ export function DocumentationScoreHelp({ score }: DocumentationScoreHelpProps) {
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {factors.map((factor) => (
-          <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700">
-            <span className="font-semibold text-slate-900">{factor.label}</span> <span>{factor.weight}</span>
-            <span className="ml-1 text-slate-500">({factor.value})</span>
+          <div key={factor.label} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200">
+            <span className="font-semibold text-slate-900 dark:text-slate-100">{factor.label}</span> <span>{factor.weight}</span>
+            <span className="ml-1 text-slate-500 dark:text-slate-400">({factor.value})</span>
           </div>
         ))}
       </div>
       {showDetails ? (
         <div className="mt-3 grid gap-2 md:grid-cols-1">
           {factors.map((factor) => (
-            <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3">
+            <div key={factor.label} className="rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{factor.label} ({factor.weight})</p>
-                <p className="text-sm font-semibold text-slate-900">{factor.value}</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{factor.label} ({factor.weight})</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{factor.value}</p>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-slate-600">{factor.description}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">{factor.description}</p>
             </div>
           ))}
         </div>

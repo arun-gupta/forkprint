@@ -92,7 +92,7 @@ export function ResultsShell({
   }, [domMatchCounts, domTotalMatches, domMatchedTabCount, onDomMatchCounts])
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 dark:bg-slate-800/60">
       <header className="w-full bg-sky-900 text-white dark:bg-slate-900">
         <div className="mx-auto flex max-w-5xl items-start justify-between gap-4 px-4 py-5">
           <div className="min-w-0">
@@ -197,7 +197,7 @@ export function ResultsShell({
 
       <div className="mx-auto max-w-5xl px-4 py-6">
         {isStale ? (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200" role="alert">
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/60" role="alert">
             Scores calibrated against GitHub data from {calibrationMeta.generated}. A more recent calibration is recommended.
           </div>
         ) : null}

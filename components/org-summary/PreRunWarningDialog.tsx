@@ -42,7 +42,7 @@ export function PreRunWarningDialog({ repoCount, onConfirm, onCancel }: PreRunWa
           Analyze {repoCount} repositories?
         </h2>
 
-        <div className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+        <div className="mt-3 space-y-2 text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
           <p>
             Estimated time: <strong>{estimateEta(repoCount, concurrency)}</strong>
           </p>
@@ -63,11 +63,11 @@ export function PreRunWarningDialog({ repoCount, onConfirm, onCancel }: PreRunWa
               value={concurrency}
               onChange={(e) => handleConcurrencyChange(e.target.value)}
               aria-label="Concurrency"
-              className="mt-1 w-20 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              className="mt-1 w-20 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:bg-slate-900"
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
             <input
               type="checkbox"
               checked={notificationOptIn}
@@ -85,7 +85,7 @@ export function PreRunWarningDialog({ repoCount, onConfirm, onCancel }: PreRunWa
           <button
             type="button"
             onClick={onCancel}
-            className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="rounded border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:bg-slate-900"
           >
             Cancel
           </button>

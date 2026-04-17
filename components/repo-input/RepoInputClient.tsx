@@ -389,33 +389,33 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     <div className="space-y-4">
       {isEmptyState && inputMode === 'repos' ? (
         <div className="space-y-3">
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
           {emptyQuote ? (
-            <p className="text-xs italic text-slate-400">
+            <p className="text-xs italic text-slate-400 dark:text-slate-500">
               &ldquo;{emptyQuote.text}&rdquo; — {emptyQuote.author}{emptyQuote.context ? `, ${emptyQuote.context}` : ''}
             </p>
           ) : null}
         </div>
       ) : null}
       {submissionError ? (
-        <p role="alert" data-testid="analysis-error" className="text-sm text-red-600">
+        <p role="alert" data-testid="analysis-error" className="text-sm text-red-600 dark:text-red-300">
           {submissionError}
         </p>
       ) : null}
       {loadingRepos.length > 0 && inputMode === 'repos' ? (
-        <section aria-label="Analysis loading state" className="rounded border border-blue-200 bg-blue-50 p-4">
+        <section aria-label="Analysis loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-blue-900">Analyzing repositories...</h2>
+            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing repositories...</h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-blue-700">{formatElapsedTime(elapsedSeconds)}</span>
+              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
               <button
                 type="button"
                 onClick={handleCancelRepoFetch}
                 aria-label="Cancel"
                 title="Cancel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                   <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
@@ -423,40 +423,40 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </button>
             </div>
           </div>
-          <ul className="mt-2 list-disc pl-5 text-sm text-blue-900">
+          <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
             {loadingRepos.map((repo) => (
               <li key={repo}>{repo}</li>
             ))}
           </ul>
           {elapsedSeconds >= 10 ? (
-            <p className="mt-3 text-xs text-blue-700">
+            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
               Large repositories with extensive commit history may take longer to analyze.
             </p>
           ) : null}
           {elapsedSeconds >= 30 ? (
-            <p className="mt-1 text-xs text-blue-700">
+            <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
               Still working — fetching commit history and computing contributor metrics.
             </p>
           ) : null}
           {currentQuote ? (
-            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600">
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
               &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
         </section>
       ) : null}
       {loadingOrg ? (
-        <section aria-label="Org inventory loading state" className="rounded border border-blue-200 bg-blue-50 p-4">
+        <section aria-label="Org inventory loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-blue-900">Loading org inventory for:</h2>
+            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Loading org inventory for:</h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-blue-700">{formatElapsedTime(elapsedSeconds)}</span>
+              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
               <button
                 type="button"
                 onClick={handleCancelOrgFetch}
                 aria-label="Cancel"
                 title="Cancel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                   <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
@@ -464,14 +464,14 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </button>
             </div>
           </div>
-          <p className="mt-2 text-sm text-blue-900">{loadingOrg}</p>
+          <p className="mt-2 text-sm text-blue-900 dark:text-blue-200">{loadingOrg}</p>
           {elapsedSeconds >= 10 ? (
-            <p className="mt-3 text-xs text-blue-700">
+            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
               Large organizations with many repositories may take longer to load.
             </p>
           ) : null}
           {currentQuote ? (
-            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600">
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
               &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
@@ -480,7 +480,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
           {orgInventoryResponse && orgAggregation.view ? (
-            <section className="flex items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+            <section className="flex items-center gap-3 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200 dark:bg-sky-900/20 dark:border-sky-800/60">
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 flex-shrink-0 text-sky-600 dark:text-sky-400">
                 <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clipRule="evenodd" />
               </svg>
@@ -491,9 +491,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           ) : null}
           <MetricCardsOverview results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
           {analysisResponse.failures.length > 0 ? (
-            <section className="rounded border border-amber-200 bg-amber-50 p-4">
-              <h2 className="font-semibold text-amber-900">Failed repositories</h2>
-              <ul className="mt-2 list-disc pl-5 text-sm text-amber-900">
+            <section className="rounded border border-amber-200 bg-amber-50 p-4 dark:bg-amber-900/20 dark:border-amber-800/60">
+              <h2 className="font-semibold text-amber-900 dark:text-amber-200">Failed repositories</h2>
+              <ul className="mt-2 list-disc pl-5 text-sm text-amber-900 dark:text-amber-200">
                 {analysisResponse.failures.map((failure) => (
                   <li key={failure.repo}>
                     {failure.repo}: {failure.reason}
@@ -503,7 +503,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             </section>
           ) : null}
           {analysisResponse.rateLimit && !orgInventoryResponse && isRateLimitLow(analysisResponse.rateLimit) ? (
-            <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+            <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
               <p>Remaining API calls: {formatDisplayValue(analysisResponse.rateLimit.remaining)}</p>
               <p>Rate limit resets at: {formatRateLimitReset(analysisResponse.rateLimit.resetAt)}</p>
               {analysisResponse.rateLimit.retryAfter !== 'unavailable' ? (
@@ -516,7 +516,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       {inputMode === 'org' && orgInventoryResponse ? (
         <section aria-label="Org inventory results" className="space-y-4">
           {orgInventoryResponse.failure ? (
-            <section className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <section className="rounded border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-900/20 dark:border-amber-800/60 dark:text-amber-200">
               <p>{orgInventoryResponse.failure.message}</p>
             </section>
           ) : (
@@ -561,8 +561,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         </section>
       ) : null}
       {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (
-        <section className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-          <h2 className="font-semibold text-slate-900">Organization inventory</h2>
+        <section className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100">Organization inventory</h2>
           <p className="mt-2">
             Enter a GitHub organization slug or org URL above to browse its public repository inventory.
           </p>
@@ -607,8 +607,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         ) : analysisResponse ? (
           <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -618,8 +618,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         ) : analysisResponse ? (
           <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -629,8 +629,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         ) : analysisResponse ? (
           <ResponsivenessView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -644,8 +644,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         ) : analysisResponse ? (
           <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -665,8 +665,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         ) : analysisResponse ? (
           <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -674,8 +674,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         analysisResponse ? (
           <RecommendationsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }
@@ -683,21 +683,21 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         analysisResponse && successfulRepoCount >= 2 ? (
           <ComparisonView results={analysisResponse.results} rateLimit={analysisResponse.rateLimit} />
         ) : loadingRepos.length >= 2 ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             {loadingRepos.length > 4
               ? <>Preparing comparison for the first 4 of {loadingRepos.length}:{' '}</>
               : <>Preparing comparison for{' '}</>}
             {loadingRepos.slice(0, 4).map((repo, i, arr) => (
               <span key={repo}>
-                <span className="font-medium text-slate-800">{repo}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-100">{repo}</span>
                 {i < arr.length - 1 ? ', ' : ''}
               </span>
             ))}
             …
           </p>
         ) : (
-          <p className="text-sm text-slate-500">
-            Enter 2 or more repositories and click <span className="font-medium text-slate-700">Analyze</span> to get started.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter 2 or more repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
       }

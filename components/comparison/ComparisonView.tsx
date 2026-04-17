@@ -63,13 +63,13 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
   }, [anchorRepo, comparedResults, enabledAttributes, enabledSections, sortColumn, sortDirection])
 
   if (results.length < 2) {
-    return <p className="text-sm text-slate-600">Compare two to four repositories to open the side-by-side comparison view.</p>
+    return <p className="text-sm text-slate-600 dark:text-slate-300">Compare two to four repositories to open the side-by-side comparison view.</p>
   }
 
   return (
     <section aria-label="Comparison view" className="space-y-6">
       {results.length > COMPARISON_MAX_REPOS ? (
-        <p className="text-sm text-amber-700">{getComparisonLimitMessage(results.length)}</p>
+        <p className="text-sm text-amber-700 dark:text-amber-300">{getComparisonLimitMessage(results.length)}</p>
       ) : null}
 
       <ComparisonControls
@@ -143,13 +143,13 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
           }}
         />
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300">
           No comparison rows are currently visible. Re-enable a section or attribute to continue.
         </div>
       )}
 
       {rateLimit && isRateLimitLow(rateLimit) ? (
-        <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+        <section className="rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
           <p>Remaining API calls: {rateLimit.remaining.toLocaleString('en-US')}</p>
           <p>Rate limit resets at: {new Date(rateLimit.resetAt).toLocaleTimeString()}</p>
         </section>

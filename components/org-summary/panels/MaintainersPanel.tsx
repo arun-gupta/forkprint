@@ -109,10 +109,10 @@ function MaintainerRow({
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-3 rounded px-1 -mx-1 hover:bg-slate-50 dark:hover:bg-slate-800"
       >
-        <span className="flex items-center gap-2 truncate text-sm text-slate-800 dark:text-slate-200">
+        <span className="flex items-center gap-2 truncate text-sm text-slate-800 dark:text-slate-200 dark:text-slate-100">
           <span className="truncate font-mono">{entry.token}</span>
           {entry.kind === 'team' ? (
-            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">
+            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 dark:text-sky-200">
               team
             </span>
           ) : null}
@@ -140,7 +140,7 @@ function MaintainerRow({
           </p>
           <ul className="space-y-1">
             {entry.reposListed.map((repo) => (
-              <li key={repo} className="text-xs text-slate-700 dark:text-slate-300 font-mono">
+              <li key={repo} className="text-xs text-slate-700 dark:text-slate-300 font-mono dark:text-slate-200">
                 {repo}
               </li>
             ))}

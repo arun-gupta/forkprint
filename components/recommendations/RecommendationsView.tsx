@@ -51,7 +51,7 @@ function getTagsForKey(key: string, isSecurityRec: boolean): string[] {
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
     <svg
-      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-0' : '-rotate-90'}`}
+      className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-0' : '-rotate-90'} dark:text-slate-500 dark:text-slate-400 `}
       viewBox="0 0 20 20"
       fill="currentColor"
     >
@@ -63,11 +63,11 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
 function SecurityRecommendationCard({ rec, referenceId, activeTag, onTagClick }: { rec: SecurityRecommendation; referenceId?: string; activeTag: string | null; onTagClick: (tag: string) => void }) {
   const tags = getTagsForKey(rec.item, true)
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <h4 className="text-sm font-semibold text-slate-900">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {referenceId ? (
-            <span className="mr-1.5 inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{referenceId}</span>
+            <span className="mr-1.5 inline-flex rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">{referenceId}</span>
           ) : null}
           {rec.title ?? rec.text}
         </h4>
@@ -80,19 +80,19 @@ function SecurityRecommendationCard({ rec, referenceId, activeTag, onTagClick }:
               {rec.riskLevel}
             </span>
           ) : null}
-          <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             {SOURCE_LABELS[rec.category] ?? rec.category}
           </span>
         </div>
       </div>
       {rec.evidence ? (
-        <p className="mt-1.5 text-xs text-slate-500">{rec.evidence}</p>
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{rec.evidence}</p>
       ) : null}
       {rec.explanation ? (
-        <p className="mt-2 text-sm text-slate-600">{rec.explanation}</p>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{rec.explanation}</p>
       ) : null}
       {rec.remediationHint ? (
-        <div className="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <div className="mt-2 rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
           {rec.remediationHint}
         </div>
       ) : null}
@@ -101,7 +101,7 @@ function SecurityRecommendationCard({ rec, referenceId, activeTag, onTagClick }:
           href={rec.docsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-2 inline-block text-xs text-blue-600 underline hover:text-blue-800"
+          className="mt-2 inline-block text-xs text-blue-600 underline hover:text-blue-800 dark:text-blue-400"
         >
           OpenSSF Scorecard docs
         </a>
@@ -156,7 +156,7 @@ function SecurityRecommendationsGroup({
     .map((cat) => ({ category: cat, entries: groups.get(cat.key)! }))
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:bg-slate-800/60 dark:border-slate-700">
       <button
         type="button"
         onClick={onToggle}
@@ -167,7 +167,7 @@ function SecurityRecommendationsGroup({
         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS.Security}`}>
           Security
         </span>
-        <span className="text-xs text-slate-400">{filtered.length} recommendation{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">{filtered.length} recommendation{filtered.length !== 1 ? 's' : ''}</span>
       </button>
       {expanded ? (
         <div className="mt-3 space-y-4">
@@ -182,8 +182,8 @@ function SecurityRecommendationsGroup({
                   aria-expanded={!collapsed}
                 >
                   <ChevronIcon expanded={!collapsed} />
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{category.label}</span>
-                  <span className="text-xs text-slate-400">{entries.length}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{category.label}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">{entries.length}</span>
                 </button>
                 {!collapsed ? (
                   <div className="space-y-2">
@@ -231,7 +231,7 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
         const totalCount = nonSecurityRecs.length + securityRecs.length
         if (totalCount === 0) {
           return (
-            <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-6 dark:bg-slate-900 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => setCollapsedRepos((prev) => { const next = new Set(prev); if (next.has(result.repo)) next.delete(result.repo); else next.add(result.repo); return next })}
@@ -239,9 +239,9 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                 aria-expanded={!isRepoCollapsed}
               >
                 <CollapseChevron expanded={!isRepoCollapsed} />
-                <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{result.repo}</h2>
               </button>
-              {!isRepoCollapsed ? <p className="mt-2 text-sm text-slate-500">No recommendations — this project scores well across all dimensions.</p> : null}
+              {!isRepoCollapsed ? <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">No recommendations — this project scores well across all dimensions.</p> : null}
             </div>
           )
         }
@@ -297,7 +297,7 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
         }
 
         return (
-          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div key={result.repo} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-900 dark:border-slate-700">
             <button
               type="button"
               onClick={() => setCollapsedRepos((prev) => { const next = new Set(prev); if (next.has(result.repo)) next.delete(result.repo); else next.add(result.repo); return next })}
@@ -305,12 +305,12 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
               aria-expanded={!isRepoCollapsed}
             >
               <CollapseChevron expanded={!isRepoCollapsed} />
-              <h2 className="text-lg font-semibold text-slate-900">{result.repo}</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{result.repo}</h2>
             </button>
             {!isRepoCollapsed ? (
               <div className="mt-4">
                 <div className="flex items-start justify-between">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {activeTag
                       ? `${filteredTotal} of ${totalCount} recommendation${totalCount !== 1 ? 's' : ''} matching "${activeTag}"`
                       : `${totalCount} recommendation${totalCount !== 1 ? 's' : ''} across ${bucketCount} dimension${bucketCount !== 1 ? 's' : ''}`}
@@ -318,7 +318,7 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                   <button
                     type="button"
                     onClick={handleToggleAll}
-                    className="shrink-0 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                    className="shrink-0 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
                   >
                     {allExpanded ? 'Collapse all' : 'Expand all'}
                   </button>
@@ -331,14 +331,14 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                 ) : null}
 
                 {filteredTotal === 0 && activeTag ? (
-                  <p className="mt-4 text-center text-sm text-slate-400">No recommendations match the &ldquo;{activeTag}&rdquo; tag.</p>
+                  <p className="mt-4 text-center text-sm text-slate-400 dark:text-slate-500">No recommendations match the &ldquo;{activeTag}&rdquo; tag.</p>
                 ) : null}
 
                 <div className="mt-4 space-y-4">
               {Array.from(bucketGroups.entries()).map(([bucket, recs]) => {
                 const isExpanded = !collapsedBuckets[bucket]
                 return (
-                  <div key={bucket} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div key={bucket} className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:bg-slate-800/60 dark:border-slate-700">
                     <button
                       type="button"
                       onClick={() => setCollapsedBuckets((prev) => ({ ...prev, [bucket]: !prev[bucket] }))}
@@ -346,18 +346,18 @@ export function RecommendationsView({ results, activeTag: externalTag, onTagChan
                       aria-expanded={isExpanded}
                     >
                       <ChevronIcon expanded={isExpanded} />
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS[bucket] ?? 'bg-slate-100 text-slate-800'}`}>
+                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${BUCKET_COLORS[bucket] ?? 'bg-slate-100 text-slate-800'} dark:bg-slate-800 dark:text-slate-100 `}>
                         {bucket}
                       </span>
-                      <span className="text-xs text-slate-400">{recs.length} recommendation{recs.length !== 1 ? 's' : ''}</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">{recs.length} recommendation{recs.length !== 1 ? 's' : ''}</span>
                     </button>
                     {isExpanded ? (
                       <ul className="mt-3 space-y-2">
                         {recs.map((rec, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500">{rec.referenceId}</span>
+                            <span className="shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-xs font-mono font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">{rec.referenceId}</span>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm text-slate-700">{rec.message}</p>
+                              <p className="text-sm text-slate-700 dark:text-slate-200">{rec.message}</p>
                               {rec.tags.length > 0 && (
                                 <div className="mt-1.5 flex flex-wrap gap-1">
                                   {rec.tags.map((tag) => (

@@ -21,7 +21,7 @@ export function OrgWindowSelector({ selected, onChange }: Props) {
     <div className="flex items-center gap-2">
       <span className="text-xs text-slate-500 dark:text-slate-400">Time window:</span>
       <div
-        className="inline-flex overflow-hidden rounded border border-slate-300 dark:border-slate-700"
+        className="inline-flex overflow-hidden rounded border border-slate-300 dark:border-slate-700 dark:border-slate-600"
         role="tablist"
         aria-label="Analysis time window"
       >

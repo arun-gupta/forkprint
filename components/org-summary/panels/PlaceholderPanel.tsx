@@ -19,7 +19,7 @@ export function PlaceholderPanel({ panelId, label, panel }: Props) {
     <section
       aria-label={label}
       data-panel-id={panelId}
-      className="rounded-lg border border-dashed border-slate-300 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+      className="rounded-lg border border-dashed border-slate-300 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:border-slate-600"
     >
       <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{label}</h3>

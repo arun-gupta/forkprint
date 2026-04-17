@@ -20,20 +20,20 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
   const [showChart, setShowChart] = useState(true)
 
   return (
-    <section aria-label="Core contributors pane" className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <section aria-label="Core contributors pane" className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:bg-slate-800/60 dark:border-slate-700">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900">Core</h3>
-        <p className="mt-1 text-sm text-slate-600">{`Contributor metrics from verified public data for the last ${windowDays} days.`}</p>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">Core</h3>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{`Contributor metrics from verified public data for the last ${windowDays} days.`}</p>
       </div>
       <dl className="grid gap-3">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3">
-            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
               <HelpLabel label={metric.label} helpText={metric.hoverText} />
             </dt>
-            {metric.secondaryValue ? <p className="mt-1 text-xs text-slate-500">{metric.secondaryValue}</p> : null}
-            <dd className="mt-1 text-base font-semibold text-slate-900">{metric.value}</dd>
-            {metric.supportingText ? <p className="mt-1 text-xs text-slate-500">{metric.supportingText}</p> : null}
+            {metric.secondaryValue ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.secondaryValue}</p> : null}
+            <dd className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{metric.value}</dd>
+            {metric.supportingText ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{metric.supportingText}</p> : null}
             {metric.breakdown ? (
               (() => {
                 const segments = metric.breakdown.segments
@@ -44,7 +44,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
 
                 return (
                   <div className="mt-3 space-y-1">
-                    <div className="h-2 overflow-hidden rounded-full bg-cyan-100">
+                    <div className="h-2 overflow-hidden rounded-full bg-cyan-100 dark:bg-cyan-900/40">
                       <div className="flex h-full w-full overflow-hidden rounded-full">
                         {segments.map((segment) => (
                           <div
@@ -63,7 +63,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
                         ))}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400">
                       {segments.map((segment) => (
                         <span key={segment.label}>{`${segment.label} ${segment.value}`}</span>
                       ))}
@@ -95,7 +95,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
                 <button
                   type="button"
                   onClick={onToggleIncludeBots}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto dark:border-slate-600 dark:text-slate-200"
                   aria-pressed={includeBots}
                 >
                   {includeBots ? 'Exclude bots from chart' : 'Include bots in chart'}
@@ -103,7 +103,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
                 <button
                   type="button"
                   onClick={() => setShowNames((current) => !current)}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto dark:border-slate-600 dark:text-slate-200"
                   aria-pressed={showNames}
                 >
                   {showNames ? 'Hide names' : 'Show names'}
@@ -111,7 +111,7 @@ export function CoreContributorsPane({ metrics, heatmap, windowDays, includeBots
                 <button
                   type="button"
                   onClick={() => setShowNumbers((current) => !current)}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto"
+                  className="rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 sm:w-auto dark:border-slate-600 dark:text-slate-200"
                   aria-pressed={showNumbers}
                 >
                   {showNumbers ? 'Hide numbers' : 'Show numbers'}
