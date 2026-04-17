@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAuth } from '@/components/auth/AuthContext'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
 import { useStaleAdmins, type OwnerType } from '@/components/shared/hooks/useStaleAdmins'
@@ -83,6 +84,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
 
   const section = hasOverride ? sectionOverride : hookState.section
   const loading = loadingOverride ?? (hasOverride ? false : hookState.loading)
+  const [expanded, setExpanded] = useState(true)
 
   return (
     <section
@@ -90,27 +92,75 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       data-testid="stale-admins-panel"
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Org admin activity
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Stale admin detection — an inactive admin is a privilege-escalation risk.
-          </p>
+      <header className={`flex flex-wrap items-start justify-between gap-2 ${expanded ? 'mb-3' : ''}`}>
+        <div className="flex min-w-0 items-start gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse Org admin activity' : 'Expand Org admin activity'}
+            aria-expanded={expanded}
+            title={expanded ? 'Collapse' : 'Expand'}
+            data-testid="stale-admins-panel-toggle"
+            className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <PanelChevron expanded={expanded} />
+          </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Org admin activity
+              </h3>
+              <ScoringHelp section={section} />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Stale admin detection — an inactive admin is a privilege-escalation risk.
+            </p>
+          </div>
         </div>
         {section ? <ModeBadge mode={section.mode} /> : null}
       </header>
 
-      {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
-
-      {!loading && section ? <SectionBody section={section} /> : null}
-
-      <details className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-        <summary className="cursor-pointer select-none">How is this scored?</summary>
-        <ThresholdDisclosure section={section} />
-      </details>
+      {expanded ? (
+        <>
+          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
+          {!loading && section ? <SectionBody section={section} /> : null}
+        </>
+      ) : null}
     </section>
+  )
+}
+
+function PanelChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  )
+}
+
+function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
+  return (
+    <details className="relative" data-testid="stale-admins-scoring-help">
+      <summary
+        aria-label="How is this scored?"
+        className="inline-flex h-4 w-4 cursor-pointer select-none items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 list-none hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200 [&::-webkit-details-marker]:hidden"
+      >
+        ?
+      </summary>
+      <div className="absolute left-0 top-6 z-10 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <p className="mb-1 font-medium text-slate-700 dark:text-slate-200">How is this scored?</p>
+        <ThresholdDisclosure section={section} />
+      </div>
+    </details>
   )
 }
 
@@ -141,12 +191,10 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
     )
   }
 
-  const counts = countByClassification(section.admins)
   const grouped = groupByClassification(section.admins)
 
   return (
-    <div className="space-y-3">
-      <CountStrip counts={counts} total={section.admins.length} />
+    <div className="space-y-2">
       {GROUP_ORDER.filter((c) => grouped[c].length > 0).map((classification) => (
         <GroupSection
           key={classification}
@@ -156,48 +204,6 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
         />
       ))}
     </div>
-  )
-}
-
-function CountStrip({
-  counts,
-  total,
-}: {
-  counts: Record<StaleAdminClassification, number>
-  total: number
-}) {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-800"
-      data-testid="stale-admins-count-strip"
-      aria-label={`Admin summary — ${total} admins`}
-    >
-      <span className="font-medium text-slate-700 dark:text-slate-200">{total} admin{total === 1 ? '' : 's'}</span>
-      <span className="text-slate-300 dark:text-slate-600">·</span>
-      {GROUP_ORDER.map((c) => (
-        <CountPill key={c} classification={c} count={counts[c]} />
-      ))}
-    </div>
-  )
-}
-
-function CountPill({
-  classification,
-  count,
-}: {
-  classification: StaleAdminClassification
-  count: number
-}) {
-  const config = GROUP_CONFIG[classification]
-  const dim = count === 0
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${config.pillClassName} ${dim ? 'opacity-40' : ''}`}
-      data-testid={`stale-admins-count-${classification}`}
-    >
-      <span aria-hidden="true">{config.icon}</span>
-      {count} {config.label.toLowerCase()}
-    </span>
   )
 }
 
@@ -214,20 +220,21 @@ function GroupSection({
   return (
     <details
       open={defaultOpen}
-      className={`rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
       data-testid={`stale-admins-group-${classification}`}
     >
       <summary
-        className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100"
+        className="flex cursor-pointer select-none items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-800 list-none dark:text-slate-100 [&::-webkit-details-marker]:hidden"
         aria-label={config.groupAriaLabel}
       >
+        <GroupChevron />
         <span aria-hidden="true">{config.icon}</span>
         <span>{config.label}</span>
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${config.pillClassName}`}>
           {admins.length}
         </span>
       </summary>
-      <ul role="list" className="divide-y divide-slate-200 px-3 pb-2 dark:divide-slate-700">
+      <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
         {admins.map((admin) => (
           <AdminRow key={admin.username} admin={admin} />
         ))}
@@ -236,10 +243,28 @@ function GroupSection({
   )
 }
 
+function GroupChevron() {
+  return (
+    <svg
+      aria-hidden="true"
+      data-testid="group-chevron"
+      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  )
+}
+
 function AdminRow({ admin }: { admin: StaleAdminRecord }) {
   return (
     <li
-      className="flex flex-wrap items-baseline justify-between gap-2 py-1.5"
+      className="flex flex-wrap items-baseline justify-between gap-2 py-1"
       data-testid={`stale-admin-row-${admin.classification}`}
     >
       <a
@@ -258,10 +283,19 @@ function AdminRow({ admin }: { admin: StaleAdminRecord }) {
 function RowDetail({ admin }: { admin: StaleAdminRecord }) {
   if (admin.lastActivityAt) {
     return (
-      <span className="text-xs text-slate-500 dark:text-slate-400">
-        Last public activity: {admin.lastActivityAt.slice(0, 10)} ({formatRelative(admin.lastActivityAt)})
+      <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+        <span>
+          Last public activity: {admin.lastActivityAt.slice(0, 10)} ({formatRelative(admin.lastActivityAt)})
+        </span>
         {admin.lastActivitySource === 'org-commit-search' ? (
-          <span className="ml-1 text-slate-400">(commit search)</span>
+          <span
+            aria-label="Activity inferred from org commit search"
+            title="Activity inferred from org commit search"
+            className="inline-flex h-3.5 w-3.5 shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] text-slate-400 dark:border-slate-600 dark:text-slate-500"
+            data-testid="stale-admin-commit-search-badge"
+          >
+            c
+          </span>
         ) : null}
       </span>
     )
@@ -344,17 +378,6 @@ function formatRelative(iso: string | null): string {
   if (days < 30) return `${days} days ago`
   if (days < 365) return `${Math.floor(days / 30)} months ago`
   return `${Math.floor(days / 365)} years ago`
-}
-
-function countByClassification(admins: StaleAdminRecord[]): Record<StaleAdminClassification, number> {
-  const counts: Record<StaleAdminClassification, number> = {
-    active: 0,
-    stale: 0,
-    'no-public-activity': 0,
-    unavailable: 0,
-  }
-  for (const a of admins) counts[a.classification]++
-  return counts
 }
 
 function groupByClassification(

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { LicenseConsistencyValue } from '@/lib/org-aggregation/aggregators/types'
 import { EmptyState } from '../EmptyState'
@@ -36,28 +37,61 @@ const GROUP_CONFIG: Record<
 }
 
 export function LicenseConsistencyPanel({ panel }: Props) {
+  const [expanded, setExpanded] = useState(true)
   return (
     <section
       aria-label="License consistency"
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       data-testid="license-consistency-panel"
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">License consistency</h3>
+      <header className={`flex flex-wrap items-center justify-between gap-2 ${expanded ? 'mb-3' : ''}`}>
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse License consistency' : 'Expand License consistency'}
+            aria-expanded={expanded}
+            title={expanded ? 'Collapse' : 'Expand'}
+            data-testid="license-consistency-panel-toggle"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <PanelChevron expanded={expanded} />
+          </button>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">License consistency</h3>
+        </div>
         {panel.lastUpdatedAt ? (
           <span className="text-xs text-slate-400 dark:text-slate-500">
             updated {panel.lastUpdatedAt.toLocaleTimeString()}
           </span>
         ) : null}
       </header>
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No licensing data available.</p>
-      ) : (
-        <PanelBody value={panel.value} contributingReposCount={panel.contributingReposCount} totalReposInRun={panel.totalReposInRun} />
-      )}
+      {expanded ? (
+        panel.status === 'in-progress' && !panel.value ? (
+          <EmptyState />
+        ) : panel.status === 'unavailable' || !panel.value ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">No licensing data available.</p>
+        ) : (
+          <PanelBody value={panel.value} contributingReposCount={panel.contributingReposCount} totalReposInRun={panel.totalReposInRun} />
+        )
+      ) : null}
     </section>
+  )
+}
+
+function PanelChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
   )
 }
 
@@ -122,25 +156,44 @@ function GroupSection({
   return (
     <details
       open={defaultOpen}
-      className={`rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
       data-testid={`license-consistency-group-${classification}`}
     >
       <summary
-        className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100"
+        className="flex cursor-pointer select-none items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-800 list-none dark:text-slate-100 [&::-webkit-details-marker]:hidden"
         aria-label={config.groupAriaLabel}
       >
+        <GroupChevron />
         <span aria-hidden="true">{config.icon}</span>
         <span>{config.label}</span>
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${config.pillClassName}`}>
           {count}
         </span>
       </summary>
-      <ul role="list" className="divide-y divide-slate-200 px-3 pb-2 dark:divide-slate-700">
+      <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
         {repos.map((r) => (
           <RepoRow key={r.repo} repo={r.repo} spdxId={r.spdxId} classification={classification} />
         ))}
       </ul>
     </details>
+  )
+}
+
+function GroupChevron() {
+  return (
+    <svg
+      aria-hidden="true"
+      data-testid="group-chevron"
+      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+        clipRule="evenodd"
+      />
+    </svg>
   )
 }
 
@@ -155,7 +208,7 @@ function RepoRow({
 }) {
   return (
     <li
-      className="flex flex-wrap items-baseline justify-between gap-2 py-1.5"
+      className="flex flex-wrap items-baseline justify-between gap-2 py-1"
       data-testid={`license-consistency-row-${classification}`}
     >
       <a
