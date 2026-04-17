@@ -91,6 +91,41 @@ describe('OrgBucketContent — StaleAdminsPanel migration (#303)', () => {
   })
 })
 
+describe('OrgBucketContent — TwoFactorEnforcementPanel wiring (#286)', () => {
+  it('does NOT render TwoFactorEnforcementPanel when bucketId is documentation', () => {
+    renderWithSession(<OrgBucketContent bucketId="documentation" view={emptyView()} org="acme" />)
+    expect(screen.queryByTestId('two-factor-panel')).not.toBeInTheDocument()
+  })
+
+  it('renders TwoFactorEnforcementPanel when bucketId is governance and ownerType is Organization', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org="acme" />)
+    expect(screen.getByTestId('two-factor-panel')).toBeInTheDocument()
+  })
+
+  it('renders TwoFactorEnforcementPanel even when ownerType is User (org=null) — its own N/A rendering is its responsibility', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org={null} />)
+    expect(screen.getByTestId('two-factor-panel')).toBeInTheDocument()
+  })
+
+  it('does NOT render TwoFactorEnforcementPanel under any non-governance bucket', () => {
+    for (const bucketId of ['contributors', 'activity', 'responsiveness', 'documentation', 'security'] as const) {
+      const { unmount } = renderWithSession(<OrgBucketContent bucketId={bucketId} view={emptyView()} org="acme" />)
+      expect(screen.queryByTestId('two-factor-panel')).not.toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  it('renders TwoFactorEnforcementPanel BEFORE StaleAdminsPanel so both org-level signals sit at the top of Governance', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org="acme" />)
+
+    const twoFactorNode = screen.getByTestId('two-factor-panel')
+    const staleAdminsNode = screen.getByTestId('stale-admins-panel')
+
+    const positionRelation = twoFactorNode.compareDocumentPosition(staleAdminsNode)
+    expect(positionRelation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
 describe('OrgBucketContent — risk-first panel order in Governance (#303 US3)', () => {
   it('renders StaleAdminsPanel BEFORE registry-driven panels', () => {
     renderWithSession(<OrgBucketContent bucketId="governance" view={viewWithGovernancePanels()} org="acme" />)

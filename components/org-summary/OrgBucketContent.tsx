@@ -4,6 +4,7 @@ import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { PANEL_BUCKETS, isRealPanel, renderPanel, type PanelBucketId } from './panels/registry'
 import { StaleAdminsPanel } from './panels/StaleAdminsPanel'
+import { TwoFactorEnforcementPanel } from './panels/TwoFactorEnforcementPanel'
 
 interface Props {
   bucketId: PanelBucketId
@@ -24,7 +25,10 @@ export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props)
 
   const extraPanels =
     bucketId === 'governance' ? (
-      <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+      <>
+        <TwoFactorEnforcementPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+        <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+      </>
     ) : null
 
   if (bucketPanels.length === 0 && !extraPanels) {

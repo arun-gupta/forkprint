@@ -191,6 +191,41 @@ export async function fetchOrgAdmins(token: string, org: string): Promise<OrgAdm
   return { kind: 'ok', admins }
 }
 
+export type OrgTwoFactorRequirementResult =
+  | { kind: 'ok'; twoFactorRequirementEnabled: boolean | null }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'not-found' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgTwoFactorRequirement(
+  token: string,
+  org: string,
+): Promise<OrgTwoFactorRequirementResult> {
+  try {
+    const response = await fetch(`https://api.github.com/orgs/${encodeURIComponent(org)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    })
+
+    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+    if (response.status === 401) return { kind: 'auth-failed' }
+    if (response.status === 404) return { kind: 'not-found' }
+    if (!response.ok) return { kind: 'unknown' }
+
+    const payload = (await response.json()) as { two_factor_requirement_enabled?: unknown }
+    const raw = payload?.two_factor_requirement_enabled
+    const value: boolean | null = raw === true ? true : raw === false ? false : null
+    return { kind: 'ok', twoFactorRequirementEnabled: value }
+  } catch {
+    return { kind: 'network' }
+  }
+}
+
 export type UserPublicEventsResult =
   | { kind: 'ok'; lastActivityAt: string | null }
   | { kind: 'admin-account-404' }
