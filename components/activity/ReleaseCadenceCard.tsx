@@ -31,11 +31,11 @@ export function ReleaseCadenceCard({ result, activeTag, onTagClick }: ReleaseCad
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Release cadence</p>
         <TagPill tag="release-health" active={activeTag === 'release-health'} onClick={onTagClick} />
       </div>
-      <dl className="mt-2 grid grid-cols-1 gap-1 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-3">
+      <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-700 dark:text-slate-200">
         <Row label="Frequency" value={formatFrequency(rh === 'unavailable' ? 'unavailable' : rh.releaseFrequency)} />
         <Row label="Last release" value={formatRecency(rh === 'unavailable' ? 'unavailable' : rh.daysSinceLastRelease)} />
         <Row label="Pre-releases" value={formatRatio(rh === 'unavailable' ? 'unavailable' : rh.preReleaseRatio)} />
-      </dl>
+      </div>
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
         Release cadence reflects how actively the project ships. Pre-release usage is informational only.
       </p>
@@ -45,9 +45,9 @@ export function ReleaseCadenceCard({ result, activeTag, onTagClick }: ReleaseCad
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+    <div className="min-w-[6rem]">
+      <p className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
+      <p className="font-medium">{value}</p>
     </div>
   )
 }

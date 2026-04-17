@@ -26,7 +26,7 @@ describe('detectReleaseHealth', () => {
     expect(result).toBe('unavailable')
   })
 
-  it('emits per-field unavailable when totalReleasesAnalyzed is 0 but tags exist', () => {
+  it('emits per-field unavailable when totalReleasesAnalyzed is 0 (no releases to score against)', () => {
     const result = detectReleaseHealth({
       releases: [],
       totalReleasesAllTime: 0,
@@ -41,7 +41,10 @@ describe('detectReleaseHealth', () => {
     expect(result.semverComplianceRatio).toBe('unavailable')
     expect(result.releaseNotesQualityRatio).toBe('unavailable')
     expect(result.preReleaseRatio).toBe('unavailable')
-    expect(result.tagToReleaseRatio).toBe(1) // 5 tags, 0 releases → 5/5
+    // No releases means tag-promotion is unmeasurable — Constitution §II
+    // forbids inferring 0 here since that would falsely flag the signal
+    // as "present" in completeness.
+    expect(result.tagToReleaseRatio).toBe('unavailable')
     expect(result.versioningScheme).toBe('unavailable')
   })
 

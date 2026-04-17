@@ -51,8 +51,11 @@ export function detectReleaseHealth(input: DetectReleaseHealthInput): ReleaseHea
 
   const tagToReleaseRatio: number | Unavailable = totalTags === 'unavailable'
     ? 'unavailable'
-    : totalTags <= 0
-      ? 0
+    : totalReleasesAllTime === 0 || totalTags === 0
+      // Nothing to compare against — a repo with no releases (or no tags)
+      // has no promotion signal to measure, per Constitution §II (no
+      // estimation). Emitting 0 here would falsely classify as "present".
+      ? 'unavailable'
       : Math.max(0, totalTags - totalReleasesAllTime) / totalTags
 
   const versioningScheme = releases.length === 0
