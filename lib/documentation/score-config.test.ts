@@ -102,6 +102,43 @@ describe('documentation/score-config', () => {
       expect(items).not.toContain('license')
     })
 
+    it('emits a concrete governance recommendation with non-zero weight when GOVERNANCE.md is missing', () => {
+      const score = getDocumentationScore(buildDocResult({
+        fileChecks: [
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: true, path: 'CONTRIBUTING.md' },
+          { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md' },
+          { name: 'security', found: true, path: 'SECURITY.md' },
+          { name: 'changelog', found: true, path: 'CHANGELOG.md' },
+          { name: 'governance', found: false, path: null },
+        ],
+      }), fullLicensing, 1000)
+
+      const governanceRec = score.recommendations.find((r) => r.category === 'file' && r.item === 'governance')
+      expect(governanceRec).toBeDefined()
+      expect(governanceRec!.text).toContain('GOVERNANCE.md')
+      expect(governanceRec!.text).not.toBe('Add governance')
+      expect(governanceRec!.weight).toBeGreaterThan(0)
+    })
+
+    it('suppresses the governance recommendation when GOVERNANCE.md is present', () => {
+      const score = getDocumentationScore(buildDocResult({
+        fileChecks: [
+          { name: 'readme', found: true, path: 'README.md' },
+          { name: 'license', found: true, path: 'LICENSE' },
+          { name: 'contributing', found: true, path: 'CONTRIBUTING.md' },
+          { name: 'code_of_conduct', found: true, path: 'CODE_OF_CONDUCT.md' },
+          { name: 'security', found: true, path: 'SECURITY.md' },
+          { name: 'changelog', found: true, path: 'CHANGELOG.md' },
+          { name: 'governance', found: true, path: 'GOVERNANCE.md' },
+        ],
+      }), fullLicensing, 1000)
+
+      const governanceRec = score.recommendations.find((r) => r.category === 'file' && r.item === 'governance')
+      expect(governanceRec).toBeUndefined()
+    })
+
     it('generates recommendations for each missing README section', () => {
       const score = getDocumentationScore(buildDocResult({
         readmeSections: [

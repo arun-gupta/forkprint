@@ -112,6 +112,7 @@ const DOC: CatalogEntry[] = [
   // Community templates
   { id: 'DOC-15', bucket: 'Documentation', key: 'file:issue_templates', title: 'Add an issue template in .github/ISSUE_TEMPLATE/', tags: ['community', 'contrib-ex'] },
   { id: 'DOC-16', bucket: 'Documentation', key: 'file:pull_request_template', title: 'Add a PULL_REQUEST_TEMPLATE.md', tags: ['community', 'contrib-ex'] },
+  { id: 'DOC-17', bucket: 'Documentation', key: 'file:governance', title: 'Add GOVERNANCE.md', tags: ['governance', 'community', 'quick-win'] },
 ]
 
 // ── Combined catalog ──────────────────────────────────────────────────
