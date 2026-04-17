@@ -98,6 +98,99 @@ async function setupAnalyzed(page: Page) {
   await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible()
 }
 
+test.describe('#340 theme toggle exposes System option', () => {
+  test.describe('with prefers-color-scheme: dark', () => {
+    test.use({ colorScheme: 'dark' })
+
+    test('fresh load (no localStorage) → app is dark, toggle is in System mode', async ({ page }) => {
+      await page.goto('/baseline')
+      await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/)
+
+      const toggle = page.getByTestId('theme-toggle')
+      await expect(toggle).toBeVisible()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: System (dark)')
+
+      const stored = await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))
+      expect(stored).toBeNull()
+    })
+
+    test('cycle system → light → dark → system updates storage and resolved theme', async ({ page }) => {
+      await page.goto('/baseline')
+      const toggle = page.getByTestId('theme-toggle')
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+
+      // system → light
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'light')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: Light')
+      await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBe('light')
+
+      // light → dark
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'dark')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: Dark')
+      await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/)
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBe('dark')
+
+      // dark → system: localStorage cleared, app follows OS (dark)
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: System (dark)')
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBeNull()
+      await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/)
+    })
+
+    test('user picks Light → effective theme stays light across reload even when OS prefers dark', async ({ page }) => {
+      await page.goto('/baseline')
+      const toggle = page.getByTestId('theme-toggle')
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'light')
+      await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBe('light')
+
+      // Persists across reload: html class is correct pre-hydration (themeInitScript handles it).
+      await page.reload()
+      await page.waitForLoadState('domcontentloaded')
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBe('light')
+      await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
+    })
+
+    test('user picks System → repopulse-theme is removed and app follows OS (dark)', async ({ page }) => {
+      // Start from an explicit "light" choice so selecting System is a distinct transition.
+      await page.addInitScript(() => { try { window.localStorage.setItem('repopulse-theme', 'light') } catch {} })
+      await page.goto('/baseline')
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBe('light')
+
+      // Click twice: light → dark → system. (Hydration leaves the toggle attr stale until first
+      // interaction, but React state is seeded from localStorage, so two clicks advance light → system.)
+      const toggle = page.getByTestId('theme-toggle')
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'dark')
+      await toggle.click()
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: System (dark)')
+
+      expect(await page.evaluate(() => window.localStorage.getItem('repopulse-theme'))).toBeNull()
+      await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/)
+    })
+  })
+
+  test.describe('with prefers-color-scheme: light', () => {
+    test.use({ colorScheme: 'light' })
+
+    test('fresh load with OS-light → app is light, aria-label reads "Theme: System (light)"', async ({ page }) => {
+      await page.goto('/baseline')
+      await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
+      const toggle = page.getByTestId('theme-toggle')
+      await expect(toggle).toHaveAttribute('data-theme-choice', 'system')
+      await expect(toggle).toHaveAttribute('aria-label', 'Theme: System (light)')
+    })
+  })
+})
+
 test.describe('#326 dark mode surfaces', () => {
   test('Overview top-bar controls render on dark surfaces', async ({ page }) => {
     await setupAnalyzed(page)
