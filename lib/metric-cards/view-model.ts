@@ -118,13 +118,22 @@ function buildLensReadouts(result: AnalysisResult): LensReadout[] {
     })
   }
 
-  const releaseHealth = computeReleaseHealthCompleteness(result)
-  if (releaseHealth.ratio !== null) {
+  // Release Health lens renders even when ratio is null, so users can see
+  // the analyzer evaluated the signals (and that there was nothing verifiable
+  // to score). Hiding the readout would falsely suggest the lens doesn't
+  // apply to this repo.
+  if (result.releaseHealthResult !== undefined) {
+    const releaseHealth = computeReleaseHealthCompleteness(result)
+    const hasData = releaseHealth.ratio !== null
     lenses.push({
       key: 'release-health',
       label: 'Release Health',
-      percentileLabel: releaseHealth.percentile !== null ? `${releaseHealth.percentile}th percentile` : '—',
-      detail: `${releaseHealth.present.length} of ${releaseHealth.present.length + releaseHealth.missing.length} signals`,
+      percentileLabel: hasData && releaseHealth.percentile !== null
+        ? `${releaseHealth.percentile}th percentile`
+        : 'Insufficient verified public data',
+      detail: hasData
+        ? `${releaseHealth.present.length} of ${releaseHealth.present.length + releaseHealth.missing.length} signals`
+        : 'No verified release-health signals',
       tooltip: 'Release Health is a cross-cutting lens — count of release-health signals present (release frequency, time since last release, semver compliance, release notes quality, tag-to-release promotion). Linear fallback until per-bracket calibration lands in #152. Does not feed the composite OSS Health Score.',
       tone: releaseHealth.tone,
     })
