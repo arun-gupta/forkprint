@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { StaleAdminsPanel } from './StaleAdminsPanel'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
@@ -86,9 +86,6 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     })
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
 
-    // Standalone count strip is removed; per-group pills carry the counts.
-    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
-
     const staleSummary = screen.getByTestId('stale-admins-group-stale').querySelector('summary')!
     const activeSummary = screen.getByTestId('stale-admins-group-active').querySelector('summary')!
     const noActivitySummary = screen
@@ -102,6 +99,55 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     expect(within(activeSummary).getByText('2')).toBeInTheDocument()
     expect(within(noActivitySummary).getByText('1')).toBeInTheDocument()
     expect(within(unavailableSummary).getByText('1')).toBeInTheDocument()
+  })
+
+  it('renders a header summary strip with totals across all classifications', () => {
+    const section = makeSection({
+      admins: [
+        mkAdmin('a1', 'active'),
+        mkAdmin('a2', 'active'),
+        mkAdmin('s1', 'stale'),
+        mkAdmin('n1', 'no-public-activity'),
+        mkAdmin('u1', 'unavailable'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const strip = screen.getByTestId('stale-admins-count-strip')
+    expect(strip).toHaveAttribute('aria-label', 'Admin summary — 5 admins')
+    expect(within(strip).getByText('5 admins')).toBeInTheDocument()
+    expect(within(strip).getByTestId('stale-admins-count-stale').textContent).toMatch(/1 stale/i)
+    expect(within(strip).getByTestId('stale-admins-count-unavailable').textContent).toMatch(/1 unavailable/i)
+    expect(
+      within(strip).getByTestId('stale-admins-count-no-public-activity').textContent,
+    ).toMatch(/1 no public activity/i)
+    expect(within(strip).getByTestId('stale-admins-count-active').textContent).toMatch(/2 active/i)
+  })
+
+  it('hides the description, summary strip, and group list when the panel is collapsed', () => {
+    const section = makeSection({
+      admins: [mkAdmin('s1', 'stale'), mkAdmin('a1', 'active')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    // Expanded by default — strip and description are visible.
+    expect(screen.getByTestId('stale-admins-count-strip')).toBeInTheDocument()
+    expect(screen.getByText(/stale admin detection/i)).toBeInTheDocument()
+
+    const toggle = screen.getByTestId('stale-admins-panel-toggle')
+    fireEvent.click(toggle)
+
+    expect(screen.queryByTestId('stale-admins-group-stale')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
+    expect(screen.queryByText(/stale admin detection/i)).not.toBeInTheDocument()
+    // Title stays visible.
+    expect(screen.getByRole('heading', { name: /org admin activity/i })).toBeInTheDocument()
+  })
+
+  it('omits the header summary strip when applicability is not applicable', () => {
+    const section = makeSection({ applicability: 'not-applicable-non-org', admins: [] })
+    renderWithSession(<StaleAdminsPanel org={null} ownerType="User" sectionOverride={section} />)
+    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
   })
 
   it('renders a commit-search badge with an explanatory tooltip on admins whose activity was inferred from org commit search', () => {
