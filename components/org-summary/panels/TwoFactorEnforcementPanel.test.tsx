@@ -82,8 +82,8 @@ describe('TwoFactorEnforcementPanel — applicable states', () => {
       />,
     )
     const explain = screen.getByTestId('two-factor-unknown-explain')
-    expect(explain.textContent).toMatch(/read:org/)
-    expect(explain.textContent).toMatch(/deeper GitHub permission/i)
+    expect(explain.textContent).toMatch(/admin:org/)
+    expect(explain.textContent).toMatch(/Organization administration: Read/i)
     expect(explain.textContent).toMatch(/public_repo/)
   })
 })

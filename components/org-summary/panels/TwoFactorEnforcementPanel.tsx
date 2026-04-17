@@ -178,14 +178,16 @@ function SectionBody({ section }: { section: TwoFactorEnforcementSection }) {
         <p>
           GitHub does not expose the <code className="font-mono text-xs">two_factor_requirement_enabled</code>{' '}
           field to this session. Unknown is <span className="font-medium">not the same as not enforced</span> —
-          only an organization owner with the <code className="font-mono text-xs">read:org</code> scope can
-          read this flag.
+          only an organization owner whose token has the <code className="font-mono text-xs">admin:org</code>{' '}
+          scope (classic PAT) or the <span className="font-medium">Organization administration: Read</span>{' '}
+          permission (fine-grained PAT) can read this flag.
         </p>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          If you own this org: sign out, check <span className="font-medium">&ldquo;Request deeper GitHub
-          permission&rdquo;</span> on the landing page, and sign back in. Baseline{' '}
-          <code className="font-mono text-[11px]">public_repo</code> scope returns{' '}
-          <code className="font-mono text-[11px]">null</code> for this field even for owners.
+          Baseline <code className="font-mono text-[11px]">public_repo</code> and{' '}
+          <code className="font-mono text-[11px]">read:org</code> both return{' '}
+          <code className="font-mono text-[11px]">null</code> for this field even for owners — GitHub
+          requires a stricter admin scope than the landing-page &ldquo;deeper permission&rdquo;
+          checkbox currently requests.
         </p>
       </div>
     )
@@ -228,8 +230,10 @@ function ScoringHelp() {
           <code className="font-mono text-[11px]">GET /orgs/&#123;org&#125;</code>.
         </p>
         <p className="mb-1.5">
-          The field is only populated for authenticated <span className="font-medium">organization owners</span>. Other sessions
-          receive <span className="font-medium">null</span>, which we surface as{' '}
+          The field is only populated for authenticated <span className="font-medium">organization owners</span> whose
+          token carries <code className="font-mono text-[11px]">admin:org</code> (classic PAT) or{' '}
+          <span className="font-medium">Organization administration: Read</span> (fine-grained PAT).
+          Other sessions receive <span className="font-medium">null</span>, which we surface as{' '}
           <span className="font-medium">unknown</span> — never confused with{' '}
           <span className="font-medium">not enforced</span>.
         </p>
