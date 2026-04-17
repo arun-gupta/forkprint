@@ -8,6 +8,26 @@ import type { Unavailable } from '@/lib/analyzer/analysis-result'
  */
 export const RECOMMENDATION_PERCENTILE_GATE = 50
 
+/**
+ * Release Health (P2-F09 / #69) shared config — thresholds and weights used by
+ * `lib/release-health/*`, `lib/activity/score-config.ts`, and
+ * `lib/documentation/score-config.ts`. Per-bracket calibration for the five
+ * numeric signals is deferred to #152; these values are tunable there.
+ */
+export const SEMVER_REGEX =
+  /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+export const CALVER_REGEX = /^v?(?:\d{4}[.-]\d{1,2}(?:[.-]\d{1,3})?|\d{2}\.\d{1,2}(?:\.\d{1,3})?)$/
+export const RELEASE_NOTES_SUBSTANTIVE_FLOOR = 40
+export const STALE_RELEASE_CUTOFF_DAYS = 730
+export const COOLING_RELEASE_CUTOFF_DAYS = 365
+export const SEMVER_ADOPTION_THRESHOLD = 0.5
+/** Sum of these two weights stays at 0.15 — the existing Activity cadence sub-factor allocation. */
+export const ACTIVITY_CADENCE_FREQUENCY_WEIGHT = 0.10
+export const ACTIVITY_CADENCE_RECENCY_WEIGHT = 0.05
+export const DOCUMENTATION_SEMVER_BONUS = 0.03
+export const DOCUMENTATION_NOTES_BONUS = 0.02
+export const DOCUMENTATION_TAG_PROMOTION_BONUS = 0.02
+
 export type BracketKey = 'solo-tiny' | 'solo-small' | 'emerging' | 'growing' | 'established' | 'popular'
 
 /** Profile override used by the scorecard to route solo repos to solo brackets. */

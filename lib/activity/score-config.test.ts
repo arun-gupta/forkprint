@@ -50,6 +50,50 @@ describe('activity/score-config', () => {
     expect(score30.summary).toContain('30d')
     expect(score365.summary).toContain('12 months')
   })
+
+  it('folds releaseHealthResult.daysSinceLastRelease into the cadence score when available', () => {
+    const baseline = getActivityScore(buildResult())
+    const withRecentRelease = getActivityScore(
+      buildResult({
+        releaseHealthResult: {
+          totalReleasesAnalyzed: 12,
+          totalTags: 12,
+          releaseFrequency: 12,
+          daysSinceLastRelease: 5,
+          semverComplianceRatio: 1,
+          releaseNotesQualityRatio: 1,
+          tagToReleaseRatio: 0,
+          preReleaseRatio: 0,
+          versioningScheme: 'semver',
+        },
+      }),
+    )
+    const withStaleRelease = getActivityScore(
+      buildResult({
+        releaseHealthResult: {
+          totalReleasesAnalyzed: 2,
+          totalTags: 2,
+          releaseFrequency: 1,
+          daysSinceLastRelease: 900,
+          semverComplianceRatio: 1,
+          releaseNotesQualityRatio: 1,
+          tagToReleaseRatio: 0,
+          preReleaseRatio: 0,
+          versioningScheme: 'semver',
+        },
+      }),
+    )
+    // Recent release should not regress versus baseline.
+    expect(withRecentRelease.value).toBeGreaterThanOrEqual(baseline.value as number)
+    // Stale release should not push the score higher than a recent one.
+    expect(withStaleRelease.value).toBeLessThanOrEqual(withRecentRelease.value as number)
+  })
+
+  it('falls back to releases-only cadence when releaseHealthResult is unavailable', () => {
+    const withUnavailable = getActivityScore(buildResult({ releaseHealthResult: 'unavailable' }))
+    const without = getActivityScore(buildResult())
+    expect(withUnavailable.value).toBe(without.value)
+  })
 })
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {

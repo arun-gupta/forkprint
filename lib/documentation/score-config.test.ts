@@ -270,4 +270,49 @@ describe('documentation/score-config', () => {
       }
     })
   })
+
+  describe('release health bonuses (P2-F09 / #69)', () => {
+    it('adds bonus points when semver / notes / tag-promotion signals are strong', () => {
+      const baseline = getDocumentationScore(buildDocResult(), fullLicensing, 1000)
+      const withRelease = getDocumentationScore(buildDocResult(), fullLicensing, 1000, undefined, 'community', {
+        totalReleasesAnalyzed: 10,
+        totalTags: 10,
+        releaseFrequency: 8,
+        daysSinceLastRelease: 30,
+        semverComplianceRatio: 1,
+        releaseNotesQualityRatio: 1,
+        tagToReleaseRatio: 0,
+        preReleaseRatio: 0,
+        versioningScheme: 'semver',
+      })
+      expect(withRelease.percentile).not.toBeNull()
+      if (typeof baseline.value === 'number' && typeof withRelease.value === 'number') {
+        expect(withRelease.value).toBeGreaterThanOrEqual(baseline.value)
+      }
+    })
+
+    it('absence of release-health signals preserves the baseline documentation score', () => {
+      const baseline = getDocumentationScore(buildDocResult(), fullLicensing, 1000)
+      const withUnavailable = getDocumentationScore(buildDocResult(), fullLicensing, 1000, undefined, 'community', 'unavailable')
+      expect(withUnavailable.value).toBe(baseline.value)
+    })
+
+    it('clamps the total percentile to [0, 99] even with max bonuses applied', () => {
+      const score = getDocumentationScore(buildDocResult(), fullLicensing, 1000, undefined, 'community', {
+        totalReleasesAnalyzed: 100,
+        totalTags: 100,
+        releaseFrequency: 24,
+        daysSinceLastRelease: 1,
+        semverComplianceRatio: 1,
+        releaseNotesQualityRatio: 1,
+        tagToReleaseRatio: 0,
+        preReleaseRatio: 0,
+        versioningScheme: 'semver',
+      })
+      if (typeof score.value === 'number') {
+        expect(score.value).toBeLessThanOrEqual(99)
+        expect(score.value).toBeGreaterThanOrEqual(0)
+      }
+    })
+  })
 })

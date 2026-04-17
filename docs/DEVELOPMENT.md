@@ -261,7 +261,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 6 | P2-F05 | Community scoring | #70 | ✅ Done |
 | 7 | P2-F06 | Foundation-aware recommendations | #119 | |
 | 8 | P2-F08 | Accessibility & Onboarding | #117 | |
-| 9 | P2-F09 | Release health scoring | #69 | |
+| 9 | P2-F09 | Release health scoring | #69 | ✅ Done |
 | 10 | P2-F10 | Development cadence | #73 | |
 | 11 | P2-F11 | Project maturity | #74 | |
 | 12 | P2-F12 | Ecosystem Reach | #118 | |

@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { getBracket, getBracketLabel, getCalibrationForStars, isSoloFallback } from './config-loader'
+import {
+  ACTIVITY_CADENCE_FREQUENCY_WEIGHT,
+  ACTIVITY_CADENCE_RECENCY_WEIGHT,
+  CALVER_REGEX,
+  COOLING_RELEASE_CUTOFF_DAYS,
+  DOCUMENTATION_NOTES_BONUS,
+  DOCUMENTATION_SEMVER_BONUS,
+  DOCUMENTATION_TAG_PROMOTION_BONUS,
+  RELEASE_NOTES_SUBSTANTIVE_FLOOR,
+  SEMVER_ADOPTION_THRESHOLD,
+  SEMVER_REGEX,
+  STALE_RELEASE_CUTOFF_DAYS,
+  getBracket,
+  getBracketLabel,
+  getCalibrationForStars,
+  isSoloFallback,
+} from './config-loader'
 
 describe('getBracket', () => {
   it('routes community stars to star-tier brackets', () => {
@@ -66,5 +82,61 @@ describe('getCalibrationForStars', () => {
     // Both exist as bracket entries — they may contain the same numbers
     // while placeholder solo data mirrors emerging, but the routing is
     // correct: the solo call returns the solo-tiny entry.
+  })
+})
+
+describe('Release Health config constants (P2-F09 / #69)', () => {
+  it('semver regex matches standard semver tags', () => {
+    expect(SEMVER_REGEX.test('v1.2.3')).toBe(true)
+    expect(SEMVER_REGEX.test('1.2.3')).toBe(true)
+    expect(SEMVER_REGEX.test('v1.0.0-rc.1')).toBe(true)
+    expect(SEMVER_REGEX.test('1.0.0-alpha+sha.5114f85')).toBe(true)
+  })
+
+  it('semver regex rejects non-semver tags', () => {
+    expect(SEMVER_REGEX.test('1.2')).toBe(false)
+    expect(SEMVER_REGEX.test('v01.2.3')).toBe(false) // leading zeros forbidden
+    expect(SEMVER_REGEX.test('release-2024')).toBe(false)
+    expect(SEMVER_REGEX.test('')).toBe(false)
+  })
+
+  it('calver regex matches common CalVer shapes', () => {
+    expect(CALVER_REGEX.test('2026.04.17')).toBe(true)
+    expect(CALVER_REGEX.test('2026-04-17')).toBe(true)
+    expect(CALVER_REGEX.test('24.04')).toBe(true)
+    expect(CALVER_REGEX.test('24.04.2')).toBe(true)
+    expect(CALVER_REGEX.test('v2024.10')).toBe(true)
+  })
+
+  it('calver regex rejects semver-shaped tags', () => {
+    expect(CALVER_REGEX.test('1.2.3')).toBe(false)
+    expect(CALVER_REGEX.test('v0.5.1')).toBe(false)
+  })
+
+  it('exposes the substantive notes floor default at 40 characters', () => {
+    expect(RELEASE_NOTES_SUBSTANTIVE_FLOOR).toBe(40)
+  })
+
+  it('exposes staleness tier cutoffs (730 stale, 365 cooling)', () => {
+    expect(STALE_RELEASE_CUTOFF_DAYS).toBe(730)
+    expect(COOLING_RELEASE_CUTOFF_DAYS).toBe(365)
+    expect(COOLING_RELEASE_CUTOFF_DAYS).toBeLessThan(STALE_RELEASE_CUTOFF_DAYS)
+  })
+
+  it('exposes the semver adoption threshold at 0.5', () => {
+    expect(SEMVER_ADOPTION_THRESHOLD).toBe(0.5)
+  })
+
+  it('activity cadence frequency + recency weights sum to 0.15 (preserving the cadence sub-factor)', () => {
+    expect(ACTIVITY_CADENCE_FREQUENCY_WEIGHT + ACTIVITY_CADENCE_RECENCY_WEIGHT).toBeCloseTo(0.15, 10)
+  })
+
+  it('documentation bonuses are small and positive', () => {
+    expect(DOCUMENTATION_SEMVER_BONUS).toBeGreaterThan(0)
+    expect(DOCUMENTATION_SEMVER_BONUS).toBeLessThanOrEqual(0.05)
+    expect(DOCUMENTATION_NOTES_BONUS).toBeGreaterThan(0)
+    expect(DOCUMENTATION_NOTES_BONUS).toBeLessThanOrEqual(0.05)
+    expect(DOCUMENTATION_TAG_PROMOTION_BONUS).toBeGreaterThan(0)
+    expect(DOCUMENTATION_TAG_PROMOTION_BONUS).toBeLessThanOrEqual(0.05)
   })
 })

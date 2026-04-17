@@ -11,6 +11,7 @@ import { getHealthScore } from '@/lib/scoring/health-score'
 import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness } from '@/lib/community/completeness'
+import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
 
 export interface JsonExportResult {
   blob: Blob
@@ -239,6 +240,45 @@ function computeCommunity(result: AnalysisResult) {
   }
 }
 
+function computeReleaseHealth(result: AnalysisResult) {
+  const rh = result.releaseHealthResult
+  const completeness = computeReleaseHealthCompleteness(result)
+  if (!rh || rh === 'unavailable') {
+    return {
+      signals: 'unavailable' as const,
+      completeness: {
+        ratio: completeness.ratio,
+        percentile: completeness.percentile,
+        tone: completeness.tone,
+        presentCount: completeness.present.length,
+        missingCount: completeness.missing.length,
+        unknownCount: completeness.unknown.length,
+      },
+    }
+  }
+  return {
+    signals: {
+      totalReleasesAnalyzed: rh.totalReleasesAnalyzed,
+      totalTags: rh.totalTags,
+      releaseFrequency: rh.releaseFrequency,
+      daysSinceLastRelease: rh.daysSinceLastRelease,
+      semverComplianceRatio: rh.semverComplianceRatio,
+      releaseNotesQualityRatio: rh.releaseNotesQualityRatio,
+      tagToReleaseRatio: rh.tagToReleaseRatio,
+      preReleaseRatio: rh.preReleaseRatio,
+      versioningScheme: rh.versioningScheme,
+    },
+    completeness: {
+      ratio: completeness.ratio,
+      percentile: completeness.percentile,
+      tone: completeness.tone,
+      presentCount: completeness.present.length,
+      missingCount: completeness.missing.length,
+      unknownCount: completeness.unknown.length,
+    },
+  }
+}
+
 function computeComparison(results: AnalysisResult[]) {
   if (results.length < 2) return undefined
   return buildComparisonSections(results).map((section) => ({
@@ -273,6 +313,7 @@ export function buildJsonExport(response: AnalyzeResponse): JsonExportResult {
       licensing: computeLicensing(result),
       inclusiveNaming: computeInclusiveNaming(result),
       community: computeCommunity(result),
+      releaseHealth: computeReleaseHealth(result),
     })),
     comparison: computeComparison(response.results),
   }

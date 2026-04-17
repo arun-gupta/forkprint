@@ -7,6 +7,7 @@ const TAG_COLORS: Record<string, string> = {
   'quick-win': 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800/60',
   compliance: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-800/60',
   'contrib-ex': 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-200 dark:border-cyan-800/60',
+  'release-health': 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-200 dark:border-teal-800/60',
 }
 
 const TAG_RING_COLORS: Record<string, string> = {
@@ -16,6 +17,7 @@ const TAG_RING_COLORS: Record<string, string> = {
   'quick-win': 'ring-emerald-400',
   compliance: 'ring-rose-400',
   'contrib-ex': 'ring-cyan-400',
+  'release-health': 'ring-teal-400',
 }
 const DEFAULT_TAG_COLOR = 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700'
 

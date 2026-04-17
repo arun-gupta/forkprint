@@ -193,7 +193,35 @@ export interface AnalysisResult {
   // while still inside the 365d window — counts for large windows should
   // be rendered as e.g. `N+` rather than implying an exact total.
   discussionsRecentTruncated?: boolean
+  // Release Health signals (P2-F09 / #69). Optional — absent on fixtures
+  // predating this feature. Set by the analyzer to either the resolved object
+  // or 'unavailable' per Constitution §II (no estimation). Per-field
+  // 'unavailable' is used for individual signals that cannot be computed.
+  releaseHealthResult?: ReleaseHealthResult | Unavailable
   missingFields: string[]
+}
+
+export type VersioningScheme = 'semver' | 'calver' | 'unrecognized'
+
+export interface ReleaseHealthResult {
+  /** Count of releases analyzed (bounded at 100 by the GraphQL query). */
+  totalReleasesAnalyzed: number
+  /** Tag count from refs(refPrefix: "refs/tags/"). 'unavailable' when the refs query is denied. */
+  totalTags: number | Unavailable
+  /** Releases per year over the last 12 months. 'unavailable' when fewer than 2 releases exist. */
+  releaseFrequency: number | Unavailable
+  /** Days since the most recent release (publishedAt falling back to createdAt). */
+  daysSinceLastRelease: number | Unavailable
+  /** Share of the most recent 100 releases matching SEMVER_REGEX [0, 1]. */
+  semverComplianceRatio: number | Unavailable
+  /** Share of releases whose body length clears RELEASE_NOTES_SUBSTANTIVE_FLOOR [0, 1]. */
+  releaseNotesQualityRatio: number | Unavailable
+  /** Share of tags that never became a release: max(0, totalTags - totalReleases) / max(1, totalTags). */
+  tagToReleaseRatio: number | Unavailable
+  /** Share of releases with isPrerelease === true. Informational — never scored. */
+  preReleaseRatio: number | Unavailable
+  /** Dominant versioning scheme. Drives semver vs. CalVer vs. unrecognized recommendation routing. */
+  versioningScheme: VersioningScheme | Unavailable
 }
 
 export interface RepositoryFetchFailure {

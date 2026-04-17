@@ -10,6 +10,7 @@ import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { GOVERNANCE_DOC_FILES, LICENSING_IS_GOVERNANCE } from '@/lib/tags/governance'
 import { COMMUNITY_DOC_FILES } from '@/lib/tags/community'
 import { getDocFileTags, getReadmeSectionTags, LICENSING_IS_COMPLIANCE } from '@/lib/tags/tag-mappings'
+import { ReleaseDisciplineCard } from './ReleaseDisciplineCard'
 
 interface DocumentationViewProps {
   results: AnalysisResult[]
@@ -354,6 +355,10 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
               {/* Licensing & Compliance — governance + compliance */}
               {!activeTag || activeTag === 'governance' || activeTag === 'compliance' ? (
                 <LicensingPane licensingResult={result.licensingResult} activeTag={activeTag} onTagClick={handleTagClick} />
+              ) : null}
+
+              {!activeTag || activeTag === 'release-health' ? (
+                <ReleaseDisciplineCard result={result} activeTag={activeTag} onTagClick={handleTagClick} />
               ) : null}
 
               {/* Inclusive Naming — hide when any tag is filtering */}

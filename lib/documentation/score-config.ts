@@ -1,6 +1,15 @@
-import type { DocumentationResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
+import type { DocumentationResult, InclusiveNamingResult, LicensingResult, ReleaseHealthResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
-import { type CalibrationProfile, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import {
+  DOCUMENTATION_NOTES_BONUS,
+  DOCUMENTATION_SEMVER_BONUS,
+  DOCUMENTATION_TAG_PROMOTION_BONUS,
+  type CalibrationProfile,
+  getBracketLabel,
+  getCalibrationForStars,
+  interpolatePercentile,
+  percentileToTone,
+} from '@/lib/scoring/config-loader'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 export interface DocumentationRecommendation {
@@ -170,6 +179,7 @@ export function getDocumentationScore(
   stars: number | 'unavailable',
   inclusiveNamingResult?: InclusiveNamingResult | 'unavailable',
   profile: CalibrationProfile = 'community',
+  releaseHealthResult?: ReleaseHealthResult | Unavailable,
 ): DocumentationScoreDefinition {
   const recommendations: DocumentationRecommendation[] = []
 
@@ -277,9 +287,15 @@ export function getDocumentationScore(
   }
 
   const calibration = getCalibrationForStars(stars, profile)
-  const percentile = calibration?.documentationScore
+  const basePercentile = calibration?.documentationScore
     ? interpolatePercentile(compositeScore, calibration.documentationScore)
     : Math.round(compositeScore * 99)
+
+  // Release Health bonuses (P2-F09 / #69). Bonus-only — absence never
+  // lowers the percentile. Magnitudes deliberately modest per research.md R6
+  // pending #152 calibration.
+  const releaseHealthBonus = computeReleaseHealthBonus(releaseHealthResult)
+  const percentile = Math.min(99, Math.max(0, basePercentile + releaseHealthBonus))
   const tone = percentileToTone(percentile)
   const bracketLabel = getBracketLabel(stars, profile)
 
@@ -295,4 +311,24 @@ export function getDocumentationScore(
     inclusiveNamingScore,
     recommendations,
   }
+}
+
+function computeReleaseHealthBonus(
+  releaseHealthResult?: ReleaseHealthResult | Unavailable,
+): number {
+  if (!releaseHealthResult || releaseHealthResult === 'unavailable') return 0
+  let bonus = 0
+  const semver = releaseHealthResult.semverComplianceRatio
+  if (typeof semver === 'number') {
+    bonus += semver * DOCUMENTATION_SEMVER_BONUS * 99
+  }
+  const notes = releaseHealthResult.releaseNotesQualityRatio
+  if (typeof notes === 'number') {
+    bonus += notes * DOCUMENTATION_NOTES_BONUS * 99
+  }
+  const promotion = releaseHealthResult.tagToReleaseRatio
+  if (typeof promotion === 'number' && promotion <= 0.3) {
+    bonus += DOCUMENTATION_TAG_PROMOTION_BONUS * 99
+  }
+  return Math.round(bonus)
 }

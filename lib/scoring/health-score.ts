@@ -6,6 +6,7 @@ import { getDocumentationScore, type DocumentationRecommendation } from '@/lib/d
 import { getSecurityScore } from '@/lib/security/score-config'
 import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, formatPercentileOrdinal, percentileToTone } from '@/lib/scoring/config-loader'
 import { SOLO_WEIGHTS, detectSoloProjectProfile, type SoloProjectDetection } from '@/lib/scoring/solo-profile'
+import { generateReleaseHealthRecommendations } from '@/lib/release-health/recommendations'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 
 export interface HealthScoreRecommendation {
@@ -71,7 +72,7 @@ export function getHealthScore(result: AnalysisResult, options: HealthScoreOptio
   const responsiveness = getResponsivenessScore(result)
   const contributors = getContributorsScore(result)
   const documentation = result.documentationResult !== 'unavailable'
-    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult, profile)
+    ? getDocumentationScore(result.documentationResult, result.licensingResult, result.stars, result.inclusiveNamingResult, profile, result.releaseHealthResult)
     : null
   const security = result.securityResult !== 'unavailable'
     ? getSecurityScore(result.securityResult, result.stars, profile)
@@ -172,6 +173,14 @@ export function getHealthScore(result: AnalysisResult, options: HealthScoreOptio
       })
     }
   }
+  // Release Health recommendations (P2-F09 / #69). Gate-honoring + staleness
+  // tiering is implemented inside generateReleaseHealthRecommendations.
+  recommendations.push(
+    ...generateReleaseHealthRecommendations(result, {
+      activityPercentile: activityPercentile ?? 0,
+      documentationPercentile: documentationPercentile ?? 0,
+    }),
+  )
 
   const buckets: HealthScoreBucket[] = [
     { name: 'Activity', percentile: activityPercentile, weight: activityWeight, label: activityPercentile !== null ? formatPercentileLabel(activityPercentile) : 'N/A' },

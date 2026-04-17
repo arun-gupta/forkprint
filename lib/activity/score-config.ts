@@ -1,6 +1,16 @@
 import type { ActivityWindowDays, AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { type BracketCalibration, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import {
+  ACTIVITY_CADENCE_FREQUENCY_WEIGHT,
+  ACTIVITY_CADENCE_RECENCY_WEIGHT,
+  type BracketCalibration,
+  type CalibrationProfile,
+  formatPercentileLabel,
+  getBracketLabel,
+  getCalibrationForStars,
+  interpolatePercentile,
+  percentileToTone,
+} from '@/lib/scoring/config-loader'
 
 export interface ActivityScoreDefinition {
   value: ScoreValue
@@ -100,20 +110,36 @@ export function getActivityScore(
   const cal = getCalibrationForStars(result.stars, profile)
   const bracketLabel = getBracketLabel(result.stars, profile)
 
+  const cadenceFrequency = evaluateReleaseCadence(metrics.releases, windowDays)
+  const cadenceRecency = evaluateReleaseRecency(result.releaseHealthResult)
+
   const subPercentiles = {
     prFlow: evaluatePrFlow(metrics.prsMerged, metrics.prsOpened, cal),
     issueFlow: evaluateIssueFlow(metrics.issuesClosed, metrics.issuesOpened, metrics.staleIssueRatio, cal),
     completionSpeed: evaluateCompletionSpeed(metrics.medianTimeToMergeHours, metrics.medianTimeToCloseHours, cal),
     sustainedActivity: evaluateSustainedActivity(metrics.commits, windowDays),
-    releaseCadence: evaluateReleaseCadence(metrics.releases, windowDays),
+    // Composite cadence score for the weightedFactors readout: weighted blend
+    // of frequency and recency. When recency is unavailable, frequency alone
+    // preserves the pre-feature score.
+    releaseCadence: cadenceRecency !== null
+      ? Math.round((cadenceFrequency * ACTIVITY_CADENCE_FREQUENCY_WEIGHT + cadenceRecency * ACTIVITY_CADENCE_RECENCY_WEIGHT) / (ACTIVITY_CADENCE_FREQUENCY_WEIGHT + ACTIVITY_CADENCE_RECENCY_WEIGHT))
+      : cadenceFrequency,
   }
+
+  // Composite respects the existing 0.15 cadence allocation — split into
+  // frequency (ACTIVITY_CADENCE_FREQUENCY_WEIGHT) + recency
+  // (ACTIVITY_CADENCE_RECENCY_WEIGHT). When recency is unavailable the full
+  // 0.15 flows through frequency, reproducing pre-feature scoring.
+  const cadenceContribution = cadenceRecency !== null
+    ? cadenceFrequency * ACTIVITY_CADENCE_FREQUENCY_WEIGHT + cadenceRecency * ACTIVITY_CADENCE_RECENCY_WEIGHT
+    : cadenceFrequency * 0.15
 
   const compositePercentile = Math.round(
     subPercentiles.prFlow * 0.25 +
     subPercentiles.issueFlow * 0.2 +
     subPercentiles.completionSpeed * 0.15 +
     subPercentiles.sustainedActivity * 0.25 +
-    subPercentiles.releaseCadence * 0.15,
+    cadenceContribution,
   )
 
   // Community signal (P2-F05 / #70): additive Discussions bonus. Bonus-only
@@ -252,6 +278,27 @@ function evaluateSustainedActivity(commits: number | Unavailable, windowDays: Ac
   if (commitsPer30Days <= 0) return 0
   if (commitsPer30Days >= 5) return Math.round(50 + ((commitsPer30Days - 5) / 15) * 49)
   return Math.round((commitsPer30Days / 5) * 50)
+}
+
+/**
+ * Recency sub-score derived from ReleaseHealthResult.daysSinceLastRelease.
+ * Returns `null` when the signal cannot be computed (no release health data,
+ * or the value is `'unavailable'`) — caller falls back to frequency-only
+ * cadence scoring in that case.
+ */
+function evaluateReleaseRecency(
+  releaseHealth: AnalysisResult['releaseHealthResult'],
+): number | null {
+  if (!releaseHealth || releaseHealth === 'unavailable') return null
+  const days = releaseHealth.daysSinceLastRelease
+  if (days === 'unavailable') return null
+  // Linear approximation pending calibration data (#152).
+  if (days <= 30) return 99
+  if (days >= 730) return 0
+  if (days <= 90) return Math.round(90 - ((days - 30) / 60) * 15) // 90 → 75
+  if (days <= 180) return Math.round(75 - ((days - 90) / 90) * 25) // 75 → 50
+  if (days <= 365) return Math.round(50 - ((days - 180) / 185) * 25) // 50 → 25
+  return Math.round(25 - ((days - 365) / 365) * 25) // 25 → 0
 }
 
 function evaluateReleaseCadence(releases: number | Unavailable, windowDays: ActivityWindowDays): number {

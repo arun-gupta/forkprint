@@ -12,6 +12,8 @@ import { formatHours, formatPercentage, getResponsivenessScore } from '@/lib/res
 import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/community/completeness'
+import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
+import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
 
 export interface MarkdownExportResult {
@@ -200,6 +202,12 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
   const communityLines = renderCommunitySection(result)
   if (communityLines.length > 0) {
     lines.push(...communityLines)
+  }
+
+  // Release Health section (cross-cutting lens; see P2-F09 / #69).
+  const releaseHealthLines = renderReleaseHealthSection(result)
+  if (releaseHealthLines.length > 0) {
+    lines.push(...releaseHealthLines)
   }
 
   // Activity section with grouped tables
@@ -637,6 +645,51 @@ function renderCommunitySection(result: AnalysisResult): string[] {
     `| GOVERNANCE.md | ${status('governance')} |`,
     `| FUNDING.yml | ${status('funding')} |`,
     `| Discussions | ${discussionsStatus} |`,
+    '',
+  ]
+}
+
+/**
+ * Render the Release Health lens section (P2-F09 / #69).
+ *
+ * Follows the Community section layout: completeness readout + a per-signal
+ * status table. Per-bracket calibration is deferred to #152, so percentile
+ * labels use the linear ratio → percentile fallback.
+ */
+function renderReleaseHealthSection(result: AnalysisResult): string[] {
+  const completeness = computeReleaseHealthCompleteness(result)
+  const rh = result.releaseHealthResult
+  if (completeness.ratio === null) return []
+
+  const total = completeness.present.length + completeness.missing.length
+  const percentileLabel = completeness.percentile !== null
+    ? `${completeness.percentile}th percentile`
+    : '—'
+  const status = (key: ReleaseHealthSignalKey): string => {
+    if (completeness.present.includes(key)) return '✓ Present'
+    if (completeness.missing.includes(key)) return '✗ Missing'
+    return '? Unknown'
+  }
+  const rhVal = (formatter: (r: ReleaseHealthResult) => string): string => {
+    if (!rh || rh === 'unavailable') return '—'
+    return formatter(rh)
+  }
+
+  return [
+    '### Release Health',
+    '',
+    `Release Health is a cross-cutting lens — it does not feed the composite OSS Health Score. Per-bracket calibration is tracked in #152; this report uses a linear ratio → percentile fallback.`,
+    '',
+    `**Completeness:** ${percentileLabel} (${completeness.present.length}/${total} signals)`,
+    '',
+    '| Signal | Value | Status |',
+    '| --- | --- | --- |',
+    `| Release frequency | ${rhVal((r) => r.releaseFrequency === 'unavailable' ? 'unavailable' : `${r.releaseFrequency} / year`)} | ${status('release_frequency')} |`,
+    `| Days since last release | ${rhVal((r) => r.daysSinceLastRelease === 'unavailable' ? 'unavailable' : `${r.daysSinceLastRelease} days`)} | ${status('days_since_last_release')} |`,
+    `| Semver compliance | ${rhVal((r) => r.semverComplianceRatio === 'unavailable' ? 'unavailable' : `${Math.round(r.semverComplianceRatio * 100)}%`)} | ${status('semver_compliance')} |`,
+    `| Release notes quality | ${rhVal((r) => r.releaseNotesQualityRatio === 'unavailable' ? 'unavailable' : `${Math.round(r.releaseNotesQualityRatio * 100)}%`)} | ${status('release_notes_quality')} |`,
+    `| Tag-to-release promotion | ${rhVal((r) => r.tagToReleaseRatio === 'unavailable' ? 'unavailable' : `${Math.round((1 - r.tagToReleaseRatio) * 100)}%`)} | ${status('tag_to_release')} |`,
+    `| Pre-release usage (informational) | ${rhVal((r) => r.preReleaseRatio === 'unavailable' ? 'unavailable' : `${Math.round(r.preReleaseRatio * 100)}%`)} | — |`,
     '',
   ]
 }

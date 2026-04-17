@@ -21,6 +21,7 @@ import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizatio
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_DISCUSSIONS_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
 import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
+import { detectReleaseHealth } from '@/lib/release-health/detect'
 import type { SecurityResult, DirectSecurityCheck } from '@/lib/security/analysis-result'
 import { fetchScorecardData } from '@/lib/security/scorecard-client'
 import { fetchBranchProtection } from '@/lib/security/direct-checks'
@@ -119,11 +120,17 @@ interface RepoOverviewResponse {
 interface RepoCommitAndReleasesResponse {
   repository: {
     releases: {
+      totalCount: number
       nodes: Array<{
+        tagName: string
+        name: string | null
+        body: string | null
+        isPrerelease: boolean
         createdAt: string
         publishedAt: string | null
       }>
     }
+    refs: { totalCount: number } | null
     defaultBranchRef: {
       target: {
         recent30: { totalCount: number }
@@ -549,6 +556,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         commitHistory.nodes,
         discussionTimestamps,
         discussionsTruncated,
+        now,
       )
 
       // Populate Scorecard data and branch protection (fetched in parallel earlier)
@@ -619,6 +627,7 @@ function buildAnalysisResult(
   recentCommitNodes: CommitNode[],
   discussionTimestamps?: string[],
   discussionsTruncated?: boolean,
+  now: Date = new Date(),
 ): AnalysisResult {
   const defaultBranchTarget = activity.repository?.defaultBranchRef?.target
   const legacyActivity = activity as RepoActivityResponse & LegacyRepoActivityResponse
@@ -770,8 +779,38 @@ function buildAnalysisResult(
     prMergeTimestamps,
     securityResult: extractSecurityResult(overview.repository),
     ...extractCommunitySignals(overview.repository, 90, discussionTimestamps, discussionsTruncated),
+    releaseHealthResult: extractReleaseHealthResult(activity, now),
     missingFields,
   }
+}
+
+function extractReleaseHealthResult(
+  activity: RepoActivityResponse,
+  now: Date,
+): AnalysisResult['releaseHealthResult'] {
+  const repo = activity.repository
+  if (!repo) return 'unavailable'
+  const releasesConnection = repo.releases
+  const rawNodes = releasesConnection?.nodes ?? []
+  const totalReleasesAllTime = typeof releasesConnection?.totalCount === 'number'
+    ? releasesConnection.totalCount
+    : rawNodes.length
+  const totalTags: number | Unavailable = typeof repo.refs?.totalCount === 'number'
+    ? repo.refs.totalCount
+    : 'unavailable'
+  return detectReleaseHealth({
+    releases: rawNodes.map((r) => ({
+      tagName: r.tagName,
+      name: r.name,
+      body: r.body,
+      isPrerelease: r.isPrerelease,
+      createdAt: r.createdAt,
+      publishedAt: r.publishedAt,
+    })),
+    totalReleasesAllTime,
+    totalTags,
+    now,
+  })
 }
 
 export function extractDocumentationResult(repo: RepoOverviewResponse['repository']): DocumentationResult | Unavailable {
