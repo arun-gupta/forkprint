@@ -127,6 +127,88 @@ describe('org-inventory/filters', () => {
       error: null,
     })
   })
+
+  describe('selectedOnly option', () => {
+    const baseFilters = { repoQuery: '', language: 'all', archived: 'all' } as const
+
+    it('returns the same rows as before when options are undefined', () => {
+      const rows = [
+        buildRepo('facebook/react'),
+        buildRepo('facebook/jest'),
+        buildRepo('facebook/relay'),
+      ]
+
+      expect(filterOrgInventoryRows(rows, baseFilters).map((row) => row.repo)).toEqual([
+        'facebook/react',
+        'facebook/jest',
+        'facebook/relay',
+      ])
+    })
+
+    it('is a no-op when selectedOnly is false', () => {
+      const rows = [buildRepo('facebook/react'), buildRepo('facebook/jest')]
+
+      expect(
+        filterOrgInventoryRows(rows, baseFilters, { selectedOnly: false, selectedRepos: ['facebook/react'] }).map(
+          (row) => row.repo,
+        ),
+      ).toEqual(['facebook/react', 'facebook/jest'])
+    })
+
+    it('narrows rows to the selected set when selectedOnly is true', () => {
+      const rows = [
+        buildRepo('facebook/react'),
+        buildRepo('facebook/jest'),
+        buildRepo('facebook/relay'),
+      ]
+
+      expect(
+        filterOrgInventoryRows(rows, baseFilters, { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebook/relay'] }).map(
+          (row) => row.repo,
+        ),
+      ).toEqual(['facebook/jest', 'facebook/relay'])
+    })
+
+    it('returns an empty array when selectedOnly is true and selectedRepos is empty', () => {
+      const rows = [buildRepo('facebook/react'), buildRepo('facebook/jest')]
+
+      expect(filterOrgInventoryRows(rows, baseFilters, { selectedOnly: true, selectedRepos: [] })).toEqual([])
+    })
+
+    it('composes with the existing filters (intersection semantics)', () => {
+      const rows = [
+        buildRepo('facebook/react', { primaryLanguage: 'TypeScript', archived: false }),
+        buildRepo('facebook/jest', { primaryLanguage: 'JavaScript', archived: false }),
+        buildRepo('facebookarchive/old', { primaryLanguage: 'JavaScript', archived: true }),
+      ]
+
+      expect(
+        filterOrgInventoryRows(
+          rows,
+          { repoQuery: 'jest', language: 'all', archived: 'all' },
+          { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebook/react'] },
+        ).map((row) => row.repo),
+      ).toEqual(['facebook/jest'])
+
+      expect(
+        filterOrgInventoryRows(
+          rows,
+          { repoQuery: '', language: 'JavaScript', archived: 'all' },
+          { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebookarchive/old', 'facebook/react'] },
+        ).map((row) => row.repo),
+      ).toEqual(['facebook/jest', 'facebookarchive/old'])
+    })
+
+    it('does not produce duplicate rows when selectedRepos contains duplicate entries', () => {
+      const rows = [buildRepo('facebook/react'), buildRepo('facebook/jest')]
+
+      expect(
+        filterOrgInventoryRows(rows, baseFilters, { selectedOnly: true, selectedRepos: ['facebook/react', 'facebook/react'] }).map(
+          (row) => row.repo,
+        ),
+      ).toEqual(['facebook/react'])
+    })
+  })
 })
 
 function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
