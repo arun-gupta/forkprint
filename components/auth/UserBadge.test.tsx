@@ -45,7 +45,7 @@ describe('UserBadge', () => {
     expect(screen.queryByTestId('elevated-scope-chip')).not.toBeInTheDocument()
   })
 
-  it('renders an elevated-scope chip enumerating non-baseline scopes', () => {
+  it('renders an elevated-scope chip enumerating non-baseline scopes in its hover tooltip', () => {
     render(
       <AuthProvider
         initialSession={{
@@ -59,6 +59,7 @@ describe('UserBadge', () => {
     )
     const chip = screen.getByTestId('elevated-scope-chip')
     expect(chip).toBeInTheDocument()
-    expect(chip).toHaveTextContent('read:org')
+    expect(chip).toHaveAttribute('title', expect.stringContaining('read:org'))
+    expect(chip).toHaveAttribute('aria-label', expect.stringContaining('read:org'))
   })
 })

@@ -27,11 +27,11 @@ export function UserBadge({ onSignOut }: UserBadgeProps) {
         <span
           role="status"
           data-testid="elevated-scope-chip"
-          title={`Session has elevated GitHub permissions: ${elevatedScopes.join(', ')}`}
-          className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-100"
+          aria-label={`Session has elevated GitHub permissions: ${elevatedScopes.join(', ')}`}
+          title={`Elevated GitHub permissions active — active scopes: ${elevatedScopes.join(', ')}`}
+          className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-[0.7rem] font-semibold text-amber-900 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-100"
         >
           <span aria-hidden="true">⚠</span>
-          <span className="font-mono normal-case">Elevated ({elevatedScopes.join(', ')})</span>
         </span>
       ) : null}
       <button

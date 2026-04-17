@@ -35,7 +35,9 @@ test.describe('RFE #345 — global elevated-scope indicator', () => {
 
     const chip = page.getByTestId('elevated-scope-chip')
     await expect(chip).toBeVisible()
-    await expect(chip).toContainText('read:org')
+    // Scope lives on the hover tooltip, not visible text
+    await expect(chip).toHaveAttribute('title', /read:org/)
+    await expect(chip).toHaveAttribute('aria-label', /read:org/)
   })
 
   test('dismissing the banner keeps the chip visible', async ({ page }) => {
