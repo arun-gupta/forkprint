@@ -5,24 +5,47 @@ export const runtime = 'nodejs'
 
 const OAUTH_STATE_COOKIE = 'repo_pulse_oauth_state'
 
-export function buildOAuthScope(elevated: boolean): string {
-  return elevated ? 'public_repo read:org' : 'public_repo'
+export type ScopeTier = 'baseline' | 'read-org' | 'admin-org'
+
+export function buildOAuthScope(tier: ScopeTier): string {
+  switch (tier) {
+    case 'admin-org':
+      return 'public_repo admin:org'
+    case 'read-org':
+      return 'public_repo read:org'
+    default:
+      return 'public_repo'
+  }
+}
+
+export function resolveScopeTier(url: URL): ScopeTier {
+  const explicit = url.searchParams.get('scope_tier')
+  if (explicit === 'admin-org') return 'admin-org'
+  if (explicit === 'read-org') return 'read-org'
+  if (explicit === 'baseline') return 'baseline'
+  // Legacy: ?elevated=1 maps to read-org
+  if (url.searchParams.get('elevated') === '1') return 'read-org'
+  return 'baseline'
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const elevated = url.searchParams.get('elevated') === '1'
-  const scope = buildOAuthScope(elevated)
+  const tier = resolveScopeTier(url)
+  const scope = buildOAuthScope(tier)
 
   // Dev-only short-circuit (#207): bypass GitHub OAuth when DEV_GITHUB_PAT is
   // set in `next dev`. Resolves the multi-worktree port-mismatch problem
   // without requiring OAuth App reconfiguration.
   const devPat = getDevPat()
   if (devPat) {
-    const username = await fetchGithubUsername(devPat)
-    if (username) {
+    const probe = await probeDevPat(devPat)
+    if (probe) {
+      // The user's tier selection is only a request; in dev, the PAT's *actual*
+      // scopes are what the session can do. Surface those (not the request),
+      // so the UI doesn't misrepresent the access rights.
+      const effectiveScopes = probe.actualScopes ?? scope
       const base = new URL('/', request.url)
-      const fragment = `token=${encodeURIComponent(devPat)}&username=${encodeURIComponent(username)}&scopes=${encodeURIComponent(scope)}`
+      const fragment = `token=${encodeURIComponent(devPat)}&username=${encodeURIComponent(probe.username)}&scopes=${encodeURIComponent(effectiveScopes)}`
       return Response.redirect(`${base.toString()}#${fragment}`, 302)
     }
     return Response.json(
@@ -57,7 +80,19 @@ export async function GET(request: Request) {
   return Response.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`, 302)
 }
 
-async function fetchGithubUsername(token: string): Promise<string | null> {
+interface DevPatProbe {
+  username: string
+  /**
+   * Space-separated scope list reflecting what the PAT actually carries.
+   * Null if GitHub did not return X-OAuth-Scopes (fine-grained PATs omit it).
+   * When null, callers should fall back to the requested tier — the session
+   * is then optimistic and individual API calls will fail honestly if the
+   * fine-grained PAT lacks the needed permission.
+   */
+  actualScopes: string | null
+}
+
+async function probeDevPat(token: string): Promise<DevPatProbe | null> {
   try {
     const res = await fetch('https://api.github.com/user', {
       headers: {
@@ -67,8 +102,26 @@ async function fetchGithubUsername(token: string): Promise<string | null> {
     })
     if (!res.ok) return null
     const body = (await res.json()) as { login?: string }
-    return body.login ?? null
+    if (!body.login) return null
+
+    const scopesHeader = res.headers.get('x-oauth-scopes')
+    const actualScopes = normalizeScopesHeader(scopesHeader)
+
+    return { username: body.login, actualScopes }
   } catch {
     return null
   }
+}
+
+function normalizeScopesHeader(header: string | null): string | null {
+  if (!header) return null
+  const trimmed = header.trim()
+  if (!trimmed) return null
+  // GitHub returns comma-separated; we store space-separated for parity with
+  // OAuth responses.
+  return trimmed
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(' ')
 }

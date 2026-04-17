@@ -1,6 +1,8 @@
 'use client'
 
-export function SignInButton({ elevated = false }: { elevated?: boolean }) {
+export type ScopeTier = 'baseline' | 'read-org' | 'admin-org'
+
+export function SignInButton({ tier = 'baseline' }: { tier?: ScopeTier }) {
   function handleClick() {
     if (typeof window === 'undefined') return
     if (window.location.search) {
@@ -10,7 +12,8 @@ export function SignInButton({ elevated = false }: { elevated?: boolean }) {
     }
   }
 
-  const href = elevated ? '/api/auth/login?elevated=1' : '/api/auth/login'
+  const href =
+    tier === 'baseline' ? '/api/auth/login' : `/api/auth/login?scope_tier=${tier}`
 
   return (
     <a

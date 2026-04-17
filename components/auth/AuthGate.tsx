@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from './AuthContext'
-import { SignInButton } from './SignInButton'
+import { SignInButton, type ScopeTier } from './SignInButton'
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, signIn } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const authError = searchParams.get('auth_error')
-  const [elevatedOptIn, setElevatedOptIn] = useState(false)
+  const [scopeTier, setScopeTier] = useState<ScopeTier>('baseline')
 
   useEffect(() => {
     // Remove stale PAT key left by the pre-OAuth token-storage implementation
@@ -88,21 +88,37 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <SignInButton elevated={elevatedOptIn} />
+        <SignInButton tier={scopeTier} />
 
-        <label className="flex max-w-md cursor-pointer items-start gap-2 px-4 text-left text-xs text-slate-600 dark:text-slate-300">
-          <input
-            type="checkbox"
-            checked={elevatedOptIn}
-            onChange={(e) => setElevatedOptIn(e.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600"
+        <fieldset
+          className="max-w-md space-y-2 px-4 text-left text-xs text-slate-600 dark:text-slate-300"
+          aria-label="GitHub permission scope"
+        >
+          <legend className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            GitHub permission
+          </legend>
+          <ScopeRadio
+            value="baseline"
+            checked={scopeTier === 'baseline'}
+            onChange={setScopeTier}
+            label={<><span className="font-semibold">Baseline</span> (<code>public_repo</code>)</>}
+            guidance="Public data only. Recommended for read-only audits of third-party orgs."
           />
-          <span>
-            Request a <span className="font-semibold">deeper GitHub permission</span> (<code>read:org</code>)
-            to see concealed admins of orgs you belong to. Unlocks the full Stale Admin panel for
-            your own orgs. Default: off.
-          </span>
-        </label>
+          <ScopeRadio
+            value="read-org"
+            checked={scopeTier === 'read-org'}
+            onChange={setScopeTier}
+            label={<><span className="font-semibold">Read org membership</span> (<code>read:org</code>)</>}
+            guidance="See concealed admins of orgs you belong to. Choose this if you want the full Stale Admin panel for your own orgs."
+          />
+          <ScopeRadio
+            value="admin-org"
+            checked={scopeTier === 'admin-org'}
+            onChange={setScopeTier}
+            label={<><span className="font-semibold">Org admin (read)</span> (<code>admin:org</code>)</>}
+            guidance="Includes everything above, plus owner-only org settings like 2FA enforcement. Broadest scope — choose only if you own the orgs you plan to audit."
+          />
+        </fieldset>
 
         <div className="max-w-md space-y-2 text-center">
           <p className="text-xs italic text-slate-400 dark:text-slate-500">
@@ -117,4 +133,35 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>
 
+}
+
+function ScopeRadio({
+  value,
+  checked,
+  onChange,
+  label,
+  guidance,
+}: {
+  value: ScopeTier
+  checked: boolean
+  onChange: (t: ScopeTier) => void
+  label: React.ReactNode
+  guidance: string
+}) {
+  return (
+    <label className="flex cursor-pointer items-start gap-2">
+      <input
+        type="radio"
+        name="scope-tier"
+        value={value}
+        checked={checked}
+        onChange={() => onChange(value)}
+        className="mt-0.5 h-3.5 w-3.5 border-slate-300 dark:border-slate-600"
+      />
+      <span className="min-w-0">
+        <span className="block">{label}</span>
+        <span className="block text-[11px] text-slate-500 dark:text-slate-400">{guidance}</span>
+      </span>
+    </label>
+  )
 }

@@ -91,6 +91,61 @@ describe('OrgBucketContent — StaleAdminsPanel migration (#303)', () => {
   })
 })
 
+describe('OrgBucketContent — pre-analysis governance rendering (#286)', () => {
+  it('renders TwoFactorEnforcementPanel and StaleAdminsPanel when view is null — org-level panels self-fetch', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={null} org="acme" />)
+    expect(screen.getByTestId('two-factor-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('stale-admins-panel')).toBeInTheDocument()
+  })
+
+  it('renders no rollup panels when view is null (nothing to aggregate yet)', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={null} org="acme" />)
+    // Registry-driven rollup panels rely on view.panels — none should appear.
+    expect(screen.queryByTestId('mock-panel-maintainers')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mock-panel-license-consistency')).not.toBeInTheDocument()
+  })
+
+  it('renders the empty-state hint when view is null and bucket has no extra panels (e.g. activity)', () => {
+    renderWithSession(<OrgBucketContent bucketId="activity" view={null} org="acme" />)
+    expect(screen.getByText(/no data available/i)).toBeInTheDocument()
+  })
+})
+
+describe('OrgBucketContent — TwoFactorEnforcementPanel wiring (#286)', () => {
+  it('does NOT render TwoFactorEnforcementPanel when bucketId is documentation', () => {
+    renderWithSession(<OrgBucketContent bucketId="documentation" view={emptyView()} org="acme" />)
+    expect(screen.queryByTestId('two-factor-panel')).not.toBeInTheDocument()
+  })
+
+  it('renders TwoFactorEnforcementPanel when bucketId is governance and ownerType is Organization', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org="acme" />)
+    expect(screen.getByTestId('two-factor-panel')).toBeInTheDocument()
+  })
+
+  it('renders TwoFactorEnforcementPanel even when ownerType is User (org=null) — its own N/A rendering is its responsibility', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org={null} />)
+    expect(screen.getByTestId('two-factor-panel')).toBeInTheDocument()
+  })
+
+  it('does NOT render TwoFactorEnforcementPanel under any non-governance bucket', () => {
+    for (const bucketId of ['contributors', 'activity', 'responsiveness', 'documentation', 'security'] as const) {
+      const { unmount } = renderWithSession(<OrgBucketContent bucketId={bucketId} view={emptyView()} org="acme" />)
+      expect(screen.queryByTestId('two-factor-panel')).not.toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  it('renders TwoFactorEnforcementPanel BEFORE StaleAdminsPanel so both org-level signals sit at the top of Governance', () => {
+    renderWithSession(<OrgBucketContent bucketId="governance" view={emptyView()} org="acme" />)
+
+    const twoFactorNode = screen.getByTestId('two-factor-panel')
+    const staleAdminsNode = screen.getByTestId('stale-admins-panel')
+
+    const positionRelation = twoFactorNode.compareDocumentPosition(staleAdminsNode)
+    expect(positionRelation & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
 describe('OrgBucketContent — risk-first panel order in Governance (#303 US3)', () => {
   it('renders StaleAdminsPanel BEFORE registry-driven panels', () => {
     renderWithSession(<OrgBucketContent bucketId="governance" view={viewWithGovernancePanels()} org="acme" />)

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchMaintainerCount,
   fetchOrgAdmins,
+  fetchOrgTwoFactorRequirement,
   fetchUserLatestOrgCommit,
   fetchUserOrgMembership,
   fetchUserPublicEvents,
@@ -317,6 +318,100 @@ describe('fetchUserLatestOrgCommit', () => {
   it('maps other failures to commit-search-failed', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 422 })))
     expect((await fetchUserLatestOrgCommit('t', 'alice', 'x')).kind).toBe('commit-search-failed')
+  })
+})
+
+describe('fetchOrgTwoFactorRequirement', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('sends bearer auth to /orgs/{org} and returns the literal boolean true', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input)
+      expect(url).toBe('https://api.github.com/orgs/kubernetes')
+      return buildPageResponse({ login: 'kubernetes', two_factor_requirement_enabled: true })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchOrgTwoFactorRequirement('ghp_test', 'kubernetes')
+
+    expect(result).toEqual({ kind: 'ok', twoFactorRequirementEnabled: true })
+    const init = fetchMock.mock.calls[0]![1] as RequestInit | undefined
+    expect(init?.headers).toMatchObject({ Authorization: 'Bearer ghp_test' })
+  })
+
+  it('returns literal false when enforcement is explicitly disabled', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => buildPageResponse({ two_factor_requirement_enabled: false })),
+    )
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result).toEqual({ kind: 'ok', twoFactorRequirementEnabled: false })
+  })
+
+  it('returns null (unknown) when the field is absent — caller lacks org-owner scope', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => buildPageResponse({ login: 'x' })))
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result).toEqual({ kind: 'ok', twoFactorRequirementEnabled: null })
+  })
+
+  it('returns null (unknown) when the field value is literal null', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => buildPageResponse({ two_factor_requirement_enabled: null })),
+    )
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result).toEqual({ kind: 'ok', twoFactorRequirementEnabled: null })
+  })
+
+  it('maps 403 + X-RateLimit-Remaining: 0 to kind rate-limited', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => buildRateLimitedResponse()))
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result.kind).toBe('rate-limited')
+  })
+
+  it('maps 401 to kind auth-failed', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result.kind).toBe('auth-failed')
+  })
+
+  it('maps 404 to kind not-found', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 404 })))
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result.kind).toBe('not-found')
+  })
+
+  it('maps a thrown fetch error to kind network', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('boom')
+      }),
+    )
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result.kind).toBe('network')
+  })
+
+  it('maps an unexpected 500 to kind unknown', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 500 })))
+
+    const result = await fetchOrgTwoFactorRequirement('t', 'x')
+
+    expect(result.kind).toBe('unknown')
   })
 })
 

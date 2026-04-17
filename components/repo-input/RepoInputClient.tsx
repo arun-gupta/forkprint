@@ -377,9 +377,14 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level hygiene and policy — account activity, maintainers, governance files, license consistency.' },
         { id: 'security', label: 'Security', status: 'implemented', description: 'Org-level OpenSSF Scorecard rollup.' },
       ]
-    : [
-        { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
-      ]
+    : orgInventoryResponse?.org
+      ? [
+          { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
+          { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level security signals available without analyzing individual repos — 2FA enforcement, admin activity.' },
+        ]
+      : [
+          { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
+        ]
 
   const showOrgWorkspace = inputMode === 'org'
   const successfulRepoCount = analysisResponse?.results.length ?? 0
@@ -656,6 +661,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             view={orgAggregation.view}
             selectedWindow={orgWindow}
             org={orgInventoryResponse?.org ?? null}
+          />
+        ) : inputMode === 'org' && orgInventoryResponse?.org ? (
+          <OrgBucketContent
+            bucketId="governance"
+            view={null}
+            org={orgInventoryResponse.org}
           />
         ) : null
       }

@@ -4,10 +4,11 @@ import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { PANEL_BUCKETS, isRealPanel, renderPanel, type PanelBucketId } from './panels/registry'
 import { StaleAdminsPanel } from './panels/StaleAdminsPanel'
+import { TwoFactorEnforcementPanel } from './panels/TwoFactorEnforcementPanel'
 
 interface Props {
   bucketId: PanelBucketId
-  view: OrgSummaryViewModel
+  view: OrgSummaryViewModel | null
   selectedWindow?: ContributorDiversityWindow
   org?: string | null
 }
@@ -16,15 +17,20 @@ export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props)
   const bucket = PANEL_BUCKETS.find((b) => b.id === bucketId)
   if (!bucket) return null
 
-  const bucketPanels = bucket.panels
-    .map((panelId) => ({ panelId, panel: view.panels[panelId] }))
-    .filter((x): x is { panelId: typeof x.panelId; panel: NonNullable<typeof x.panel> } =>
-      Boolean(x.panel) && isRealPanel(x.panelId)
-    )
+  const bucketPanels = view
+    ? bucket.panels
+        .map((panelId) => ({ panelId, panel: view.panels[panelId] }))
+        .filter((x): x is { panelId: typeof x.panelId; panel: NonNullable<typeof x.panel> } =>
+          Boolean(x.panel) && isRealPanel(x.panelId),
+        )
+    : []
 
   const extraPanels =
     bucketId === 'governance' ? (
-      <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+      <>
+        <TwoFactorEnforcementPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+        <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+      </>
     ) : null
 
   if (bucketPanels.length === 0 && !extraPanels) {

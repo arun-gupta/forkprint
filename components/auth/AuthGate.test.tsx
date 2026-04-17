@@ -58,7 +58,7 @@ describe('AuthGate', () => {
     expect(screen.getByRole('link', { name: /sign in with github/i })).toBeInTheDocument()
   })
 
-  it('renders an opt-in deeper-permission checkbox on the unauthenticated branch', () => {
+  it('renders three scope-tier radios on the unauthenticated branch, with baseline selected by default', () => {
     render(
       <AuthProvider>
         <AuthGate>
@@ -66,12 +66,16 @@ describe('AuthGate', () => {
         </AuthGate>
       </AuthProvider>,
     )
-    const checkbox = screen.getByRole('checkbox', { name: /deeper github permission/i })
-    expect(checkbox).toBeInTheDocument()
-    expect(checkbox).not.toBeChecked()
+    const baseline = screen.getByRole('radio', { name: /baseline/i })
+    const readOrg = screen.getByRole('radio', { name: /read org membership/i })
+    const adminOrg = screen.getByRole('radio', { name: /org admin \(read\)/i })
+
+    expect(baseline).toBeChecked()
+    expect(readOrg).not.toBeChecked()
+    expect(adminOrg).not.toBeChecked()
   })
 
-  it('sign-in link includes ?elevated=1 when the checkbox is checked, and omits it when unchecked', async () => {
+  it('sign-in link reflects the selected scope tier', async () => {
     const userEvent = (await import('@testing-library/user-event')).default
     render(
       <AuthProvider>
@@ -83,10 +87,26 @@ describe('AuthGate', () => {
     const link = screen.getByRole('link', { name: /sign in with github/i })
     expect(link.getAttribute('href')).toBe('/api/auth/login')
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /deeper github permission/i }))
-    expect(link.getAttribute('href')).toBe('/api/auth/login?elevated=1')
+    await userEvent.click(screen.getByRole('radio', { name: /read org membership/i }))
+    expect(link.getAttribute('href')).toBe('/api/auth/login?scope_tier=read-org')
 
-    await userEvent.click(screen.getByRole('checkbox', { name: /deeper github permission/i }))
+    await userEvent.click(screen.getByRole('radio', { name: /org admin \(read\)/i }))
+    expect(link.getAttribute('href')).toBe('/api/auth/login?scope_tier=admin-org')
+
+    await userEvent.click(screen.getByRole('radio', { name: /baseline/i }))
     expect(link.getAttribute('href')).toBe('/api/auth/login')
+  })
+
+  it('each scope tier carries a brief guidance line to help the user decide', () => {
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <p>Protected content</p>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.getByText(/public data only/i)).toBeInTheDocument()
+    expect(screen.getByText(/concealed admins/i)).toBeInTheDocument()
+    expect(screen.getByText(/owner-only org settings/i)).toBeInTheDocument()
   })
 })

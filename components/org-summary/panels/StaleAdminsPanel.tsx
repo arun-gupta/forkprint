@@ -72,7 +72,9 @@ const GROUP_CONFIG: Record<
 
 export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverride }: Props) {
   const { session, hasScope } = useAuth()
-  const elevated = hasScope('read:org')
+  // admin:org is a strict superset of read:org — treat either as "elevated"
+  // for the concealed-admins view.
+  const elevated = hasScope('read:org') || hasScope('admin:org')
   const hasOverride = sectionOverride !== undefined
 
   const hookState = useStaleAdmins({
@@ -122,7 +124,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
           </div>
           {section ? <ModeBadge mode={section.mode} /> : null}
         </div>
-        {expanded && section ? <HeaderCountStrip section={section} /> : null}
+        {section ? <HeaderCountStrip section={section} /> : null}
       </header>
 
       {expanded ? (
