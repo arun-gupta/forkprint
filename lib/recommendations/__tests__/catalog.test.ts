@@ -38,8 +38,8 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Security')).toHaveLength(17)
   })
 
-  it('has 5 activity entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Activity')).toHaveLength(5)
+  it('has 8 activity entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Activity')).toHaveLength(8)
   })
 
   it('has 3 responsiveness entries', () => {
@@ -50,12 +50,16 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(7)
   })
 
-  it('has 17 documentation entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(17)
+  it('has 21 documentation entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(21)
   })
 
   it('has 5 community-tagged entries', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('community'))).toHaveLength(5)
+  })
+
+  it('has 7 release-health-tagged entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('release-health'))).toHaveLength(7)
   })
 })
 
@@ -125,7 +129,7 @@ describe('getCatalogEntriesByTag', () => {
     const entries = getCatalogEntriesByTag('quick-win')
     const ids = entries.map((e) => e.id).sort()
     expect(ids).toEqual([
-      'DOC-1', 'DOC-17', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
+      'DOC-1', 'DOC-103', 'DOC-104', 'DOC-17', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-16', 'SEC-6',
     ])
   })
