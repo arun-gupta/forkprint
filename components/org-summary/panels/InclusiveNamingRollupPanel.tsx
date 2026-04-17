@@ -2,6 +2,7 @@
 
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { InclusiveNamingRollupValue } from '@/lib/org-aggregation/aggregators/types'
+import { HelpLabel } from '@/components/shared/HelpLabel'
 import { EmptyState } from '../EmptyState'
 
 interface Props { panel: AggregatePanel<InclusiveNamingRollupValue> }
@@ -75,13 +76,8 @@ function Stat({
   const toneClass = tone === 'good' ? 'text-emerald-700 dark:text-emerald-400' : tone === 'bad' ? 'text-rose-700 dark:text-rose-400' : tone === 'warn' ? 'text-amber-700 dark:text-amber-400' : 'text-slate-900 dark:text-slate-100'
   return (
     <div>
-      <dt
-        className="flex items-center gap-1 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"
-        title={tooltip}
-      >
-        <span>{label}</span>
-        <span aria-hidden="true" className="cursor-help text-slate-400 dark:text-slate-500">(?)</span>
-        <span className="sr-only">{tooltip}</span>
+      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <HelpLabel label={label} helpText={tooltip} />
       </dt>
       <dd className={`text-lg font-semibold ${toneClass}`}>
         {value}
