@@ -67,10 +67,11 @@ const ACT: CatalogEntry[] = [
   { id: 'ACT-3', bucket: 'Activity', key: 'completion_speed', title: 'Reduce time to merge PRs and close issues' },
   { id: 'ACT-4', bucket: 'Activity', key: 'sustained_activity', title: 'Increase commit frequency for sustained momentum' },
   { id: 'ACT-5', bucket: 'Activity', key: 'feature:discussions_enabled', title: 'Enable GitHub Discussions for contributor conversation', tags: ['community', 'contrib-ex'] },
-  // Release Health recommendations (P2-F09 / #69).
-  { id: 'ACT-101', bucket: 'Activity', key: 'release_never_released', title: 'Cut a first release so adopters have a clear starting point', tags: ['release-health'] },
-  { id: 'ACT-102', bucket: 'Activity', key: 'release_stale', title: 'Cut a maintenance release or archive the repository', tags: ['release-health'] },
-  { id: 'ACT-103', bucket: 'Activity', key: 'release_cooling', title: 'Cut a release to reflect recent commits', tags: ['release-health'] },
+  // Release Health recommendations (P2-F09 / #69). IDs stay below the
+  // fallback-counter range (101+) used by reference-id.ts for dynamic recs.
+  { id: 'ACT-6', bucket: 'Activity', key: 'release_never_released', title: 'Cut a first release so adopters have a clear starting point', tags: ['release-health'] },
+  { id: 'ACT-7', bucket: 'Activity', key: 'release_stale', title: 'Cut a maintenance release or archive the repository', tags: ['release-health'] },
+  { id: 'ACT-8', bucket: 'Activity', key: 'release_cooling', title: 'Cut a release to reflect recent commits', tags: ['release-health'] },
 ]
 
 // ── Responsiveness ────────────────────────────────────────────────────
@@ -117,11 +118,12 @@ const DOC: CatalogEntry[] = [
   { id: 'DOC-15', bucket: 'Documentation', key: 'file:issue_templates', title: 'Add an issue template in .github/ISSUE_TEMPLATE/', tags: ['community', 'contrib-ex'] },
   { id: 'DOC-16', bucket: 'Documentation', key: 'file:pull_request_template', title: 'Add a PULL_REQUEST_TEMPLATE.md', tags: ['community', 'contrib-ex'] },
   { id: 'DOC-17', bucket: 'Documentation', key: 'file:governance', title: 'Add GOVERNANCE.md', tags: ['governance', 'community', 'quick-win'] },
-  // Release Health recommendations (P2-F09 / #69).
-  { id: 'DOC-101', bucket: 'Documentation', key: 'release_adopt_semver', title: 'Adopt semantic versioning for release tags', tags: ['release-health'] },
-  { id: 'DOC-102', bucket: 'Documentation', key: 'release_adopt_scheme', title: 'Adopt a consistent versioning scheme', tags: ['release-health'] },
-  { id: 'DOC-103', bucket: 'Documentation', key: 'release_improve_notes', title: 'Expand release notes to describe what changed', tags: ['release-health', 'quick-win'] },
-  { id: 'DOC-104', bucket: 'Documentation', key: 'release_promote_tags', title: 'Promote git tags to GitHub Releases', tags: ['release-health', 'quick-win'] },
+  // Release Health recommendations (P2-F09 / #69). IDs stay below the
+  // fallback-counter range (101+) used by reference-id.ts for dynamic recs.
+  { id: 'DOC-18', bucket: 'Documentation', key: 'release_adopt_semver', title: 'Adopt semantic versioning for release tags', tags: ['release-health'] },
+  { id: 'DOC-19', bucket: 'Documentation', key: 'release_adopt_scheme', title: 'Adopt a consistent versioning scheme', tags: ['release-health'] },
+  { id: 'DOC-20', bucket: 'Documentation', key: 'release_improve_notes', title: 'Expand release notes to describe what changed', tags: ['release-health', 'quick-win'] },
+  { id: 'DOC-21', bucket: 'Documentation', key: 'release_promote_tags', title: 'Promote git tags to GitHub Releases', tags: ['release-health', 'quick-win'] },
 ]
 
 // ── Combined catalog ──────────────────────────────────────────────────

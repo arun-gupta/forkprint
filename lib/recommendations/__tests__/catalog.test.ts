@@ -129,7 +129,7 @@ describe('getCatalogEntriesByTag', () => {
     const entries = getCatalogEntriesByTag('quick-win')
     const ids = entries.map((e) => e.id).sort()
     expect(ids).toEqual([
-      'DOC-1', 'DOC-103', 'DOC-104', 'DOC-17', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
+      'DOC-1', 'DOC-17', 'DOC-2', 'DOC-20', 'DOC-21', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-16', 'SEC-6',
     ])
   })

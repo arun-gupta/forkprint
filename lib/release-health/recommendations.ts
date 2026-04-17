@@ -48,7 +48,7 @@ export function generateReleaseHealthRecommendations(
 
     if (typeof rh.releaseNotesQualityRatio === 'number' && rh.releaseNotesQualityRatio < NOTES_FLOOR) {
       recs.push({
-        bucket: 'documentation',
+        bucket: 'Documentation',
         key: 'release_improve_notes',
         percentile: context.documentationPercentile,
         message: 'Expand release notes to describe what changed in each release — adopters rely on them to gauge upgrade impact',
@@ -58,7 +58,7 @@ export function generateReleaseHealthRecommendations(
 
     if (typeof rh.tagToReleaseRatio === 'number' && rh.tagToReleaseRatio > TAG_PROMOTION_CEILING) {
       recs.push({
-        bucket: 'documentation',
+        bucket: 'Documentation',
         key: 'release_promote_tags',
         percentile: context.documentationPercentile,
         message: 'Promote git tags to GitHub Releases so users have a clear list of shipped versions with associated changelog entries',
@@ -76,7 +76,7 @@ function pickStalenessTier(
 ): HealthScoreRecommendation | null {
   if (rh.totalReleasesAnalyzed === 0) {
     return {
-      bucket: 'activity',
+      bucket: 'Activity',
       key: 'release_never_released',
       percentile: 0,
       message: 'Cut a first release (and tag it on GitHub) so adopters have a clear starting point and upgrade path',
@@ -89,7 +89,7 @@ function pickStalenessTier(
 
   if (days >= STALE_RELEASE_CUTOFF_DAYS) {
     return {
-      bucket: 'activity',
+      bucket: 'Activity',
       key: 'release_stale',
       percentile: 0,
       message: `The most recent release was ${days} days ago — consider cutting a maintenance release or archiving the repository so downstream users know its status`,
@@ -99,7 +99,7 @@ function pickStalenessTier(
 
   if (days >= COOLING_RELEASE_CUTOFF_DAYS && typeof commits90d === 'number' && commits90d > 0) {
     return {
-      bucket: 'activity',
+      bucket: 'Activity',
       key: 'release_cooling',
       percentile: 0,
       message: `It has been ${days} days since the last release, even though commits are landing — consider cutting a release to reflect recent work`,
@@ -116,7 +116,7 @@ function pickSchemeRec(rh: ReleaseHealthResult): HealthScoreRecommendation | nul
 
   if (rh.versioningScheme === 'unrecognized') {
     return {
-      bucket: 'documentation',
+      bucket: 'Documentation',
       key: 'release_adopt_scheme',
       percentile: 0,
       message: 'Adopt a consistent versioning scheme (semver, CalVer, or a documented alternative) so adopters can reason about upgrades',
@@ -127,7 +127,7 @@ function pickSchemeRec(rh: ReleaseHealthResult): HealthScoreRecommendation | nul
   const ratio = rh.semverComplianceRatio
   if (typeof ratio === 'number' && ratio < SEMVER_ADOPTION_THRESHOLD) {
     return {
-      bucket: 'documentation',
+      bucket: 'Documentation',
       key: 'release_adopt_semver',
       percentile: 0,
       message: 'Adopt semantic versioning (MAJOR.MINOR.PATCH) for release tags so adopters can interpret upgrade risk automatically',
