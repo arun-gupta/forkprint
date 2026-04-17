@@ -35,7 +35,7 @@ export interface DocumentationScoreDefinition {
   recommendations: DocumentationRecommendation[]
 }
 
-const FILE_WEIGHTS: Record<string, number> = {
+export const FILE_WEIGHTS: Record<string, number> = {
   readme: 0.30,
   contributing: 0.20,
   code_of_conduct: 0.10,
@@ -62,7 +62,7 @@ const FILE_RECOMMENDATIONS: Record<string, string> = {
   governance: 'Add a governance document (e.g. GOVERNANCE.md) to describe project decision-making, maintainer roles, and escalation paths',
 }
 
-const SECTION_WEIGHTS: Record<string, number> = {
+export const SECTION_WEIGHTS: Record<string, number> = {
   description: 0.25,
   installation: 0.25,
   usage: 0.25,
@@ -78,17 +78,17 @@ const SECTION_RECOMMENDATIONS: Record<string, string> = {
   license: 'Add a license section or badge to your README',
 }
 
-const LICENSING_WEIGHTS = {
+export const LICENSING_WEIGHTS = {
   licensePresent: 0.40,
   osiApproved: 0.25,
   tierClassified: 0.10,
   dcoClaEnforced: 0.25,
 } as const
 
-const COMPOSITE_WEIGHTS = {
-  filePresence: 0.35,
-  readmeQuality: 0.30,
-  licensing: 0.25,
+export const COMPOSITE_WEIGHTS = {
+  filePresence: 0.50,
+  readmeQuality: 0.25,
+  licensing: 0.15,
   inclusiveNaming: 0.10,
 } as const
 

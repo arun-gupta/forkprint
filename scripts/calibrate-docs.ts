@@ -12,6 +12,14 @@
 import { loadEnvConfig } from '@next/env'
 import { readFileSync, writeFileSync } from 'fs'
 import { isOsiApproved, getPermissivenessTier } from '../lib/licensing/license-data'
+import { extractInclusiveNamingResult } from '../lib/inclusive-naming/checker'
+import { getInclusiveNamingScore } from '../lib/inclusive-naming/score-config'
+import {
+  FILE_WEIGHTS,
+  SECTION_WEIGHTS,
+  LICENSING_WEIGHTS,
+  COMPOSITE_WEIGHTS,
+} from '../lib/documentation/score-config'
 
 loadEnvConfig(process.cwd())
 
@@ -58,13 +66,12 @@ interface BracketRepos {
 function readRepoList(): BracketRepos[] {
   const content = readFileSync(REPO_LIST_PATH, 'utf-8')
   const brackets: BracketRepos[] = []
-  let currentKey = ''
 
   for (const line of content.split('\n')) {
-    const bracketMatch = line.match(/^## (Emerging|Growing|Established|Popular)/)
+    const bracketMatch = line.match(/^## (Solo Tiny|Solo Small|Emerging|Growing|Established|Popular)\b/)
     if (bracketMatch) {
-      currentKey = bracketMatch[1]!.toLowerCase()
-      brackets.push({ key: currentKey, repos: [] })
+      const key = bracketMatch[1]!.toLowerCase().replace(/\s+/g, '-')
+      brackets.push({ key, repos: [] })
       continue
     }
     const repoMatch = line.match(/^\- \[([^\]]+)\]/)
@@ -85,7 +92,9 @@ function buildDocQuery(repos: string[]): string {
     const [owner, name] = fullName.split('/')
     return `
       repo${i}: repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(name)}) {
+        description
         licenseInfo { spdxId }
+        repositoryTopics(first: 20) { nodes { topic { name } } }
         readmeMd: object(expression: "HEAD:README.md") { ... on Blob { text } }
         readmeLower: object(expression: "HEAD:readme.md") { ... on Blob { text } }
         readmeRst: object(expression: "HEAD:README.rst") { ... on Blob { text } }
@@ -101,10 +110,22 @@ function buildDocQuery(repos: string[]): string {
         changes: object(expression: "HEAD:CHANGES.md") { ... on Blob { oid } }
         history: object(expression: "HEAD:HISTORY.md") { ... on Blob { oid } }
         news: object(expression: "HEAD:NEWS.md") { ... on Blob { oid } }
+        issueTemplateDir: object(expression: "HEAD:.github/ISSUE_TEMPLATE") {
+          ... on Tree { entries { name } }
+        }
+        issueTemplateLegacyRoot: object(expression: "HEAD:ISSUE_TEMPLATE.md") { ... on Blob { oid } }
+        issueTemplateLegacyGithub: object(expression: "HEAD:.github/ISSUE_TEMPLATE.md") { ... on Blob { oid } }
+        prTemplateRoot: object(expression: "HEAD:PULL_REQUEST_TEMPLATE.md") { ... on Blob { oid } }
+        prTemplateGithub: object(expression: "HEAD:.github/PULL_REQUEST_TEMPLATE.md") { ... on Blob { oid } }
+        prTemplateDocs: object(expression: "HEAD:docs/PULL_REQUEST_TEMPLATE.md") { ... on Blob { oid } }
+        governanceRoot: object(expression: "HEAD:GOVERNANCE.md") { ... on Blob { oid } }
+        governanceGithub: object(expression: "HEAD:.github/GOVERNANCE.md") { ... on Blob { oid } }
+        governanceDocs: object(expression: "HEAD:docs/GOVERNANCE.md") { ... on Blob { oid } }
         workflows: object(expression: "HEAD:.github/workflows") {
           ... on Tree { entries { name object { ... on Blob { text } } } }
         }
         defaultBranchRef {
+          name
           target {
             ... on Commit { history(first: 20) { nodes { message } } }
           }
@@ -134,8 +155,11 @@ async function fetchWithRetry(url: string, init: RequestInit, retries = 3): Prom
 
 interface DocBlob { text?: string; oid?: string }
 interface WorkflowEntry { name: string; object: { text: string } | null }
+interface TreeEntry { name: string }
 interface DocRepoData {
+  description?: string | null
   licenseInfo?: { spdxId: string | null } | null
+  repositoryTopics?: { nodes: Array<{ topic: { name: string } }> } | null
   readmeMd?: DocBlob | null
   readmeLower?: DocBlob | null
   readmeRst?: DocBlob | null
@@ -151,8 +175,20 @@ interface DocRepoData {
   changes?: DocBlob | null
   history?: DocBlob | null
   news?: DocBlob | null
+  issueTemplateDir?: { entries: TreeEntry[] } | null
+  issueTemplateLegacyRoot?: DocBlob | null
+  issueTemplateLegacyGithub?: DocBlob | null
+  prTemplateRoot?: DocBlob | null
+  prTemplateGithub?: DocBlob | null
+  prTemplateDocs?: DocBlob | null
+  governanceRoot?: DocBlob | null
+  governanceGithub?: DocBlob | null
+  governanceDocs?: DocBlob | null
   workflows?: { entries: WorkflowEntry[] } | null
-  defaultBranchRef?: { target: { history: { nodes: Array<{ message: string }> } } } | null
+  defaultBranchRef?: {
+    name?: string | null
+    target: { history: { nodes: Array<{ message: string }> } } | null
+  } | null
 }
 
 async function runGraphQL(query: string, token: string): Promise<Record<string, DocRepoData | null>> {
@@ -183,17 +219,9 @@ async function runGraphQL(query: string, token: string): Promise<Record<string, 
 }
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────
-
-// Matches lib/documentation/score-config.ts — license excluded (scored in licensing sub-score)
-const FILE_WEIGHTS: Record<string, number> = {
-  readme: 0.30, contributing: 0.20,
-  code_of_conduct: 0.10, security: 0.20, changelog: 0.20,
-}
-
-const SECTION_WEIGHTS: Record<string, number> = {
-  description: 0.25, installation: 0.25, usage: 0.25,
-  contributing: 0.15, license: 0.10,
-}
+// Sub-score weights (FILE_WEIGHTS, SECTION_WEIGHTS, LICENSING_WEIGHTS,
+// COMPOSITE_WEIGHTS) are imported from lib/documentation/score-config.ts so
+// this script stays in sync with runtime scoring.
 
 function rstAndMdPatterns(keyword: RegExp): RegExp[] {
   return [
@@ -210,21 +238,6 @@ const SECTION_PATTERNS: Array<{ name: string; patterns: RegExp[] }> = [
   { name: 'license', patterns: rstAndMdPatterns(/licen[sc]e/) },
 ]
 
-// Licensing sub-score weights — matches lib/documentation/score-config.ts
-const LICENSING_WEIGHTS = {
-  licensePresent: 0.40,
-  osiApproved: 0.25,
-  tierClassified: 0.10,
-  dcoClaEnforced: 0.25,
-}
-
-// Composite weights — matches lib/documentation/score-config.ts
-const COMPOSITE_WEIGHTS = {
-  filePresence: 0.40,
-  readmeQuality: 0.30,
-  licensing: 0.30,
-}
-
 const DCO_CLA_BOT_PATTERNS = [
   'apps/dco',
   'probot/dco',
@@ -239,7 +252,8 @@ function computeDocScore(repo: DocRepoData): number {
   const has = (blob: DocBlob | null | undefined) => blob != null
   const any = (...blobs: (DocBlob | null | undefined)[]) => blobs.some(has)
 
-  // File presence sub-score — license excluded (scored in licensing sub-score)
+  // ── File presence sub-score (license excluded — scored in licensing sub-score)
+  // Matches lib/analyzer/analyze.ts community-template detection + FILE_WEIGHTS.
   let fileScore = 0
   if (any(repo.readmeMd, repo.readmeLower, repo.readmeRst, repo.readmeTxt, repo.readmePlain)) fileScore += FILE_WEIGHTS.readme!
   if (any(repo.contributing, repo.contributingRst, repo.contributingTxt)) fileScore += FILE_WEIGHTS.contributing!
@@ -247,7 +261,17 @@ function computeDocScore(repo: DocRepoData): number {
   if (has(repo.security)) fileScore += FILE_WEIGHTS.security!
   if (any(repo.changelog, repo.changelogPlain, repo.changes, repo.history, repo.news)) fileScore += FILE_WEIGHTS.changelog!
 
-  // README quality sub-score
+  // Community templates (P2-F05). Issue templates: directory with at least one
+  // .md/.yml/.yaml entry OR a legacy ISSUE_TEMPLATE.md.
+  const issueTplEntries = repo.issueTemplateDir?.entries ?? []
+  const hasIssueTemplateDir = issueTplEntries.some((e) => /\.(md|ya?ml)$/i.test(e.name))
+  const hasLegacyIssueTemplate = repo.issueTemplateLegacyRoot != null || repo.issueTemplateLegacyGithub != null
+  if (hasIssueTemplateDir || hasLegacyIssueTemplate) fileScore += FILE_WEIGHTS.issue_templates!
+  if (any(repo.prTemplateRoot, repo.prTemplateGithub, repo.prTemplateDocs)) fileScore += FILE_WEIGHTS.pull_request_template!
+  if (any(repo.governanceRoot, repo.governanceGithub, repo.governanceDocs)) fileScore += FILE_WEIGHTS.governance!
+  if (fileScore > 1) fileScore = 1
+
+  // ── README quality sub-score
   const readmeBlob = repo.readmeMd ?? repo.readmeLower ?? repo.readmeRst ?? repo.readmeTxt ?? repo.readmePlain
   const content = readmeBlob?.text ?? null
   let sectionScore = 0
@@ -266,7 +290,7 @@ function computeDocScore(repo: DocRepoData): number {
     }
   }
 
-  // Licensing sub-score
+  // ── Licensing sub-score
   const spdxId = repo.licenseInfo?.spdxId ?? null
   let licensingScore = 0
 
@@ -303,10 +327,19 @@ function computeDocScore(repo: DocRepoData): number {
     licensingScore += LICENSING_WEIGHTS.dcoClaEnforced
   }
 
+  // ── Inclusive Naming sub-score — reuses runtime scoring so composite anchors
+  // stay in sync with the runtime formula.
+  const branchName = repo.defaultBranchRef?.name ?? null
+  const description = repo.description ?? null
+  const topics = (repo.repositoryTopics?.nodes ?? []).map((n) => n.topic.name)
+  const iniResult = extractInclusiveNamingResult(branchName, description, topics)
+  const inclusiveNamingScore = getInclusiveNamingScore(iniResult).compositeScore
+
   return (
     fileScore * COMPOSITE_WEIGHTS.filePresence +
     sectionScore * COMPOSITE_WEIGHTS.readmeQuality +
-    licensingScore * COMPOSITE_WEIGHTS.licensing
+    licensingScore * COMPOSITE_WEIGHTS.licensing +
+    inclusiveNamingScore * COMPOSITE_WEIGHTS.inclusiveNaming
   )
 }
 
