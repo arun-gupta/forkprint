@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { LicenseConsistencyValue } from '@/lib/org-aggregation/aggregators/types'
 import { EmptyState } from '../EmptyState'
@@ -36,28 +37,61 @@ const GROUP_CONFIG: Record<
 }
 
 export function LicenseConsistencyPanel({ panel }: Props) {
+  const [expanded, setExpanded] = useState(true)
   return (
     <section
       aria-label="License consistency"
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       data-testid="license-consistency-panel"
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">License consistency</h3>
+      <header className={`flex flex-wrap items-center justify-between gap-2 ${expanded ? 'mb-3' : ''}`}>
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse License consistency' : 'Expand License consistency'}
+            aria-expanded={expanded}
+            title={expanded ? 'Collapse' : 'Expand'}
+            data-testid="license-consistency-panel-toggle"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <PanelChevron expanded={expanded} />
+          </button>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">License consistency</h3>
+        </div>
         {panel.lastUpdatedAt ? (
           <span className="text-xs text-slate-400 dark:text-slate-500">
             updated {panel.lastUpdatedAt.toLocaleTimeString()}
           </span>
         ) : null}
       </header>
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No licensing data available.</p>
-      ) : (
-        <PanelBody value={panel.value} contributingReposCount={panel.contributingReposCount} totalReposInRun={panel.totalReposInRun} />
-      )}
+      {expanded ? (
+        panel.status === 'in-progress' && !panel.value ? (
+          <EmptyState />
+        ) : panel.status === 'unavailable' || !panel.value ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">No licensing data available.</p>
+        ) : (
+          <PanelBody value={panel.value} contributingReposCount={panel.contributingReposCount} totalReposInRun={panel.totalReposInRun} />
+        )
+      ) : null}
     </section>
+  )
+}
+
+function PanelChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
   )
 }
 

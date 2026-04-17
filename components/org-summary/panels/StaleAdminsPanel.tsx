@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAuth } from '@/components/auth/AuthContext'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
 import { useStaleAdmins, type OwnerType } from '@/components/shared/hooks/useStaleAdmins'
@@ -83,6 +84,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
 
   const section = hasOverride ? sectionOverride : hookState.section
   const loading = loadingOverride ?? (hasOverride ? false : hookState.loading)
+  const [expanded, setExpanded] = useState(true)
 
   return (
     <section
@@ -90,25 +92,58 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       data-testid="stale-admins-panel"
     >
-      <header className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Org admin activity
-            </h3>
-            <ScoringHelp section={section} />
+      <header className={`flex flex-wrap items-start justify-between gap-2 ${expanded ? 'mb-3' : ''}`}>
+        <div className="flex min-w-0 items-start gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse Org admin activity' : 'Expand Org admin activity'}
+            aria-expanded={expanded}
+            title={expanded ? 'Collapse' : 'Expand'}
+            data-testid="stale-admins-panel-toggle"
+            className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <PanelChevron expanded={expanded} />
+          </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Org admin activity
+              </h3>
+              <ScoringHelp section={section} />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Stale admin detection — an inactive admin is a privilege-escalation risk.
+            </p>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Stale admin detection — an inactive admin is a privilege-escalation risk.
-          </p>
         </div>
         {section ? <ModeBadge mode={section.mode} /> : null}
       </header>
 
-      {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
-
-      {!loading && section ? <SectionBody section={section} /> : null}
+      {expanded ? (
+        <>
+          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
+          {!loading && section ? <SectionBody section={section} /> : null}
+        </>
+      ) : null}
     </section>
+  )
+}
+
+function PanelChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
   )
 }
 
