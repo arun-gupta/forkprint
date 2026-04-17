@@ -5,14 +5,33 @@ export const runtime = 'nodejs'
 
 const OAUTH_STATE_COOKIE = 'repo_pulse_oauth_state'
 
-export function buildOAuthScope(elevated: boolean): string {
-  return elevated ? 'public_repo read:org' : 'public_repo'
+export type ScopeTier = 'baseline' | 'read-org' | 'admin-org'
+
+export function buildOAuthScope(tier: ScopeTier): string {
+  switch (tier) {
+    case 'admin-org':
+      return 'public_repo admin:org'
+    case 'read-org':
+      return 'public_repo read:org'
+    default:
+      return 'public_repo'
+  }
+}
+
+export function resolveScopeTier(url: URL): ScopeTier {
+  const explicit = url.searchParams.get('scope_tier')
+  if (explicit === 'admin-org') return 'admin-org'
+  if (explicit === 'read-org') return 'read-org'
+  if (explicit === 'baseline') return 'baseline'
+  // Legacy: ?elevated=1 maps to read-org
+  if (url.searchParams.get('elevated') === '1') return 'read-org'
+  return 'baseline'
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const elevated = url.searchParams.get('elevated') === '1'
-  const scope = buildOAuthScope(elevated)
+  const tier = resolveScopeTier(url)
+  const scope = buildOAuthScope(tier)
 
   // Dev-only short-circuit (#207): bypass GitHub OAuth when DEV_GITHUB_PAT is
   // set in `next dev`. Resolves the multi-worktree port-mismatch problem
