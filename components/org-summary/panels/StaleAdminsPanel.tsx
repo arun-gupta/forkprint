@@ -106,11 +106,12 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
             <PanelChevron expanded={expanded} />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Org admin activity
               </h3>
               <ScoringHelp section={section} />
+              <AdminCountSummary section={section} />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Stale admin detection — an inactive admin is a privilege-escalation risk.
@@ -144,6 +145,48 @@ function PanelChevron({ expanded }: { expanded: boolean }) {
     >
       <path d="M4 6l4 4 4-4" />
     </svg>
+  )
+}
+
+function AdminCountSummary({ section }: { section: StaleAdminsSection | null }) {
+  if (!section || section.applicability !== 'applicable') return null
+  const stale = section.admins.filter((a) => a.classification === 'stale').length
+  const unavailable = section.admins.filter((a) => a.classification === 'unavailable').length
+  if (stale === 0 && unavailable === 0) {
+    if (section.admins.length === 0) return null
+    return (
+      <span
+        className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+        data-testid="stale-admins-panel-summary"
+      >
+        All active
+      </span>
+    )
+  }
+  const parts: { label: string; className: string }[] = []
+  if (stale > 0) {
+    parts.push({
+      label: `${stale} stale`,
+      className: 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
+    })
+  }
+  if (unavailable > 0) {
+    parts.push({
+      label: `${unavailable} unavailable`,
+      className: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+    })
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-1" data-testid="stale-admins-panel-summary">
+      {parts.map((p) => (
+        <span
+          key={p.label}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.className}`}
+        >
+          {p.label}
+        </span>
+      ))}
+    </span>
   )
 }
 

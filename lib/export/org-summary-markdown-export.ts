@@ -30,7 +30,7 @@ const PANEL_LABELS: Record<PanelId, string> = {
   'org-affiliations': 'Org Affiliations',
   'release-cadence': 'Release Cadence',
   'security-rollup': 'Security Rollup',
-  governance: 'Governance',
+  governance: 'GOVERNANCE.md Coverage',
   adopters: 'Adopters',
   'project-footprint': 'Project Footprint',
   'activity-rollup': 'Activity Rollup',

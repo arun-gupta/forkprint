@@ -38,6 +38,7 @@ const GROUP_CONFIG: Record<
 
 export function LicenseConsistencyPanel({ panel }: Props) {
   const [expanded, setExpanded] = useState(true)
+  const summary = buildSummary(panel.value)
   return (
     <section
       aria-label="License consistency"
@@ -58,6 +59,14 @@ export function LicenseConsistencyPanel({ panel }: Props) {
             <PanelChevron expanded={expanded} />
           </button>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">License consistency</h3>
+          {summary ? (
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${summary.className}`}
+              data-testid="license-consistency-panel-summary"
+            >
+              {summary.label}
+            </span>
+          ) : null}
         </div>
         {panel.lastUpdatedAt ? (
           <span className="text-xs text-slate-400 dark:text-slate-500">
@@ -76,6 +85,21 @@ export function LicenseConsistencyPanel({ panel }: Props) {
       ) : null}
     </section>
   )
+}
+
+function buildSummary(value: LicenseConsistencyValue | null): { label: string; className: string } | null {
+  if (!value) return null
+  if (value.perRepo.length === 0) return null
+  if (value.nonOsiCount > 0) {
+    return {
+      label: `${value.nonOsiCount} non-OSI`,
+      className: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+    }
+  }
+  return {
+    label: 'All OSI',
+    className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+  }
 }
 
 function PanelChevron({ expanded }: { expanded: boolean }) {
@@ -114,19 +138,6 @@ function PanelBody({
     <div className="space-y-3">
       <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-200">
         {contributingReposCount} of {totalReposInRun} repos contributed
-        {value.nonOsiCount > 0 ? (
-          <>
-            {' · '}
-            <span className="text-amber-700 dark:text-amber-400 dark:text-amber-300">
-              {value.nonOsiCount} use non-OSI-approved licenses
-            </span>
-          </>
-        ) : (
-          <>
-            {' · '}
-            <span className="text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">All use OSI-approved licenses</span>
-          </>
-        )}
       </p>
       {GROUP_ORDER.filter((c) => grouped[c].length > 0).map((classification) => (
         <GroupSection

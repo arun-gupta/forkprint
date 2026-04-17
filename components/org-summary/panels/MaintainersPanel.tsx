@@ -20,18 +20,42 @@ interface Props {
 }
 
 export function MaintainersPanel({ panel }: Props) {
+  const [expanded, setExpanded] = useState(true)
   const partialCoverageLabel =
     panel.value && panel.contributingReposCount < panel.totalReposInRun
       ? `${panel.contributingReposCount} of ${panel.totalReposInRun} repos`
       : null
+  const summary = buildSummary(panel.value)
 
   return (
     <section
       aria-label="Maintainers"
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+      data-testid="maintainers-panel"
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Maintainers</h3>
+      <header className={`flex flex-wrap items-center justify-between gap-2 ${expanded ? 'mb-3' : ''}`}>
+        <div className="flex min-w-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse Maintainers' : 'Expand Maintainers'}
+            aria-expanded={expanded}
+            title={expanded ? 'Collapse' : 'Expand'}
+            data-testid="maintainers-panel-toggle"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            <PanelChevron expanded={expanded} />
+          </button>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Maintainers</h3>
+          {summary ? (
+            <span
+              className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              data-testid="maintainers-panel-summary"
+            >
+              {summary}
+            </span>
+          ) : null}
+        </div>
         <div className="flex items-center gap-3">
           {panel.status === 'unavailable' ? (
             <span className="text-xs text-slate-500 dark:text-slate-400">unavailable</span>
@@ -49,16 +73,46 @@ export function MaintainersPanel({ panel }: Props) {
         </div>
       </header>
 
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          No OWNERS / MAINTAINERS / CODEOWNERS files were verified across this run.
-        </p>
-      ) : (
-        <Body value={panel.value} />
-      )}
+      {expanded ? (
+        panel.status === 'in-progress' && !panel.value ? (
+          <EmptyState />
+        ) : panel.status === 'unavailable' || !panel.value ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            No OWNERS / MAINTAINERS / CODEOWNERS files were verified across this run.
+          </p>
+        ) : (
+          <Body value={panel.value} />
+        )
+      ) : null}
     </section>
+  )
+}
+
+function buildSummary(value: MaintainersValue | null): string | null {
+  if (!value) return null
+  const unique = value.projectWide.length
+  if (unique === 0) return null
+  const teams = value.projectWide.filter((e) => e.kind === 'team').length
+  const uniqueLabel = `${unique} maintainer${unique === 1 ? '' : 's'}`
+  if (teams === 0) return uniqueLabel
+  const teamsLabel = `${teams} team${teams === 1 ? '' : 's'}`
+  return `${uniqueLabel} · ${teamsLabel}`
+}
+
+function PanelChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-4 w-4 transition-transform ${expanded ? '' : '-rotate-90'}`}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
   )
 }
 

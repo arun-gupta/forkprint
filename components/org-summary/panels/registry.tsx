@@ -123,7 +123,7 @@ export const PANEL_LABELS: Record<PanelId, string> = {
   'responsiveness-rollup': 'Responsiveness',
   'stale-work': 'Stale work',
   'security-rollup': 'Security (OpenSSF Scorecard)',
-  governance: 'Governance',
+  governance: 'GOVERNANCE.md coverage',
   'license-consistency': 'License consistency',
   'inclusive-naming-rollup': 'Inclusive naming',
   'documentation-coverage': 'Documentation coverage',
