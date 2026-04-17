@@ -122,25 +122,44 @@ function GroupSection({
   return (
     <details
       open={defaultOpen}
-      className={`rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName}`}
       data-testid={`license-consistency-group-${classification}`}
     >
       <summary
-        className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100"
+        className="flex cursor-pointer select-none items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-800 list-none dark:text-slate-100 [&::-webkit-details-marker]:hidden"
         aria-label={config.groupAriaLabel}
       >
+        <GroupChevron />
         <span aria-hidden="true">{config.icon}</span>
         <span>{config.label}</span>
         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs ${config.pillClassName}`}>
           {count}
         </span>
       </summary>
-      <ul role="list" className="divide-y divide-slate-200 px-3 pb-2 dark:divide-slate-700">
+      <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
         {repos.map((r) => (
           <RepoRow key={r.repo} repo={r.repo} spdxId={r.spdxId} classification={classification} />
         ))}
       </ul>
     </details>
+  )
+}
+
+function GroupChevron() {
+  return (
+    <svg
+      aria-hidden="true"
+      data-testid="group-chevron"
+      className="h-4 w-4 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+        clipRule="evenodd"
+      />
+    </svg>
   )
 }
 
@@ -155,7 +174,7 @@ function RepoRow({
 }) {
   return (
     <li
-      className="flex flex-wrap items-baseline justify-between gap-2 py-1.5"
+      className="flex flex-wrap items-baseline justify-between gap-2 py-1"
       data-testid={`license-consistency-row-${classification}`}
     >
       <a

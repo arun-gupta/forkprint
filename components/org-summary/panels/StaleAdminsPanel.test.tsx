@@ -74,7 +74,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     expect(badge.textContent).toMatch(/public admins only/i)
   })
 
-  it('renders a risk-first count strip summarizing every classification', () => {
+  it('shows per-group count pills matching the number of admins in each group', () => {
     const section = makeSection({
       admins: [
         mkAdmin('a1', 'active'),
@@ -86,13 +86,34 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     })
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
 
-    const strip = screen.getByTestId('stale-admins-count-strip')
-    expect(strip).toBeInTheDocument()
-    expect(within(strip).getByTestId('stale-admins-count-stale').textContent).toMatch(/\b1\b/)
-    expect(within(strip).getByTestId('stale-admins-count-active').textContent).toMatch(/\b2\b/)
-    expect(within(strip).getByTestId('stale-admins-count-no-public-activity').textContent).toMatch(/\b1\b/)
-    expect(within(strip).getByTestId('stale-admins-count-unavailable').textContent).toMatch(/\b1\b/)
-    expect(strip.textContent).toMatch(/5 admins/i)
+    // Standalone count strip is removed; per-group pills carry the counts.
+    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
+
+    const staleSummary = screen.getByTestId('stale-admins-group-stale').querySelector('summary')!
+    const activeSummary = screen.getByTestId('stale-admins-group-active').querySelector('summary')!
+    const noActivitySummary = screen
+      .getByTestId('stale-admins-group-no-public-activity')
+      .querySelector('summary')!
+    const unavailableSummary = screen
+      .getByTestId('stale-admins-group-unavailable')
+      .querySelector('summary')!
+
+    expect(within(staleSummary).getByText('1')).toBeInTheDocument()
+    expect(within(activeSummary).getByText('2')).toBeInTheDocument()
+    expect(within(noActivitySummary).getByText('1')).toBeInTheDocument()
+    expect(within(unavailableSummary).getByText('1')).toBeInTheDocument()
+  })
+
+  it('renders a chevron inside each group header summary', () => {
+    const section = makeSection({
+      admins: [mkAdmin('s1', 'stale'), mkAdmin('a1', 'active')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const staleSummary = screen.getByTestId('stale-admins-group-stale').querySelector('summary')!
+    const activeSummary = screen.getByTestId('stale-admins-group-active').querySelector('summary')!
+    expect(staleSummary.querySelector('[data-testid="group-chevron"]')).not.toBeNull()
+    expect(activeSummary.querySelector('[data-testid="group-chevron"]')).not.toBeNull()
   })
 
   it('renders Stale and Unavailable groups open by default, No-public-activity and Active closed', () => {
