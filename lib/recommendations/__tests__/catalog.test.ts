@@ -50,12 +50,12 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(7)
   })
 
-  it('has 16 documentation entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(16)
+  it('has 17 documentation entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(17)
   })
 
-  it('has 4 community-tagged entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('community'))).toHaveLength(4)
+  it('has 5 community-tagged entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('community'))).toHaveLength(5)
   })
 })
 
@@ -107,7 +107,7 @@ describe('getCatalogEntriesByTag', () => {
     const ids = governance.map((e) => e.id).sort()
     expect(ids).toEqual([
       'CTR-2', 'CTR-3', 'CTR-4',
-      'DOC-12', 'DOC-13', 'DOC-14',
+      'DOC-12', 'DOC-13', 'DOC-14', 'DOC-17',
       'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-17', 'SEC-3', 'SEC-5',
     ])
@@ -125,7 +125,7 @@ describe('getCatalogEntriesByTag', () => {
     const entries = getCatalogEntriesByTag('quick-win')
     const ids = entries.map((e) => e.id).sort()
     expect(ids).toEqual([
-      'DOC-1', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
+      'DOC-1', 'DOC-17', 'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-16', 'SEC-6',
     ])
   })
@@ -154,7 +154,7 @@ describe('getCatalogEntriesByTag', () => {
   it('returns community-tagged entries', () => {
     const entries = getCatalogEntriesByTag('community')
     const ids = entries.map((e) => e.id).sort()
-    expect(ids).toEqual(['ACT-5', 'CTR-3', 'DOC-15', 'DOC-16'])
+    expect(ids).toEqual(['ACT-5', 'CTR-3', 'DOC-15', 'DOC-16', 'DOC-17'])
   })
 
   it('entries with multiple tags return for each tag', () => {

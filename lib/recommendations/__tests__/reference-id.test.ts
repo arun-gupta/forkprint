@@ -49,6 +49,7 @@ describe('resolveReferenceId', () => {
     expect(resolveReferenceId('file:readme', 'Documentation', 1)).toBe('DOC-1')
     expect(resolveReferenceId('section:usage', 'Documentation', 1)).toBe('DOC-9')
     expect(resolveReferenceId('licensing:dco_cla', 'Documentation', 1)).toBe('DOC-14')
+    expect(resolveReferenceId('file:governance', 'Documentation', 99)).toBe('DOC-17')
   })
 
   it('falls back to sequential ID for unknown keys', () => {

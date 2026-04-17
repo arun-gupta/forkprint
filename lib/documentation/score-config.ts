@@ -38,6 +38,7 @@ const FILE_WEIGHTS: Record<string, number> = {
   // for fully-documented repos.
   issue_templates: 0.05,
   pull_request_template: 0.05,
+  governance: 0.05,
 }
 
 const FILE_RECOMMENDATIONS: Record<string, string> = {
@@ -49,6 +50,7 @@ const FILE_RECOMMENDATIONS: Record<string, string> = {
   changelog: 'Add a changelog (e.g. CHANGELOG.md) to help users understand what changed between releases',
   issue_templates: 'Add an issue template in .github/ISSUE_TEMPLATE/ to structure bug reports and feature requests',
   pull_request_template: 'Add a PULL_REQUEST_TEMPLATE.md to guide contributors through your PR checklist',
+  governance: 'Add a governance document (e.g. GOVERNANCE.md) to describe project decision-making, maintainer roles, and escalation paths',
 }
 
 const SECTION_WEIGHTS: Record<string, number> = {
