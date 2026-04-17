@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { DocumentationResult, LicensingResult } from '@/lib/analyzer/analysis-result'
+import type { DocumentationResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from './score-config'
 
 function buildDocResult(overrides: Partial<DocumentationResult> = {}): DocumentationResult {
@@ -267,6 +267,68 @@ describe('documentation/score-config', () => {
 
       for (const rec of score.recommendations) {
         expect(rec.bucket).toBe('documentation')
+      }
+    })
+  })
+
+  // Regression guard for issue #233: arun-gupta/repo-pulse (Growing bracket,
+  // 3 of 9 canonical files, 3 of 5 README sections, MIT + OSI, no DCO/CLA,
+  // clean inclusive naming) landed at 90+ percentile prior to the #152
+  // documentation recalibration + composite re-weighting. The fix aligned the
+  // calibrator formula with the runtime (INI + community templates) and
+  // shifted composite weights toward File Presence (0.50/0.25/0.15/0.10).
+  // Test bound ≤ 85 catches a regression back to 90+ while tolerating small
+  // anchor shifts from future recalibrations. The residual gap to ≤ p75
+  // reflects sample bias (growing-tier repos are genuinely documentation-
+  // light) rather than formula error — sample-curation work tracked in #152.
+  describe('documentation percentile regression (issue #233)', () => {
+    const repoPulseDocResult: DocumentationResult = {
+      fileChecks: [
+        { name: 'readme', found: true, path: 'README.md' },
+        { name: 'license', found: true, path: 'LICENSE' },
+        { name: 'contributing', found: true, path: 'CONTRIBUTING.md' },
+        { name: 'code_of_conduct', found: false, path: null },
+        { name: 'security', found: false, path: null },
+        { name: 'changelog', found: false, path: null },
+        { name: 'issue_templates', found: false, path: null },
+        { name: 'pull_request_template', found: false, path: null },
+        { name: 'governance', found: false, path: null },
+      ],
+      readmeSections: [
+        { name: 'description', detected: true },
+        { name: 'installation', detected: true },
+        { name: 'usage', detected: false },
+        { name: 'contributing', detected: true },
+        { name: 'license', detected: false },
+      ],
+      readmeContent: '# repo-pulse\n\nA GitHub health scorecard.\n\n## Getting Started\n\nnpm install\n\n## Contributing\n\nPRs welcome.',
+    }
+
+    const repoPulseLicensing: LicensingResult = {
+      license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
+      additionalLicenses: [],
+      contributorAgreement: { signedOffByRatio: null, dcoOrClaBot: false, enforced: false },
+    }
+
+    const cleanInclusiveNaming: InclusiveNamingResult = {
+      defaultBranchName: 'main',
+      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      metadataChecks: [],
+    }
+
+    it('lands at or below the 85th percentile in the Growing bracket', () => {
+      const score = getDocumentationScore(
+        repoPulseDocResult,
+        repoPulseLicensing,
+        500, // Growing bracket (100–999 stars)
+        cleanInclusiveNaming,
+      )
+
+      expect(typeof score.value).toBe('number')
+      if (typeof score.value === 'number') {
+        // Regression bound: catches the pre-fix 90+ state. Tighter targets
+        // require sample curation per #152.
+        expect(score.value).toBeLessThanOrEqual(85)
       }
     })
   })
