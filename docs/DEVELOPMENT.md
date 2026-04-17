@@ -157,7 +157,7 @@ scripts/claude-worktree.sh --headless 207
 for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
 ```
 
-The script creates `../forkprint-<issue>-<slug>/` on a new branch named `<issue>-<slug>`, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`, PID: `.dev.pid`), and launches `claude` with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
+The script creates `../repo-pulse-<issue>-<slug>/` on a new branch named `<issue>-<slug>`, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`, PID: `.dev.pid`), and launches `claude` with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
 
 ### Numbering rule
 
@@ -165,7 +165,7 @@ The branch, worktree, and spec directory for a feature always share the same num
 
 | Flow | Worktree path | Branch | Spec directory |
 |---|---|---|---|
-| Worktree-driven (issue) | `../forkprint-249-align-numbering` | `249-align-numbering` | `specs/249-align-numbering/` |
+| Worktree-driven (issue) | `../repo-pulse-249-align-numbering` | `249-align-numbering` | `specs/249-align-numbering/` |
 | Manual sequential | *(none)* | `230-some-refactor` | `specs/230-some-refactor/` |
 | Timestamp (opt-in) | *(none)* | `20260416-143022-refactor` | `specs/20260416-143022-refactor/` |
 
@@ -209,7 +209,7 @@ Preconditions (both commands exit non-zero with a clear error if unmet):
 
 Additional rule for `--revise-spec`: empty feedback is rejected. Repeated `--revise-spec` rounds accumulate — each round edits the spec as it stands after the previous round.
 
-Manual fallback (still supported): `cd ../forkprint-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
+Manual fallback (still supported): `cd ../repo-pulse-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
 
 The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done`) you review and release each worktree independently, but the release itself is fire-and-forget, so `for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done` walks away with three PRs on the way.
 
@@ -227,7 +227,7 @@ scripts/claude-worktree.sh --remove 207
 ```bash
 # From inside the worktree (e.g. the same shell the Claude session ran in),
 # the issue number is inferred from the current branch's `^[0-9]+-` prefix:
-cd ../forkprint-207-<slug>
+cd ../repo-pulse-207-<slug>
 scripts/claude-worktree.sh --cleanup-merged    # no arg needed
 ```
 

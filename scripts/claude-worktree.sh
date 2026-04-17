@@ -150,7 +150,7 @@ cleanup_merged() {
       exit 1
     fi
     wt_registered=0
-    local candidate="$PARENT_DIR/forkprint-$branch"
+    local candidate="$PARENT_DIR/repo-pulse-$branch"
     if [[ -d "$candidate" ]]; then
       echo "Detected orphaned worktree dir at $candidate (not registered with git); recovering."
       wt="$candidate"
@@ -388,7 +388,7 @@ if [[ -z "$SLUG" ]]; then
 fi
 
 BRANCH="${ISSUE}-${SLUG}"
-WT_PATH="${PARENT_DIR}/forkprint-${ISSUE}-${SLUG}"
+WT_PATH="${PARENT_DIR}/repo-pulse-${ISSUE}-${SLUG}"
 
 # 1. Find a free port
 port=$BASE_PORT
