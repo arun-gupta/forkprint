@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { CollapseChevron } from '@/components/shared/CollapseChevron'
 import { ScoreBadge } from '@/components/metric-cards/ScoreBadge'
-import { DocumentationScoreHelp } from '@/components/documentation/DocumentationScoreHelp'
+import { DocumentationFormulaCard } from '@/components/documentation/DocumentationFormulaCard'
+import { DocumentationSubScoresChips } from '@/components/documentation/DocumentationSubScoresChips'
 import { TagPill, ActiveFilterBar } from '@/components/tags/TagPill'
 import type { AnalysisResult, InclusiveNamingResult, LicensingResult } from '@/lib/analyzer/analysis-result'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
@@ -232,6 +233,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
 
   return (
     <section aria-label="Documentation view" className="space-y-6">
+      <DocumentationFormulaCard />
       {results.map((result) => {
         const isCollapsed = collapsed.has(result.repo)
         if (result.documentationResult === 'unavailable') {
@@ -278,7 +280,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                   </div>
                 </div>
 
-                <DocumentationScoreHelp score={score} />
+                <DocumentationSubScoresChips score={score} />
 
                 {activeTag ? (
                   <div className="mt-4">
