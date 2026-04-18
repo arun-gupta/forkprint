@@ -59,17 +59,17 @@ Once done, open a PR and merge before starting the next feature.
 
 ## Workflow sub-agents
 
-Three project-scoped sub-agents in `.claude/agents/` encode the RepoPulse workflow rules that live in `CLAUDE.md`, `.specify/memory/constitution.md`, and this document. Each is a bounded, read-heavy check; running them is how the rule becomes mechanical instead of a thing you have to remember.
+Three project-scoped sub-agents in `.claude/agents/` encode the RepoPulse workflow rules that live in `CLAUDE.md`, `.specify/memory/constitution.md`, and this document. Two are bounded, read-heavy checks; the third (`pr-test-plan-runner`) executes the automatable portion of a PR's Test plan. Running them is how the rule becomes mechanical instead of a thing you have to remember.
 
 | Agent | When to invoke | How to invoke |
 |---|---|---|
 | `spec-reviewer` | After `/speckit.specify`, before the mandatory approval gate in `CLAUDE.md`. | Mention `spec-reviewer` in a prompt, or `@spec-reviewer (agent) review specs/<N>-<slug>/spec.md`. |
 | `dod-verifier` | Before `git push` / PR open. Runs the Definition of Done checklist from constitution §XII against the current branch. | `@dod-verifier (agent) walk the DoD for this branch`. |
-| `pr-test-plan-checker` | After PR open, before asking the user to merge. Verifies every `## Test plan` checkbox is checked. | `@pr-test-plan-checker (agent) check PR #<N>`. |
+| `pr-test-plan-runner` | After PR open, before asking the user to merge. Executes automatable items in `## Test plan` (unit tests, lint, typecheck, build, focused vitest/eslint/tsc runs), ticks the matching checkboxes via `gh pr edit`, and posts an audit comment with the per-item results. | `@pr-test-plan-runner (agent) run PR #<N>`. |
 
-Each agent returns a structured report. `spec-reviewer` returns `PASS` / `FAIL` with citations into the constitution and `docs/PRODUCT.md`; `dod-verifier` returns a per-item `SATISFIED` / `BLOCKED` / `REQUIRES HUMAN SIGN-OFF` punch list with command output as evidence; `pr-test-plan-checker` returns `READY` / `BLOCKED` with the verbatim list of unchecked items.
+Each agent returns a structured report. `spec-reviewer` returns `PASS` / `FAIL` with citations into the constitution and `docs/PRODUCT.md`; `dod-verifier` returns a per-item `SATISFIED` / `BLOCKED` / `REQUIRES HUMAN SIGN-OFF` punch list with command output as evidence; `pr-test-plan-runner` returns a per-item `AUTO-PASS` / `AUTO-FAIL` / `MANUAL` / `ALREADY-CHECKED` classification plus an overall `READY` / `BLOCKED` verdict, and additionally posts a PR comment with an agent-generated disclaimer (`> Automated report from pr-test-plan-runner …`) so reviewers have a durable audit trail of what ran, when, and with what result.
 
-**PR merge discipline**: `pr-test-plan-checker`'s tool allowlist is narrowed to `Bash(gh pr view:*)` only, and its prompt explicitly forbids `gh pr merge` / `gh pr close` / `gh pr edit` / `gh pr review` / `gh pr comment`. The `CLAUDE.md` rule that PR merging is a manual user action is intact — none of the three agents is permitted to merge.
+**PR merge discipline**: `pr-test-plan-runner`'s tool allowlist is narrow — 12 patterns total: `Bash(gh pr view:*)`, `Bash(gh pr edit:*)`, `Bash(gh pr comment:*)` for PR interaction, plus nine automatable command prefixes (`Bash(npm test:*)`, `Bash(npm run lint:*)`, `Bash(npm run typecheck:*)`, `Bash(npm run build:*)`, `Bash(npm run test:unit:*)`, `Bash(npm run test:integration:*)`, `Bash(npx vitest:*)`, `Bash(npx eslint:*)`, `Bash(npx tsc:*)`). `gh pr merge`, `gh pr close`, `gh pr ready`, and `gh pr review` are explicitly absent from the allowlist, and the agent prompt additionally forbids extracted Test plan commands matching those prefixes, `rm`, `git reset`, `git push --force`, `sudo`, `curl`, `wget`, `ssh`, `npm run test:e2e`, and `npx playwright`. The `CLAUDE.md` rule that PR merging is a manual user action is intact — none of the three agents is permitted to merge.
 
 Sub-agents inherit the parent session's `.claude/settings.json` allowlist as a ceiling; they cannot widen it. No entry was added to `settings.json` for these three agents — the existing allowlist already covers every tool they need.
 
