@@ -2,6 +2,8 @@
 
 import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
+import type { TwoFactorEnforcementSection } from '@/lib/governance/two-factor'
+import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
 import { PANEL_BUCKETS, isRealPanel, renderPanel, type PanelBucketId } from './panels/registry'
 import { StaleAdminsPanel } from './panels/StaleAdminsPanel'
 import { TwoFactorEnforcementPanel } from './panels/TwoFactorEnforcementPanel'
@@ -11,9 +13,21 @@ interface Props {
   view: OrgSummaryViewModel | null
   selectedWindow?: ContributorDiversityWindow
   org?: string | null
+  /**
+   * Pre-computed 2FA enforcement section. When provided, the inventory-level
+   * 2FA panel renders against this value instead of firing a live fetch.
+   * Used by /demo/* to display fixture data (issue #213).
+   */
+  twoFactorOverride?: TwoFactorEnforcementSection | null
+  /**
+   * Pre-computed stale admins section. When provided, the inventory-level
+   * stale-admins panel renders against this value instead of firing a live
+   * fetch. Used by /demo/* to display fixture data (issue #213).
+   */
+  staleAdminsOverride?: StaleAdminsSection | null
 }
 
-export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props) {
+export function OrgBucketContent({ bucketId, view, selectedWindow, org, twoFactorOverride, staleAdminsOverride }: Props) {
   const bucket = PANEL_BUCKETS.find((b) => b.id === bucketId)
   if (!bucket) return null
 
@@ -28,8 +42,16 @@ export function OrgBucketContent({ bucketId, view, selectedWindow, org }: Props)
   const extraPanels =
     bucketId === 'governance' ? (
       <>
-        <TwoFactorEnforcementPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
-        <StaleAdminsPanel org={org ?? null} ownerType={org ? 'Organization' : 'User'} />
+        <TwoFactorEnforcementPanel
+          org={org ?? null}
+          ownerType={org ? 'Organization' : 'User'}
+          sectionOverride={twoFactorOverride}
+        />
+        <StaleAdminsPanel
+          org={org ?? null}
+          ownerType={org ? 'Organization' : 'User'}
+          sectionOverride={staleAdminsOverride}
+        />
       </>
     ) : null
 

@@ -1,30 +1,19 @@
 {
-  "generatedAt": "2026-04-18T02:57:06.534Z",
+  "generatedAt": "2026-04-18T03:16:52.361Z",
   "repos": [
-    {
-      "repo": "simonw/llm-echo",
-      "slug": "simonw__llm-echo"
-    },
-    {
-      "repo": "333fred/compiler-developer-sdk",
-      "slug": "333fred__compiler-developer-sdk"
-    },
-    {
-      "repo": "ossf/security-insights-spec",
-      "slug": "ossf__security-insights-spec"
-    },
-    {
-      "repo": "fluxcd/helm-controller",
-      "slug": "fluxcd__helm-controller"
-    },
-    {
-      "repo": "projectcalico/calico",
-      "slug": "projectcalico__calico"
-    },
-    {
-      "repo": "prometheus/prometheus",
-      "slug": "prometheus__prometheus"
-    }
+    "simonw/llm-echo",
+    "333fred/compiler-developer-sdk",
+    "ossf/security-insights-spec",
+    "fluxcd/helm-controller",
+    "projectcalico/calico",
+    "prometheus/prometheus"
   ],
-  "org": "ossf"
+  "org": "ossf",
+  "orgTopReposAnalyzed": [
+    "ossf/scorecard",
+    "ossf/cve-bin-tool",
+    "ossf/criticality_score",
+    "ossf/allstar",
+    "ossf/wg-best-practices-os-developers"
+  ]
 }

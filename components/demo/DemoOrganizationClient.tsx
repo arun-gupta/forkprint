@@ -1,18 +1,30 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
+import { OrgWindowSelector } from '@/components/org-summary/OrgWindowSelector'
 import { ReportSearchBar } from '@/components/search/ReportSearchBar'
 import { SearchProvider } from '@/components/search/SearchContext'
-import type { TabMatchCounts } from '@/lib/search/types'
+import { buildOrgSummaryViewModel } from '@/lib/org-aggregation/view-model'
+import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
+import type { OrgAggregationRun } from '@/lib/org-aggregation/types'
+import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
+import type { TwoFactorEnforcementSection } from '@/lib/governance/two-factor'
+import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
+import type { TabMatchCounts } from '@/lib/search/types'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 
 interface DemoOrganizationClientProps {
   response: OrgInventoryResponse
+  governance: {
+    twoFactor: TwoFactorEnforcementSection | null
+    staleAdmins: StaleAdminsSection | null
+  }
+  topReposAnalyzed: AnalysisResult[]
 }
 
 const DEMO_ORG_TABS: ResultTabDefinition[] = [
@@ -20,21 +32,79 @@ const DEMO_ORG_TABS: ResultTabDefinition[] = [
     id: 'overview',
     label: 'Overview',
     status: 'implemented',
-    description: 'Organization inventory summary and public repository metadata.',
+    description: 'Organization inventory and footprint.',
+  },
+  {
+    id: 'contributors',
+    label: 'Contributors',
+    status: 'implemented',
+    description: 'Org-level contributor diversity and affiliations (top repos).',
+  },
+  {
+    id: 'activity',
+    label: 'Activity',
+    status: 'implemented',
+    description: 'Org-level activity, release cadence, and stale work (top repos).',
+  },
+  {
+    id: 'responsiveness',
+    label: 'Responsiveness',
+    status: 'implemented',
+    description: 'Org-level responsiveness metrics (top repos).',
+  },
+  {
+    id: 'documentation',
+    label: 'Documentation',
+    status: 'implemented',
+    description: 'Org-level documentation coverage, inclusive naming, and adopters (top repos).',
   },
   {
     id: 'governance',
     label: 'Governance',
     status: 'implemented',
-    description: 'Org-level security signals available without analyzing individual repos — 2FA enforcement, admin activity.',
+    description: 'Org-level hygiene and policy — 2FA enforcement, admin activity, governance files.',
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    status: 'implemented',
+    description: 'Org-level OpenSSF Scorecard rollup (top repos).',
   },
 ]
 
-export function DemoOrganizationClient({ response }: DemoOrganizationClientProps) {
+function buildSyntheticRun(org: string, results: AnalysisResult[]): OrgAggregationRun {
+  const now = new Date()
+  const perRepo = new Map<string, { repo: string; status: 'done'; result: AnalysisResult; startedAt: Date; finishedAt: Date }>()
+  for (const result of results) {
+    perRepo.set(result.repo, {
+      repo: result.repo,
+      status: 'done',
+      result,
+      startedAt: now,
+      finishedAt: now,
+    })
+  }
+  return {
+    org,
+    repos: results.map((r) => r.repo),
+    concurrency: 1,
+    effectiveConcurrency: 1,
+    updateCadence: { kind: 'on-completion-only' },
+    startedAt: now,
+    status: 'complete',
+    perRepo,
+    pauseHistory: [],
+    notificationOptIn: false,
+    flagshipRepos: [],
+  }
+}
+
+export function DemoOrganizationClient({ response, governance, topReposAnalyzed }: DemoOrganizationClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [domTotalMatches, setDomTotalMatches] = useState(0)
   const [domMatchedTabCount, setDomMatchedTabCount] = useState(0)
+  const [orgWindow, setOrgWindow] = useState<ContributorDiversityWindow>(90)
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -55,6 +125,13 @@ export function DemoOrganizationClient({ response }: DemoOrganizationClientProps
     [],
   )
 
+  const [nowMs] = useState(() => Date.now())
+  const view = useMemo(() => {
+    if (topReposAnalyzed.length === 0) return null
+    const run = buildSyntheticRun(response.org, topReposAnalyzed)
+    return buildOrgSummaryViewModel(run, nowMs)
+  }, [response.org, topReposAnalyzed, nowMs])
+
   const emptyPanel = (
     <p className="text-sm text-slate-500 dark:text-slate-400">
       Not available in demo mode.
@@ -65,17 +142,20 @@ export function DemoOrganizationClient({ response }: DemoOrganizationClientProps
     <SearchProvider query={debouncedQuery}>
       <ResultsShell
         initialActiveTab="overview"
-        analysisPanel={<DemoOrgAnalysisPanel org={response.org} />}
+        analysisPanel={<DemoOrgAnalysisPanel org={response.org} topCount={topReposAnalyzed.length} />}
         tabs={DEMO_ORG_TABS}
         searchQuery={debouncedQuery}
         onDomMatchCounts={handleDomMatchCounts}
         toolbar={
-          <ReportSearchBar
-            query={searchQuery}
-            onQueryChange={setSearchQuery}
-            totalMatches={domTotalMatches}
-            matchedTabCount={domMatchedTabCount}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <ReportSearchBar
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              totalMatches={domTotalMatches}
+              matchedTabCount={domMatchedTabCount}
+            />
+            {view ? <OrgWindowSelector selected={orgWindow} onChange={setOrgWindow} /> : null}
+          </div>
         }
         overview={
           <OrgInventoryView
@@ -91,12 +171,31 @@ export function DemoOrganizationClient({ response }: DemoOrganizationClientProps
             }}
           />
         }
-        governance={<OrgBucketContent bucketId="governance" view={null} org={response.org} />}
-        contributors={emptyPanel}
-        activity={emptyPanel}
-        responsiveness={emptyPanel}
-        documentation={emptyPanel}
-        security={emptyPanel}
+        contributors={view ? (
+          <OrgBucketContent bucketId="contributors" view={view} selectedWindow={orgWindow} />
+        ) : emptyPanel}
+        activity={view ? (
+          <OrgBucketContent bucketId="activity" view={view} selectedWindow={orgWindow} />
+        ) : emptyPanel}
+        responsiveness={view ? (
+          <OrgBucketContent bucketId="responsiveness" view={view} selectedWindow={orgWindow} />
+        ) : emptyPanel}
+        documentation={view ? (
+          <OrgBucketContent bucketId="documentation" view={view} selectedWindow={orgWindow} />
+        ) : emptyPanel}
+        governance={
+          <OrgBucketContent
+            bucketId="governance"
+            view={view}
+            selectedWindow={orgWindow}
+            org={response.org}
+            twoFactorOverride={governance.twoFactor}
+            staleAdminsOverride={governance.staleAdmins}
+          />
+        }
+        security={view ? (
+          <OrgBucketContent bucketId="security" view={view} selectedWindow={orgWindow} />
+        ) : emptyPanel}
         recommendations={emptyPanel}
         comparison={emptyPanel}
       />
@@ -104,7 +203,7 @@ export function DemoOrganizationClient({ response }: DemoOrganizationClientProps
   )
 }
 
-function DemoOrgAnalysisPanel({ org }: { org: string }) {
+function DemoOrgAnalysisPanel({ org, topCount }: { org: string; topCount: number }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">
@@ -112,9 +211,10 @@ function DemoOrgAnalysisPanel({ org }: { org: string }) {
           Pre-analyzed org inventory
         </h2>
         <p className="text-sm text-slate-700 dark:text-slate-200">
-          Browse the <span className="font-mono">{org}</span> organization — {' '}
-          {/* 78-row inventory is pre-fetched */}
-          inventory, filters, and sorting all work against the fixture.
+          Browse the <span className="font-mono">{org}</span> organization — inventory and
+          governance are pre-fetched, and the top {topCount} repos by stars are fully
+          analyzed so Contributors, Activity, Responsiveness, Documentation and Security
+          tabs render aggregated rollups against real data.
         </p>
       </div>
       <div className="flex items-center gap-3">
