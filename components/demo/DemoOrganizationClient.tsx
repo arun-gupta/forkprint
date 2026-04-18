@@ -138,6 +138,30 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
     </p>
   )
 
+  const analyzedRepoLabels = topReposAnalyzed.map((r) => r.repo)
+  const rollupNote = analyzedRepoLabels.length > 0 ? (
+    <section
+      role="note"
+      aria-label="Rollup scope"
+      className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-100"
+    >
+      <span className="font-semibold">Rollup scope:</span>{' '}
+      this tab aggregates metrics from the top {analyzedRepoLabels.length} repos by stars ({' '}
+      <span className="font-mono">{analyzedRepoLabels.join(', ')}</span>
+      {' '}), not all {response.results.length} repos in the organization. Sign in to analyze
+      every repo.
+    </section>
+  ) : null
+
+  function withNote(panel: React.ReactNode) {
+    return (
+      <div className="space-y-3">
+        {rollupNote}
+        {panel}
+      </div>
+    )
+  }
+
   return (
     <SearchProvider query={debouncedQuery}>
       <ResultsShell
@@ -171,19 +195,19 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
             }}
           />
         }
-        contributors={view ? (
-          <OrgBucketContent bucketId="contributors" view={view} selectedWindow={orgWindow} />
+        contributors={view ? withNote(
+          <OrgBucketContent bucketId="contributors" view={view} selectedWindow={orgWindow} />,
         ) : emptyPanel}
-        activity={view ? (
-          <OrgBucketContent bucketId="activity" view={view} selectedWindow={orgWindow} />
+        activity={view ? withNote(
+          <OrgBucketContent bucketId="activity" view={view} selectedWindow={orgWindow} />,
         ) : emptyPanel}
-        responsiveness={view ? (
-          <OrgBucketContent bucketId="responsiveness" view={view} selectedWindow={orgWindow} />
+        responsiveness={view ? withNote(
+          <OrgBucketContent bucketId="responsiveness" view={view} selectedWindow={orgWindow} />,
         ) : emptyPanel}
-        documentation={view ? (
-          <OrgBucketContent bucketId="documentation" view={view} selectedWindow={orgWindow} />
+        documentation={view ? withNote(
+          <OrgBucketContent bucketId="documentation" view={view} selectedWindow={orgWindow} />,
         ) : emptyPanel}
-        governance={
+        governance={withNote(
           <OrgBucketContent
             bucketId="governance"
             view={view}
@@ -191,10 +215,10 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
             org={response.org}
             twoFactorOverride={governance.twoFactor}
             staleAdminsOverride={governance.staleAdmins}
-          />
-        }
-        security={view ? (
-          <OrgBucketContent bucketId="security" view={view} selectedWindow={orgWindow} />
+          />,
+        )}
+        security={view ? withNote(
+          <OrgBucketContent bucketId="security" view={view} selectedWindow={orgWindow} />,
         ) : emptyPanel}
         recommendations={emptyPanel}
         comparison={emptyPanel}
