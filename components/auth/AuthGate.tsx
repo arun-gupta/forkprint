@@ -110,31 +110,25 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             checked={scopeTier === 'baseline'}
             onChange={setScopeTier}
             label={<><span className="font-semibold">Baseline</span> (<code>public_repo</code>)</>}
-            guidance="Public data only. Recommended for read-only audits of third-party orgs."
+            guidance="Public data only — for auditing third-party orgs."
           />
           <ScopeRadio
             value="read-org"
             checked={scopeTier === 'read-org'}
             onChange={setScopeTier}
             label={<><span className="font-semibold">Read org membership</span> (<code>read:org</code>)</>}
-            guidance="See concealed admins of orgs you belong to. Choose this if you want the full Stale Admin panel for your own orgs."
+            guidance="Adds concealed admins of orgs you belong to."
           />
           <ScopeRadio
             value="admin-org"
             checked={scopeTier === 'admin-org'}
             onChange={setScopeTier}
             label={<><span className="font-semibold">Org admin (read)</span> (<code>admin:org</code>)</>}
-            guidance="Includes everything above, plus owner-only org settings like 2FA enforcement. Broadest scope — choose only if you own the orgs you plan to audit."
+            guidance="Adds owner-only signals like 2FA enforcement; for orgs you own."
           />
         </fieldset>
 
-        <div className="max-w-md space-y-2 text-center">
-          <p className="text-xs italic text-slate-400 dark:text-slate-500">
-            Built for community-oriented projects. Solo-maintainer repos are auto-detected and
-            scored on Activity, Security, and Documentation instead.
-          </p>
-          <a href="/baseline" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 hover:text-slate-600 transition dark:text-slate-500">View scoring methodology</a>
-        </div>
+        <a href="/baseline" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 transition hover:text-slate-600 dark:text-slate-500">View scoring methodology</a>
       </div>
     )
   }
