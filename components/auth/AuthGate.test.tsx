@@ -107,6 +107,17 @@ describe('AuthGate', () => {
     )
     expect(screen.getByText(/public data only/i)).toBeInTheDocument()
     expect(screen.getByText(/concealed admins/i)).toBeInTheDocument()
-    expect(screen.getByText(/owner-only org settings/i)).toBeInTheDocument()
+    expect(screen.getByText(/2fa enforcement/i)).toBeInTheDocument()
+  })
+
+  it('omits the solo-maintainer footnote that previously sat below the picker', () => {
+    render(
+      <AuthProvider>
+        <AuthGate>
+          <p>Protected content</p>
+        </AuthGate>
+      </AuthProvider>,
+    )
+    expect(screen.queryByText(/solo-maintainer repos are auto-detected/i)).not.toBeInTheDocument()
   })
 })
