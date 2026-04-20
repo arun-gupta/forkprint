@@ -229,7 +229,7 @@ export async function fetchOrgTwoFactorRequirement(
 export type UserPublicEventsResult =
   | { kind: 'ok'; lastActivityAt: string | null }
   | { kind: 'admin-account-404' }
-  | { kind: 'rate-limited' }
+  | { kind: 'rate-limited'; retryAvailableAt: string | null }
   | { kind: 'events-fetch-failed' }
 
 export async function fetchUserPublicEvents(
@@ -249,7 +249,9 @@ export async function fetchUserPublicEvents(
     )
 
     if (response.status === 404) return { kind: 'admin-account-404' }
-    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+    if (response.status === 403 && isRateLimited(response)) {
+      return { kind: 'rate-limited', retryAvailableAt: parseRetryAvailableAt(response) }
+    }
     if (!response.ok) return { kind: 'events-fetch-failed' }
 
     const payload = (await response.json()) as Array<{ created_at?: unknown }>
@@ -268,44 +270,118 @@ export async function fetchUserPublicEvents(
 
 export type UserLatestOrgCommitResult =
   | { kind: 'ok'; lastActivityAt: string | null }
-  | { kind: 'rate-limited' }
+  | { kind: 'rate-limited'; retryAvailableAt: string | null }
   | { kind: 'commit-search-failed' }
+
+// Search Commits has a 30 req/min quota — roughly 10x tighter than core REST.
+// In admin-resolution bursts this cap is routinely hit; a single short retry
+// recovers most near-boundary cases without serializing the whole fan-out.
+const COMMIT_SEARCH_RETRY_MAX_WAIT_MS = 3000
+const COMMIT_SEARCH_DEFAULT_RETRY_MS = 1500
+
+export interface FetchUserLatestOrgCommitOptions {
+  sleep?: (ms: number) => Promise<void>
+  /** Max in-function retries on rate-limit. Default 1 (two total attempts). */
+  maxRetries?: number
+}
 
 export async function fetchUserLatestOrgCommit(
   token: string,
   username: string,
   org: string,
+  options: FetchUserLatestOrgCommitOptions = {},
 ): Promise<UserLatestOrgCommitResult> {
-  try {
-    const q = `author:${username}+org:${org}`
-    const response = await fetch(
-      `https://api.github.com/search/commits?q=${encodeURIComponent(q)}&sort=author-date&order=desc&per_page=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
+  const sleep = options.sleep ?? defaultSleep
+  const maxRetries = options.maxRetries ?? 1
+  let attempt = 0
+
+  while (true) {
+    try {
+      const q = `author:${username}+org:${org}`
+      const response = await fetch(
+        `https://api.github.com/search/commits?q=${encodeURIComponent(q)}&sort=author-date&order=desc&per_page=1`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+          },
         },
-      },
-    )
+      )
 
-    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
-    if (!response.ok) return { kind: 'commit-search-failed' }
+      if (response.status === 403) {
+        const rateLimited = isRateLimited(response) || (await hasSecondaryRateLimitBody(response))
+        if (rateLimited) {
+          if (attempt < maxRetries) {
+            const wait = Math.min(
+              parseRetryAfterMs(response) ?? COMMIT_SEARCH_DEFAULT_RETRY_MS,
+              COMMIT_SEARCH_RETRY_MAX_WAIT_MS,
+            )
+            await sleep(wait)
+            attempt++
+            continue
+          }
+          return { kind: 'rate-limited', retryAvailableAt: parseRetryAvailableAt(response) }
+        }
+      }
+      if (!response.ok) return { kind: 'commit-search-failed' }
 
-    const payload = (await response.json()) as {
-      total_count?: number
-      items?: Array<{ commit?: { author?: { date?: unknown } } }>
+      const payload = (await response.json()) as {
+        total_count?: number
+        items?: Array<{ commit?: { author?: { date?: unknown } } }>
+      }
+      if (!payload || typeof payload.total_count !== 'number' || payload.total_count === 0) {
+        return { kind: 'ok', lastActivityAt: null }
+      }
+      const first = payload.items?.[0]
+      const date = first?.commit?.author?.date
+      if (typeof date !== 'string') return { kind: 'ok', lastActivityAt: null }
+      return { kind: 'ok', lastActivityAt: date }
+    } catch {
+      return { kind: 'commit-search-failed' }
     }
-    if (!payload || typeof payload.total_count !== 'number' || payload.total_count === 0) {
-      return { kind: 'ok', lastActivityAt: null }
-    }
-    const first = payload.items?.[0]
-    const date = first?.commit?.author?.date
-    if (typeof date !== 'string') return { kind: 'ok', lastActivityAt: null }
-    return { kind: 'ok', lastActivityAt: date }
-  } catch {
-    return { kind: 'commit-search-failed' }
   }
+}
+
+async function hasSecondaryRateLimitBody(response: Response): Promise<boolean> {
+  try {
+    const body = (await response.clone().json()) as { message?: unknown }
+    const message = typeof body.message === 'string' ? body.message.toLowerCase() : ''
+    return (
+      message.includes('secondary rate limit') ||
+      message.includes('abuse detection') ||
+      message.includes('api rate limit exceeded')
+    )
+  } catch {
+    return false
+  }
+}
+
+function parseRetryAfterMs(response: Response): number | null {
+  const header = response.headers.get('Retry-After')
+  if (!header) return null
+  const seconds = Number(header)
+  if (!Number.isFinite(seconds) || seconds < 0) return null
+  return seconds * 1000
+}
+
+// Prefer Retry-After (relative, usually shorter) over X-RateLimit-Reset
+// (absolute, usually further out). Returns an ISO timestamp at which the
+// next request is expected to succeed, or null when GitHub gave us neither
+// signal (secondary rate limits sometimes omit both).
+export function parseRetryAvailableAt(response: Response, nowMs: number = Date.now()): string | null {
+  const retryAfterMs = parseRetryAfterMs(response)
+  if (retryAfterMs !== null) return new Date(nowMs + retryAfterMs).toISOString()
+  const reset = response.headers.get('X-RateLimit-Reset')
+  if (reset) {
+    const secs = Number(reset)
+    if (Number.isFinite(secs) && secs > 0) return new Date(secs * 1000).toISOString()
+  }
+  return null
+}
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export interface UserOrgMembershipResult {
@@ -348,7 +424,12 @@ function classifyRestStatus(response: Response): 'ok' | OrgAdminListResult {
 }
 
 function isRateLimited(response: Response): boolean {
-  return response.headers.get('X-RateLimit-Remaining') === '0'
+  if (response.headers.get('X-RateLimit-Remaining') === '0') return true
+  // Secondary rate limits surface as 403 with Retry-After but without the
+  // `X-RateLimit-Remaining: 0` header. Present Retry-After is GitHub telling
+  // the caller to back off — classify as rate-limited.
+  if (response.headers.get('Retry-After')) return true
+  return false
 }
 
 function parseNextLink(linkHeader: string | null): string | null {

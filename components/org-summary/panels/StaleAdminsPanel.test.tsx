@@ -24,6 +24,7 @@ function makeSection(override: Partial<StaleAdminsSection> = {}): StaleAdminsSec
     mode: 'baseline',
     thresholdDays: 90,
     admins: [],
+    earliestRetryAvailableAt: null,
     resolvedAt: '2026-04-16T00:00:00Z',
     ...override,
   }
@@ -39,6 +40,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2026-04-10T00:00:00Z',
           lastActivitySource: 'public-events',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
         {
           username: 'bob',
@@ -46,6 +48,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2025-09-01T00:00:00Z',
           lastActivitySource: 'org-commit-search',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
       ],
     })
@@ -159,6 +162,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2026-04-10T00:00:00Z',
           lastActivitySource: 'public-events',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
         {
           username: 'bob',
@@ -166,6 +170,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2025-09-01T00:00:00Z',
           lastActivitySource: 'org-commit-search',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
       ],
     })
@@ -294,6 +299,202 @@ describe('StaleAdminsPanel — US3 mode indicators', () => {
   })
 })
 
+describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
+  it('renders sub-breakdown pills for rate-limited vs commit-search-failed inside the Unavailable group', () => {
+    const section = makeSection({
+      admins: [
+        mkUnavailable('u1', 'rate-limited'),
+        mkUnavailable('u2', 'rate-limited'),
+        mkUnavailable('u3', 'commit-search-failed'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const unavailable = screen.getByTestId('stale-admins-group-unavailable')
+    const strip = within(unavailable).getByTestId('stale-admins-unavailable-reasons')
+    expect(
+      within(strip).getByTestId('stale-admins-unavailable-reason-rate-limited').textContent,
+    ).toMatch(/2 rate-limited/i)
+    expect(
+      within(strip).getByTestId('stale-admins-unavailable-reason-commit-search-failed').textContent,
+    ).toMatch(/1 search unavailable/i)
+  })
+
+  it('shows a Retry button for any retryable unavailable reason, hidden when only terminal reasons remain', () => {
+    const onRetry = vi.fn()
+    const retryable = makeSection({
+      admins: [mkUnavailable('u1', 'commit-search-failed')],
+    })
+    const { rerender } = renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={retryable}
+        onRetryOverride={onRetry}
+      />,
+    )
+
+    const retry = screen.getByTestId('stale-admins-unavailable-retry')
+    fireEvent.click(retry)
+    expect(onRetry).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <AuthProvider initialSession={{ token: 't', username: 'u', scopes: ['public_repo'] }}>
+        <StaleAdminsPanel
+          org="acme"
+          ownerType="Organization"
+          sectionOverride={makeSection({
+            admins: [mkUnavailable('u1', 'admin-account-404')],
+          })}
+          onRetryOverride={onRetry}
+        />
+      </AuthProvider>,
+    )
+    expect(screen.queryByTestId('stale-admins-unavailable-retry')).not.toBeInTheDocument()
+  })
+
+  it('renders a unified retryable-row message — rate-limit and search-unavailable share the same copy', () => {
+    const section = makeSection({
+      admins: [
+        mkUnavailable('u1', 'rate-limited'),
+        mkUnavailable('u2', 'commit-search-failed'),
+        mkUnavailable('u3', 'admin-account-404'),
+      ],
+    })
+    // nextAutoRetryAtOverride=null simulates the ladder-paused state.
+    renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={section}
+        nextAutoRetryAtOverride={null}
+      />,
+    )
+
+    const unavailable = screen.getByTestId('stale-admins-group-unavailable')
+    // Retryable rows (both rate-limited and commit-search-failed) share one message.
+    const retryableRows = within(unavailable).getAllByText(
+      /GitHub didn’t return activity data — click Retry to try again/i,
+    )
+    expect(retryableRows.length).toBe(2)
+    // Terminal reason keeps its distinct (non-retryable) copy.
+    expect(within(unavailable).getByText(/GitHub account not found/i)).toBeInTheDocument()
+    // Our implementation names, debug asides, and lying time-promises must not appear.
+    expect(within(unavailable).queryByText(/commit search/i)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/events feed/i)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/\(often a burst rate-limit\)/i)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/about a minute/i)).not.toBeInTheDocument()
+    // No per-reason rate-limit lead leaking into a row — the distinction
+    // lives in the sub-pill strip above the rows, not in each row's copy.
+    expect(within(unavailable).queryByText(/^GitHub rate limit/i)).not.toBeInTheDocument()
+  })
+
+  it('every unavailable row shows a countdown when a background retry is scheduled, regardless of whether GitHub disclosed a reset', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+    const section = makeSection({
+      admins: [
+        // u1 has its own GitHub-disclosed reset (should win over nextAutoRetryAt).
+        mkUnavailable('u1', 'rate-limited', '2026-04-20T12:00:15Z'),
+        // u2 has none — should fall back to the hook's nextAutoRetryAt.
+        mkUnavailable('u2', 'commit-search-failed'),
+      ],
+    })
+    renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={section}
+        nextAutoRetryAtOverride={'2026-04-20T12:00:30Z'}
+      />,
+    )
+
+    const countdowns = screen.getAllByTestId('retry-countdown')
+    expect(countdowns).toHaveLength(2)
+    // u1 uses its own reset (≈15s), u2 falls back to nextAutoRetryAt (≈30s).
+    expect(countdowns[0]!.textContent).toMatch(/15s/)
+    expect(countdowns[1]!.textContent).toMatch(/30s/)
+    vi.useRealTimers()
+  })
+
+  it('section-level Retry button shows the auto-retry countdown and disables while waiting', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+    const onRetry = vi.fn()
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'commit-search-failed')],
+    })
+    renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={section}
+        onRetryOverride={onRetry}
+        nextAutoRetryAtOverride={'2026-04-20T12:00:25Z'}
+      />,
+    )
+    const retry = screen.getByTestId('stale-admins-unavailable-retry')
+    expect(retry.textContent).toMatch(/Auto-retry in \d+s/)
+    expect(retry).toBeDisabled()
+    vi.useRealTimers()
+  })
+
+  it('omits the sub-breakdown strip on non-unavailable groups', () => {
+    const section = makeSection({
+      admins: [mkAdmin('s', 'stale'), mkAdmin('a', 'active')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    expect(screen.queryByTestId('stale-admins-unavailable-reasons')).not.toBeInTheDocument()
+  })
+
+  it('renders a countdown for rate-limited rows with a known retryAvailableAt', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+    const availableAt = new Date('2026-04-20T12:00:37Z').toISOString()
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited', availableAt)],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const countdown = screen.getByTestId('retry-countdown')
+    expect(countdown.textContent).toMatch(/37s/)
+    vi.useRealTimers()
+  })
+
+  it('shows "click Retry" copy (not a stale countdown) when retryAvailableAt is in the past and ladder is exhausted', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:01:00Z'))
+    const elapsed = new Date('2026-04-20T12:00:00Z').toISOString()
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited', elapsed)],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    // Past retryAvailableAt with no nextAutoRetryAt: ladder exhausted, no countdown pinned.
+    expect(screen.queryByTestId('retry-countdown-ready')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('retry-countdown')).not.toBeInTheDocument()
+    expect(screen.getByText(/click Retry to try again/)).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
+  it('keeps the section visible during refresh (stale-while-revalidate) and swaps the Retry button to Retrying…', () => {
+    const section = makeSection({
+      admins: [mkAdmin('a', 'active'), mkUnavailable('u', 'rate-limited')],
+    })
+    renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={section}
+        loadingOverride={true}
+      />,
+    )
+    // Section content is still rendered (no blank "Loading admin activity..." takeover).
+    expect(screen.getByText('a')).toBeInTheDocument()
+    expect(screen.getByText('u')).toBeInTheDocument()
+    expect(screen.queryByText(/Loading admin activity/i)).not.toBeInTheDocument()
+
+    const retry = screen.getByTestId('stale-admins-unavailable-retry')
+    expect(retry.textContent).toMatch(/Retrying/i)
+    expect(retry).toBeDisabled()
+  })
+})
+
 describe('StaleAdminsPanel — US5 freshness disclosure', () => {
   it('reads the threshold value from the config and discloses public-only + eventual consistency', () => {
     const section = makeSection()
@@ -310,7 +511,14 @@ function mkAdmin(
   classification: 'active' | 'stale' | 'no-public-activity' | 'unavailable',
 ) {
   if (classification === 'no-public-activity') {
-    return { username, classification, lastActivityAt: null, lastActivitySource: null, unavailableReason: null }
+    return {
+      username,
+      classification,
+      lastActivityAt: null,
+      lastActivitySource: null,
+      unavailableReason: null,
+      retryAvailableAt: null,
+    }
   }
   if (classification === 'unavailable') {
     return {
@@ -319,6 +527,7 @@ function mkAdmin(
       lastActivityAt: null,
       lastActivitySource: null,
       unavailableReason: 'rate-limited' as const,
+      retryAvailableAt: null,
     }
   }
   return {
@@ -327,5 +536,21 @@ function mkAdmin(
     lastActivityAt: classification === 'stale' ? '2025-09-01T00:00:00Z' : '2026-04-10T00:00:00Z',
     lastActivitySource: 'public-events' as const,
     unavailableReason: null,
+    retryAvailableAt: null,
+  }
+}
+
+function mkUnavailable(
+  username: string,
+  reason: 'rate-limited' | 'commit-search-failed' | 'events-fetch-failed' | 'admin-account-404',
+  retryAvailableAt: string | null = null,
+) {
+  return {
+    username,
+    classification: 'unavailable' as const,
+    lastActivityAt: null,
+    lastActivitySource: null,
+    unavailableReason: reason,
+    retryAvailableAt,
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/AuthContext'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
 import { useStaleAdmins, type OwnerType } from '@/components/shared/hooks/useStaleAdmins'
@@ -9,6 +9,7 @@ import type {
   StaleAdminMode,
   StaleAdminRecord,
   StaleAdminsSection,
+  StaleAdminUnavailableReason,
 } from '@/lib/governance/stale-admins'
 
 interface Props {
@@ -18,6 +19,10 @@ interface Props {
   sectionOverride?: StaleAdminsSection | null
   /** Override for tests. */
   loadingOverride?: boolean
+  /** Override for tests. */
+  onRetryOverride?: () => void
+  /** Override for tests. */
+  nextAutoRetryAtOverride?: string | null
 }
 
 // Risk-first ordering: the user's attention should go to Stale and Unavailable
@@ -70,7 +75,14 @@ const GROUP_CONFIG: Record<
   },
 }
 
-export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverride }: Props) {
+export function StaleAdminsPanel({
+  org,
+  ownerType,
+  sectionOverride,
+  loadingOverride,
+  onRetryOverride,
+  nextAutoRetryAtOverride,
+}: Props) {
   const { session, hasScope } = useAuth()
   // admin:org is a strict superset of read:org — treat either as "elevated"
   // for the concealed-admins view.
@@ -86,6 +98,13 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
 
   const section = hasOverride ? sectionOverride : hookState.section
   const loading = loadingOverride ?? (hasOverride ? false : hookState.loading)
+  const onRetry = onRetryOverride ?? hookState.refetch
+  const nextAutoRetryAt =
+    nextAutoRetryAtOverride !== undefined
+      ? nextAutoRetryAtOverride
+      : hasOverride
+        ? null
+        : hookState.nextAutoRetryAt
   const [expanded, setExpanded] = useState(true)
 
   return (
@@ -129,8 +148,17 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
 
       {expanded ? (
         <>
-          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
-          {!loading && section ? <SectionBody section={section} /> : null}
+          {loading && !section ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p>
+          ) : null}
+          {section ? (
+            <SectionBody
+              section={section}
+              onRetry={onRetry}
+              refreshing={loading}
+              nextAutoRetryAt={nextAutoRetryAt}
+            />
+          ) : null}
         </>
       ) : null}
     </section>
@@ -217,11 +245,11 @@ function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
     <details className="relative" data-testid="stale-admins-scoring-help">
       <summary
         aria-label="How is this scored?"
-        className="inline-flex h-4 w-4 cursor-pointer select-none items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 list-none hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200 [&::-webkit-details-marker]:hidden dark:bg-slate-900"
+        className="inline-flex h-4 w-4 cursor-pointer select-none items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold text-slate-500 list-none hover:border-slate-400 hover:text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200 [&::-webkit-details-marker]:hidden"
       >
         ?
       </summary>
-      <div className="absolute left-0 top-6 z-10 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:bg-slate-900">
+      <div className="absolute left-0 top-6 z-10 w-72 rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
         <p className="mb-1 font-medium text-slate-700 dark:text-slate-200">How is this scored?</p>
         <ThresholdDisclosure section={section} />
       </div>
@@ -229,7 +257,17 @@ function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
   )
 }
 
-function SectionBody({ section }: { section: StaleAdminsSection }) {
+function SectionBody({
+  section,
+  onRetry,
+  refreshing,
+  nextAutoRetryAt,
+}: {
+  section: StaleAdminsSection
+  onRetry: () => void
+  refreshing: boolean
+  nextAutoRetryAt: string | null
+}) {
   if (section.applicability === 'not-applicable-non-org') {
     return (
       <p className="text-sm text-slate-600 dark:text-slate-300" data-testid="stale-admins-na">
@@ -241,7 +279,7 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
 
   if (section.applicability === 'admin-list-unavailable') {
     return (
-      <p className="text-sm text-rose-700 dark:text-rose-400 dark:text-rose-300" data-testid="stale-admins-unavailable">
+      <p className="text-sm text-rose-700 dark:text-rose-300" data-testid="stale-admins-unavailable">
         Admin list could not be retrieved —{' '}
         <span className="font-medium">{section.adminListUnavailableReason ?? 'unknown'}</span>.
       </p>
@@ -266,6 +304,9 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
           classification={classification}
           admins={grouped[classification]}
           defaultOpen={DEFAULT_OPEN[classification]}
+          onRetry={onRetry}
+          refreshing={refreshing}
+          nextAutoRetryAt={nextAutoRetryAt}
         />
       ))}
     </div>
@@ -276,16 +317,27 @@ function GroupSection({
   classification,
   admins,
   defaultOpen,
+  onRetry,
+  refreshing,
+  nextAutoRetryAt,
 }: {
   classification: StaleAdminClassification
   admins: StaleAdminRecord[]
   defaultOpen: boolean
+  onRetry: () => void
+  refreshing: boolean
+  nextAutoRetryAt: string | null
 }) {
   const config = GROUP_CONFIG[classification]
+  const isUnavailable = classification === 'unavailable'
+  const reasonCounts = isUnavailable ? countByUnavailableReason(admins) : null
+  const retryableCount = reasonCounts
+    ? reasonCounts['rate-limited'] + reasonCounts['commit-search-failed'] + reasonCounts['events-fetch-failed']
+    : 0
   return (
     <details
       open={defaultOpen}
-      className={`group rounded-md bg-slate-50 dark:bg-slate-800/40 ${config.headerBorderClassName} dark:bg-slate-800/60 `}
+      className={`group rounded-md bg-slate-50 dark:bg-slate-800/60 ${config.headerBorderClassName}`}
       data-testid={`stale-admins-group-${classification}`}
     >
       <summary
@@ -299,13 +351,162 @@ function GroupSection({
           {admins.length}
         </span>
       </summary>
+      {isUnavailable && reasonCounts ? (
+        <UnavailableReasonStrip
+          counts={reasonCounts}
+          onRetry={onRetry}
+          showRetry={retryableCount > 0}
+          refreshing={refreshing}
+          nextAutoRetryAt={nextAutoRetryAt}
+        />
+      ) : null}
       <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
         {admins.map((admin) => (
-          <AdminRow key={admin.username} admin={admin} />
+          <AdminRow key={admin.username} admin={admin} nextAutoRetryAt={nextAutoRetryAt} />
         ))}
       </ul>
     </details>
   )
+}
+
+const UNAVAILABLE_REASON_LABEL: Record<StaleAdminUnavailableReason, string> = {
+  'rate-limited': 'Rate-limited',
+  'commit-search-failed': 'Search unavailable',
+  'events-fetch-failed': 'Events unavailable',
+  'admin-account-404': 'Account not found',
+}
+
+// Row-level humanized copy. Framed around what GitHub returned (or didn't),
+// not our implementation (`/search/commits`, `/events/public`). Avoids
+// parenthetical technical asides — those read as app-error / debug output.
+//
+// All retryable reasons (rate-limited, commit-search-failed,
+// events-fetch-failed) share a single message so rows read consistently;
+// the per-reason split is already visible at a glance via the sub-pill
+// strip above the rows ("3 rate-limited · 18 search unavailable"), which
+// is where users who care about the distinction can find it.
+//
+// Two rendering modes, driven by `hasCountdown`:
+//   - With countdown: a live timer follows the lead and carries the "when".
+//   - Without countdown: the background retry ladder is paused, so the
+//     text points at the Retry button instead of promising a time.
+function unavailableReasonRowText(reason: StaleAdminUnavailableReason | null, hasCountdown: boolean): string {
+  if (reason === 'admin-account-404') {
+    return 'GitHub account not found or deleted.'
+  }
+  if (reason === null) {
+    return 'Activity could not be retrieved.'
+  }
+  return hasCountdown
+    ? 'GitHub didn’t return activity data.'
+    : 'GitHub didn’t return activity data — click Retry to try again.'
+}
+
+function UnavailableReasonStrip({
+  counts,
+  onRetry,
+  showRetry,
+  refreshing,
+  nextAutoRetryAt,
+}: {
+  counts: Record<StaleAdminUnavailableReason | 'unknown', number>
+  onRetry: () => void
+  showRetry: boolean
+  refreshing: boolean
+  nextAutoRetryAt: string | null
+}) {
+  const entries = (Object.keys(UNAVAILABLE_REASON_LABEL) as StaleAdminUnavailableReason[])
+    .filter((r) => counts[r] > 0)
+    .map((r) => ({ reason: r, count: counts[r], label: UNAVAILABLE_REASON_LABEL[r] }))
+  if (counts.unknown > 0) {
+    entries.push({ reason: 'unknown' as never, count: counts.unknown, label: 'Unknown' })
+  }
+  if (entries.length === 0) return null
+  return (
+    <div
+      className="mx-3 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-amber-200 pb-1.5 text-xs dark:border-amber-900/60"
+      data-testid="stale-admins-unavailable-reasons"
+    >
+      {entries.map(({ reason, count, label }) => (
+        <span
+          key={reason}
+          className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+          data-testid={`stale-admins-unavailable-reason-${reason}`}
+        >
+          {count} {label.toLowerCase()}
+        </span>
+      ))}
+      {showRetry ? (
+        <RetryButton
+          onRetry={onRetry}
+          refreshing={refreshing}
+          nextAutoRetryAt={nextAutoRetryAt}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function RetryButton({
+  onRetry,
+  refreshing,
+  nextAutoRetryAt,
+}: {
+  onRetry: () => void
+  refreshing: boolean
+  nextAutoRetryAt: string | null
+}) {
+  const target = nextAutoRetryAt ? Date.parse(nextAutoRetryAt) : NaN
+  const hasKnownTarget = Number.isFinite(target)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    if (!hasKnownTarget) return
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [hasKnownTarget])
+
+  const remainingMs = hasKnownTarget ? Math.max(0, target - nowMs) : 0
+  const seconds = Math.ceil(remainingMs / 1000)
+  const waiting = hasKnownTarget && remainingMs > 0
+  // When a background auto-retry is pending, users should not fire their
+  // own on top of it (doubles the rate-limit pressure). Disable until the
+  // timer is up OR the ladder is exhausted (nextAutoRetryAt = null).
+  const disabled = refreshing || waiting
+  const label = refreshing
+    ? 'Retrying…'
+    : waiting
+      ? `Auto-retry in ${seconds}s`
+      : 'Retry'
+
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      disabled={disabled}
+      data-testid="stale-admins-unavailable-retry"
+      className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:cursor-wait disabled:opacity-60 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
+    >
+      {label}
+    </button>
+  )
+}
+
+function countByUnavailableReason(
+  admins: StaleAdminRecord[],
+): Record<StaleAdminUnavailableReason | 'unknown', number> {
+  const counts: Record<StaleAdminUnavailableReason | 'unknown', number> = {
+    'rate-limited': 0,
+    'commit-search-failed': 0,
+    'events-fetch-failed': 0,
+    'admin-account-404': 0,
+    unknown: 0,
+  }
+  for (const a of admins) {
+    const r = a.unavailableReason
+    if (r && r in counts) counts[r]++
+    else counts.unknown++
+  }
+  return counts
 }
 
 function GroupChevron() {
@@ -326,7 +527,13 @@ function GroupChevron() {
   )
 }
 
-function AdminRow({ admin }: { admin: StaleAdminRecord }) {
+function AdminRow({
+  admin,
+  nextAutoRetryAt,
+}: {
+  admin: StaleAdminRecord
+  nextAutoRetryAt: string | null
+}) {
   return (
     <li
       className="flex flex-wrap items-baseline justify-between gap-2 py-1"
@@ -340,12 +547,18 @@ function AdminRow({ admin }: { admin: StaleAdminRecord }) {
       >
         {admin.username}
       </a>
-      <RowDetail admin={admin} />
+      <RowDetail admin={admin} nextAutoRetryAt={nextAutoRetryAt} />
     </li>
   )
 }
 
-function RowDetail({ admin }: { admin: StaleAdminRecord }) {
+function RowDetail({
+  admin,
+  nextAutoRetryAt,
+}: {
+  admin: StaleAdminRecord
+  nextAutoRetryAt: string | null
+}) {
   if (admin.lastActivityAt) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
@@ -371,13 +584,63 @@ function RowDetail({ admin }: { admin: StaleAdminRecord }) {
     )
   }
   if (admin.classification === 'unavailable') {
+    // Unified countdown source: prefer this admin's own GitHub-disclosed
+    // reset (`retryAvailableAt`) only while it's still in the future —
+    // a past timestamp means the window has passed and shouldn't keep
+    // "Ready to retry." pinned after the ladder is exhausted. Fall back
+    // to the hook's next scheduled background retry (`nextAutoRetryAt`).
+    // When neither is available (ladder exhausted, terminal reason), no
+    // countdown is shown and the copy points at Retry.
+    const retryAt =
+      admin.retryAvailableAt && Date.parse(admin.retryAvailableAt) > Date.now()
+        ? admin.retryAvailableAt
+        : null
+    const countdownAt = retryAt ?? nextAutoRetryAt
+    const hasCountdown = Boolean(countdownAt)
     return (
       <span className="text-xs text-slate-500 dark:text-slate-400">
-        Activity could not be retrieved ({admin.unavailableReason ?? 'unknown'}).
+        {unavailableReasonRowText(admin.unavailableReason, hasCountdown)}
+        {countdownAt ? (
+          <>
+            {' '}
+            <RetryCountdown availableAt={countdownAt} />
+          </>
+        ) : null}
       </span>
     )
   }
   return null
+}
+
+function RetryCountdown({ availableAt }: { availableAt: string }) {
+  const target = Date.parse(availableAt)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    if (!Number.isFinite(target)) return
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [target])
+  if (!Number.isFinite(target)) return null
+  const remainingMs = target - nowMs
+  if (remainingMs <= 0) {
+    return (
+      <span
+        data-testid="retry-countdown-ready"
+        className="font-medium text-emerald-700 dark:text-emerald-400"
+      >
+        Ready to retry.
+      </span>
+    )
+  }
+  const seconds = Math.ceil(remainingMs / 1000)
+  return (
+    <span
+      data-testid="retry-countdown"
+      className="font-medium text-amber-700 dark:text-amber-400"
+    >
+      Retry available in {seconds}s.
+    </span>
+  )
 }
 
 function ModeBadge({ mode }: { mode: StaleAdminMode }) {

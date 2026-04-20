@@ -25,6 +25,13 @@ export interface StaleAdminRecord {
   lastActivityAt: string | null
   lastActivitySource: StaleAdminActivitySource | null
   unavailableReason: StaleAdminUnavailableReason | null
+  /**
+   * For unavailable admins where GitHub disclosed a rate-limit reset
+   * (via `Retry-After` or `X-RateLimit-Reset`), the ISO timestamp at
+   * which a retry is expected to succeed. Null when GitHub gave no
+   * reset signal (e.g. secondary rate limits, generic 5xx).
+   */
+  retryAvailableAt: string | null
 }
 
 export type StaleAdminsApplicability =
@@ -46,6 +53,12 @@ export interface StaleAdminsSection {
   thresholdDays: StaleAdminThresholdDays
   admins: StaleAdminRecord[]
   adminListUnavailableReason?: AdminListUnavailableReason
+  /**
+   * Earliest `retryAvailableAt` across all unavailable admins, used by the
+   * client to schedule a reset-aware background auto-retry. Null when no
+   * unavailable admin carries a known reset time.
+   */
+  earliestRetryAvailableAt: string | null
   resolvedAt: string
 }
 
@@ -54,6 +67,7 @@ export interface AdminActivityInput {
   lastActivityAt: string | null
   lastActivitySource: StaleAdminActivitySource | null
   error: StaleAdminUnavailableReason | null
+  retryAvailableAt?: string | null
 }
 
 const DAY_MS = 86_400_000
@@ -70,6 +84,7 @@ export function classifyAdmin(
       lastActivityAt: null,
       lastActivitySource: null,
       unavailableReason: input.error,
+      retryAvailableAt: input.retryAvailableAt ?? null,
     }
   }
 
@@ -80,6 +95,7 @@ export function classifyAdmin(
       lastActivityAt: null,
       lastActivitySource: null,
       unavailableReason: null,
+      retryAvailableAt: null,
     }
   }
 
@@ -94,5 +110,6 @@ export function classifyAdmin(
     lastActivityAt: input.lastActivityAt,
     lastActivitySource: input.lastActivitySource,
     unavailableReason: null,
+    retryAvailableAt: null,
   }
 }

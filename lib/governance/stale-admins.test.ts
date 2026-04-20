@@ -139,7 +139,7 @@ describe('classifyAdmin', () => {
     }
   })
 
-  it.each([30, 60, 90, 180, 365])('respects the configured threshold window of %i days', (threshold) => {
+  it.each([30, 60, 90, 180, 365] as const)('respects the configured threshold window of %i days', (threshold) => {
     const justInside: AdminActivityInput = {
       username: 'inside',
       lastActivityAt: iso(NOW_MS - (threshold - 1) * DAY_MS),
