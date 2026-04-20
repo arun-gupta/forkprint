@@ -30,6 +30,7 @@ import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import { decodeRepos } from '@/lib/export/shareable-url'
+import { parseRepos } from '@/lib/parse-repos'
 import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 
@@ -41,7 +42,9 @@ interface RepoInputClientProps {
 export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
   const { session } = useAuth()
   const searchParams = useSearchParams()
-  const initialRepoValue = decodeRepos(searchParams.toString()).join('\n')
+  const initialRepos = decodeRepos(searchParams.toString())
+  const initialRepoValue = initialRepos.join('\n')
+  const autoTriggeredRef = useRef(false)
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
   const [analyzedRepos, setAnalyzedRepos] = useState<string[]>([])
   const [orgInventoryResponse, setOrgInventoryResponse] = useState<OrgInventoryResponse | null>(null)
@@ -262,6 +265,18 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       })
     }
   }, [analysisResponse])
+
+  useEffect(() => {
+    if (autoTriggeredRef.current) return
+    if (!session?.token) return
+    if (initialRepos.length === 0) return
+
+    autoTriggeredRef.current = true
+    const parsed = parseRepos(initialRepoValue)
+    if (!parsed.valid) return
+    void handleSubmit(parsed.repos)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.token])
 
   async function handleSubmit(repos: string[]) {
     if (!session?.token) return

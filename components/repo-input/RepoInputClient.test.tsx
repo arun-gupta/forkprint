@@ -643,4 +643,51 @@ describe('RepoInputClient — shareable URL pre-population', () => {
     renderWithAuth(<RepoInputClient />)
     expect(screen.getByRole('textbox', { name: /repository list/i })).toHaveValue('')
   })
+
+  it('auto-triggers analysis when ?repos= query param contains valid repos', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('repos=facebook%2Freact%2Cvercel%2Fnext.js'))
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [buildAnalysisResult('facebook/react'), buildAnalysisResult('vercel/next.js')],
+      failures: [],
+      rateLimit: null,
+    })
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await vi.waitFor(() => {
+      expect(onAnalyze).toHaveBeenCalledWith(['facebook/react', 'vercel/next.js'], 'gho_test_token')
+    })
+    expect(onAnalyze).toHaveBeenCalledTimes(1)
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+  })
+
+  it('does not auto-trigger analysis when the param contains an invalid slug', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('repos=facebook%2Freact%2Cnot-a-slug'))
+    const onAnalyze = vi.fn()
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    // Textarea pre-populates even with the malformed entry.
+    const textarea = screen.getByRole('textbox', { name: /repository list/i })
+    expect(textarea).toHaveValue('facebook/react\nnot-a-slug')
+
+    // Give the mount effect a chance to run — it should not dispatch.
+    await new Promise((r) => setTimeout(r, 0))
+    expect(onAnalyze).not.toHaveBeenCalled()
+
+    // Clicking Analyze surfaces the validation error inline.
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+    expect(screen.getByTestId('repo-error')).toHaveTextContent(/not a valid owner\/repo slug/i)
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+  })
+
+  it('does not auto-trigger analysis when no ?repos= param is present', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+    const onAnalyze = vi.fn()
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await new Promise((r) => setTimeout(r, 0))
+    expect(onAnalyze).not.toHaveBeenCalled()
+  })
 })
