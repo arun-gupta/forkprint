@@ -360,7 +360,7 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('### Onboarding & Accessibility')
     expect(md).toContain('Good first issues')
     expect(md).toContain('Dev environment setup')
-    expect(md).toContain('Gitpod support')
+    expect(md).toContain('+ Gitpod')
     expect(md).toContain('New contributor PR acceptance')
   })
 
