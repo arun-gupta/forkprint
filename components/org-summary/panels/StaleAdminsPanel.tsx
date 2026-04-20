@@ -360,18 +360,26 @@ const UNAVAILABLE_REASON_LABEL: Record<StaleAdminUnavailableReason, string> = {
   'admin-account-404': 'Account not found',
 }
 
-// Row-level humanized copy. Distinguishes retryable transient GitHub-side
-// issues ("try again in a moment") from terminal conditions ("account not
-// found"). `commit-search-failed` and `events-fetch-failed` are grouped with
-// retryable because in practice they often mask a disguised rate-limit or
-// abuse-detection block whose response didn't carry our expected headers.
-const UNAVAILABLE_REASON_ROW_TEXT: Record<StaleAdminUnavailableReason, string> = {
-  'rate-limited': 'GitHub rate limit hit — try Retry in a moment.',
-  'commit-search-failed':
-    'GitHub commit search is temporarily unavailable (often a burst rate-limit). Try Retry in a moment.',
-  'events-fetch-failed':
-    'GitHub events feed is temporarily unavailable. Try Retry in a moment.',
-  'admin-account-404': 'GitHub account not found or deleted.',
+// Row-level humanized copy. Framed around what GitHub returned (or didn't),
+// not our implementation (`/search/commits`, `/events/public`). Avoids
+// parenthetical technical asides — those read as app-error / debug output.
+// Terminal conditions (`admin-account-404`) are distinct from retryable
+// throttling; commit-search / events failures are grouped under the same
+// user-facing copy because in practice they share a root cause (GitHub-side
+// throttling we can't observe directly) and a single recourse (retry later).
+function unavailableReasonRowText(reason: StaleAdminUnavailableReason | null, hasCountdown: boolean): string {
+  switch (reason) {
+    case 'rate-limited':
+      // When a countdown follows, the timer carries the "when"; keep the lead tight.
+      return hasCountdown ? 'GitHub rate limit.' : 'GitHub rate limit — retry in about a minute.'
+    case 'commit-search-failed':
+    case 'events-fetch-failed':
+      return 'GitHub didn’t return activity data — retry may work in about a minute.'
+    case 'admin-account-404':
+      return 'GitHub account not found or deleted.'
+    default:
+      return 'Activity could not be retrieved.'
+  }
 }
 
 function UnavailableReasonStrip({
@@ -541,14 +549,10 @@ function RowDetail({ admin }: { admin: StaleAdminRecord }) {
     )
   }
   if (admin.classification === 'unavailable') {
-    const reason = admin.unavailableReason
-    const text =
-      reason && reason in UNAVAILABLE_REASON_ROW_TEXT
-        ? UNAVAILABLE_REASON_ROW_TEXT[reason]
-        : 'Activity could not be retrieved.'
+    const hasCountdown = Boolean(admin.retryAvailableAt)
     return (
       <span className="text-xs text-slate-500 dark:text-slate-400">
-        {text}
+        {unavailableReasonRowText(admin.unavailableReason, hasCountdown)}
         {admin.retryAvailableAt ? (
           <>
             {' '}

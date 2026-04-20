@@ -353,7 +353,7 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     expect(screen.queryByTestId('stale-admins-unavailable-retry')).not.toBeInTheDocument()
   })
 
-  it('renders humanized row text for each unavailable reason (no enum names)', () => {
+  it('renders humanized, non-app-error row text for each unavailable reason', () => {
     const section = makeSection({
       admins: [
         mkUnavailable('u1', 'rate-limited'),
@@ -364,12 +364,28 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
 
     const unavailable = screen.getByTestId('stale-admins-group-unavailable')
-    expect(within(unavailable).getByText(/GitHub rate limit hit/i)).toBeInTheDocument()
-    expect(within(unavailable).getByText(/GitHub commit search is temporarily unavailable/i)).toBeInTheDocument()
+    // Row copy is framed around what GitHub returned, not our implementation.
+    expect(within(unavailable).getByText(/GitHub rate limit — retry in about a minute/i)).toBeInTheDocument()
+    expect(within(unavailable).getByText(/GitHub didn’t return activity data/i)).toBeInTheDocument()
     expect(within(unavailable).getByText(/GitHub account not found/i)).toBeInTheDocument()
-    // Make sure raw enum values no longer leak into row copy.
+    // Our implementation names and debug asides must not leak into user copy.
+    expect(within(unavailable).queryByText(/commit search/i)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/events feed/i)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/\(often a burst rate-limit\)/i)).not.toBeInTheDocument()
     expect(within(unavailable).queryByText(/commit-search-failed/)).not.toBeInTheDocument()
     expect(within(unavailable).queryByText(/rate-limited\)/)).not.toBeInTheDocument()
+  })
+
+  it('when a countdown is present, the row lead is tight and defers the "when" to the timer', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited', '2026-04-20T12:00:30Z')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    // Concise lead (no "retry in about a minute" — countdown carries the signal).
+    expect(screen.getByText('GitHub rate limit.')).toBeInTheDocument()
+    expect(screen.getByTestId('retry-countdown').textContent).toMatch(/Retry available in \d+s/)
+    vi.useRealTimers()
   })
 
   it('omits the sub-breakdown strip on non-unavailable groups', () => {
