@@ -150,6 +150,26 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
         </div>
       ) : null}
 
+      {card.details.length > 0 ? (
+        <section
+          aria-label={`${card.repo} details`}
+          className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/60"
+        >
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+            {card.details.map((detail) => (
+              <div key={detail.label} className="min-w-0">
+                <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {detail.label}
+                </dt>
+                <dd className="mt-0.5 break-words text-sm text-slate-900 dark:text-slate-100">
+                  {detail.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
       {hs.recommendations.length > 0 ? (
         <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/60">
           <p className="text-xs text-slate-600 dark:text-slate-300">
