@@ -1,6 +1,6 @@
 import type { AnalysisResult, ContributorWindowDays, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
-import { type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import { MATURITY_CONFIG, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ContributorsScoreDefinition {
   value: ScoreValue
@@ -128,6 +128,17 @@ export function getContributorsScore(
   result: AnalysisResult,
   profile: CalibrationProfile = 'community',
 ): ContributorsScoreDefinition {
+  // Age-guard (P2-F11 / #74): repos younger than the Resilience minimum age
+  // render "Insufficient verified public data" rather than a penalty that
+  // reflects age more than health. `ageInDays === 'unavailable'` does NOT
+  // trigger the guard — absence of evidence is not evidence of youth.
+  if (typeof result.ageInDays === 'number' && result.ageInDays < MATURITY_CONFIG.minimumResilienceScoringAgeDays) {
+    return {
+      ...INSUFFICIENT_SCORE,
+      summary: `Repo is younger than the minimum age for confident Resilience scoring (${MATURITY_CONFIG.minimumResilienceScoringAgeDays} d).`,
+      description: 'Too new to produce a confident Resilience score — evaluated against the age-guard rather than the contributor distribution.',
+    }
+  }
   return computeContributorsScore(result.commitCountsByAuthor, result.stars, deriveExtras(result), profile)
 }
 

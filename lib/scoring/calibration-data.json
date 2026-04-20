@@ -7,7 +7,15 @@
     "emerging": 399,
     "growing": 400,
     "established": 400,
-    "popular": 401
+    "popular": 401,
+    "emerging-young": 0,
+    "emerging-mature": 0,
+    "growing-young": 0,
+    "growing-mature": 0,
+    "established-young": 0,
+    "established-mature": 0,
+    "popular-young": 0,
+    "popular-mature": 0
   },
   "brackets": {
     "solo-small": {
@@ -1022,6 +1030,1422 @@
         "p50": 0.6,
         "p75": 0.8,
         "p90": 0.9
+      }
+    },
+    "emerging-young": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "emerging-mature": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "growing-young": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "growing-mature": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "established-young": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "established-mature": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "popular-young": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      }
+    },
+    "popular-mature": {
+      "sampleSize": 0,
+      "stars": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forks": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watchers": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "forkRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "watcherRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueClosureRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "staleIssueRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "stalePrRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToMergeHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "medianTimeToCloseHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueFirstResponseP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prFirstReviewP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeMedianHours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prMergeP90Hours": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issueResolutionRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorResponseRate": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "humanResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "botResponseRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "prReviewDepth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "issuesClosedWithoutCommentRatio": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "topContributorShare": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "starsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "contributorsPerYear": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
+      },
+      "commitsPerMonth": {
+        "p25": 0,
+        "p50": 0,
+        "p75": 0,
+        "p90": 0
       }
     }
   }

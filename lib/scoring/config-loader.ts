@@ -28,7 +28,38 @@ export const DOCUMENTATION_SEMVER_BONUS = 0.03
 export const DOCUMENTATION_NOTES_BONUS = 0.02
 export const DOCUMENTATION_TAG_PROMOTION_BONUS = 0.02
 
-export type BracketKey = 'solo-tiny' | 'solo-small' | 'emerging' | 'growing' | 'established' | 'popular'
+/**
+ * Project Maturity (P2-F11 / #74) — shared config consumed by the analyzer,
+ * Activity + Resilience scoring, and the metric-card view-model.
+ *
+ * All knobs live here so the constitution §VI rule is satisfied — thresholds
+ * are not inline in logic or components.
+ */
+export const MATURITY_CONFIG = {
+  /** Min age before stars/year, contributors/year, commits/month are computed. */
+  minimumNormalizationAgeDays: 90,
+  /** Min age before a growth trajectory label is assigned. */
+  minimumTrajectoryAgeDays: 730,
+  /** Recent/lifetime ratio ≥ this → 'accelerating'. */
+  acceleratingRatio: 1.25,
+  /** Recent/lifetime ratio ≤ this → 'declining'. */
+  decliningRatio: 0.75,
+  /** Activity score renders "Insufficient" below this age. */
+  minimumActivityScoringAgeDays: 90,
+  /** Resilience score renders "Insufficient" below this age. */
+  minimumResilienceScoringAgeDays: 180,
+  /** Community brackets split into -young (< N) and -mature (≥ N). */
+  ageStratumBoundaryDays: 730,
+} as const
+
+export type CommunityTier = 'emerging' | 'growing' | 'established' | 'popular'
+export type AgeStratum = 'young' | 'mature'
+
+export type BracketKey =
+  | 'solo-tiny'
+  | 'solo-small'
+  | CommunityTier
+  | `${CommunityTier}-${AgeStratum}`
 
 /** Profile override used by the scorecard to route solo repos to solo brackets. */
 export type CalibrationProfile = 'community' | 'solo'
@@ -69,6 +100,12 @@ export interface BracketCalibration {
   issuesClosedWithoutCommentRatio: PercentileSet
   topContributorShare: PercentileSet
   documentationScore?: PercentileSet
+  // Project Maturity (P2-F11 / #74). Optional — populated per stratum once
+  // calibration re-samples under #152. When absent, the UI cohort caption
+  // degrades gracefully (omits the context line).
+  starsPerYear?: PercentileSet
+  contributorsPerYear?: PercentileSet
+  commitsPerMonth?: PercentileSet
 }
 
 /**
@@ -98,6 +135,42 @@ export function getBracket(stars: number | Unavailable, profile: CalibrationProf
   return 'popular'
 }
 
+/** Resolves the community tier a given star count maps to, ignoring profile. */
+function communityTierForStars(stars: number | Unavailable): CommunityTier {
+  if (stars === 'unavailable' || stars < 100) return 'emerging'
+  if (stars < 1000) return 'growing'
+  if (stars < 10000) return 'established'
+  return 'popular'
+}
+
+/** True when a stratified community bracket has real calibration data. */
+function stratifiedBracketHasData(bracket: BracketKey): boolean {
+  const entry = (calibrationData.brackets as Record<string, { sampleSize?: number } | undefined>)[bracket]
+  return !!entry && typeof entry.sampleSize === 'number' && entry.sampleSize > 0
+}
+
+/**
+ * Age-aware bracket routing (P2-F11 / #74). Routes to `-young` / `-mature`
+ * stratum when calibration data for that stratum is available; otherwise
+ * falls back to the unstratified community bracket. Solo profile bypasses
+ * stratification (solo brackets encode the dominant cohort signal already).
+ */
+export function getMaturityBracket(
+  stars: number | Unavailable,
+  ageInDays: number | Unavailable,
+  profile: CalibrationProfile = 'community',
+): BracketKey {
+  const soloOrCommunity = getBracket(stars, profile)
+  if (soloOrCommunity === 'solo-tiny' || soloOrCommunity === 'solo-small') {
+    return soloOrCommunity
+  }
+  if (ageInDays === 'unavailable') return soloOrCommunity
+  const tier = communityTierForStars(stars)
+  const stratum: AgeStratum = ageInDays < MATURITY_CONFIG.ageStratumBoundaryDays ? 'young' : 'mature'
+  const stratified = `${tier}-${stratum}` as BracketKey
+  return stratifiedBracketHasData(stratified) ? stratified : soloOrCommunity
+}
+
 export function getCalibration(bracket: BracketKey): BracketCalibration {
   return calibrationData.brackets[bracket] as BracketCalibration
 }
@@ -124,6 +197,30 @@ const BRACKET_LABELS: Record<BracketKey, string> = {
   growing: 'Growing (100–999 stars)',
   established: 'Established (1k–10k stars)',
   popular: 'Popular (10k+ stars)',
+  'emerging-young': 'Emerging · < 2 yrs',
+  'emerging-mature': 'Emerging · ≥ 2 yrs',
+  'growing-young': 'Growing · < 2 yrs',
+  'growing-mature': 'Growing · ≥ 2 yrs',
+  'established-young': 'Established · < 2 yrs',
+  'established-mature': 'Established · ≥ 2 yrs',
+  'popular-young': 'Popular · < 2 yrs',
+  'popular-mature': 'Popular · ≥ 2 yrs',
+}
+
+/**
+ * Label for an age-aware bracket lookup. Matches `getMaturityBracket` —
+ * when the stratum has no data, the unstratified label is returned.
+ */
+export function getMaturityBracketLabel(
+  stars: number | Unavailable,
+  ageInDays: number | Unavailable,
+  profile: CalibrationProfile = 'community',
+): string {
+  const bracket = getMaturityBracket(stars, ageInDays, profile)
+  if (profile === 'solo' && isSoloFallback(stars, profile)) {
+    return `${BRACKET_LABELS[bracket]} — limited solo sample`
+  }
+  return BRACKET_LABELS[bracket]
 }
 
 /**

@@ -198,6 +198,19 @@ export interface AnalysisResult {
   // or 'unavailable' per Constitution §II (no estimation). Per-field
   // 'unavailable' is used for individual signals that cannot be computed.
   releaseHealthResult?: ReleaseHealthResult | Unavailable
+  // Project Maturity signals (P2-F11 / #74). Optional — absent on fixtures
+  // predating this feature. `createdAt` is the sole verified input for
+  // `ageInDays`; `lifetimeCommits` is the default branch's
+  // `history(first: 0).totalCount`. Normalized fields degrade to 'too-new'
+  // when age is below the normalization threshold, and 'unavailable' when
+  // any upstream input is missing (constitution §II).
+  ageInDays?: number | Unavailable
+  lifetimeCommits?: number | Unavailable
+  starsPerYear?: number | 'too-new' | Unavailable
+  contributorsPerYear?: number | 'too-new' | Unavailable
+  commitsPerMonthLifetime?: number | 'too-new' | Unavailable
+  commitsPerMonthRecent12mo?: number | Unavailable
+  growthTrajectory?: 'accelerating' | 'stable' | 'declining' | Unavailable
   missingFields: string[]
 }
 

@@ -57,6 +57,33 @@ function mdTable(rows: [string, string][]): string {
   return lines.join('\n')
 }
 
+function formatAgeMd(value: number | 'unavailable' | undefined): string {
+  if (typeof value !== 'number') return '—'
+  if (value < 30) return `${Math.round(value)} d`
+  if (value < 365) return `${Math.round(value / 30.4375)} mo`
+  const years = value / 365.25
+  return `${years.toFixed(years >= 10 ? 0 : 1)} yr`
+}
+
+function formatRateMd(
+  value: number | 'too-new' | 'unavailable' | undefined,
+  unit: '/yr' | '/mo',
+): string {
+  if (value === undefined || value === 'unavailable') return '—'
+  if (value === 'too-new') return 'Too new to normalize'
+  const formatted = value >= 100
+    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)
+    : new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value)
+  return `${formatted} ${unit}`
+}
+
+function formatTrajectoryMd(
+  value: 'accelerating' | 'stable' | 'declining' | 'unavailable' | undefined,
+): string {
+  if (value === undefined || value === 'unavailable') return 'Insufficient verified public data'
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 function getResponsivenessMetrics(result: AnalysisResult): ResponsivenessMetrics {
   return (
     result.responsivenessMetricsByWindow?.[90] ??
@@ -148,6 +175,16 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       ['Forks', fmt(result.forks)],
       ['Watchers', fmt(result.watchers)],
       ['Primary language', fmt(result.primaryLanguage)],
+    ]),
+    '',
+    '#### Maturity',
+    '',
+    mdTable([
+      ['Age', formatAgeMd(result.ageInDays)],
+      ['Stars / year', formatRateMd(result.starsPerYear, '/yr')],
+      ['Contributors / year', formatRateMd(result.contributorsPerYear, '/yr')],
+      ['Commits / month', formatRateMd(result.commitsPerMonthLifetime, '/mo')],
+      ['Growth trajectory', formatTrajectoryMd(result.growthTrajectory)],
     ]),
     '',
     '| Score | Value |',

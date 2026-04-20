@@ -20,6 +20,7 @@ import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations, type MaintainerToken } from './github-rest'
 import { REPO_COMMIT_AND_RELEASES_QUERY, REPO_ACTIVITY_COUNTS_QUERY, REPO_COMMIT_HISTORY_PAGE_QUERY, REPO_DISCUSSIONS_PAGE_QUERY, REPO_OVERVIEW_QUERY, REPO_README_BLOB_QUERY, REPO_RESPONSIVENESS_METADATA_QUERY, buildResponsivenessDetailQuery } from './queries'
 import { extractLicensingResult, type LicenseFileInfo } from './extract-licensing'
+import { MATURITY_CONFIG } from '@/lib/scoring/config-loader'
 import { extractInclusiveNamingResult } from '@/lib/inclusive-naming/checker'
 import { detectReleaseHealth } from '@/lib/release-health/detect'
 import type { SecurityResult, DirectSecurityCheck } from '@/lib/security/analysis-result'
@@ -171,10 +172,12 @@ interface RepoCommitAndReleasesResponse {
     refs: { totalCount: number } | null
     defaultBranchRef: {
       target: {
+        lifetime?: { totalCount: number }
         recent30: { totalCount: number }
         recent60: { totalCount: number }
         recent90: { totalCount: number }
         recent180: { totalCount: number }
+        recent365?: { totalCount: number }
         recent365Commits: CommitHistoryConnection | null
       } | null
     } | null
@@ -828,7 +831,124 @@ function buildAnalysisResult(
     securityResult: extractSecurityResult(overview.repository),
     ...extractCommunitySignals(overview.repository, 90, discussionTimestamps, discussionsTruncated),
     releaseHealthResult: extractReleaseHealthResult(activity, now),
+    ...extractMaturitySignals({
+      createdAt: overview.repository?.createdAt ?? 'unavailable',
+      stars: overview.repository?.stargazerCount ?? 'unavailable',
+      totalContributors: totalContributorCount !== 'unavailable'
+        ? totalContributorCount
+        : contributorMetricsByWindow[365].uniqueCommitAuthors !== 'unavailable' && contributorMetricsByWindow[365].uniqueCommitAuthors > 0
+          ? contributorMetricsByWindow[365].uniqueCommitAuthors
+          : 'unavailable',
+      lifetimeCommits: defaultBranchTarget?.lifetime?.totalCount ?? 'unavailable',
+      recent365Commits: defaultBranchTarget?.recent365?.totalCount ?? 'unavailable',
+      now,
+    }),
     missingFields,
+  }
+}
+
+const DAYS_PER_YEAR = 365.25
+const DAYS_PER_MONTH = 30.4375
+
+interface MaturityExtractInputs {
+  createdAt: string | Unavailable
+  stars: number | Unavailable
+  totalContributors: number | Unavailable
+  lifetimeCommits: number | Unavailable
+  recent365Commits: number | Unavailable
+  now: Date
+}
+
+/**
+ * Pure-function classifier for Growth Trajectory (P2-F11 / #74).
+ * Compares recent (last-12mo) commits/month against lifetime commits/month
+ * using config-driven ratios. Below minimumTrajectoryAgeDays, output is
+ * 'unavailable' — constitution §II forbids guessing when a repo is too
+ * young for the comparison to be meaningful.
+ */
+export function classifyGrowthTrajectory(
+  recentCommitsPerMonth: number | Unavailable,
+  lifetimeCommitsPerMonth: number | Unavailable,
+  ageInDays: number | Unavailable,
+): 'accelerating' | 'stable' | 'declining' | Unavailable {
+  if (ageInDays === 'unavailable') return 'unavailable'
+  if (ageInDays < MATURITY_CONFIG.minimumTrajectoryAgeDays) return 'unavailable'
+  if (recentCommitsPerMonth === 'unavailable' || lifetimeCommitsPerMonth === 'unavailable') return 'unavailable'
+  if (lifetimeCommitsPerMonth <= 0) return 'unavailable'
+  const ratio = recentCommitsPerMonth / lifetimeCommitsPerMonth
+  if (ratio >= MATURITY_CONFIG.acceleratingRatio) return 'accelerating'
+  if (ratio <= MATURITY_CONFIG.decliningRatio) return 'declining'
+  return 'stable'
+}
+
+/**
+ * Derives the seven Project Maturity fields. All derivations map to verified
+ * GraphQL inputs (`createdAt`, `stars`, `totalContributors`, lifetime and
+ * 365d `history.totalCount`). Missing inputs propagate as 'unavailable';
+ * below-threshold age yields 'too-new' for normalized rates.
+ */
+export function extractMaturitySignals(inputs: MaturityExtractInputs): {
+  ageInDays: number | Unavailable
+  lifetimeCommits: number | Unavailable
+  starsPerYear: number | 'too-new' | Unavailable
+  contributorsPerYear: number | 'too-new' | Unavailable
+  commitsPerMonthLifetime: number | 'too-new' | Unavailable
+  commitsPerMonthRecent12mo: number | Unavailable
+  growthTrajectory: 'accelerating' | 'stable' | 'declining' | Unavailable
+} {
+  const { createdAt, stars, totalContributors, lifetimeCommits, recent365Commits, now } = inputs
+
+  let ageInDays: number | Unavailable = 'unavailable'
+  if (createdAt !== 'unavailable') {
+    const created = new Date(createdAt).getTime()
+    if (!Number.isNaN(created)) {
+      ageInDays = Math.max(0, (now.getTime() - created) / (24 * 60 * 60 * 1000))
+    }
+  }
+
+  const tooNewGate = ageInDays !== 'unavailable' && ageInDays < MATURITY_CONFIG.minimumNormalizationAgeDays
+
+  const normalizePerYear = (value: number | Unavailable): number | 'too-new' | Unavailable => {
+    if (value === 'unavailable') return 'unavailable'
+    if (ageInDays === 'unavailable') return 'unavailable'
+    if (tooNewGate) return 'too-new'
+    return value / (ageInDays / DAYS_PER_YEAR)
+  }
+
+  const starsPerYear = normalizePerYear(stars)
+  const contributorsPerYear = normalizePerYear(totalContributors)
+
+  let commitsPerMonthLifetime: number | 'too-new' | Unavailable
+  if (lifetimeCommits === 'unavailable' || ageInDays === 'unavailable') {
+    commitsPerMonthLifetime = 'unavailable'
+  } else if (tooNewGate) {
+    commitsPerMonthLifetime = 'too-new'
+  } else {
+    commitsPerMonthLifetime = lifetimeCommits / (ageInDays / DAYS_PER_MONTH)
+  }
+
+  const commitsPerMonthRecent12mo: number | Unavailable =
+    recent365Commits === 'unavailable' ? 'unavailable' : recent365Commits / 12
+
+  // Build numeric inputs for classifier (reject the 'too-new' branch — below
+  // normalization age, the trajectory is age-gated independently).
+  const lifetimeNumeric: number | Unavailable =
+    typeof commitsPerMonthLifetime === 'number' ? commitsPerMonthLifetime : 'unavailable'
+
+  const growthTrajectory = classifyGrowthTrajectory(
+    commitsPerMonthRecent12mo,
+    lifetimeNumeric,
+    ageInDays,
+  )
+
+  return {
+    ageInDays,
+    lifetimeCommits,
+    starsPerYear,
+    contributorsPerYear,
+    commitsPerMonthLifetime,
+    commitsPerMonthRecent12mo,
+    growthTrajectory,
   }
 }
 

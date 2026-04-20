@@ -263,7 +263,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 8 | P2-F08 | Accessibility & Onboarding | #117 | |
 | 9 | P2-F09 | Release health scoring | #69 | ✅ Done |
 | 10 | P2-F10 | Development cadence | #73 | |
-| 11 | P2-F11 | Project maturity | #74 | |
+| 11 | P2-F11 | Project maturity | #74 | ✅ Done |
 | 12 | P2-F12 | Ecosystem Reach | #118 | |
 | 13 | P2-F01b | Documentation scoring (advanced) | #110, #67 | |
 | 14 | P2-F13 | Org governance audit — stale admin detection, 2FA enforcement | #287, #286 (children of #285) | ✅ Done |

@@ -3,6 +3,7 @@ import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/m
 import {
   ACTIVITY_CADENCE_FREQUENCY_WEIGHT,
   ACTIVITY_CADENCE_RECENCY_WEIGHT,
+  MATURITY_CONFIG,
   type BracketCalibration,
   type CalibrationProfile,
   formatPercentileLabel,
@@ -88,6 +89,16 @@ export function getActivityScore(
   windowDays: ActivityWindowDays = 90,
   profile: CalibrationProfile = 'community',
 ): ActivityScoreDefinition {
+  // Age-guard (P2-F11 / #74): below the minimum Activity scoring age, a Low
+  // score would penalize newness rather than health. `ageInDays === 'unavailable'`
+  // does NOT trigger the guard.
+  if (typeof result.ageInDays === 'number' && result.ageInDays < MATURITY_CONFIG.minimumActivityScoringAgeDays) {
+    return {
+      ...INSUFFICIENT_SCORE,
+      summary: `Repo is younger than the minimum age for confident Activity scoring (${MATURITY_CONFIG.minimumActivityScoringAgeDays} d).`,
+      description: 'Too new to produce a confident Activity score — evaluated against the age-guard rather than recent-flow signals.',
+    }
+  }
   const missingInputs = getMissingActivityScoreInputs(result, windowDays)
   if (missingInputs.length > 0) {
     return {
