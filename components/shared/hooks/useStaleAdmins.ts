@@ -28,14 +28,19 @@ export interface UseStaleAdminsState {
   nextAutoRetryAt: string | null
 }
 
-// Bounded background auto-retry ladder. Hybrid strategy:
+// Bounded background auto-retry. Hybrid strategy:
 //   - If the section carries `earliestRetryAvailableAt`, schedule the next
 //     retry right after that timestamp (header-driven, accurate).
-//   - Otherwise, fall back to this fixed ladder for cases where GitHub did
-//     not disclose a reset time (secondary rate limits, 5xx, etc).
-// Capped at 3 attempts. A manual `refetch()` resets the ladder so the user
-// can always trigger a fresh cycle.
-const BG_RETRY_LADDER_MS = [10_000, 30_000, 60_000]
+//   - Otherwise, use a fixed 30s interval for the case where GitHub did not
+//     disclose a reset (secondary rate limits, 5xx, etc). 30s is long
+//     enough for the Search-Commits 1-minute window to mostly slide and
+//     short enough that the user does not feel abandoned.
+//
+// Capped at 3 attempts. After that the ladder pauses and the user must
+// click Retry to start a fresh cycle — preventing an idle tab from
+// hammering GitHub forever.
+const BG_RETRY_INTERVAL_MS = 30_000
+const BG_RETRY_MAX_ATTEMPTS = 3
 const BG_RETRY_MAX_DELAY_MS = 60_000
 const BG_RETRY_JITTER_MS = 500
 
@@ -132,7 +137,7 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
     const canSchedule =
       !state.loading &&
       state.section !== null &&
-      ladderStep < BG_RETRY_LADDER_MS.length &&
+      ladderStep < BG_RETRY_MAX_ATTEMPTS &&
       sectionHasRetryableUnavailable(state.section)
 
     if (!canSchedule) {
@@ -140,9 +145,8 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
       return
     }
 
-    const fallbackDelay = BG_RETRY_LADDER_MS[ladderStep]!
     const earliestAt = state.section!.earliestRetryAvailableAt
-    let delay = fallbackDelay
+    let delay = BG_RETRY_INTERVAL_MS
     if (earliestAt) {
       const untilReset = Date.parse(earliestAt) - Date.now()
       if (Number.isFinite(untilReset)) {

@@ -353,7 +353,7 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     expect(screen.queryByTestId('stale-admins-unavailable-retry')).not.toBeInTheDocument()
   })
 
-  it('renders humanized, non-app-error row text for each unavailable reason (ladder exhausted → "click Retry")', () => {
+  it('renders a unified retryable-row message — rate-limit and search-unavailable share the same copy', () => {
     const section = makeSection({
       admins: [
         mkUnavailable('u1', 'rate-limited'),
@@ -361,7 +361,7 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
         mkUnavailable('u3', 'admin-account-404'),
       ],
     })
-    // nextAutoRetryAtOverride=null simulates the ladder-exhausted state.
+    // nextAutoRetryAtOverride=null simulates the ladder-paused state.
     renderWithSession(
       <StaleAdminsPanel
         org="acme"
@@ -372,16 +372,21 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     )
 
     const unavailable = screen.getByTestId('stale-admins-group-unavailable')
-    expect(within(unavailable).getByText(/GitHub rate limit — click Retry to try again/i)).toBeInTheDocument()
-    expect(within(unavailable).getByText(/GitHub didn’t return activity data — click Retry to try again/i)).toBeInTheDocument()
+    // Retryable rows (both rate-limited and commit-search-failed) share one message.
+    const retryableRows = within(unavailable).getAllByText(
+      /GitHub didn’t return activity data — click Retry to try again/i,
+    )
+    expect(retryableRows.length).toBe(2)
+    // Terminal reason keeps its distinct (non-retryable) copy.
     expect(within(unavailable).getByText(/GitHub account not found/i)).toBeInTheDocument()
     // Our implementation names, debug asides, and lying time-promises must not appear.
     expect(within(unavailable).queryByText(/commit search/i)).not.toBeInTheDocument()
     expect(within(unavailable).queryByText(/events feed/i)).not.toBeInTheDocument()
     expect(within(unavailable).queryByText(/\(often a burst rate-limit\)/i)).not.toBeInTheDocument()
     expect(within(unavailable).queryByText(/about a minute/i)).not.toBeInTheDocument()
-    expect(within(unavailable).queryByText(/commit-search-failed/)).not.toBeInTheDocument()
-    expect(within(unavailable).queryByText(/rate-limited\)/)).not.toBeInTheDocument()
+    // No per-reason rate-limit lead leaking into a row — the distinction
+    // lives in the sub-pill strip above the rows, not in each row's copy.
+    expect(within(unavailable).queryByText(/^GitHub rate limit/i)).not.toBeInTheDocument()
   })
 
   it('every unavailable row shows a countdown when a background retry is scheduled, regardless of whether GitHub disclosed a reset', () => {

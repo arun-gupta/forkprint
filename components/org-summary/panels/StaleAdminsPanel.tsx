@@ -380,27 +380,26 @@ const UNAVAILABLE_REASON_LABEL: Record<StaleAdminUnavailableReason, string> = {
 // not our implementation (`/search/commits`, `/events/public`). Avoids
 // parenthetical technical asides — those read as app-error / debug output.
 //
+// All retryable reasons (rate-limited, commit-search-failed,
+// events-fetch-failed) share a single message so rows read consistently;
+// the per-reason split is already visible at a glance via the sub-pill
+// strip above the rows ("3 rate-limited · 18 search unavailable"), which
+// is where users who care about the distinction can find it.
+//
 // Two rendering modes, driven by `hasCountdown`:
 //   - With countdown: a live timer follows the lead and carries the "when".
-//     Keep the lead tight; no promises about time live in the text.
-//   - Without countdown: the background retry ladder is exhausted, so the
-//     text points at the Retry button instead of lying about a time.
-//
-// Terminal conditions (`admin-account-404`) don't vary — they're terminal.
+//   - Without countdown: the background retry ladder is paused, so the
+//     text points at the Retry button instead of promising a time.
 function unavailableReasonRowText(reason: StaleAdminUnavailableReason | null, hasCountdown: boolean): string {
-  switch (reason) {
-    case 'rate-limited':
-      return hasCountdown ? 'GitHub rate limit.' : 'GitHub rate limit — click Retry to try again.'
-    case 'commit-search-failed':
-    case 'events-fetch-failed':
-      return hasCountdown
-        ? 'GitHub didn’t return activity data.'
-        : 'GitHub didn’t return activity data — click Retry to try again.'
-    case 'admin-account-404':
-      return 'GitHub account not found or deleted.'
-    default:
-      return 'Activity could not be retrieved.'
+  if (reason === 'admin-account-404') {
+    return 'GitHub account not found or deleted.'
   }
+  if (reason === null) {
+    return 'Activity could not be retrieved.'
+  }
+  return hasCountdown
+    ? 'GitHub didn’t return activity data.'
+    : 'GitHub didn’t return activity data — click Retry to try again.'
 }
 
 function UnavailableReasonStrip({
