@@ -75,6 +75,34 @@ Sub-agents inherit the parent session's `.claude/settings.json` allowlist as a c
 
 ---
 
+## Recommended MCP servers
+
+This section is the single source of truth for RepoPulse MCP guidance. `CLAUDE.md` intentionally points here instead of duplicating a server list.
+
+Recommended shared aliases:
+
+| Alias | Why it helps in this repo |
+|---|---|
+| `github` | Read issues, PRs, reviews, branches, and Actions runs without copying GitHub data into chat. Most useful for the issue-driven SpecKit flow and future Phase 3 integrations. |
+| `playwright` | Exercise the Next.js UI, org-summary flows, auth states, and regressions through a browser tool instead of manual narration or screenshots. |
+| `vercel` | Inspect preview deployments, environment mismatches, and runtime failures for the Vercel-hosted app. |
+| `context7` | Pull current framework and API docs (Next.js, React, Playwright, GitHub APIs) when implementation details are newer than the repo docs. |
+
+Rules:
+
+- Keep the detailed MCP list here. `CLAUDE.md` should stay as a pointer only.
+- Prefer **local-scope** MCP servers for personal experiments or servers that require machine-specific credentials.
+- Use **project-scope** MCP servers (`.mcp.json`) only when the whole repo benefits from the same integration.
+- For shared project servers, keep the alias names exactly `github`, `playwright`, `vercel`, and `context7` so `.claude/settings.json` can auto-approve them consistently.
+- Never commit secrets into `.mcp.json`; use environment-variable expansion for tokens, API keys, and machine-specific paths.
+
+Repo status:
+
+- The repo **does not currently commit a `.mcp.json`**. This keeps the shared workflow lightweight while still documenting the preferred aliases and usage.
+- `.claude/settings.json` pre-approves the aliases above **if** a project-scoped `.mcp.json` is added later. It does **not** blanket-approve arbitrary MCP servers.
+
+---
+
 ## Phase 1 feature order
 
 This is the planned implementation order for Phase 1. It may differ from the feature listing order in `docs/PRODUCT.md`, which remains the canonical product definition.
@@ -184,10 +212,11 @@ The allowlist is intentionally narrow:
 - Common read-only shell utilities (`ls`, `cat`, `mkdir`, `grep`, `find`, `awk`, `sed`, `echo`, `printf`, `lsof`, `uuidgen`) — scoped by command name, never as `Bash(*)`.
 - Claude Code built-ins: `Read`, `Edit`, `Write`, `Grep`, `Glob`.
 - `WebFetch(domain:github.com)` and `WebFetch(domain:api.github.com)` — read-only GitHub lookups.
+- Project-scoped MCP servers are opt-in: `.claude/settings.json` pre-approves only the documented shared aliases (`github`, `playwright`, `vercel`, `context7`) when they are defined in `.mcp.json`.
 
-Explicitly not allowed: `Bash(rm:*)`, `Bash(curl:*)`, `Bash(wget:*)`, `Bash(sudo:*)`, `Bash(ssh:*)`, any MCP tools, any blanket wildcard, and `bypassPermissions`. A tool outside the allowlist falls through to the normal prompt path; in a headless session, that still blocks — which is the signal to extend the allowlist by PR, not to bypass it.
+Explicitly not allowed: `Bash(rm:*)`, `Bash(curl:*)`, `Bash(wget:*)`, `Bash(sudo:*)`, `Bash(ssh:*)`, unapproved project-scoped MCP servers, any blanket wildcard, and `bypassPermissions`. A tool outside the allowlist falls through to the normal prompt path; in a headless session, that still blocks — which is the signal to extend the allowlist by PR, not to bypass it.
 
-**Extending the allowlist**: edit `.claude/settings.json` in a PR. The PR description must name the SpecKit helper, `git` subcommand, `npm` script, or `gh` subcommand that needs the new entry. No secrets, no blanket wildcards, no destructive shell commands.
+**Extending the allowlist**: edit `.claude/settings.json` in a PR. The PR description must name the SpecKit helper, `git` subcommand, `npm` script, `gh` subcommand, or project-scoped MCP alias that needs the new entry. No secrets, no blanket wildcards, no destructive shell commands.
 
 **Releasing a paused headless session.** For `--headless` spawns, use the fire-and-forget release commands:
 

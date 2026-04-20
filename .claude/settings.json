@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "Bash(.specify/scripts/bash/*)",
@@ -27,5 +28,6 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:api.github.com)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["github", "playwright", "vercel", "context7"]
 }

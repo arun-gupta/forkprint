@@ -22,7 +22,7 @@ Command definitions are available in `.claude/commands/`.
 - `/speckit.implement` — execute plan
 
 ## Technology Stack & Development Workflow
-See `docs/DEVELOPMENT.md` for the full technology stack, testing commands, and development workflow.
+See `docs/DEVELOPMENT.md` for the full technology stack, testing commands, development workflow, and shared MCP/tooling guidance.
 
 ## PR Merge Rule
 Never run `gh pr merge` automatically. PR merging is always a manual user action. When the user confirms the test plan:
