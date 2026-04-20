@@ -43,6 +43,14 @@ const BRACKET_LABELS: Record<BracketKey, string> = {
   growing: 'Growing (100-999 stars)',
   established: 'Established (1k-10k stars)',
   popular: 'Popular (10k+ stars)',
+  'emerging-young': 'Emerging · < 2 yrs',
+  'emerging-mature': 'Emerging · ≥ 2 yrs',
+  'growing-young': 'Growing · < 2 yrs',
+  'growing-mature': 'Growing · ≥ 2 yrs',
+  'established-young': 'Established · < 2 yrs',
+  'established-mature': 'Established · ≥ 2 yrs',
+  'popular-young': 'Popular · < 2 yrs',
+  'popular-mature': 'Popular · ≥ 2 yrs',
 }
 
 const PERCENTAGE_METRICS = new Set([

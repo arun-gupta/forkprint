@@ -24,7 +24,8 @@ describe('buildMetricCardViewModels', () => {
     expect(card.profile?.reachLabel).toMatch(/\d+\w{2} percentile/)
     expect(card.scoreBadges).toHaveLength(5)
     expect(card.scoreBadges.find((badge) => badge.category === 'Contributors')?.value).toBe('Insufficient verified public data')
-    expect(card.details.find((detail) => detail.label === 'Releases (12mo)')?.value).toBe('—')
+    expect(card.details.find((detail) => detail.label === 'Primary language')?.value).toBe('—')
+    expect(card.details.find((detail) => detail.label === 'Releases (12mo)')).toBeUndefined()
   })
 
   it('formats unavailable numeric fields as em-dash', () => {

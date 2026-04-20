@@ -47,7 +47,35 @@ describe('MetricCard', () => {
 
     render(<MetricCard card={card} />)
 
-    expect(screen.getByText('The library for web and native user interfaces.')).toBeInTheDocument()
+    expect(screen.getAllByText('The library for web and native user interfaces.').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders maturity details in the visible card details panel', () => {
+    const card = buildMetricCardViewModels([
+      buildResult({
+        ageInDays: 365 * 5,
+        starsPerYear: 48.2,
+        contributorsPerYear: 12.4,
+        commitsPerMonthLifetime: 31.6,
+        growthTrajectory: 'accelerating',
+      }),
+    ])[0]!
+
+    render(<MetricCard card={card} />)
+
+    expect(screen.getByText(/^Age$/)).toBeInTheDocument()
+    expect(screen.getByText('5.0 yr')).toBeInTheDocument()
+    expect(screen.getByText('Stars / year')).toBeInTheDocument()
+    expect(screen.getByText('48.2 /yr')).toBeInTheDocument()
+    expect(screen.getByText('Contributors / year')).toBeInTheDocument()
+    expect(screen.getByText('12.4 /yr')).toBeInTheDocument()
+    expect(screen.getByText('Commits / month')).toBeInTheDocument()
+    expect(screen.getByText('31.6 /mo')).toBeInTheDocument()
+    expect(screen.getByText('Growth trajectory')).toBeInTheDocument()
+    expect(screen.getByText('Accelerating')).toBeInTheDocument()
+    expect(screen.queryByText('Commits (30d)')).not.toBeInTheDocument()
+    expect(screen.queryByText('PRs opened (90d)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Total contributors')).not.toBeInTheDocument()
   })
 
   it('shows fallback for unavailable description', () => {

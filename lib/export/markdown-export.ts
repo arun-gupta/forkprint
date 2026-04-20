@@ -15,6 +15,7 @@ import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/com
 import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
 import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
+import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
 
 export interface MarkdownExportResult {
   blob: Blob
@@ -148,6 +149,16 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
       ['Forks', fmt(result.forks)],
       ['Watchers', fmt(result.watchers)],
       ['Primary language', fmt(result.primaryLanguage)],
+    ]),
+    '',
+    '#### Maturity',
+    '',
+    mdTable([
+      ['Age', formatMaturityAge(result.ageInDays)],
+      ['Stars / year', formatNormalizedRate(result.starsPerYear, '/yr')],
+      ['Contributors / year', formatNormalizedRate(result.contributorsPerYear, '/yr')],
+      ['Commits / month', formatNormalizedRate(result.commitsPerMonthLifetime, '/mo')],
+      ['Growth trajectory', formatGrowthTrajectory(result.growthTrajectory)],
     ]),
     '',
     '| Score | Value |',

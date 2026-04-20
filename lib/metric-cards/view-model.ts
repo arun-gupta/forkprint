@@ -6,6 +6,7 @@ import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { computeGovernanceCompleteness } from '@/lib/governance/completeness'
 import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
+import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
 
 /**
  * A "lens readout" — a cross-cutting completeness summary that is rendered on
@@ -65,17 +66,12 @@ export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCard
       primaryLanguage: formatText(result.primaryLanguage),
       details: [
         { label: 'Primary language', value: formatText(result.primaryLanguage) },
-        { label: 'Description', value: formatText(result.description) },
         { label: 'Created', value: formatDate(result.createdAt) },
-        { label: 'Commits (30d)', value: formatMetric(result.commits30d) },
-        { label: 'Commits (90d)', value: formatMetric(result.commits90d) },
-        { label: 'Releases (12mo)', value: formatMetric(result.releases12mo) },
-        { label: 'PRs opened (90d)', value: formatMetric(result.prsOpened90d) },
-        { label: 'PRs merged (90d)', value: formatMetric(result.prsMerged90d) },
-        { label: 'Open issues', value: formatMetric(result.issuesOpen) },
-        { label: 'Issues closed (90d)', value: formatMetric(result.issuesClosed90d) },
-        { label: 'Active contributors (90d)', value: formatMetric(result.uniqueCommitAuthors90d) },
-        { label: 'Total contributors', value: formatMetric(result.totalContributors) },
+        { label: 'Age', value: formatMaturityAge(result.ageInDays) },
+        { label: 'Stars / year', value: formatNormalizedRate(result.starsPerYear, '/yr') },
+        { label: 'Contributors / year', value: formatNormalizedRate(result.contributorsPerYear, '/yr') },
+        { label: 'Commits / month', value: formatNormalizedRate(result.commitsPerMonthLifetime, '/mo') },
+        { label: 'Growth trajectory', value: formatGrowthTrajectory(result.growthTrajectory) },
       ],
       missingFields: result.missingFields,
       profile: ecosystemRow?.profile ?? null,

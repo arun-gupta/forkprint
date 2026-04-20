@@ -182,6 +182,9 @@ export const REPO_COMMIT_AND_RELEASES_QUERY = `
       defaultBranchRef {
         target {
           ... on Commit {
+            lifetime: history(first: 0) {
+              totalCount
+            }
             recent30: history(since: $since30) {
               totalCount
             }
@@ -192,6 +195,9 @@ export const REPO_COMMIT_AND_RELEASES_QUERY = `
               totalCount
             }
             recent180: history(since: $since180) {
+              totalCount
+            }
+            recent365: history(since: $since365) {
               totalCount
             }
             recent365Commits: history(first: 100, since: $since365) {

@@ -6,14 +6,20 @@ import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
+import { formatNormalizedRate, formatGrowthTrajectory, trajectoryToOrdinal } from '@/lib/maturity/format'
 
-export type ComparisonSectionId = 'overview' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'community' | 'health-ratios'
+export type ComparisonSectionId = 'overview' | 'maturity' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'community' | 'health-ratios'
 export type ComparisonAttributeId =
   | 'stars'
   | 'forks'
   | 'watchers'
   | 'fork-rate'
   | 'watcher-rate'
+  | 'age-years'
+  | 'stars-per-year'
+  | 'contributors-per-year'
+  | 'commits-per-month'
+  | 'growth-trajectory'
   | 'community-completeness'
   | 'community-signals-present'
   | 'community-discussions-enabled'
@@ -84,6 +90,7 @@ function formatDurationHours(value: number | Unavailable) {
   }
   return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}h`
 }
+
 
 
 function getContributorWindowMetrics(result: AnalysisResult) {
@@ -184,6 +191,69 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         valueType: 'percentage',
         getValue: (result) => computeHealthRatio(result.watchers, result.stars),
         formatValue: formatPercentage,
+      },
+    ],
+  },
+  {
+    id: 'maturity',
+    label: 'Maturity',
+    description: 'Compare repository age and age-normalized velocity signals.',
+    attributes: [
+      {
+        id: 'age-years',
+        sectionId: 'maturity',
+        label: 'Age (years)',
+        helpText: 'Years since repository creation.',
+        direction: 'neutral',
+        valueType: 'number',
+        getValue: (result) =>
+          typeof result.ageInDays === 'number' ? result.ageInDays / 365.25 : 'unavailable',
+        formatValue: (value) =>
+          typeof value === 'number' ? `${value.toFixed(value >= 10 ? 0 : 1)} yr` : '—',
+      },
+      {
+        id: 'stars-per-year',
+        sectionId: 'maturity',
+        label: 'Stars / year',
+        helpText: 'Age-normalized star accumulation rate. Best age+stars cohort comparison signal — differentiates steady growers from flat plateaus.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) =>
+          typeof result.starsPerYear === 'number' ? result.starsPerYear : 'unavailable',
+        formatValue: (_value, result) => formatNormalizedRate(result?.starsPerYear, '/yr'),
+      },
+      {
+        id: 'contributors-per-year',
+        sectionId: 'maturity',
+        label: 'Contributors / year',
+        helpText: 'Age-normalized contributor growth rate.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) =>
+          typeof result.contributorsPerYear === 'number' ? result.contributorsPerYear : 'unavailable',
+        formatValue: (_value, result) => formatNormalizedRate(result?.contributorsPerYear, '/yr'),
+      },
+      {
+        id: 'commits-per-month',
+        sectionId: 'maturity',
+        label: 'Commits / month',
+        helpText: 'Lifetime commits normalized to a monthly rate.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) =>
+          typeof result.commitsPerMonthLifetime === 'number' ? result.commitsPerMonthLifetime : 'unavailable',
+        formatValue: (_value, result) =>
+          formatNormalizedRate(result?.commitsPerMonthLifetime, '/mo'),
+      },
+      {
+        id: 'growth-trajectory',
+        sectionId: 'maturity',
+        label: 'Growth trajectory',
+        helpText: 'Last 12 months commits/month vs lifetime commits/month. Accelerating / Stable / Declining. Insufficient when age < 2 years.',
+        direction: 'neutral',
+        valueType: 'label',
+        getValue: (result) => trajectoryToOrdinal(result.growthTrajectory),
+        formatValue: (_value, result) => formatGrowthTrajectory(result?.growthTrajectory),
       },
     ],
   },

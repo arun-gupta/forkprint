@@ -29,6 +29,61 @@ All scores are computed relative to repositories in the same **star bracket**, n
 
 **Solo sampling:** `npm run calibrate:solo` samples only repos that satisfy a lightweight solo heuristic at fetch time (≤ 2 recent commit authors, ≤ 2 contributors, no GOVERNANCE file — 2-of-3 required). Results are written into `lib/scoring/calibration-data.json` alongside community brackets, not in place of them. Solo runs drop the org cap (solo repos are individual-account single-maintainers, so org concentration is a no-op) and relax the language cap to 40 per popular language / 20 per other (up from 15/8), so the solo cohort's natural language distribution is preserved.
 
+---
+
+## Project Maturity (P2-F11 / #74)
+
+Repository age is factored into scoring and into cohort comparison via three levers:
+
+### Age-normalized signals per repo
+
+Three derived fields live on every `AnalysisResult` alongside the raw counts they normalize:
+
+| Field | Formula | Gate |
+|---|---|---|
+| `starsPerYear` | `stars / (ageInDays / 365.25)` | `ageInDays ≥ MATURITY_CONFIG.minimumNormalizationAgeDays` (default 90) |
+| `contributorsPerYear` | `totalContributors / (ageInDays / 365.25)` | same |
+| `commitsPerMonthLifetime` | `lifetimeCommits / (ageInDays / 30.4375)` | same |
+
+Below the gate, each field is the literal string `"too-new"` — not an inflated rate. Missing upstream inputs propagate as `"unavailable"`. The UI renders "Too new to normalize" or "—" respectively (constitution §II).
+
+### Growth trajectory
+
+`growthTrajectory` is `accelerating | stable | declining | unavailable`, derived by comparing `commitsPerMonthRecent12mo` (last-365d commits / 12) against `commitsPerMonthLifetime`:
+
+- ratio ≥ `MATURITY_CONFIG.acceleratingRatio` (default 1.25) → `accelerating`
+- ratio ≤ `MATURITY_CONFIG.decliningRatio` (default 0.75) → `declining`
+- within the band → `stable`
+- `ageInDays < MATURITY_CONFIG.minimumTrajectoryAgeDays` (default 730) → `unavailable`
+
+### Age-guarded scoring
+
+Two existing scores gain age gates so a young healthy repo isn't tagged as low-performing by accident:
+
+| Score | Gate | Behavior below the gate |
+|---|---|---|
+| Resilience (Contributors) | `MATURITY_CONFIG.minimumResilienceScoringAgeDays` (default 180) | Outputs the literal `"Insufficient verified public data"` with an age-guard reason string |
+| Activity | `MATURITY_CONFIG.minimumActivityScoringAgeDays` (default 90) | Same |
+
+`ageInDays === 'unavailable'` does NOT fire the guard — absence of evidence is not evidence of youth.
+
+### Age-stratified calibration brackets
+
+Each community star bracket splits into `-young` (< 2 years) and `-mature` (≥ 2 years) variants so cohort comparisons honor age as well as star tier. The age stratum boundary (`MATURITY_CONFIG.ageStratumBoundaryDays`, default 730) is coherent with the trajectory minimum age for simplicity.
+
+| Star tier | Young variant | Mature variant |
+|---|---|---|
+| Emerging (10–99) | `emerging-young` | `emerging-mature` |
+| Growing (100–999) | `growing-young` | `growing-mature` |
+| Established (1k–10k) | `established-young` | `established-mature` |
+| Popular (10k+) | `popular-young` | `popular-mature` |
+
+Solo brackets are intentionally NOT age-stratified — the solo cohort already encodes the dominant cohort signal via contributor count; splitting further produces strata too thin for stable percentiles. YAGNI (constitution §IX.6).
+
+**Sampling status:** This feature commits the schema and the routing helper (`getMaturityBracket`). The eight new stratum entries land with `sampleSize: 0` — `getMaturityBracket` treats those as unpopulated and falls back to the unstratified community bracket for that star tier, same pattern as the solo-bracket fallback. **Live sampling data lands under issue #152** (re-calibration tracker).
+
+When the live data arrives, each populated stratum gains `starsPerYear`, `contributorsPerYear`, and `commitsPerMonth` percentile blocks alongside the existing rate fields. `starsPerYear` is the primary velocity axis in cohort comparison, surfaced in the Comparison view's Maturity section and in the scorecard's "at the Xth percentile for the growing · < 2 yrs bracket" caption.
+
 **Known limitation:** Stars correlate with maturity but are also influenced by marketing and virality. A single anchor metric will never be perfect. This is a pragmatic simplification chosen for explainability. Future calibration may stratify by additional dimensions such as repo age or domain.
 
 ---
