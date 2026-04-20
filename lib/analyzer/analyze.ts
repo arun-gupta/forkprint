@@ -1443,7 +1443,10 @@ function buildOpenPullRequestsOlderThanQuery(repoSearch: string, before: Date) {
 }
 
 export function buildGoodFirstIssueQuery(repoSearch: string): string {
-  return `repo:${repoSearch} is:issue is:open label:"good first issue" OR label:"good-first-issue" OR label:"beginner" OR label:"starter"`
+  // GitHub's GraphQL search does not scope `repo:` across OR branches, so
+  // OR variants would produce incorrect counts. We use only the canonical
+  // GitHub-recommended label; hyphenated and other variants are tracked in #382.
+  return `repo:${repoSearch} is:issue is:open label:"good first issue"`
 }
 
 // ─── Two-pass responsiveness fetch ───────────────────────────────────────────
