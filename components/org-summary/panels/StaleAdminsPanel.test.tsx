@@ -24,6 +24,7 @@ function makeSection(override: Partial<StaleAdminsSection> = {}): StaleAdminsSec
     mode: 'baseline',
     thresholdDays: 90,
     admins: [],
+    earliestRetryAvailableAt: null,
     resolvedAt: '2026-04-16T00:00:00Z',
     ...override,
   }
@@ -39,6 +40,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2026-04-10T00:00:00Z',
           lastActivitySource: 'public-events',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
         {
           username: 'bob',
@@ -46,6 +48,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2025-09-01T00:00:00Z',
           lastActivitySource: 'org-commit-search',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
       ],
     })
@@ -159,6 +162,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2026-04-10T00:00:00Z',
           lastActivitySource: 'public-events',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
         {
           username: 'bob',
@@ -166,6 +170,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
           lastActivityAt: '2025-09-01T00:00:00Z',
           lastActivitySource: 'org-commit-search',
           unavailableReason: null,
+          retryAvailableAt: null,
         },
       ],
     })
@@ -375,6 +380,30 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     expect(screen.queryByTestId('stale-admins-unavailable-reasons')).not.toBeInTheDocument()
   })
 
+  it('renders a countdown for rate-limited rows with a known retryAvailableAt', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:00:00Z'))
+    const availableAt = new Date('2026-04-20T12:00:37Z').toISOString()
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited', availableAt)],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const countdown = screen.getByTestId('retry-countdown')
+    expect(countdown.textContent).toMatch(/37s/)
+    vi.useRealTimers()
+  })
+
+  it('renders "Ready to retry" when the countdown has elapsed', () => {
+    vi.setSystemTime(new Date('2026-04-20T12:01:00Z'))
+    const elapsed = new Date('2026-04-20T12:00:00Z').toISOString()
+    const section = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited', elapsed)],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    expect(screen.getByTestId('retry-countdown-ready')).toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
   it('keeps the section visible during refresh (stale-while-revalidate) and swaps the Retry button to Retrying…', () => {
     const section = makeSection({
       admins: [mkAdmin('a', 'active'), mkUnavailable('u', 'rate-limited')],
@@ -414,7 +443,14 @@ function mkAdmin(
   classification: 'active' | 'stale' | 'no-public-activity' | 'unavailable',
 ) {
   if (classification === 'no-public-activity') {
-    return { username, classification, lastActivityAt: null, lastActivitySource: null, unavailableReason: null }
+    return {
+      username,
+      classification,
+      lastActivityAt: null,
+      lastActivitySource: null,
+      unavailableReason: null,
+      retryAvailableAt: null,
+    }
   }
   if (classification === 'unavailable') {
     return {
@@ -423,6 +459,7 @@ function mkAdmin(
       lastActivityAt: null,
       lastActivitySource: null,
       unavailableReason: 'rate-limited' as const,
+      retryAvailableAt: null,
     }
   }
   return {
@@ -431,12 +468,14 @@ function mkAdmin(
     lastActivityAt: classification === 'stale' ? '2025-09-01T00:00:00Z' : '2026-04-10T00:00:00Z',
     lastActivitySource: 'public-events' as const,
     unavailableReason: null,
+    retryAvailableAt: null,
   }
 }
 
 function mkUnavailable(
   username: string,
   reason: 'rate-limited' | 'commit-search-failed' | 'events-fetch-failed' | 'admin-account-404',
+  retryAvailableAt: string | null = null,
 ) {
   return {
     username,
@@ -444,5 +483,6 @@ function mkUnavailable(
     lastActivityAt: null,
     lastActivitySource: null,
     unavailableReason: reason,
+    retryAvailableAt,
   }
 }

@@ -371,6 +371,57 @@ describe('fetchUserLatestOrgCommit', () => {
     expect(sleep).toHaveBeenCalledWith(3000)
   })
 
+  it('populates retryAvailableAt from Retry-After when rate-limited', async () => {
+    const nowMs = Date.parse('2026-04-16T00:00:00Z')
+    vi.setSystemTime(new Date(nowMs))
+
+    const fetchMock = vi.fn(async () =>
+      new Response('', {
+        status: 403,
+        headers: { 'X-RateLimit-Remaining': '0', 'Retry-After': '45' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep: async () => {} })
+    expect(result.kind).toBe('rate-limited')
+    if (result.kind === 'rate-limited') {
+      expect(result.retryAvailableAt).toBe(new Date(nowMs + 45_000).toISOString())
+    }
+
+    vi.useRealTimers()
+  })
+
+  it('falls back to X-RateLimit-Reset when Retry-After is absent', async () => {
+    const resetEpoch = Math.floor(Date.parse('2026-04-16T00:05:00Z') / 1000)
+    const fetchMock = vi.fn(async () =>
+      new Response('', {
+        status: 403,
+        headers: { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': String(resetEpoch) },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep: async () => {} })
+    expect(result.kind).toBe('rate-limited')
+    if (result.kind === 'rate-limited') {
+      expect(result.retryAvailableAt).toBe(new Date(resetEpoch * 1000).toISOString())
+    }
+  })
+
+  it('returns retryAvailableAt=null when neither header is present', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response('', { status: 403, headers: { 'X-RateLimit-Remaining': '0' } }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep: async () => {} })
+    expect(result.kind).toBe('rate-limited')
+    if (result.kind === 'rate-limited') {
+      expect(result.retryAvailableAt).toBeNull()
+    }
+  })
+
   it('detects secondary rate-limit by body message when headers do not match', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(

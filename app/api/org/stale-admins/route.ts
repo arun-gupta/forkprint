@@ -63,6 +63,7 @@ export async function GET(request: Request) {
       mode: 'baseline',
       thresholdDays: STALE_ADMIN_THRESHOLD_DAYS,
       admins: [],
+      earliestRetryAvailableAt: null,
       resolvedAt,
     }
     return Response.json({ section })
@@ -77,6 +78,7 @@ export async function GET(request: Request) {
       thresholdDays: STALE_ADMIN_THRESHOLD_DAYS,
       admins: [],
       adminListUnavailableReason: mapAdminListReason(adminListResult),
+      earliestRetryAvailableAt: null,
       resolvedAt,
     }
     return Response.json({ section })
@@ -103,10 +105,23 @@ export async function GET(request: Request) {
     mode,
     thresholdDays: STALE_ADMIN_THRESHOLD_DAYS,
     admins,
+    earliestRetryAvailableAt: computeEarliestRetryAvailableAt(admins),
     resolvedAt,
   }
 
   return Response.json({ section })
+}
+
+function computeEarliestRetryAvailableAt(admins: StaleAdminRecord[]): string | null {
+  let earliest: number | null = null
+  for (const admin of admins) {
+    if (admin.classification !== 'unavailable') continue
+    if (!admin.retryAvailableAt) continue
+    const ms = Date.parse(admin.retryAvailableAt)
+    if (!Number.isFinite(ms)) continue
+    if (earliest === null || ms < earliest) earliest = ms
+  }
+  return earliest !== null ? new Date(earliest).toISOString() : null
 }
 
 async function resolveAdmin(
@@ -119,6 +134,7 @@ async function resolveAdmin(
   const eventsResult = await fetchUserPublicEvents(token, username)
 
   let error: StaleAdminUnavailableReason | null = null
+  let retryAvailableAt: string | null = null
   let lastActivityAt: string | null = null
   let lastActivitySource: AdminActivityInput['lastActivitySource'] = null
 
@@ -129,6 +145,7 @@ async function resolveAdmin(
     error = 'admin-account-404'
   } else if (eventsResult.kind === 'rate-limited') {
     error = 'rate-limited'
+    retryAvailableAt = eventsResult.retryAvailableAt
   } else {
     // events-fetch-failed OR ok-but-empty → fall through to commit search
     const commitResult = await fetchUserLatestOrgCommit(token, username, org, commitSearchOptions)
@@ -137,6 +154,7 @@ async function resolveAdmin(
       lastActivitySource = 'org-commit-search'
     } else if (commitResult.kind === 'rate-limited') {
       error = 'rate-limited'
+      retryAvailableAt = commitResult.retryAvailableAt
     } else if (commitResult.kind === 'commit-search-failed') {
       // If events also errored (not just empty), propagate that first
       error = eventsResult.kind === 'events-fetch-failed' ? 'events-fetch-failed' : 'commit-search-failed'
@@ -145,7 +163,7 @@ async function resolveAdmin(
   }
 
   return classifyAdmin(
-    { username, lastActivityAt, lastActivitySource, error },
+    { username, lastActivityAt, lastActivitySource, error, retryAvailableAt },
     STALE_ADMIN_THRESHOLD_DAYS,
     new Date(resolvedAt),
   )
@@ -174,6 +192,7 @@ async function resolveAllAdminsWithConcurrency(
           lastActivityAt: null,
           lastActivitySource: null,
           unavailableReason: 'events-fetch-failed',
+          retryAvailableAt: null,
         }
       }
     }

@@ -229,7 +229,7 @@ export async function fetchOrgTwoFactorRequirement(
 export type UserPublicEventsResult =
   | { kind: 'ok'; lastActivityAt: string | null }
   | { kind: 'admin-account-404' }
-  | { kind: 'rate-limited' }
+  | { kind: 'rate-limited'; retryAvailableAt: string | null }
   | { kind: 'events-fetch-failed' }
 
 export async function fetchUserPublicEvents(
@@ -249,7 +249,9 @@ export async function fetchUserPublicEvents(
     )
 
     if (response.status === 404) return { kind: 'admin-account-404' }
-    if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+    if (response.status === 403 && isRateLimited(response)) {
+      return { kind: 'rate-limited', retryAvailableAt: parseRetryAvailableAt(response) }
+    }
     if (!response.ok) return { kind: 'events-fetch-failed' }
 
     const payload = (await response.json()) as Array<{ created_at?: unknown }>
@@ -268,7 +270,7 @@ export async function fetchUserPublicEvents(
 
 export type UserLatestOrgCommitResult =
   | { kind: 'ok'; lastActivityAt: string | null }
-  | { kind: 'rate-limited' }
+  | { kind: 'rate-limited'; retryAvailableAt: string | null }
   | { kind: 'commit-search-failed' }
 
 // Search Commits has a 30 req/min quota — roughly 10x tighter than core REST.
@@ -319,7 +321,7 @@ export async function fetchUserLatestOrgCommit(
             attempt++
             continue
           }
-          return { kind: 'rate-limited' }
+          return { kind: 'rate-limited', retryAvailableAt: parseRetryAvailableAt(response) }
         }
       }
       if (!response.ok) return { kind: 'commit-search-failed' }
@@ -361,6 +363,21 @@ function parseRetryAfterMs(response: Response): number | null {
   const seconds = Number(header)
   if (!Number.isFinite(seconds) || seconds < 0) return null
   return seconds * 1000
+}
+
+// Prefer Retry-After (relative, usually shorter) over X-RateLimit-Reset
+// (absolute, usually further out). Returns an ISO timestamp at which the
+// next request is expected to succeed, or null when GitHub gave us neither
+// signal (secondary rate limits sometimes omit both).
+export function parseRetryAvailableAt(response: Response, nowMs: number = Date.now()): string | null {
+  const retryAfterMs = parseRetryAfterMs(response)
+  if (retryAfterMs !== null) return new Date(nowMs + retryAfterMs).toISOString()
+  const reset = response.headers.get('X-RateLimit-Reset')
+  if (reset) {
+    const secs = Number(reset)
+    if (Number.isFinite(secs) && secs > 0) return new Date(secs * 1000).toISOString()
+  }
+  return null
 }
 
 function defaultSleep(ms: number): Promise<void> {

@@ -249,6 +249,7 @@ describe('GET /api/org/stale-admins', () => {
         lastActivityAt: '2026-04-10T00:00:00Z',
         lastActivitySource: 'public-events',
         unavailableReason: null,
+        retryAvailableAt: null,
       },
       {
         username: 'ghost',
@@ -256,6 +257,7 @@ describe('GET /api/org/stale-admins', () => {
         lastActivityAt: null,
         lastActivitySource: null,
         unavailableReason: 'admin-account-404',
+        retryAvailableAt: null,
       },
     ]
     const sleep = vi.fn(async () => {})
@@ -274,6 +276,7 @@ describe('GET /api/org/stale-admins', () => {
         lastActivityAt: null,
         lastActivitySource: null,
         unavailableReason: 'rate-limited',
+        retryAvailableAt: null,
       },
       {
         username: 'u2',
@@ -281,11 +284,12 @@ describe('GET /api/org/stale-admins', () => {
         lastActivityAt: null,
         lastActivitySource: null,
         unavailableReason: 'rate-limited',
+        retryAvailableAt: null,
       },
     ]
     // fetch should be called at most once: after the first admin, the clock
     // jumps past the 10s budget and the loop exits.
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn(async (..._args: FetchArgs) =>
       new Response('', { status: 403, headers: { 'X-RateLimit-Remaining': '0' } }),
     )
     vi.stubGlobal('fetch', fetchMock)

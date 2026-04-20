@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/AuthContext'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
 import { useStaleAdmins, type OwnerType } from '@/components/shared/hooks/useStaleAdmins'
@@ -290,6 +290,7 @@ function SectionBody({
           defaultOpen={DEFAULT_OPEN[classification]}
           onRetry={onRetry}
           refreshing={refreshing}
+          earliestRetryAvailableAt={section.earliestRetryAvailableAt ?? null}
         />
       ))}
     </div>
@@ -302,12 +303,14 @@ function GroupSection({
   defaultOpen,
   onRetry,
   refreshing,
+  earliestRetryAvailableAt,
 }: {
   classification: StaleAdminClassification
   admins: StaleAdminRecord[]
   defaultOpen: boolean
   onRetry: () => void
   refreshing: boolean
+  earliestRetryAvailableAt: string | null
 }) {
   const config = GROUP_CONFIG[classification]
   const isUnavailable = classification === 'unavailable'
@@ -338,6 +341,7 @@ function GroupSection({
           onRetry={onRetry}
           showRetry={retryableCount > 0}
           refreshing={refreshing}
+          earliestRetryAvailableAt={earliestRetryAvailableAt}
         />
       ) : null}
       <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
@@ -375,11 +379,13 @@ function UnavailableReasonStrip({
   onRetry,
   showRetry,
   refreshing,
+  earliestRetryAvailableAt,
 }: {
   counts: Record<StaleAdminUnavailableReason | 'unknown', number>
   onRetry: () => void
   showRetry: boolean
   refreshing: boolean
+  earliestRetryAvailableAt: string | null
 }) {
   const entries = (Object.keys(UNAVAILABLE_REASON_LABEL) as StaleAdminUnavailableReason[])
     .filter((r) => counts[r] > 0)
@@ -403,17 +409,54 @@ function UnavailableReasonStrip({
         </span>
       ))}
       {showRetry ? (
-        <button
-          type="button"
-          onClick={onRetry}
-          disabled={refreshing}
-          data-testid="stale-admins-unavailable-retry"
-          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:cursor-wait disabled:opacity-60 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
-        >
-          {refreshing ? 'Retrying…' : 'Retry unavailable'}
-        </button>
+        <RetryButton
+          onRetry={onRetry}
+          refreshing={refreshing}
+          earliestRetryAvailableAt={earliestRetryAvailableAt}
+        />
       ) : null}
     </div>
+  )
+}
+
+function RetryButton({
+  onRetry,
+  refreshing,
+  earliestRetryAvailableAt,
+}: {
+  onRetry: () => void
+  refreshing: boolean
+  earliestRetryAvailableAt: string | null
+}) {
+  const target = earliestRetryAvailableAt ? Date.parse(earliestRetryAvailableAt) : NaN
+  const hasKnownTarget = Number.isFinite(target)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    if (!hasKnownTarget) return
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [hasKnownTarget])
+
+  const remainingMs = hasKnownTarget ? Math.max(0, target - nowMs) : 0
+  const seconds = Math.ceil(remainingMs / 1000)
+  const waiting = hasKnownTarget && remainingMs > 0
+  const disabled = refreshing || waiting
+  const label = refreshing
+    ? 'Retrying…'
+    : waiting
+      ? `Retry in ${seconds}s`
+      : 'Retry unavailable'
+
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      disabled={disabled}
+      data-testid="stale-admins-unavailable-retry"
+      className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:cursor-wait disabled:opacity-60 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
+    >
+      {label}
+    </button>
   )
 }
 
@@ -503,9 +546,50 @@ function RowDetail({ admin }: { admin: StaleAdminRecord }) {
       reason && reason in UNAVAILABLE_REASON_ROW_TEXT
         ? UNAVAILABLE_REASON_ROW_TEXT[reason]
         : 'Activity could not be retrieved.'
-    return <span className="text-xs text-slate-500 dark:text-slate-400">{text}</span>
+    return (
+      <span className="text-xs text-slate-500 dark:text-slate-400">
+        {text}
+        {admin.retryAvailableAt ? (
+          <>
+            {' '}
+            <RetryCountdown availableAt={admin.retryAvailableAt} />
+          </>
+        ) : null}
+      </span>
+    )
   }
   return null
+}
+
+function RetryCountdown({ availableAt }: { availableAt: string }) {
+  const target = Date.parse(availableAt)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    if (!Number.isFinite(target)) return
+    const id = setInterval(() => setNowMs(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [target])
+  if (!Number.isFinite(target)) return null
+  const remainingMs = target - nowMs
+  if (remainingMs <= 0) {
+    return (
+      <span
+        data-testid="retry-countdown-ready"
+        className="font-medium text-emerald-700 dark:text-emerald-400"
+      >
+        Ready to retry.
+      </span>
+    )
+  }
+  const seconds = Math.ceil(remainingMs / 1000)
+  return (
+    <span
+      data-testid="retry-countdown"
+      className="font-medium text-amber-700 dark:text-amber-400"
+    >
+      Retry available in {seconds}s.
+    </span>
+  )
 }
 
 function ModeBadge({ mode }: { mode: StaleAdminMode }) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
 
 export type OwnerType = 'Organization' | 'User'
@@ -20,12 +20,27 @@ export interface UseStaleAdminsState {
   refetch: () => void
 }
 
+// Bounded background auto-retry ladder. Hybrid strategy:
+//   - If the section carries `earliestRetryAvailableAt`, schedule the next
+//     retry right after that timestamp (header-driven, accurate).
+//   - Otherwise, fall back to this fixed ladder for cases where GitHub did
+//     not disclose a reset time (secondary rate limits, 5xx, etc).
+// Capped at 3 attempts. A manual `refetch()` resets the ladder so the user
+// can always trigger a fresh cycle.
+const BG_RETRY_LADDER_MS = [10_000, 30_000, 60_000]
+const BG_RETRY_MAX_DELAY_MS = 60_000
+const BG_RETRY_JITTER_MS = 500
+
 export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsState {
   const { org, ownerType, token, elevated } = options
   const fetchFn = options.fetchFn ?? fetch
 
   const [retryCount, setRetryCount] = useState(0)
-  const refetch = useCallback(() => setRetryCount((n) => n + 1), [])
+  const [ladderStep, setLadderStep] = useState(0)
+  const refetch = useCallback(() => {
+    setLadderStep(0)
+    setRetryCount((n) => n + 1)
+  }, [])
   const [state, setState] = useState<Omit<UseStaleAdminsState, 'refetch'>>(() => ({
     loading: Boolean(org && token),
     section: null,
@@ -88,5 +103,56 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
     }
   }, [org, ownerType, token, elevated, fetchFn, retryCount])
 
+  // Reset the ladder whenever the caller options change (nav, sign-out, etc).
+  const ladderResetKey = `${org}|${ownerType}|${token}|${elevated}`
+  const lastResetKeyRef = useRef(ladderResetKey)
+  useEffect(() => {
+    if (lastResetKeyRef.current === ladderResetKey) return
+    lastResetKeyRef.current = ladderResetKey
+    // Defer the state update out of the effect body to avoid cascading renders
+    // (eslint react-hooks/set-state-in-effect).
+    queueMicrotask(() => setLadderStep(0))
+  }, [ladderResetKey])
+
+  // Schedule a background auto-retry after each fetch completes, when there
+  // are still retryable-unavailable admins. Cancelled on new fetch / option
+  // change / unmount. The ladder advances per fire; once exhausted, the
+  // user's Retry button is the fallback.
+  useEffect(() => {
+    if (state.loading) return
+    if (!state.section) return
+    if (ladderStep >= BG_RETRY_LADDER_MS.length) return
+    if (!sectionHasRetryableUnavailable(state.section)) return
+
+    const fallbackDelay = BG_RETRY_LADDER_MS[ladderStep]!
+    const earliestAt = state.section.earliestRetryAvailableAt
+    let delay = fallbackDelay
+    if (earliestAt) {
+      const untilReset = Date.parse(earliestAt) - Date.now()
+      if (Number.isFinite(untilReset)) {
+        delay = Math.min(
+          Math.max(untilReset + BG_RETRY_JITTER_MS, 1000),
+          BG_RETRY_MAX_DELAY_MS,
+        )
+      }
+    }
+
+    const id = setTimeout(() => {
+      setLadderStep((s) => s + 1)
+      setRetryCount((n) => n + 1)
+    }, delay)
+    return () => clearTimeout(id)
+  }, [state.loading, state.section, ladderStep])
+
   return { ...state, refetch }
+}
+
+function sectionHasRetryableUnavailable(section: StaleAdminsSection): boolean {
+  if (section.applicability !== 'applicable') return false
+  return section.admins.some(
+    (admin) =>
+      admin.classification === 'unavailable' &&
+      admin.unavailableReason !== null &&
+      admin.unavailableReason !== 'admin-account-404',
+  )
 }
