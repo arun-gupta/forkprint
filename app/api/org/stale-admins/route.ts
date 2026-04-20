@@ -3,6 +3,7 @@ import {
   fetchUserLatestOrgCommit,
   fetchUserOrgMembership,
   fetchUserPublicEvents,
+  type FetchUserLatestOrgCommitOptions,
   type OrgAdminListResult,
 } from '@/lib/analyzer/github-rest'
 import { STALE_ADMIN_THRESHOLD_DAYS } from '@/lib/config/governance'
@@ -17,6 +18,20 @@ import {
 } from '@/lib/governance/stale-admins'
 
 const PER_ADMIN_CONCURRENCY = 5
+
+// Unavailable reasons we will auto-retry server-side after the first fan-out.
+// `admin-account-404` is terminal (deleted user) and excluded.
+const AUTO_RETRYABLE_REASONS: ReadonlySet<StaleAdminUnavailableReason> = new Set([
+  'rate-limited',
+  'commit-search-failed',
+  'events-fetch-failed',
+])
+
+// Second-pass budget and spacing. Bounded hard so we never blow the
+// serverless function timeout — remaining items simply stay Unavailable and
+// the client's Retry button becomes the fallback.
+const AUTO_RETRY_BUDGET_MS = 10_000
+const AUTO_RETRY_SPACING_MS = 500
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -74,12 +89,13 @@ export async function GET(request: Request) {
       : 'elevated-ineffective'
     : 'baseline'
 
-  const admins = await resolveAllAdminsWithConcurrency(
+  const firstPass = await resolveAllAdminsWithConcurrency(
     adminListResult.admins.map((a) => a.login),
     token,
     org,
     resolvedAt,
   )
+  const admins = await retryUnavailableAdminsSerially(firstPass, token, org, resolvedAt)
 
   const section: StaleAdminsSection = {
     kind: 'stale-admins',
@@ -98,6 +114,7 @@ async function resolveAdmin(
   token: string,
   org: string,
   resolvedAt: string,
+  commitSearchOptions: FetchUserLatestOrgCommitOptions = {},
 ): Promise<StaleAdminRecord> {
   const eventsResult = await fetchUserPublicEvents(token, username)
 
@@ -114,7 +131,7 @@ async function resolveAdmin(
     error = 'rate-limited'
   } else {
     // events-fetch-failed OR ok-but-empty → fall through to commit search
-    const commitResult = await fetchUserLatestOrgCommit(token, username, org)
+    const commitResult = await fetchUserLatestOrgCommit(token, username, org, commitSearchOptions)
     if (commitResult.kind === 'ok' && commitResult.lastActivityAt) {
       lastActivityAt = commitResult.lastActivityAt
       lastActivitySource = 'org-commit-search'
@@ -165,6 +182,56 @@ async function resolveAllAdminsWithConcurrency(
   const workerCount = Math.min(PER_ADMIN_CONCURRENCY, usernames.length)
   await Promise.all(Array.from({ length: workerCount }, () => worker()))
   return results
+}
+
+// Auto-retry pass: after the concurrent fan-out, walk still-unavailable admins
+// serially with small inter-request spacing. Serializing keeps us well under
+// the Search Commits 30 req/min quota, and the delay gives GitHub's rate-limit
+// window time to slide. Bounded by a hard deadline so we never extend the
+// response beyond the budget — admins still Unavailable after the deadline
+// remain Unavailable for the client's Retry button to handle.
+export async function retryUnavailableAdminsSerially(
+  admins: StaleAdminRecord[],
+  token: string,
+  org: string,
+  resolvedAt: string,
+  opts: { now?: () => number; sleep?: (ms: number) => Promise<void> } = {},
+): Promise<StaleAdminRecord[]> {
+  const now = opts.now ?? Date.now
+  const sleep = opts.sleep ?? defaultSleep
+
+  const retryable = admins
+    .map((admin, index) => ({ admin, index }))
+    .filter(
+      ({ admin }) =>
+        admin.classification === 'unavailable' &&
+        admin.unavailableReason !== null &&
+        AUTO_RETRYABLE_REASONS.has(admin.unavailableReason),
+    )
+  if (retryable.length === 0) return admins
+
+  const deadline = now() + AUTO_RETRY_BUDGET_MS
+  const next = [...admins]
+
+  for (const { admin, index } of retryable) {
+    if (now() >= deadline) break
+    try {
+      // maxRetries=0 disables fetchUserLatestOrgCommit's in-function retry —
+      // this pass IS the retry, and the inter-request spacing is our backoff.
+      next[index] = await resolveAdmin(admin.username, token, org, resolvedAt, {
+        maxRetries: 0,
+      })
+    } catch {
+      // Keep the original unavailable record on unexpected throw.
+    }
+    if (now() < deadline) await sleep(AUTO_RETRY_SPACING_MS)
+  }
+
+  return next
+}
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function mapAdminListReason(result: OrgAdminListResult): AdminListUnavailableReason {

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { GET } from './route'
+import { GET, retryUnavailableAdminsSerially } from './route'
+import type { StaleAdminRecord } from '@/lib/governance/stale-admins'
 
 type FetchArgs = Parameters<typeof fetch>
 
@@ -189,6 +190,121 @@ describe('GET /api/org/stale-admins', () => {
     expect(
       fetchMock.mock.calls.some((call) => String(call[0]).includes('/user/memberships/orgs/')),
     ).toBe(false)
+  })
+
+  it('auto-retries rate-limited admins server-side after the first fan-out', async () => {
+    const now = new Date('2026-04-16T00:00:00Z')
+    vi.setSystemTime(now)
+
+    // stale-bob's events are empty → falls through to commit-search.
+    // First commit-search call returns rate-limited; second returns a real
+    // commit date. With the server-side retry pass, stale-bob should land
+    // as classified (stale) rather than unavailable.
+    let commitCall = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (...args: FetchArgs) => {
+        const url = String(args[0])
+        if (url.includes('/orgs/acme/members')) {
+          return json(200, [{ login: 'stale-bob' }])
+        }
+        if (url.includes('/users/stale-bob/events/public')) {
+          return json(200, [])
+        }
+        if (url.includes('/search/commits') && url.includes('author%3Astale-bob')) {
+          commitCall++
+          if (commitCall === 1) {
+            return new Response('', {
+              status: 403,
+              headers: { 'X-RateLimit-Remaining': '0' },
+            })
+          }
+          return json(200, {
+            total_count: 1,
+            items: [{ commit: { author: { date: '2025-09-01T00:00:00Z' } } }],
+          })
+        }
+        return json(404, {})
+      }),
+    )
+
+    const res = await GET(buildReq('?org=acme&ownerType=Organization'))
+    const body = (await res.json()) as {
+      section: { admins: Array<{ username: string; classification: string }> }
+    }
+
+    expect(body.section.admins[0]).toMatchObject({
+      username: 'stale-bob',
+      classification: 'stale',
+    })
+
+    vi.useRealTimers()
+  })
+
+  it('retryUnavailableAdminsSerially is a no-op when there are no retryable admins', async () => {
+    const admins: StaleAdminRecord[] = [
+      {
+        username: 'active-alice',
+        classification: 'active',
+        lastActivityAt: '2026-04-10T00:00:00Z',
+        lastActivitySource: 'public-events',
+        unavailableReason: null,
+      },
+      {
+        username: 'ghost',
+        classification: 'unavailable',
+        lastActivityAt: null,
+        lastActivitySource: null,
+        unavailableReason: 'admin-account-404',
+      },
+    ]
+    const sleep = vi.fn(async () => {})
+    const result = await retryUnavailableAdminsSerially(admins, 't', 'acme', '2026-04-16T00:00:00Z', {
+      sleep,
+    })
+    expect(result).toBe(admins)
+    expect(sleep).not.toHaveBeenCalled()
+  })
+
+  it('retryUnavailableAdminsSerially stops once the deadline is exceeded', async () => {
+    const admins: StaleAdminRecord[] = [
+      {
+        username: 'u1',
+        classification: 'unavailable',
+        lastActivityAt: null,
+        lastActivitySource: null,
+        unavailableReason: 'rate-limited',
+      },
+      {
+        username: 'u2',
+        classification: 'unavailable',
+        lastActivityAt: null,
+        lastActivitySource: null,
+        unavailableReason: 'rate-limited',
+      },
+    ]
+    // fetch should be called at most once: after the first admin, the clock
+    // jumps past the 10s budget and the loop exits.
+    const fetchMock = vi.fn(async () =>
+      new Response('', { status: 403, headers: { 'X-RateLimit-Remaining': '0' } }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    let clock = 0
+    const now = () => clock
+    const sleep = vi.fn(async () => {
+      clock += 60_000
+    })
+
+    await retryUnavailableAdminsSerially(admins, 't', 'acme', '2026-04-16T00:00:00Z', {
+      now,
+      sleep,
+    })
+    // First admin consumed: events fetch + commit search (1 call after maxRetries=0).
+    // After processing, sleep advances clock past the 10s deadline, so u2 is skipped.
+    const usernames = fetchMock.mock.calls.map((c) => String(c[0]))
+    expect(usernames.some((u) => u.includes('/users/u1/events/public'))).toBe(true)
+    expect(usernames.some((u) => u.includes('/users/u2/events/public'))).toBe(false)
   })
 
   it('surfaces threshold 90 as default in the response', async () => {

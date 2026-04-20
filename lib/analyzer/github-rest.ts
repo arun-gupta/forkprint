@@ -277,13 +277,20 @@ export type UserLatestOrgCommitResult =
 const COMMIT_SEARCH_RETRY_MAX_WAIT_MS = 3000
 const COMMIT_SEARCH_DEFAULT_RETRY_MS = 1500
 
+export interface FetchUserLatestOrgCommitOptions {
+  sleep?: (ms: number) => Promise<void>
+  /** Max in-function retries on rate-limit. Default 1 (two total attempts). */
+  maxRetries?: number
+}
+
 export async function fetchUserLatestOrgCommit(
   token: string,
   username: string,
   org: string,
-  options: { sleep?: (ms: number) => Promise<void> } = {},
+  options: FetchUserLatestOrgCommitOptions = {},
 ): Promise<UserLatestOrgCommitResult> {
   const sleep = options.sleep ?? defaultSleep
+  const maxRetries = options.maxRetries ?? 1
   let attempt = 0
 
   while (true) {
@@ -303,7 +310,7 @@ export async function fetchUserLatestOrgCommit(
       if (response.status === 403) {
         const rateLimited = isRateLimited(response) || (await hasSecondaryRateLimitBody(response))
         if (rateLimited) {
-          if (attempt < 1) {
+          if (attempt < maxRetries) {
             const wait = Math.min(
               parseRetryAfterMs(response) ?? COMMIT_SEARCH_DEFAULT_RETRY_MS,
               COMMIT_SEARCH_RETRY_MAX_WAIT_MS,
