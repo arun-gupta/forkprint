@@ -310,14 +310,93 @@ describe('fetchUserLatestOrgCommit', () => {
     }
   })
 
-  it('maps 403+rate-limit to rate-limited', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => buildRateLimitedResponse()))
-    expect((await fetchUserLatestOrgCommit('t', 'alice', 'x')).kind).toBe('rate-limited')
+  it('maps 403+rate-limit to rate-limited after one retry', async () => {
+    const fetchMock = vi.fn(async () => buildRateLimitedResponse())
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('rate-limited')
+    // One initial attempt + one retry attempt = 2 fetches, 1 sleep.
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(sleep).toHaveBeenCalledTimes(1)
   })
 
-  it('maps other failures to commit-search-failed', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 422 })))
-    expect((await fetchUserLatestOrgCommit('t', 'alice', 'x')).kind).toBe('commit-search-failed')
+  it('retries after a transient rate-limit and succeeds on the second attempt', async () => {
+    let call = 0
+    const fetchMock = vi.fn(async () => {
+      call++
+      if (call === 1) return buildRateLimitedResponse()
+      return buildPageResponse({
+        total_count: 1,
+        items: [{ commit: { author: { date: '2026-01-01T00:00:00Z' } } }],
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+
+    expect(result).toEqual({ kind: 'ok', lastActivityAt: '2026-01-01T00:00:00Z' })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(sleep).toHaveBeenCalledTimes(1)
+  })
+
+  it('treats 403 with Retry-After header (no X-RateLimit-Remaining: 0) as rate-limited', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response('', {
+        status: 403,
+        headers: { 'Retry-After': '1' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('rate-limited')
+    // Retry-After=1 second → bounded ≤3000ms.
+    expect(sleep).toHaveBeenCalledWith(1000)
+  })
+
+  it('caps the retry wait at 3000ms even when Retry-After is larger', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response('', {
+        status: 403,
+        headers: { 'Retry-After': '60' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(sleep).toHaveBeenCalledWith(3000)
+  })
+
+  it('detects secondary rate-limit by body message when headers do not match', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          message: 'You have exceeded a secondary rate limit. Please wait a few minutes.',
+        }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('rate-limited')
+    expect(sleep).toHaveBeenCalledTimes(1)
+  })
+
+  it('maps true 4xx/5xx errors to commit-search-failed without retrying', async () => {
+    const fetchMock = vi.fn(async () => new Response('', { status: 422 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('commit-search-failed')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(sleep).not.toHaveBeenCalled()
   })
 })
 

@@ -9,6 +9,7 @@ import type {
   StaleAdminMode,
   StaleAdminRecord,
   StaleAdminsSection,
+  StaleAdminUnavailableReason,
 } from '@/lib/governance/stale-admins'
 
 interface Props {
@@ -18,6 +19,8 @@ interface Props {
   sectionOverride?: StaleAdminsSection | null
   /** Override for tests. */
   loadingOverride?: boolean
+  /** Override for tests. */
+  onRetryOverride?: () => void
 }
 
 // Risk-first ordering: the user's attention should go to Stale and Unavailable
@@ -70,7 +73,13 @@ const GROUP_CONFIG: Record<
   },
 }
 
-export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverride }: Props) {
+export function StaleAdminsPanel({
+  org,
+  ownerType,
+  sectionOverride,
+  loadingOverride,
+  onRetryOverride,
+}: Props) {
   const { session, hasScope } = useAuth()
   // admin:org is a strict superset of read:org — treat either as "elevated"
   // for the concealed-admins view.
@@ -86,6 +95,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
 
   const section = hasOverride ? sectionOverride : hookState.section
   const loading = loadingOverride ?? (hasOverride ? false : hookState.loading)
+  const onRetry = onRetryOverride ?? hookState.refetch
   const [expanded, setExpanded] = useState(true)
 
   return (
@@ -130,7 +140,7 @@ export function StaleAdminsPanel({ org, ownerType, sectionOverride, loadingOverr
       {expanded ? (
         <>
           {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
-          {!loading && section ? <SectionBody section={section} /> : null}
+          {!loading && section ? <SectionBody section={section} onRetry={onRetry} /> : null}
         </>
       ) : null}
     </section>
@@ -229,7 +239,13 @@ function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
   )
 }
 
-function SectionBody({ section }: { section: StaleAdminsSection }) {
+function SectionBody({
+  section,
+  onRetry,
+}: {
+  section: StaleAdminsSection
+  onRetry: () => void
+}) {
   if (section.applicability === 'not-applicable-non-org') {
     return (
       <p className="text-sm text-slate-600 dark:text-slate-300" data-testid="stale-admins-na">
@@ -266,6 +282,7 @@ function SectionBody({ section }: { section: StaleAdminsSection }) {
           classification={classification}
           admins={grouped[classification]}
           defaultOpen={DEFAULT_OPEN[classification]}
+          onRetry={onRetry}
         />
       ))}
     </div>
@@ -276,12 +293,17 @@ function GroupSection({
   classification,
   admins,
   defaultOpen,
+  onRetry,
 }: {
   classification: StaleAdminClassification
   admins: StaleAdminRecord[]
   defaultOpen: boolean
+  onRetry: () => void
 }) {
   const config = GROUP_CONFIG[classification]
+  const isUnavailable = classification === 'unavailable'
+  const reasonCounts = isUnavailable ? countByUnavailableReason(admins) : null
+  const rateLimitedCount = reasonCounts?.['rate-limited'] ?? 0
   return (
     <details
       open={defaultOpen}
@@ -299,6 +321,13 @@ function GroupSection({
           {admins.length}
         </span>
       </summary>
+      {isUnavailable && reasonCounts ? (
+        <UnavailableReasonStrip
+          counts={reasonCounts}
+          onRetry={onRetry}
+          showRetry={rateLimitedCount > 0}
+        />
+      ) : null}
       <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
         {admins.map((admin) => (
           <AdminRow key={admin.username} admin={admin} />
@@ -306,6 +335,75 @@ function GroupSection({
       </ul>
     </details>
   )
+}
+
+const UNAVAILABLE_REASON_LABEL: Record<StaleAdminUnavailableReason, string> = {
+  'rate-limited': 'Rate-limited',
+  'commit-search-failed': 'Commit search failed',
+  'events-fetch-failed': 'Events fetch failed',
+  'admin-account-404': 'Account not found',
+}
+
+function UnavailableReasonStrip({
+  counts,
+  onRetry,
+  showRetry,
+}: {
+  counts: Record<StaleAdminUnavailableReason | 'unknown', number>
+  onRetry: () => void
+  showRetry: boolean
+}) {
+  const entries = (Object.keys(UNAVAILABLE_REASON_LABEL) as StaleAdminUnavailableReason[])
+    .filter((r) => counts[r] > 0)
+    .map((r) => ({ reason: r, count: counts[r], label: UNAVAILABLE_REASON_LABEL[r] }))
+  if (counts.unknown > 0) {
+    entries.push({ reason: 'unknown' as never, count: counts.unknown, label: 'Unknown' })
+  }
+  if (entries.length === 0) return null
+  return (
+    <div
+      className="mx-3 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-amber-200 pb-1.5 text-xs dark:border-amber-900/60"
+      data-testid="stale-admins-unavailable-reasons"
+    >
+      {entries.map(({ reason, count, label }) => (
+        <span
+          key={reason}
+          className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+          data-testid={`stale-admins-unavailable-reason-${reason}`}
+        >
+          {count} {label.toLowerCase()}
+        </span>
+      ))}
+      {showRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          data-testid="stale-admins-unavailable-retry"
+          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
+        >
+          Retry rate-limited
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function countByUnavailableReason(
+  admins: StaleAdminRecord[],
+): Record<StaleAdminUnavailableReason | 'unknown', number> {
+  const counts: Record<StaleAdminUnavailableReason | 'unknown', number> = {
+    'rate-limited': 0,
+    'commit-search-failed': 0,
+    'events-fetch-failed': 0,
+    'admin-account-404': 0,
+    unknown: 0,
+  }
+  for (const a of admins) {
+    const r = a.unavailableReason
+    if (r && r in counts) counts[r]++
+    else counts.unknown++
+  }
+  return counts
 }
 
 function GroupChevron() {

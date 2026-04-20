@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
 
 export type OwnerType = 'Organization' | 'User'
@@ -17,13 +17,16 @@ export interface UseStaleAdminsState {
   loading: boolean
   section: StaleAdminsSection | null
   error: string | null
+  refetch: () => void
 }
 
 export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsState {
   const { org, ownerType, token, elevated } = options
   const fetchFn = options.fetchFn ?? fetch
 
-  const [state, setState] = useState<UseStaleAdminsState>(() => ({
+  const [retryCount, setRetryCount] = useState(0)
+  const refetch = useCallback(() => setRetryCount((n) => n + 1), [])
+  const [state, setState] = useState<Omit<UseStaleAdminsState, 'refetch'>>(() => ({
     loading: Boolean(org && token),
     section: null,
     error: null,
@@ -80,7 +83,7 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
     return () => {
       cancelled = true
     }
-  }, [org, ownerType, token, elevated, fetchFn])
+  }, [org, ownerType, token, elevated, fetchFn, retryCount])
 
-  return state
+  return { ...state, refetch }
 }

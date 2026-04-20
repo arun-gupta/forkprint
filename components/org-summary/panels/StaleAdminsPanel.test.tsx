@@ -294,6 +294,69 @@ describe('StaleAdminsPanel — US3 mode indicators', () => {
   })
 })
 
+describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
+  it('renders sub-breakdown pills for rate-limited vs commit-search-failed inside the Unavailable group', () => {
+    const section = makeSection({
+      admins: [
+        mkUnavailable('u1', 'rate-limited'),
+        mkUnavailable('u2', 'rate-limited'),
+        mkUnavailable('u3', 'commit-search-failed'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const unavailable = screen.getByTestId('stale-admins-group-unavailable')
+    const strip = within(unavailable).getByTestId('stale-admins-unavailable-reasons')
+    expect(
+      within(strip).getByTestId('stale-admins-unavailable-reason-rate-limited').textContent,
+    ).toMatch(/2 rate-limited/i)
+    expect(
+      within(strip).getByTestId('stale-admins-unavailable-reason-commit-search-failed').textContent,
+    ).toMatch(/1 commit search failed/i)
+  })
+
+  it('shows a Retry button when at least one admin is rate-limited, hidden otherwise', () => {
+    const onRetry = vi.fn()
+    const sectionWithRL = makeSection({
+      admins: [mkUnavailable('u1', 'rate-limited'), mkUnavailable('u2', 'commit-search-failed')],
+    })
+    const { rerender } = renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={sectionWithRL}
+        onRetryOverride={onRetry}
+      />,
+    )
+
+    const retry = screen.getByTestId('stale-admins-unavailable-retry')
+    fireEvent.click(retry)
+    expect(onRetry).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <AuthProvider initialSession={{ token: 't', username: 'u', scopes: ['public_repo'] }}>
+        <StaleAdminsPanel
+          org="acme"
+          ownerType="Organization"
+          sectionOverride={makeSection({
+            admins: [mkUnavailable('u1', 'commit-search-failed')],
+          })}
+          onRetryOverride={onRetry}
+        />
+      </AuthProvider>,
+    )
+    expect(screen.queryByTestId('stale-admins-unavailable-retry')).not.toBeInTheDocument()
+  })
+
+  it('omits the sub-breakdown strip on non-unavailable groups', () => {
+    const section = makeSection({
+      admins: [mkAdmin('s', 'stale'), mkAdmin('a', 'active')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    expect(screen.queryByTestId('stale-admins-unavailable-reasons')).not.toBeInTheDocument()
+  })
+})
+
 describe('StaleAdminsPanel — US5 freshness disclosure', () => {
   it('reads the threshold value from the config and discloses public-only + eventual consistency', () => {
     const section = makeSection()
@@ -327,5 +390,18 @@ function mkAdmin(
     lastActivityAt: classification === 'stale' ? '2025-09-01T00:00:00Z' : '2026-04-10T00:00:00Z',
     lastActivitySource: 'public-events' as const,
     unavailableReason: null,
+  }
+}
+
+function mkUnavailable(
+  username: string,
+  reason: 'rate-limited' | 'commit-search-failed' | 'events-fetch-failed' | 'admin-account-404',
+) {
+  return {
+    username,
+    classification: 'unavailable' as const,
+    lastActivityAt: null,
+    lastActivitySource: null,
+    unavailableReason: reason,
   }
 }
