@@ -119,9 +119,17 @@ async function main() {
     fetchStaleAdmins(DEMO_ORG, token),
   ])
 
+  // Sort results by repo name so the fixture diff only reflects real data
+  // changes, not ordering churn caused by the API returning repos sorted by
+  // pushedAt (which shifts every refresh).
+  const sortedOrgResults = [...orgResponse.results].sort((a, b) =>
+    a.repo.localeCompare(b.repo),
+  )
+
   const orgPayload = {
     generatedAt,
     ...orgResponse,
+    results: sortedOrgResults,
     governance: { twoFactor, staleAdmins },
     topReposAnalyzed: topAnalysis.results,
   }
