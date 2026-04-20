@@ -43,6 +43,7 @@ const PANEL_LABELS: Record<PanelId, string> = {
   'bus-factor': 'Bus-Factor Risk',
   'repo-age': 'Repo Age',
   'inactive-repos': 'Inactive Repos',
+  'org-recommendations': 'Top Systemic Issues',
 }
 
 function renderPanelSection(id: PanelId, panel: AggregatePanel<unknown>): string {

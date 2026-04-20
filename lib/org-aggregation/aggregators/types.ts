@@ -147,6 +147,47 @@ export type InactiveReposValue = {
   repos: { repo: string; lastCommitAt: Date | null }[]
 }
 
+// Org-level recommendations (issue #359).
+// Catalog-derived identity for each aggregated recommendation, grouped by
+// CHAOSS dimension. Five-bucket union mirrors the per-repo Recommendations
+// view taxonomy (components/recommendations/RecommendationsView.tsx).
+
+export type OrgRecommendationBucket =
+  | 'Activity'
+  | 'Responsiveness'
+  | 'Contributors'
+  | 'Documentation'
+  | 'Security'
+
+// Render order used by OrgRecommendationsPanel. The aggregator sorts flat
+// items by this bucket order first, then affectedRepoCount desc, then id asc.
+export const ORG_RECOMMENDATION_BUCKET_ORDER: readonly OrgRecommendationBucket[] = [
+  'Activity',
+  'Responsiveness',
+  'Contributors',
+  'Documentation',
+  'Security',
+]
+
+export interface OrgRecommendationEntry {
+  // Catalog ID (e.g. "SEC-3") when the key is cataloged, otherwise
+  // `UNCAT:<rawKey>` so uncataloged keys survive with stable identity.
+  id: string
+  bucket: OrgRecommendationBucket
+  title: string
+  affectedRepoCount: number
+  // `owner/repo` slugs, alphabetical (case-insensitive). Length equals
+  // affectedRepoCount by construction.
+  affectedRepos: string[]
+}
+
+export interface OrgRecommendationsValue {
+  // Flat list, pre-sorted [bucket-order asc, affectedRepoCount desc, id asc].
+  items: OrgRecommendationEntry[]
+  // Count of successfully analyzed repos that contributed to this panel.
+  analyzedReposCount: number
+}
+
 // --------------------------------------------------------------------
 // Aggregator function signatures
 // --------------------------------------------------------------------

@@ -141,6 +141,7 @@ export type PanelId =
   | 'bus-factor'
   | 'repo-age'
   | 'inactive-repos'
+  | 'org-recommendations'
 
 export interface AggregatePanel<T> {
   panelId: PanelId

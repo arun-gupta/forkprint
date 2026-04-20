@@ -11,6 +11,7 @@ import { languagesAggregator } from './aggregators/languages'
 import { licenseConsistencyAggregator } from './aggregators/license-consistency'
 import { maintainersAggregator } from './aggregators/maintainers'
 import { orgAffiliationsAggregator } from './aggregators/org-affiliations'
+import { orgRecommendationsAggregator } from './aggregators/org-recommendations'
 import { projectFootprintAggregator } from './aggregators/project-footprint'
 import { releaseCadenceAggregator } from './aggregators/release-cadence'
 import { repoAgeAggregator } from './aggregators/repo-age'
@@ -155,6 +156,7 @@ export function buildOrgSummaryViewModel(
     'bus-factor': stamp(busFactorAggregator(completedResults, context)),
     'repo-age': stamp(repoAgeAggregator(completedResults, context)),
     'inactive-repos': stamp(inactiveReposAggregator(completedResults, context)),
+    'org-recommendations': stamp(orgRecommendationsAggregator(completedResults, context)),
   }
 
   const missingRecords: PanelMissingRecord[] = []

@@ -28,12 +28,23 @@ function analysisStub(
   repo: string,
   commitCountsByAuthor: Record<string, number> | 'unavailable' = { alice: 10 },
 ): AnalysisResult {
+  // Include the minimum set of `unavailable` sentinels that downstream
+  // scoring functions (getHealthScore, detectSoloProjectProfile) touch, so
+  // the stub can flow through the full view-model pipeline without NPEs.
   return {
     repo,
     commitCountsByAuthor,
     contributorMetricsByWindow: {
       90: { commitCountsByAuthor },
     },
+    documentationResult: 'unavailable',
+    securityResult: 'unavailable',
+    licensingResult: 'unavailable',
+    inclusiveNamingResult: 'unavailable',
+    totalContributors: 'unavailable',
+    uniqueCommitAuthors90d: 'unavailable',
+    maintainerCount: 'unavailable',
+    stars: 'unavailable',
   } as unknown as AnalysisResult
 }
 

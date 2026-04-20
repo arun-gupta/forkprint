@@ -5,12 +5,22 @@ import type { DispatchResult } from '@/lib/org-aggregation/queue'
 import { useOrgAggregation } from './useOrgAggregation'
 
 function stub(repo: string, commits: Record<string, number> = { alice: 10 }): AnalysisResult {
+  // Minimum `unavailable` sentinels that getHealthScore + detectSoloProjectProfile
+  // touch — keeps the view-model pipeline from NPE'ing on the shallow fixture.
   return {
     repo,
     commitCountsByAuthor: commits,
     contributorMetricsByWindow: {
       90: { commitCountsByAuthor: commits },
     },
+    documentationResult: 'unavailable',
+    securityResult: 'unavailable',
+    licensingResult: 'unavailable',
+    inclusiveNamingResult: 'unavailable',
+    totalContributors: 'unavailable',
+    uniqueCommitAuthors90d: 'unavailable',
+    maintainerCount: 'unavailable',
+    stars: 'unavailable',
   } as unknown as AnalysisResult
 }
 

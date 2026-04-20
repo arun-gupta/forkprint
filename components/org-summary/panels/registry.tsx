@@ -15,6 +15,7 @@ import { LanguagesPanel } from './LanguagesPanel'
 import { LicenseConsistencyPanel } from './LicenseConsistencyPanel'
 import { MaintainersPanel } from './MaintainersPanel'
 import { OrgAffiliationsPanel } from './OrgAffiliationsPanel'
+import { OrgRecommendationsPanel } from './OrgRecommendationsPanel'
 import { PlaceholderPanel } from './PlaceholderPanel'
 import { ProjectFootprintPanel } from './ProjectFootprintPanel'
 import { ReleaseCadencePanel } from './ReleaseCadencePanel'
@@ -26,9 +27,10 @@ import { StaleWorkPanel } from './StaleWorkPanel'
 // Bucket groupings mirror the per-repo ResultsShell tabs (overview /
 // contributors / activity / responsiveness / documentation / security)
 // plus an org-only 'governance' bucket for org-level hygiene + policy
-// signals (issue #303). The per-repo 'recommendations' and 'comparison'
-// tabs don't apply at the org level — no recommendations engine and no
-// repo-vs-repo matrix.
+// signals (issue #303). The org 'recommendations' bucket (issue #359)
+// aggregates the per-repo recommendation streams into top-N systemic
+// issues grouped by CHAOSS dimension. The per-repo 'comparison' tab
+// doesn't apply at the org level — no repo-vs-repo matrix.
 export type PanelBucketId =
   | 'overview'
   | 'contributors'
@@ -99,8 +101,8 @@ export const PANEL_BUCKETS: PanelBucket[] = [
   {
     id: 'recommendations',
     label: 'Recommendations',
-    description: 'Suggested actions synthesized from the org-wide signals above.',
-    panels: [],
+    description: 'Top systemic issues across the analyzed repos, grouped by CHAOSS dimension.',
+    panels: ['org-recommendations'],
   },
   {
     id: 'repos',
@@ -132,6 +134,7 @@ export const PANEL_LABELS: Record<PanelId, string> = {
   languages: 'Languages',
   'repo-age': 'Repo age',
   'inactive-repos': 'Inactive repos',
+  'org-recommendations': 'Top systemic issues',
 }
 
 // Real panel components. Any PanelId missing from this map renders via
@@ -155,6 +158,7 @@ const REAL_PANELS: Partial<Record<PanelId, ComponentType<{ panel: AggregatePanel
   'bus-factor': BusFactorPanel as ComponentType<{ panel: AggregatePanel<never> }>,
   'repo-age': RepoAgePanel as ComponentType<{ panel: AggregatePanel<never> }>,
   'inactive-repos': InactiveReposPanel as ComponentType<{ panel: AggregatePanel<never> }>,
+  'org-recommendations': OrgRecommendationsPanel as ComponentType<{ panel: AggregatePanel<never> }>,
 }
 
 export function isRealPanel(panelId: PanelId): boolean {

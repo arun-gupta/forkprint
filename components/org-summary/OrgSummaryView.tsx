@@ -31,7 +31,7 @@ const SHOW_PROGRESS_STATUSES: RunStatus[] = ['in-progress', 'paused', 'complete'
 
 export function OrgSummaryView({ org, view, startedAt, onCancel, onPause, onResume, onRetry, notificationToggle, showRunStatus = true, showPanels = true }: Props) {
   const visibleBuckets = PANEL_BUCKETS
-    .filter((b) => b.id !== 'repos' && b.id !== 'recommendations')
+    .filter((b) => b.id !== 'repos')
     .map((bucket) => ({
       bucket,
       bucketPanels: bucket.panels

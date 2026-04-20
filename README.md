@@ -41,7 +41,7 @@ RepoPulse is built for **community-oriented projects** — multi-contributor rep
 | :card_index_dividers: | **8-Dimension Scorecard** | Quick signals (Reach, Attention, Engagement) plus deep-dive dimensions |
 | :chart_with_upwards_trend: | **Percentile Scoring** | Every metric shows where the repo ranks vs. 2,400+ calibrated repos |
 | :busts_in_silhouette: | **Multi-Repo Comparison** | Side-by-side analysis of up to 4 repositories |
-| :office: | **Org Inventory** | Browse and analyze all repos within a GitHub organization, with an org-summary view that surfaces Overview, Contributors, Activity, Responsiveness, Documentation, Governance, and Security across the analyzed repo set |
+| :office: | **Org Inventory** | Browse and analyze all repos within a GitHub organization, with an org-summary view that surfaces Overview, Contributors, Activity, Responsiveness, Documentation, Governance, Security, and Recommendations (top systemic issues) across the analyzed repo set |
 | :bulb: | **Unified Recommendations** | Actionable improvement suggestions across all scoring dimensions |
 | :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds |
 | :outbox_tray: | **Export** | JSON, Markdown, and shareable URL |
