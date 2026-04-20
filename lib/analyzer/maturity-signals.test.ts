@@ -23,7 +23,7 @@ describe('extractMaturitySignals', () => {
     expect(typeof out.starsPerYear).toBe('number')
     expect(typeof out.contributorsPerYear).toBe('number')
     expect(typeof out.commitsPerMonthLifetime).toBe('number')
-    expect(out.commitsPerMonthRecent12mo).toBe(100)
+    expect(out.commitsPerMonthRecent12mo).toBeCloseTo(100, 0)
     expect(out.lifetimeCommits).toBe(6000)
   })
 

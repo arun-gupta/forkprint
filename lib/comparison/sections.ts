@@ -6,6 +6,7 @@ import { getResponsivenessScore } from '@/lib/responsiveness/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { computeHealthRatio } from '@/lib/health-ratios/ratio-definitions'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
+import { formatNormalizedRate, formatGrowthTrajectory, trajectoryToOrdinal } from '@/lib/maturity/format'
 
 export type ComparisonSectionId = 'overview' | 'maturity' | 'contributors' | 'activity' | 'responsiveness' | 'documentation' | 'community' | 'health-ratios'
 export type ComparisonAttributeId =
@@ -90,25 +91,6 @@ function formatDurationHours(value: number | Unavailable) {
   return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}h`
 }
 
-function formatNormalizedRateCell(
-  value: number | Unavailable,
-  unit: '/yr' | '/mo',
-  raw: number | 'too-new' | Unavailable | undefined,
-): string {
-  if (raw === 'too-new') return 'Too new to normalize'
-  if (value === 'unavailable') return '—'
-  const formatted = value >= 100
-    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)
-    : new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value)
-  return `${formatted} ${unit}`
-}
-
-function formatTrajectoryCell(
-  value: 'accelerating' | 'stable' | 'declining' | Unavailable | undefined,
-): string {
-  if (value === undefined || value === 'unavailable') return 'Insufficient verified public data'
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
 
 
 function getContributorWindowMetrics(result: AnalysisResult) {
@@ -238,7 +220,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         valueType: 'number',
         getValue: (result) =>
           typeof result.starsPerYear === 'number' ? result.starsPerYear : 'unavailable',
-        formatValue: (value, result) => formatNormalizedRateCell(value, '/yr', result?.starsPerYear),
+        formatValue: (_value, result) => formatNormalizedRate(result?.starsPerYear, '/yr'),
       },
       {
         id: 'contributors-per-year',
@@ -249,7 +231,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         valueType: 'number',
         getValue: (result) =>
           typeof result.contributorsPerYear === 'number' ? result.contributorsPerYear : 'unavailable',
-        formatValue: (value, result) => formatNormalizedRateCell(value, '/yr', result?.contributorsPerYear),
+        formatValue: (_value, result) => formatNormalizedRate(result?.contributorsPerYear, '/yr'),
       },
       {
         id: 'commits-per-month',
@@ -260,8 +242,8 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         valueType: 'number',
         getValue: (result) =>
           typeof result.commitsPerMonthLifetime === 'number' ? result.commitsPerMonthLifetime : 'unavailable',
-        formatValue: (value, result) =>
-          formatNormalizedRateCell(value, '/mo', result?.commitsPerMonthLifetime),
+        formatValue: (_value, result) =>
+          formatNormalizedRate(result?.commitsPerMonthLifetime, '/mo'),
       },
       {
         id: 'growth-trajectory',
@@ -270,8 +252,8 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         helpText: 'Last 12 months commits/month vs lifetime commits/month. Accelerating / Stable / Declining. Insufficient when age < 2 years.',
         direction: 'neutral',
         valueType: 'label',
-        getValue: () => 'unavailable',
-        formatValue: (_value, result) => formatTrajectoryCell(result?.growthTrajectory),
+        getValue: (result) => trajectoryToOrdinal(result.growthTrajectory),
+        formatValue: (_value, result) => formatGrowthTrajectory(result?.growthTrajectory),
       },
     ],
   },

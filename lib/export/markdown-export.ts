@@ -15,6 +15,7 @@ import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/com
 import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
 import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
+import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
 
 export interface MarkdownExportResult {
   blob: Blob
@@ -55,33 +56,6 @@ function mdTable(rows: [string, string][]): string {
     lines.push(`| ${label} | ${value} |`)
   }
   return lines.join('\n')
-}
-
-function formatAgeMd(value: number | 'unavailable' | undefined): string {
-  if (typeof value !== 'number') return '—'
-  if (value < 30) return `${Math.round(value)} d`
-  if (value < 365) return `${Math.round(value / 30.4375)} mo`
-  const years = value / 365.25
-  return `${years.toFixed(years >= 10 ? 0 : 1)} yr`
-}
-
-function formatRateMd(
-  value: number | 'too-new' | 'unavailable' | undefined,
-  unit: '/yr' | '/mo',
-): string {
-  if (value === undefined || value === 'unavailable') return '—'
-  if (value === 'too-new') return 'Too new to normalize'
-  const formatted = value >= 100
-    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)
-    : new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value)
-  return `${formatted} ${unit}`
-}
-
-function formatTrajectoryMd(
-  value: 'accelerating' | 'stable' | 'declining' | 'unavailable' | undefined,
-): string {
-  if (value === undefined || value === 'unavailable') return 'Insufficient verified public data'
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function getResponsivenessMetrics(result: AnalysisResult): ResponsivenessMetrics {
@@ -180,11 +154,11 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
     '#### Maturity',
     '',
     mdTable([
-      ['Age', formatAgeMd(result.ageInDays)],
-      ['Stars / year', formatRateMd(result.starsPerYear, '/yr')],
-      ['Contributors / year', formatRateMd(result.contributorsPerYear, '/yr')],
-      ['Commits / month', formatRateMd(result.commitsPerMonthLifetime, '/mo')],
-      ['Growth trajectory', formatTrajectoryMd(result.growthTrajectory)],
+      ['Age', formatMaturityAge(result.ageInDays)],
+      ['Stars / year', formatNormalizedRate(result.starsPerYear, '/yr')],
+      ['Contributors / year', formatNormalizedRate(result.contributorsPerYear, '/yr')],
+      ['Commits / month', formatNormalizedRate(result.commitsPerMonthLifetime, '/mo')],
+      ['Growth trajectory', formatGrowthTrajectory(result.growthTrajectory)],
     ]),
     '',
     '| Score | Value |',

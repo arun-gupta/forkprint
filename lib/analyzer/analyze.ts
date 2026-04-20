@@ -928,7 +928,7 @@ export function extractMaturitySignals(inputs: MaturityExtractInputs): {
   }
 
   const commitsPerMonthRecent12mo: number | Unavailable =
-    recent365Commits === 'unavailable' ? 'unavailable' : recent365Commits / 12
+    recent365Commits === 'unavailable' ? 'unavailable' : recent365Commits / (365 / DAYS_PER_MONTH)
 
   // Build numeric inputs for classifier (reject the 'too-new' branch — below
   // normalization age, the trajectory is age-gated independently).

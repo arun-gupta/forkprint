@@ -6,6 +6,7 @@ import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { computeGovernanceCompleteness } from '@/lib/governance/completeness'
 import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
+import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
 
 /**
  * A "lens readout" — a cross-cutting completeness summary that is rendered on
@@ -66,11 +67,11 @@ export function buildMetricCardViewModels(results: AnalysisResult[]): MetricCard
       details: [
         { label: 'Primary language', value: formatText(result.primaryLanguage) },
         { label: 'Created', value: formatDate(result.createdAt) },
-        { label: 'Age', value: formatAge(result.ageInDays) },
+        { label: 'Age', value: formatMaturityAge(result.ageInDays) },
         { label: 'Stars / year', value: formatNormalizedRate(result.starsPerYear, '/yr') },
         { label: 'Contributors / year', value: formatNormalizedRate(result.contributorsPerYear, '/yr') },
         { label: 'Commits / month', value: formatNormalizedRate(result.commitsPerMonthLifetime, '/mo') },
-        { label: 'Growth trajectory', value: formatTrajectory(result.growthTrajectory) },
+        { label: 'Growth trajectory', value: formatGrowthTrajectory(result.growthTrajectory) },
       ],
       missingFields: result.missingFields,
       profile: ecosystemRow?.profile ?? null,
@@ -143,31 +144,6 @@ function formatMetric(value: number | 'unavailable') {
   }
 
   return '—'
-}
-
-function formatAge(value: number | 'unavailable' | undefined) {
-  if (typeof value !== 'number') return '—'
-  if (value < 30) return `${Math.round(value)} d`
-  if (value < 365) return `${Math.round(value / 30.4375)} mo`
-  const years = value / 365.25
-  return `${years.toFixed(years >= 10 ? 0 : 1)} yr`
-}
-
-function formatNormalizedRate(
-  value: number | 'too-new' | 'unavailable' | undefined,
-  unit: '/yr' | '/mo',
-) {
-  if (value === undefined || value === 'unavailable') return '—'
-  if (value === 'too-new') return 'Too new to normalize'
-  const formatted = value >= 100
-    ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)
-    : new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 }).format(value)
-  return `${formatted} ${unit}`
-}
-
-function formatTrajectory(value: 'accelerating' | 'stable' | 'declining' | 'unavailable' | undefined) {
-  if (value === undefined || value === 'unavailable') return 'Insufficient verified public data'
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function formatText(value: string | 'unavailable', fallback = '—') {
