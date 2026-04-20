@@ -34,8 +34,10 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
   useEffect(() => {
     setParticipants((current) => {
       const valid = current.filter((repo) => repoOrder.includes(repo))
+      if (valid.length >= COMPARISON_MAX_REPOS) return valid
       if (valid.length === 0) return repoOrder.slice(0, COMPARISON_MAX_REPOS)
-      return valid
+      const fill = repoOrder.filter((repo) => !valid.includes(repo))
+      return [...valid, ...fill].slice(0, COMPARISON_MAX_REPOS)
     })
   }, [repoOrder])
 

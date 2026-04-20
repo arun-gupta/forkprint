@@ -117,6 +117,37 @@ describe('ComparisonView', () => {
       expect(screen.queryByRole('button', { name: /sort by four\/repo/i })).not.toBeInTheDocument()
     })
 
+    it('tops up participants to four when new repos are analyzed after mount', () => {
+      const twoResults = [buildResult('one/repo'), buildResult('two/repo')]
+      const { rerender } = render(<ComparisonView results={twoResults} />)
+
+      // With 2 results, picker is not shown.
+      expect(screen.queryByRole('group', { name: /comparison participants/i })).not.toBeInTheDocument()
+
+      // Grow results to 8. Participants should top up to the first four.
+      rerender(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+            buildResult('five/repo'),
+            buildResult('six/repo'),
+            buildResult('seven/repo'),
+            buildResult('eight/repo'),
+          ]}
+        />,
+      )
+
+      expect(screen.getByText(/4\/4/)).toBeInTheDocument()
+      expect(screen.getByLabelText('Include one/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include two/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include three/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include four/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include five/repo in comparison')).not.toBeChecked()
+    })
+
     it('prevents dropping below two participants', async () => {
       render(
         <ComparisonView
