@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchMaintainerCount,
   fetchOrgAdmins,
+  fetchOrgMembers,
+  fetchOrgOutsideCollaborators,
   fetchOrgTwoFactorRequirement,
   fetchUserLatestOrgCommit,
   fetchUserOrgMembership,
@@ -575,5 +577,121 @@ describe('fetchUserOrgMembership', () => {
 
     expect(result.isMember).toBe(false)
     expect(result.reason).toBe('unknown')
+  })
+})
+
+describe('fetchOrgMembers', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('sends role=member query with bearer auth', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input)
+      expect(url).toContain('/orgs/kubernetes/members')
+      expect(url).toContain('role=member')
+      expect(url).toContain('per_page=100')
+      return buildPageResponse([{ login: 'alice' }])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchOrgMembers('ghp_test', 'kubernetes')
+
+    expect(result.kind).toBe('ok')
+    if (result.kind === 'ok') {
+      expect(result.members.map((m) => m.login)).toEqual(['alice'])
+    }
+    const init = (fetchMock.mock.calls[0] as unknown[])[1] as RequestInit | undefined
+    expect(init?.headers).toMatchObject({ Authorization: 'Bearer ghp_test' })
+  })
+
+  it('follows Link: rel="next" across pages', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input)
+      if (url.includes('page=2')) {
+        return buildPageResponse([{ login: 'bob' }])
+      }
+      return buildPageResponse([{ login: 'alice' }], {
+        linkHeader: '<https://api.github.com/orgs/x/members?role=member&per_page=100&page=2>; rel="next"',
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchOrgMembers('ghp_test', 'x')
+
+    expect(result.kind).toBe('ok')
+    if (result.kind === 'ok') {
+      expect(result.members.map((m) => m.login)).toEqual(['alice', 'bob'])
+    }
+  })
+
+  it('maps 403 + rate-limit header to kind rate-limited', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => buildRateLimitedResponse()))
+    expect((await fetchOrgMembers('t', 'x')).kind).toBe('rate-limited')
+  })
+
+  it('maps 401 to kind auth-failed', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+    expect((await fetchOrgMembers('t', 'x')).kind).toBe('auth-failed')
+  })
+
+  it('maps a thrown fetch error to kind network', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('boom') }))
+    expect((await fetchOrgMembers('t', 'x')).kind).toBe('network')
+  })
+})
+
+describe('fetchOrgOutsideCollaborators', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('calls /orgs/{org}/outside_collaborators with bearer auth', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input)
+      expect(url).toContain('/orgs/kubernetes/outside_collaborators')
+      expect(url).toContain('per_page=100')
+      return buildPageResponse([{ login: 'ext1' }])
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchOrgOutsideCollaborators('ghp_test', 'kubernetes')
+
+    expect(result.kind).toBe('ok')
+    if (result.kind === 'ok') {
+      expect(result.collaborators.map((c) => c.login)).toEqual(['ext1'])
+    }
+    const init = (fetchMock.mock.calls[0] as unknown[])[1] as RequestInit | undefined
+    expect(init?.headers).toMatchObject({ Authorization: 'Bearer ghp_test' })
+  })
+
+  it('follows Link: rel="next" across pages', async () => {
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      if (String(input).includes('page=2')) {
+        return buildPageResponse([{ login: 'ext2' }])
+      }
+      return buildPageResponse([{ login: 'ext1' }], {
+        linkHeader: '<https://api.github.com/orgs/x/outside_collaborators?per_page=100&page=2>; rel="next"',
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchOrgOutsideCollaborators('t', 'x')
+
+    expect(result.kind).toBe('ok')
+    if (result.kind === 'ok') {
+      expect(result.collaborators.map((c) => c.login)).toEqual(['ext1', 'ext2'])
+    }
+  })
+
+  it('maps 403 + rate-limit header to kind rate-limited', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => buildRateLimitedResponse()))
+    expect((await fetchOrgOutsideCollaborators('t', 'x')).kind).toBe('rate-limited')
+  })
+
+  it('maps 401 to kind auth-failed', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 401 })))
+    expect((await fetchOrgOutsideCollaborators('t', 'x')).kind).toBe('auth-failed')
+  })
+
+  it('maps a thrown fetch error to kind network', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('net') }))
+    expect((await fetchOrgOutsideCollaborators('t', 'x')).kind).toBe('network')
   })
 })

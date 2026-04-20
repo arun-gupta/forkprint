@@ -1340,6 +1340,14 @@
         }
       ],
       "resolvedAt": "2026-04-20T15:54:23.471Z"
+    },
+    "memberPermission": {
+      "kind": "member-permission-distribution",
+      "applicability": "applicable",
+      "memberCount": 42,
+      "outsideCollaboratorCount": 5,
+      "unavailableReasons": [],
+      "resolvedAt": "2026-04-20T15:54:23.471Z"
     }
   },
   "topReposAnalyzed": []
