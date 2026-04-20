@@ -312,19 +312,19 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     ).toMatch(/2 rate-limited/i)
     expect(
       within(strip).getByTestId('stale-admins-unavailable-reason-commit-search-failed').textContent,
-    ).toMatch(/1 commit search failed/i)
+    ).toMatch(/1 search unavailable/i)
   })
 
-  it('shows a Retry button when at least one admin is rate-limited, hidden otherwise', () => {
+  it('shows a Retry button for any retryable unavailable reason, hidden when only terminal reasons remain', () => {
     const onRetry = vi.fn()
-    const sectionWithRL = makeSection({
-      admins: [mkUnavailable('u1', 'rate-limited'), mkUnavailable('u2', 'commit-search-failed')],
+    const retryable = makeSection({
+      admins: [mkUnavailable('u1', 'commit-search-failed')],
     })
     const { rerender } = renderWithSession(
       <StaleAdminsPanel
         org="acme"
         ownerType="Organization"
-        sectionOverride={sectionWithRL}
+        sectionOverride={retryable}
         onRetryOverride={onRetry}
       />,
     )
@@ -339,7 +339,7 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
           org="acme"
           ownerType="Organization"
           sectionOverride={makeSection({
-            admins: [mkUnavailable('u1', 'commit-search-failed')],
+            admins: [mkUnavailable('u1', 'admin-account-404')],
           })}
           onRetryOverride={onRetry}
         />
@@ -348,12 +348,53 @@ describe('StaleAdminsPanel — Unavailable bucket split (issue #364)', () => {
     expect(screen.queryByTestId('stale-admins-unavailable-retry')).not.toBeInTheDocument()
   })
 
+  it('renders humanized row text for each unavailable reason (no enum names)', () => {
+    const section = makeSection({
+      admins: [
+        mkUnavailable('u1', 'rate-limited'),
+        mkUnavailable('u2', 'commit-search-failed'),
+        mkUnavailable('u3', 'admin-account-404'),
+      ],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+
+    const unavailable = screen.getByTestId('stale-admins-group-unavailable')
+    expect(within(unavailable).getByText(/GitHub rate limit hit/i)).toBeInTheDocument()
+    expect(within(unavailable).getByText(/GitHub commit search is temporarily unavailable/i)).toBeInTheDocument()
+    expect(within(unavailable).getByText(/GitHub account not found/i)).toBeInTheDocument()
+    // Make sure raw enum values no longer leak into row copy.
+    expect(within(unavailable).queryByText(/commit-search-failed/)).not.toBeInTheDocument()
+    expect(within(unavailable).queryByText(/rate-limited\)/)).not.toBeInTheDocument()
+  })
+
   it('omits the sub-breakdown strip on non-unavailable groups', () => {
     const section = makeSection({
       admins: [mkAdmin('s', 'stale'), mkAdmin('a', 'active')],
     })
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
     expect(screen.queryByTestId('stale-admins-unavailable-reasons')).not.toBeInTheDocument()
+  })
+
+  it('keeps the section visible during refresh (stale-while-revalidate) and swaps the Retry button to Retrying…', () => {
+    const section = makeSection({
+      admins: [mkAdmin('a', 'active'), mkUnavailable('u', 'rate-limited')],
+    })
+    renderWithSession(
+      <StaleAdminsPanel
+        org="acme"
+        ownerType="Organization"
+        sectionOverride={section}
+        loadingOverride={true}
+      />,
+    )
+    // Section content is still rendered (no blank "Loading admin activity..." takeover).
+    expect(screen.getByText('a')).toBeInTheDocument()
+    expect(screen.getByText('u')).toBeInTheDocument()
+    expect(screen.queryByText(/Loading admin activity/i)).not.toBeInTheDocument()
+
+    const retry = screen.getByTestId('stale-admins-unavailable-retry')
+    expect(retry.textContent).toMatch(/Retrying/i)
+    expect(retry).toBeDisabled()
   })
 })
 

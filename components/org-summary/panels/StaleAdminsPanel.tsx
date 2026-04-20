@@ -139,8 +139,12 @@ export function StaleAdminsPanel({
 
       {expanded ? (
         <>
-          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p> : null}
-          {!loading && section ? <SectionBody section={section} onRetry={onRetry} /> : null}
+          {loading && !section ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p>
+          ) : null}
+          {section ? (
+            <SectionBody section={section} onRetry={onRetry} refreshing={loading} />
+          ) : null}
         </>
       ) : null}
     </section>
@@ -242,9 +246,11 @@ function ScoringHelp({ section }: { section: StaleAdminsSection | null }) {
 function SectionBody({
   section,
   onRetry,
+  refreshing,
 }: {
   section: StaleAdminsSection
   onRetry: () => void
+  refreshing: boolean
 }) {
   if (section.applicability === 'not-applicable-non-org') {
     return (
@@ -283,6 +289,7 @@ function SectionBody({
           admins={grouped[classification]}
           defaultOpen={DEFAULT_OPEN[classification]}
           onRetry={onRetry}
+          refreshing={refreshing}
         />
       ))}
     </div>
@@ -294,16 +301,20 @@ function GroupSection({
   admins,
   defaultOpen,
   onRetry,
+  refreshing,
 }: {
   classification: StaleAdminClassification
   admins: StaleAdminRecord[]
   defaultOpen: boolean
   onRetry: () => void
+  refreshing: boolean
 }) {
   const config = GROUP_CONFIG[classification]
   const isUnavailable = classification === 'unavailable'
   const reasonCounts = isUnavailable ? countByUnavailableReason(admins) : null
-  const rateLimitedCount = reasonCounts?.['rate-limited'] ?? 0
+  const retryableCount = reasonCounts
+    ? reasonCounts['rate-limited'] + reasonCounts['commit-search-failed'] + reasonCounts['events-fetch-failed']
+    : 0
   return (
     <details
       open={defaultOpen}
@@ -325,7 +336,8 @@ function GroupSection({
         <UnavailableReasonStrip
           counts={reasonCounts}
           onRetry={onRetry}
-          showRetry={rateLimitedCount > 0}
+          showRetry={retryableCount > 0}
+          refreshing={refreshing}
         />
       ) : null}
       <ul role="list" className="divide-y divide-slate-200 px-3 pb-1.5 dark:divide-slate-700">
@@ -339,19 +351,35 @@ function GroupSection({
 
 const UNAVAILABLE_REASON_LABEL: Record<StaleAdminUnavailableReason, string> = {
   'rate-limited': 'Rate-limited',
-  'commit-search-failed': 'Commit search failed',
-  'events-fetch-failed': 'Events fetch failed',
+  'commit-search-failed': 'Search unavailable',
+  'events-fetch-failed': 'Events unavailable',
   'admin-account-404': 'Account not found',
+}
+
+// Row-level humanized copy. Distinguishes retryable transient GitHub-side
+// issues ("try again in a moment") from terminal conditions ("account not
+// found"). `commit-search-failed` and `events-fetch-failed` are grouped with
+// retryable because in practice they often mask a disguised rate-limit or
+// abuse-detection block whose response didn't carry our expected headers.
+const UNAVAILABLE_REASON_ROW_TEXT: Record<StaleAdminUnavailableReason, string> = {
+  'rate-limited': 'GitHub rate limit hit — try Retry in a moment.',
+  'commit-search-failed':
+    'GitHub commit search is temporarily unavailable (often a burst rate-limit). Try Retry in a moment.',
+  'events-fetch-failed':
+    'GitHub events feed is temporarily unavailable. Try Retry in a moment.',
+  'admin-account-404': 'GitHub account not found or deleted.',
 }
 
 function UnavailableReasonStrip({
   counts,
   onRetry,
   showRetry,
+  refreshing,
 }: {
   counts: Record<StaleAdminUnavailableReason | 'unknown', number>
   onRetry: () => void
   showRetry: boolean
+  refreshing: boolean
 }) {
   const entries = (Object.keys(UNAVAILABLE_REASON_LABEL) as StaleAdminUnavailableReason[])
     .filter((r) => counts[r] > 0)
@@ -378,10 +406,11 @@ function UnavailableReasonStrip({
         <button
           type="button"
           onClick={onRetry}
+          disabled={refreshing}
           data-testid="stale-admins-unavailable-retry"
-          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
+          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:cursor-wait disabled:opacity-60 dark:border-amber-700 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-slate-800"
         >
-          Retry rate-limited
+          {refreshing ? 'Retrying…' : 'Retry unavailable'}
         </button>
       ) : null}
     </div>
@@ -469,11 +498,12 @@ function RowDetail({ admin }: { admin: StaleAdminRecord }) {
     )
   }
   if (admin.classification === 'unavailable') {
-    return (
-      <span className="text-xs text-slate-500 dark:text-slate-400">
-        Activity could not be retrieved ({admin.unavailableReason ?? 'unknown'}).
-      </span>
-    )
+    const reason = admin.unavailableReason
+    const text =
+      reason && reason in UNAVAILABLE_REASON_ROW_TEXT
+        ? UNAVAILABLE_REASON_ROW_TEXT[reason]
+        : 'Activity could not be retrieved.'
+    return <span className="text-xs text-slate-500 dark:text-slate-400">{text}</span>
   }
   return null
 }

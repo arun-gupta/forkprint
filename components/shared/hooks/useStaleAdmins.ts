@@ -51,9 +51,12 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
     }
 
     let cancelled = false
+    // Stale-while-revalidate: keep any previous `section` in place during a
+    // refetch so the panel does not blank out. Only `loading` and `error`
+    // flip; `section` is cleared only on options change (caller-driven).
     queueMicrotask(() => {
       if (cancelled) return
-      setState((prev) => (prev.loading ? prev : { loading: true, section: null, error: null }))
+      setState((prev) => (prev.loading ? prev : { ...prev, loading: true, error: null }))
     })
 
     const params = new URLSearchParams({ org, ownerType })
@@ -65,7 +68,7 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
       .then(async (res) => {
         if (cancelled) return
         if (!res.ok) {
-          setState({ loading: false, section: null, error: `HTTP ${res.status}` })
+          setState((prev) => ({ ...prev, loading: false, error: `HTTP ${res.status}` }))
           return
         }
         const body = (await res.json()) as { section?: StaleAdminsSection }
@@ -73,11 +76,11 @@ export function useStaleAdmins(options: UseStaleAdminsOptions): UseStaleAdminsSt
       })
       .catch((err: unknown) => {
         if (cancelled) return
-        setState({
+        setState((prev) => ({
+          ...prev,
           loading: false,
-          section: null,
           error: err instanceof Error ? err.message : 'stale-admin fetch failed',
-        })
+        }))
       })
 
     return () => {
