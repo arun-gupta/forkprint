@@ -13,6 +13,7 @@ import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/community/completeness'
 import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
+import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
 import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
 import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
@@ -671,26 +672,41 @@ function renderCommunitySection(result: AnalysisResult): string[] {
  * labels use the linear ratio → percentile fallback.
  */
 function renderOnboardingSection(result: AnalysisResult): string[] {
-  const fmt = (v: unknown): string => {
-    if (v === 'unavailable' || v === undefined) return '—'
-    if (typeof v === 'boolean') return v ? '✓ Yes' : '✗ No'
-    if (typeof v === 'number') return String(v)
-    return String(v)
+  const completeness = computeOnboardingCompleteness(result)
+  const total = completeness.present.length + completeness.missing.length + completeness.unknown.length
+  if (total === 0) return []
+
+  const status = (key: string): string => {
+    if ((completeness.present as string[]).includes(key)) return '✓ Present'
+    if ((completeness.missing as string[]).includes(key)) return '✗ Missing'
+    return '—'
   }
+
   const fmtRate = (v: number | 'unavailable' | undefined): string => {
     if (v === 'unavailable' || v === undefined) return '—'
     return `${(v * 100).toFixed(1)}%`
   }
 
+  const presentCount = completeness.present.length
+  const percentileLabel = completeness.percentile !== null ? ` · ${completeness.percentile}th percentile` : ''
+
   return [
     '### Onboarding & Accessibility',
     '',
+    `**Score:** ${presentCount} of ${total} signals${percentileLabel}`,
+    '',
     '| Signal | Value |',
     '| --- | --- |',
-    `| Good first issues | ${fmt(result.goodFirstIssueCount)} |`,
-    `| Dev environment setup | ${fmt(result.devEnvironmentSetup)} |`,
-    `| Gitpod support | ${fmt(result.gitpodPresent)} |`,
+    `| Good first issues | ${result.goodFirstIssueCount === 'unavailable' || result.goodFirstIssueCount === undefined ? '—' : String(result.goodFirstIssueCount)} |`,
+    `| Dev environment setup | ${status('dev_environment_setup')} |`,
+    `| Gitpod support | ${result.gitpodPresent === true ? '✓ Present' : result.gitpodPresent === false ? '✗ No' : '—'} |`,
     `| New contributor PR acceptance | ${fmtRate(result.newContributorPRAcceptanceRate)} |`,
+    `| Issue templates | ${status('issue_templates')} |`,
+    `| PR template | ${status('pull_request_template')} |`,
+    `| CONTRIBUTING.md | ${status('contributing')} |`,
+    `| CODE_OF_CONDUCT.md | ${status('code_of_conduct')} |`,
+    `| README: Installation section | ${status('readme_installation')} |`,
+    `| README: Contributing section | ${status('readme_contributing')} |`,
     '',
   ]
 }
