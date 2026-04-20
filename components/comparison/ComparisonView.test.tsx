@@ -40,6 +40,103 @@ describe('ComparisonView', () => {
     await userEvent.click(screen.getAllByRole('checkbox', { name: 'Activity' })[0]!)
     expect(screen.queryByRole('heading', { name: 'Activity' })).not.toBeInTheDocument()
   })
+
+  describe('participants picker', () => {
+    it('does not render when only 4 repos are analyzed', () => {
+      render(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+          ]}
+        />,
+      )
+
+      expect(screen.queryByRole('group', { name: /comparison participants/i })).not.toBeInTheDocument()
+    })
+
+    it('renders when 5+ repos are analyzed, defaulting to the first four checked', () => {
+      render(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+            buildResult('five/repo'),
+            buildResult('six/repo'),
+          ]}
+        />,
+      )
+
+      expect(screen.getByRole('group', { name: /comparison participants/i })).toBeInTheDocument()
+      expect(screen.getByLabelText('Include one/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include four/repo in comparison')).toBeChecked()
+      expect(screen.getByLabelText('Include five/repo in comparison')).not.toBeChecked()
+      expect(screen.getByLabelText('Include six/repo in comparison')).not.toBeChecked()
+    })
+
+    it('disables unchecked boxes when four participants are already selected', () => {
+      render(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+            buildResult('five/repo'),
+          ]}
+        />,
+      )
+
+      const five = screen.getByLabelText('Include five/repo in comparison')
+      expect(five).not.toBeChecked()
+      expect(five).toBeDisabled()
+    })
+
+    it('swaps a participant in by unchecking a current one and checking a new one', async () => {
+      render(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+            buildResult('five/repo'),
+          ]}
+        />,
+      )
+
+      await userEvent.click(screen.getByLabelText('Include four/repo in comparison'))
+      await userEvent.click(screen.getByLabelText('Include five/repo in comparison'))
+
+      expect(screen.getByLabelText('Include four/repo in comparison')).not.toBeChecked()
+      expect(screen.getByLabelText('Include five/repo in comparison')).toBeChecked()
+      expect(screen.queryByRole('button', { name: /sort by four\/repo/i })).not.toBeInTheDocument()
+    })
+
+    it('prevents dropping below two participants', async () => {
+      render(
+        <ComparisonView
+          results={[
+            buildResult('one/repo'),
+            buildResult('two/repo'),
+            buildResult('three/repo'),
+            buildResult('four/repo'),
+            buildResult('five/repo'),
+          ]}
+        />,
+      )
+
+      await userEvent.click(screen.getByLabelText('Include three/repo in comparison'))
+      await userEvent.click(screen.getByLabelText('Include four/repo in comparison'))
+
+      expect(screen.getByLabelText('Include one/repo in comparison')).toBeDisabled()
+      expect(screen.getByLabelText('Include two/repo in comparison')).toBeDisabled()
+    })
+  })
 })
 
 function buildResult(repo: string, overrides: Partial<AnalysisResult> = {}): AnalysisResult {
