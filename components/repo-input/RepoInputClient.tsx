@@ -376,6 +376,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         { id: 'documentation', label: 'Documentation', status: 'implemented', description: 'Org-level documentation coverage, inclusive naming, and adopters.' },
         { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level hygiene and policy — account activity, maintainers, governance files, license consistency.' },
         { id: 'security', label: 'Security', status: 'implemented', description: 'Org-level OpenSSF Scorecard rollup.' },
+        { id: 'recommendations', label: 'Recommendations', status: 'implemented', description: 'Top systemic issues across the analyzed repos, grouped by CHAOSS dimension.' },
       ]
     : orgInventoryResponse?.org
       ? [
@@ -682,7 +683,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         )
       }
       recommendations={
-        analysisResponse ? (
+        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+          <OrgBucketContent bucketId="recommendations" view={orgAggregation.view} selectedWindow={orgWindow} />
+        ) : analysisResponse ? (
           <RecommendationsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
         ) : (
           <p className="text-sm text-slate-500 dark:text-slate-400">
