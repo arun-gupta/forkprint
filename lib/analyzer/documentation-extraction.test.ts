@@ -23,6 +23,33 @@ function check(
 }
 
 describe('extractDocumentationResult — non-security governance variants', () => {
+  describe('license', () => {
+    it.each([
+      ['LICENSE', 'docLicense'],
+      ['license', 'docLicenseLower'],
+      ['LICENSE.md', 'docLicenseMd'],
+      ['license.md', 'docLicenseMdLower'],
+      ['LICENSE.txt', 'docLicenseTxt'],
+      ['license.txt', 'docLicenseTxtLower'],
+      ['LICENSE.rst', 'docLicenseRst'],
+      ['license.rst', 'docLicenseRstLower'],
+      ['COPYING', 'docCopying'],
+      ['copying', 'docCopyingLower'],
+    ])('resolves as present when %s exists', (path, field) => {
+      const result = extractDocumentationResult(repoFixture({ [field]: { oid: 'abc' } }))
+      const license = check(result, 'license')
+      expect(license.found).toBe(true)
+      expect(license.path).toBe(path)
+    })
+
+    it('resolves as absent when no license variant exists', () => {
+      const result = extractDocumentationResult(repoFixture({}))
+      const license = check(result, 'license')
+      expect(license.found).toBe(false)
+      expect(license.path).toBeNull()
+    })
+  })
+
   describe('code_of_conduct', () => {
     it.each([
       ['CODE_OF_CONDUCT.md', 'docCodeOfConduct'],
