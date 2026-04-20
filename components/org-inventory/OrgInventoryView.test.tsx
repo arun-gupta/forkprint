@@ -720,6 +720,29 @@ describe('OrgInventoryView', () => {
 
     expect(screen.getByRole('button', { name: /analyze all/i })).toBeDisabled()
   })
+
+  it('supports selecting an unlimited number of repos via row checkboxes', async () => {
+    const results = Array.from({ length: 8 }, (_, i) => buildRepo(`facebook/repo-${i + 1}`))
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    for (let i = 1; i <= 8; i += 1) {
+      await userEvent.click(screen.getByLabelText(`Select facebook/repo-${i}`))
+    }
+
+    expect(screen.getByText(/8 selected ·/)).toBeInTheDocument()
+    expect(screen.queryByText(/you can select up to/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Bulk selection limit')).not.toBeInTheDocument()
+  })
 })
 
 function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {

@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
-  applySelectionLimit,
   getEffectiveSortState,
   filterOrgInventoryRows,
   getNextSortState,
   sortOrgInventoryRows,
   toggleRepoSelection,
   toggleVisibleColumn,
-  validateSelectionLimit,
   DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS,
   type OrgInventorySortColumn,
 } from './filters'
@@ -92,40 +90,12 @@ describe('org-inventory/filters', () => {
     })
   })
 
-  it('explains when lowering the selection limit would trim the current selection', () => {
-    expect(validateSelectionLimit(['facebook/react', 'facebook/jest'], 1)).toEqual({
-      valid: false,
-      error: 'Selection will be trimmed to the first 1 repositories.',
-    })
-
-    expect(validateSelectionLimit(['facebook/react'], 2)).toEqual({
-      valid: true,
-      error: null,
-    })
+  it('adds a repo to the selection when not already present', () => {
+    expect(toggleRepoSelection(['facebook/react'], 'facebook/jest')).toEqual(['facebook/react', 'facebook/jest'])
   })
 
-  it('trims selection deterministically when the current limit is lowered', () => {
-    expect(applySelectionLimit(['facebook/react', 'facebook/jest', 'facebook/relay'], 2)).toEqual({
-      selectedRepos: ['facebook/react', 'facebook/jest'],
-      error: 'Selection trimmed to the first 2 repositories.',
-    })
-
-    expect(applySelectionLimit(['facebook/react'], 2)).toEqual({
-      selectedRepos: ['facebook/react'],
-      error: null,
-    })
-  })
-
-  it('prevents selecting more repos than the current selection limit', () => {
-    expect(toggleRepoSelection(['facebook/react'], 'facebook/jest', 1)).toEqual({
-      selectedRepos: ['facebook/react'],
-      error: 'You can select up to 1 repositories for bulk analysis.',
-    })
-
-    expect(toggleRepoSelection(['facebook/react'], 'facebook/react', 1)).toEqual({
-      selectedRepos: [],
-      error: null,
-    })
+  it('removes a repo from the selection when already present', () => {
+    expect(toggleRepoSelection(['facebook/react', 'facebook/jest'], 'facebook/react')).toEqual(['facebook/jest'])
   })
 
   describe('selectedOnly option', () => {

@@ -1,12 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { isRateLimitLow, type AnalysisResult, type RateLimitState } from '@/lib/analyzer/analysis-result'
 import {
   buildComparisonSections,
-  getComparisonLimitMessage,
   getDefaultAnchorRepo,
-  limitComparedResults,
+  selectComparedResults,
   sortComparisonRows,
   type ComparisonSortColumn,
 } from '@/lib/comparison/view-model'
@@ -26,8 +25,26 @@ interface ComparisonViewProps {
   rateLimit?: RateLimitState | null
 }
 
+const MIN_COMPARISON_PARTICIPANTS = 2
+
 export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
-  const comparedResults = useMemo(() => limitComparedResults(results), [results])
+  const repoOrder = useMemo(() => results.map((r) => r.repo), [results])
+  const [participants, setParticipants] = useState<string[]>(() => repoOrder.slice(0, COMPARISON_MAX_REPOS))
+
+  useEffect(() => {
+    setParticipants((current) => {
+      const valid = current.filter((repo) => repoOrder.includes(repo))
+      if (valid.length >= COMPARISON_MAX_REPOS) return valid
+      if (valid.length === 0) return repoOrder.slice(0, COMPARISON_MAX_REPOS)
+      const fill = repoOrder.filter((repo) => !valid.includes(repo))
+      return [...valid, ...fill].slice(0, COMPARISON_MAX_REPOS)
+    })
+  }, [repoOrder])
+
+  const comparedResults = useMemo(
+    () => selectComparedResults(results, participants),
+    [results, participants],
+  )
   const nonAnchorRepos = useMemo(
     () => comparedResults.slice(1).map((r) => r.repo),
     [comparedResults],
@@ -39,6 +56,16 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
   const [expandedRepos, setExpandedRepos] = useState<string[]>(nonAnchorRepos)
   const [sortColumn, setSortColumn] = useState<ComparisonSortColumn | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+
+  useEffect(() => {
+    if (!comparedResults.some((r) => r.repo === anchorRepo)) {
+      setAnchorRepo(getDefaultAnchorRepo(comparedResults))
+    }
+  }, [comparedResults, anchorRepo])
+
+  useEffect(() => {
+    setExpandedRepos(nonAnchorRepos)
+  }, [nonAnchorRepos])
 
   const visibleRepos = useMemo(
     () => comparedResults.map((r) => r.repo).filter((repo) => repo === anchorRepo || expandedRepos.includes(repo)),
@@ -66,10 +93,47 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
     return <p className="text-sm text-slate-600 dark:text-slate-300">Compare two to four repositories to open the side-by-side comparison view.</p>
   }
 
+  const pickerVisible = results.length > COMPARISON_MAX_REPOS
+
   return (
     <section aria-label="Comparison view" className="space-y-6">
-      {results.length > COMPARISON_MAX_REPOS ? (
-        <p className="text-sm text-amber-700 dark:text-amber-300">{getComparisonLimitMessage(results.length)}</p>
+      {pickerVisible ? (
+        <fieldset
+          aria-label="Comparison participants"
+          className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800"
+        >
+          <legend className="px-1 text-xs font-medium text-slate-700 dark:text-slate-200">
+            Pick up to {COMPARISON_MAX_REPOS} of {results.length} analyzed repos to compare
+            {' '}
+            <span className="text-slate-500 dark:text-slate-400">({participants.length}/{COMPARISON_MAX_REPOS})</span>
+          </legend>
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-700 dark:text-slate-200">
+            {results.map((result) => {
+              const checked = participants.includes(result.repo)
+              const atMax = !checked && participants.length >= COMPARISON_MAX_REPOS
+              const atMin = checked && participants.length <= MIN_COMPARISON_PARTICIPANTS
+              return (
+                <label key={result.repo} className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={atMax || atMin}
+                    aria-label={`Include ${result.repo} in comparison`}
+                    onChange={(event) => {
+                      setParticipants((current) => {
+                        if (event.target.checked) {
+                          return current.includes(result.repo) ? current : [...current, result.repo]
+                        }
+                        return current.filter((repo) => repo !== result.repo)
+                      })
+                    }}
+                  />
+                  <span>{result.repo}</span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
       ) : null}
 
       <ComparisonControls
@@ -80,8 +144,8 @@ export function ComparisonView({ results, rateLimit }: ComparisonViewProps) {
         enabledAttributes={enabledAttributes}
         showMedianColumn={showMedianColumn}
         onAnchorChange={(repo) => {
+          setParticipants((current) => (current.includes(repo) ? current : [...current, repo].slice(0, COMPARISON_MAX_REPOS)))
           setExpandedRepos((current) => {
-            // Keep the old anchor visible and ensure the new anchor is included
             const withOldAnchor = current.includes(anchorRepo) ? current : [...current, anchorRepo]
             return withOldAnchor.includes(repo) ? withOldAnchor : [...withOldAnchor, repo]
           })

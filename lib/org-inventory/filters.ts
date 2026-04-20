@@ -147,53 +147,12 @@ export function getEffectiveSortState(
   }
 }
 
-export function validateSelectionLimit(selectedRepos: string[], nextLimit: number) {
-  if (selectedRepos.length > nextLimit) {
-    return {
-      valid: false as const,
-      error: `Selection will be trimmed to the first ${nextLimit} repositories.`,
-    }
-  }
-
-  return {
-    valid: true as const,
-    error: null,
-  }
-}
-
-export function applySelectionLimit(selectedRepos: string[], nextLimit: number) {
-  if (selectedRepos.length <= nextLimit) {
-    return {
-      selectedRepos,
-      error: null,
-    }
-  }
-
-  return {
-    selectedRepos: selectedRepos.slice(0, nextLimit),
-    error: `Selection trimmed to the first ${nextLimit} repositories.`,
-  }
-}
-
-export function toggleRepoSelection(selectedRepos: string[], repo: string, limit: number) {
+export function toggleRepoSelection(selectedRepos: string[], repo: string): string[] {
   if (selectedRepos.includes(repo)) {
-    return {
-      selectedRepos: selectedRepos.filter((entry) => entry !== repo),
-      error: null,
-    }
+    return selectedRepos.filter((entry) => entry !== repo)
   }
 
-  if (selectedRepos.length >= limit) {
-    return {
-      selectedRepos,
-      error: `You can select up to ${limit} repositories for bulk analysis.`,
-    }
-  }
-
-  return {
-    selectedRepos: [...selectedRepos, repo],
-    error: null,
-  }
+  return [...selectedRepos, repo]
 }
 
 function compareByColumn(left: OrgRepoSummary, right: OrgRepoSummary, column: OrgInventorySortColumn) {

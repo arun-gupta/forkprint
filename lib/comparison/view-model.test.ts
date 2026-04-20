@@ -5,6 +5,7 @@ import {
   getComparisonLimitMessage,
   getDefaultAnchorRepo,
   limitComparedResults,
+  selectComparedResults,
   sortComparisonRows,
   sortComparedResults,
 } from './view-model'
@@ -87,6 +88,53 @@ describe('comparison/view-model', () => {
   it('returns clear cap messaging', () => {
     expect(getComparisonLimitMessage(3)).toMatch(/up to 4 repositories/i)
     expect(getComparisonLimitMessage(5)).toMatch(/showing the first 4 of 5/i)
+  })
+
+  describe('selectComparedResults', () => {
+    it('falls back to the first four results when no participants are provided', () => {
+      const selected = selectComparedResults([
+        buildResult('one/repo'),
+        buildResult('two/repo'),
+        buildResult('three/repo'),
+        buildResult('four/repo'),
+        buildResult('five/repo'),
+      ])
+
+      expect(selected.map((result) => result.repo)).toEqual(['one/repo', 'two/repo', 'three/repo', 'four/repo'])
+    })
+
+    it('filters to participants regardless of their order, preserving results order', () => {
+      const selected = selectComparedResults(
+        [
+          buildResult('one/repo'),
+          buildResult('two/repo'),
+          buildResult('three/repo'),
+          buildResult('four/repo'),
+          buildResult('five/repo'),
+        ],
+        ['five/repo', 'one/repo', 'three/repo'],
+      )
+
+      expect(selected.map((result) => result.repo)).toEqual(['one/repo', 'three/repo', 'five/repo'])
+    })
+
+    it('still caps at four even if participants has more entries', () => {
+      const selected = selectComparedResults(
+        Array.from({ length: 6 }, (_, i) => buildResult(`repo-${i}/r`)),
+        ['repo-0/r', 'repo-1/r', 'repo-2/r', 'repo-3/r', 'repo-4/r'],
+      )
+
+      expect(selected).toHaveLength(4)
+    })
+
+    it('ignores participant entries that are not in results', () => {
+      const selected = selectComparedResults(
+        [buildResult('one/repo'), buildResult('two/repo')],
+        ['one/repo', 'missing/repo'],
+      )
+
+      expect(selected.map((result) => result.repo)).toEqual(['one/repo'])
+    })
   })
 
   it('sorts comparison rows by a repo column with unavailable values last', () => {

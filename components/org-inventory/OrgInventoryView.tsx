@@ -6,7 +6,6 @@ import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import { ORG_AGGREGATION_CONFIG } from '@/lib/config/org-aggregation'
 import { clampOrgInventoryPageSize, ORG_INVENTORY_CONFIG } from '@/lib/config/org-inventory'
 import {
-  applySelectionLimit,
   DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS,
   filterOrgInventoryRows,
   getEffectiveSortState,
@@ -15,7 +14,6 @@ import {
   sortOrgInventoryRows,
   toggleRepoSelection,
   toggleVisibleColumn,
-  validateSelectionLimit,
   type OrgInventoryFilters,
   type OrgInventorySortState,
   type OrgInventoryVisibleColumn,
@@ -54,11 +52,9 @@ export function OrgInventoryView({
     sortColumn: 'repo',
     sortDirection: 'asc',
   })
-  const [selectionLimit, setSelectionLimit] = useState<number>(ORG_INVENTORY_CONFIG.defaultBulkSelectionLimit)
   const [pageSize, setPageSize] = useState<number>(ORG_INVENTORY_CONFIG.defaultPageSize)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRepos, setSelectedRepos] = useState<string[]>([])
-  const [selectionError, setSelectionError] = useState<string | null>(null)
   const [excludeArchivedRepos, setExcludeArchivedRepos] = useState<boolean>(
     ORG_AGGREGATION_CONFIG.preFilters.excludeArchivedByDefault,
   )
@@ -263,8 +259,6 @@ export function OrgInventoryView({
                     </button>
                   </div>
                 </div>
-                {selectionError ? <p className="mt-1 text-xs text-amber-700 dark:text-amber-400 dark:text-amber-300">{selectionError}</p> : null}
-
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Showing {visibleRangeStart}–{visibleRangeEnd} of {sortedRows.length}
@@ -345,9 +339,7 @@ export function OrgInventoryView({
                         setSortState((current) => getNextSortState(current, column))
                       }}
                       onToggleRepoSelection={(repo) => {
-                        const next = toggleRepoSelection(selectedRepos, repo, selectionLimit)
-                        setSelectedRepos(next.selectedRepos)
-                        setSelectionError(next.error)
+                        setSelectedRepos(toggleRepoSelection(selectedRepos, repo))
                       }}
                       onAnalyzeRepo={onAnalyzeRepo}
                     />

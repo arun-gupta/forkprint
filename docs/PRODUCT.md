@@ -159,7 +159,7 @@ User can provide a GitHub organization and get a high-level inventory of its pub
 - Large org inventories support local pagination controls with configurable rows per page
 - Org-level summary area shows high-level rollups such as total public repos, total stars, most-starred repos, most recently active repos, language distribution, and archived vs active repo count
 - Each repo row links into the existing repo-level analysis flow so users can drill into a specific repository
-- Users can select multiple repositories from the org inventory table and launch the existing repo-analysis flow for that selection, up to the configured bulk-selection limit
+- Users can select any number of repositories from the org inventory table and launch the existing repo-analysis flow for that selection; the queued org-aggregation pipeline handles rate-limit and progress concerns, so there is no per-selection cap
 - Empty orgs, invalid orgs, and rate-limit states are handled clearly without fabricating results
 - Once an org analysis run completes, the org-summary view exposes a tabbed result area whose tab strip mirrors the per-repo Results Shell (Overview, Contributors, Activity, Responsiveness, Documentation, Security) plus an org-only **Governance** tab, positioned between Documentation and Security, that gathers org-level hygiene and policy signals (org admin activity, designated maintainers, governance file presence, license consistency). The Governance tab is org-summary-only — there is no per-repo Governance tab.
 
@@ -290,6 +290,7 @@ Users can compare two or more repos side by side across all health metrics.
 - Comparison view includes a user-selectable median column across the chosen repos; it is visible by default
 - Every visible comparison column is sortable in ascending or descending order within the current section context
 - The UI clearly communicates the maximum of 4 compared repositories before and during analysis input
+- When more than 4 repos are analyzed, users choose which 4 appear in the Comparison view via a participants picker; anchor selection is independent of subset selection and changing the anchor implicitly includes it in the participants
 - Metrics unavailable for one repo are shown as `—` in that column, never omitted from the row
 - Comparison is driven entirely from the already-fetched `AnalysisResult[]` — no additional API calls
 - All metric categories represented: ecosystem signals, activity, contribution dynamics, responsiveness

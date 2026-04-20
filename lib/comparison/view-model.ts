@@ -46,6 +46,19 @@ export function limitComparedResults(results: AnalysisResult[], maxRepos = COMPA
   return results.slice(0, maxRepos)
 }
 
+export function selectComparedResults(
+  results: AnalysisResult[],
+  participants?: string[] | null,
+  maxRepos = COMPARISON_MAX_REPOS,
+) {
+  if (!participants || participants.length === 0) {
+    return results.slice(0, maxRepos)
+  }
+
+  const allowed = new Set(participants)
+  return results.filter((result) => allowed.has(result.repo)).slice(0, maxRepos)
+}
+
 export function getComparisonLimitMessage(selectedCount: number, maxRepos = COMPARISON_MAX_REPOS) {
   if (selectedCount <= maxRepos) {
     return `Compare up to ${maxRepos} repositories side by side.`
