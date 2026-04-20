@@ -41,9 +41,13 @@ export const REPO_OVERVIEW_QUERY = `
         }
       }
       docLicense: object(expression: "HEAD:LICENSE") { ... on Blob { oid text } }
+      docLicenseLower: object(expression: "HEAD:license") { ... on Blob { oid text } }
       docLicenseMd: object(expression: "HEAD:LICENSE.md") { ... on Blob { oid text } }
+      docLicenseMdLower: object(expression: "HEAD:license.md") { ... on Blob { oid text } }
       docLicenseTxt: object(expression: "HEAD:LICENSE.txt") { ... on Blob { oid text } }
+      docLicenseTxtLower: object(expression: "HEAD:license.txt") { ... on Blob { oid text } }
       docCopying: object(expression: "HEAD:COPYING") { ... on Blob { oid text } }
+      docCopyingLower: object(expression: "HEAD:copying") { ... on Blob { oid text } }
       docLicenseMit: object(expression: "HEAD:LICENSE-MIT") { ... on Blob { oid text } }
       docLicenseApache: object(expression: "HEAD:LICENSE-APACHE") { ... on Blob { oid text } }
       docLicenseBsd: object(expression: "HEAD:LICENSE-BSD") { ... on Blob { oid text } }
@@ -61,6 +65,7 @@ export const REPO_OVERVIEW_QUERY = `
       docCodeOfConductDocs: object(expression: "HEAD:docs/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docCodeOfConductGithub: object(expression: "HEAD:.github/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docLicenseRst: object(expression: "HEAD:LICENSE.rst") { ... on Blob { oid text } }
+      docLicenseRstLower: object(expression: "HEAD:license.rst") { ... on Blob { oid text } }
       docSecurity: object(expression: "HEAD:SECURITY.md") { ... on Blob { oid } }
       docSecurityLower: object(expression: "HEAD:security.md") { ... on Blob { oid } }
       docSecurityRst: object(expression: "HEAD:SECURITY.rst") { ... on Blob { oid } }

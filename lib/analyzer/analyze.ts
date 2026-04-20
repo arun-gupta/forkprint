@@ -89,9 +89,13 @@ interface RepoOverviewResponse {
     licenseInfo?: { spdxId: string | null; name: string | null } | null
     rootTree?: { entries: Array<{ name: string; type: string }> } | null
     docLicense?: DocBlob | null
+    docLicenseLower?: DocBlob | null
     docLicenseMd?: DocBlob | null
+    docLicenseMdLower?: DocBlob | null
     docLicenseTxt?: DocBlob | null
+    docLicenseTxtLower?: DocBlob | null
     docCopying?: DocBlob | null
+    docCopyingLower?: DocBlob | null
     docLicenseMit?: DocBlob | null
     docLicenseApache?: DocBlob | null
     docLicenseBsd?: DocBlob | null
@@ -109,6 +113,7 @@ interface RepoOverviewResponse {
     docCodeOfConductDocs?: DocBlob | null
     docCodeOfConductGithub?: DocBlob | null
     docLicenseRst?: DocBlob | null
+    docLicenseRstLower?: DocBlob | null
     docSecurity?: DocBlob | null
     docSecurityLower?: DocBlob | null
     docSecurityRst?: DocBlob | null
@@ -796,8 +801,11 @@ function buildAnalysisResult(
           const repo = overview.repository
           // Collect license file content for SPDX expression parsing
           const licenseFileContent =
-            repo.docLicense?.text ?? repo.docLicenseMd?.text ?? repo.docLicenseTxt?.text ??
-            repo.docLicenseRst?.text ?? repo.docCopying?.text ?? null
+            repo.docLicense?.text ?? repo.docLicenseLower?.text ??
+            repo.docLicenseMd?.text ?? repo.docLicenseMdLower?.text ??
+            repo.docLicenseTxt?.text ?? repo.docLicenseTxtLower?.text ??
+            repo.docLicenseRst?.text ?? repo.docLicenseRstLower?.text ??
+            repo.docCopying?.text ?? repo.docCopyingLower?.text ?? null
           // Collect additional license files (LICENSE-MIT, LICENSE-APACHE, etc.)
           const additionalLicenseFiles: LicenseFileInfo[] = [
             { suffix: 'MIT', content: repo.docLicenseMit?.text ?? null },
@@ -870,7 +878,21 @@ export function extractDocumentationResult(
   const findFirst = (...aliases: (DocBlob | null | undefined)[]): DocBlob | null =>
     aliases.find((a) => a != null) ?? null
 
-  const licenseBlob = findFirst(repo.docLicense, repo.docLicenseMd, repo.docLicenseTxt, repo.docLicenseRst, repo.docCopying, repo.docLicenseMit, repo.docLicenseApache, repo.docLicenseBsd)
+  const licenseBlob = findFirst(
+    repo.docLicense,
+    repo.docLicenseLower,
+    repo.docLicenseMd,
+    repo.docLicenseMdLower,
+    repo.docLicenseTxt,
+    repo.docLicenseTxtLower,
+    repo.docLicenseRst,
+    repo.docLicenseRstLower,
+    repo.docCopying,
+    repo.docCopyingLower,
+    repo.docLicenseMit,
+    repo.docLicenseApache,
+    repo.docLicenseBsd,
+  )
   const contributingBlob = findFirst(repo.docContributing, repo.docContributingRst, repo.docContributingTxt, repo.docContributingLower, repo.docContributingDocs, repo.docContributingGithub)
   const codeOfConductBlob = findFirst(repo.docCodeOfConduct, repo.docCodeOfConductRst, repo.docCodeOfConductTxt, repo.docCodeOfConductHyphenLower, repo.docCodeOfConductUnderscoreLower, repo.docCodeOfConductDocs, repo.docCodeOfConductGithub)
   const securityBlob = findFirst(
@@ -891,7 +913,11 @@ export function extractDocumentationResult(
   })()
 
   const licensePathMap: [string, DocBlob | null | undefined][] = [
-    ['LICENSE', repo.docLicense], ['LICENSE.md', repo.docLicenseMd], ['LICENSE.txt', repo.docLicenseTxt], ['LICENSE.rst', repo.docLicenseRst], ['COPYING', repo.docCopying],
+    ['LICENSE', repo.docLicense], ['license', repo.docLicenseLower],
+    ['LICENSE.md', repo.docLicenseMd], ['license.md', repo.docLicenseMdLower],
+    ['LICENSE.txt', repo.docLicenseTxt], ['license.txt', repo.docLicenseTxtLower],
+    ['LICENSE.rst', repo.docLicenseRst], ['license.rst', repo.docLicenseRstLower],
+    ['COPYING', repo.docCopying], ['copying', repo.docCopyingLower],
     ['LICENSE-MIT', repo.docLicenseMit], ['LICENSE-APACHE', repo.docLicenseApache], ['LICENSE-BSD', repo.docLicenseBsd],
   ]
   const contributingPathMap: [string, DocBlob | null | undefined][] = [
