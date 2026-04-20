@@ -131,7 +131,7 @@ async function main() {
     ...orgResponse,
     results: sortedOrgResults,
     governance: { twoFactor, staleAdmins },
-    topReposAnalyzed: topAnalysis.results,
+    topReposAnalyzed: [...topAnalysis.results].sort((a, b) => a.repo.localeCompare(b.repo)),
   }
   writeFileSync(
     join(OUTPUT_DIR, `org-${DEMO_ORG}.json`),
