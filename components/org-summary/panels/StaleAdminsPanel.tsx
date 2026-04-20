@@ -559,6 +559,7 @@ function RowDetail({
   admin: StaleAdminRecord
   nextAutoRetryAt: string | null
 }) {
+  const [now] = useState(() => Date.now())
   if (admin.lastActivityAt) {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
@@ -592,7 +593,7 @@ function RowDetail({
     // When neither is available (ladder exhausted, terminal reason), no
     // countdown is shown and the copy points at Retry.
     const retryAt =
-      admin.retryAvailableAt && Date.parse(admin.retryAvailableAt) > Date.now()
+      admin.retryAvailableAt && Date.parse(admin.retryAvailableAt) > now
         ? admin.retryAvailableAt
         : null
     const countdownAt = retryAt ?? nextAutoRetryAt
