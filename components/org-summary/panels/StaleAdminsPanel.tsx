@@ -1162,7 +1162,6 @@ const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string; to
   'elevated-ineffective': {
     label: 'Elevated grant did not widen this view',
     className: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-    tooltip: 'The admin list returned the same count as the full member list — this typically means the org restricts third-party OAuth apps. Are you a member of this org? A Personal Access Token with read:org scope bypasses OAuth app restrictions.',
   },
 }
 
