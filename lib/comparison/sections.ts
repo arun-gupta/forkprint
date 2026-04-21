@@ -343,7 +343,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         id: 'good-first-issues-count',
         sectionId: 'contributors',
         label: 'Good first issues',
-        helpText: 'Open issues labeled as good first issues, beginner, or starter.',
+        helpText: 'Open issues labeled as good first issue, good-first-issue, beginner, or starter.',
         direction: 'higher-is-better',
         valueType: 'number',
         getValue: (result) => result.goodFirstIssueCount ?? 'unavailable',

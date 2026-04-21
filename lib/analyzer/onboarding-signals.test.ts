@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { extractOnboardingSignals, buildGoodFirstIssueQuery } from './analyze'
+import { buildGoodFirstIssueQueries, extractOnboardingSignals } from './analyze'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function overviewFixture(overrides: Record<string, unknown>): any {
+interface OnboardingPullRequestNode {
+  createdAt: string
+  mergedAt: string | null
+  authorAssociation?: string | null
+}
+
+function overviewFixture(overrides: Record<string, unknown>) {
   return {
     name: 'test', description: '', createdAt: '', primaryLanguage: null,
     stargazerCount: 0, forkCount: 0, watchers: { totalCount: 0 },
@@ -11,10 +16,15 @@ function overviewFixture(overrides: Record<string, unknown>): any {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function activityFixture(mergedPRNodes: any[], goodFirstIssueCount?: number): any {
+function activityFixture(
+  mergedPRNodes: OnboardingPullRequestNode[],
+  goodFirstIssueCounts?: Partial<Record<'goodFirstIssues' | 'goodFirstIssuesHyphenated' | 'goodFirstIssuesBeginner' | 'goodFirstIssuesStarter', number>>,
+){
   return {
-    goodFirstIssues: goodFirstIssueCount !== undefined ? { issueCount: goodFirstIssueCount } : undefined,
+    goodFirstIssues: goodFirstIssueCounts?.goodFirstIssues !== undefined ? { issueCount: goodFirstIssueCounts.goodFirstIssues } : undefined,
+    goodFirstIssuesHyphenated: goodFirstIssueCounts?.goodFirstIssuesHyphenated !== undefined ? { issueCount: goodFirstIssueCounts.goodFirstIssuesHyphenated } : undefined,
+    goodFirstIssuesBeginner: goodFirstIssueCounts?.goodFirstIssuesBeginner !== undefined ? { issueCount: goodFirstIssueCounts.goodFirstIssuesBeginner } : undefined,
+    goodFirstIssuesStarter: goodFirstIssueCounts?.goodFirstIssuesStarter !== undefined ? { issueCount: goodFirstIssueCounts.goodFirstIssuesStarter } : undefined,
     recentMergedPullRequests: { nodes: mergedPRNodes },
   }
 }
@@ -95,14 +105,27 @@ describe('extractOnboardingSignals — goodFirstIssueCount', () => {
   it('returns count when > 0', () => {
     const result = extractOnboardingSignals(
       overviewFixture({}),
-      activityFixture([], 7),
+      activityFixture([], { goodFirstIssues: 7 }),
     )
     expect(result.goodFirstIssueCount).toBe(7)
   })
 
   it('returns 0 when count is 0 (not unavailable)', () => {
-    const result = extractOnboardingSignals(overviewFixture({}), activityFixture([], 0))
+    const result = extractOnboardingSignals(overviewFixture({}), activityFixture([], { goodFirstIssues: 0 }))
     expect(result.goodFirstIssueCount).toBe(0)
+  })
+
+  it('sums mutually exclusive alternate label counts', () => {
+    const result = extractOnboardingSignals(
+      overviewFixture({}),
+      activityFixture([], {
+        goodFirstIssues: 2,
+        goodFirstIssuesHyphenated: 3,
+        goodFirstIssuesBeginner: 4,
+        goodFirstIssuesStarter: 1,
+      }),
+    )
+    expect(result.goodFirstIssueCount).toBe(10)
   })
 
   it('returns unavailable when goodFirstIssues field is missing from activity', () => {
@@ -181,10 +204,17 @@ describe('extractOnboardingSignals — newContributorPRAcceptanceRate', () => {
   })
 })
 
-describe('buildGoodFirstIssueQuery', () => {
-  it('includes common onboarding labels', () => {
-    const q = buildGoodFirstIssueQuery('owner/repo')
-    expect(q).toContain('repo:owner/repo')
-    expect(q).toContain('good first issue')
+describe('buildGoodFirstIssueQueries', () => {
+  it('builds mutually exclusive queries for supported onboarding labels', () => {
+    const queries = buildGoodFirstIssueQueries('owner/repo')
+    expect(queries.goodFirstIssueQuery).toContain('repo:owner/repo')
+    expect(queries.goodFirstIssueQuery).toContain('label:"good first issue"')
+    expect(queries.goodFirstIssueHyphenatedQuery).toContain('label:"good-first-issue"')
+    expect(queries.goodFirstIssueHyphenatedQuery).toContain('-label:"good first issue"')
+    expect(queries.goodFirstIssueBeginnerQuery).toContain('label:"beginner"')
+    expect(queries.goodFirstIssueBeginnerQuery).toContain('-label:"good-first-issue"')
+    expect(queries.goodFirstIssueStarterQuery).toContain('label:"starter"')
+    expect(queries.goodFirstIssueStarterQuery).toContain('-label:"beginner"')
+    expect(Object.values(queries).join(' ')).not.toContain('help wanted')
   })
 })
