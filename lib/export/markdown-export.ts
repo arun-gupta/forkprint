@@ -13,7 +13,7 @@ import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/community/completeness'
 import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
-import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
+import { buildOnboardingExportModel } from '@/lib/onboarding/export-model'
 import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
 import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
@@ -672,40 +672,38 @@ function renderCommunitySection(result: AnalysisResult): string[] {
  * labels use the linear ratio → percentile fallback.
  */
 function renderOnboardingSection(result: AnalysisResult): string[] {
-  const completeness = computeOnboardingCompleteness(result)
-  const total = completeness.present.length + completeness.missing.length + completeness.unknown.length
-  if (total === 0) return []
+  const model = buildOnboardingExportModel(result)
+  if (model.score.total === 0) return []
 
-  const status = (key: string): string => {
-    if ((completeness.present as string[]).includes(key)) return '✓ Present'
-    if ((completeness.missing as string[]).includes(key)) return '✗ Missing'
+  const statusLabel = (s: 'present' | 'missing' | 'unknown'): string => {
+    if (s === 'present') return '✓ Present'
+    if (s === 'missing') return '✗ Missing'
     return '—'
   }
 
-  const fmtRate = (v: number | 'unavailable' | undefined): string => {
-    if (v === 'unavailable' || v === undefined) return '—'
+  const fmtRate = (v: number | 'unavailable'): string => {
+    if (v === 'unavailable') return '—'
     return `${(v * 100).toFixed(1)}%`
   }
 
-  const presentCount = completeness.present.length
-  const percentileLabel = completeness.percentile !== null ? ` · ${completeness.percentile}th percentile` : ''
+  const percentileLabel = model.score.percentile !== null ? ` · ${model.score.percentile}th percentile` : ''
 
   return [
     '### Onboarding & Accessibility',
     '',
-    `**Score:** ${presentCount} of ${total} signals${percentileLabel}`,
+    `**Score:** ${model.score.present} of ${model.score.total} signals${percentileLabel}`,
     '',
     '| Signal | Value |',
     '| --- | --- |',
-    `| Good first issues | ${result.goodFirstIssueCount === 'unavailable' || result.goodFirstIssueCount === undefined ? '—' : String(result.goodFirstIssueCount)} |`,
-    `| Dev environment setup | ${status('dev_environment_setup')}${result.gitpodPresent === true ? ' (+ Gitpod)' : ''} |`,
-    `| New contributor PR acceptance | ${fmtRate(result.newContributorPRAcceptanceRate)} |`,
-    `| Issue templates | ${status('issue_templates')} |`,
-    `| PR template | ${status('pull_request_template')} |`,
-    `| CONTRIBUTING.md | ${status('contributing')} |`,
-    `| CODE_OF_CONDUCT.md | ${status('code_of_conduct')} |`,
-    `| README: Installation section | ${status('readme_installation')} |`,
-    `| README: Contributing section | ${status('readme_contributing')} |`,
+    `| Good first issues | ${model.goodFirstIssueCount === 'unavailable' ? '—' : String(model.goodFirstIssueCount)} |`,
+    `| Dev environment setup | ${statusLabel(model.signals.dev_environment_setup.status)}${model.gitpodBonus ? ' (+ Gitpod)' : ''} |`,
+    `| New contributor PR acceptance | ${fmtRate(model.newContributorPRAcceptanceRate)} |`,
+    `| Issue templates | ${statusLabel(model.signals.issue_templates.status)} |`,
+    `| PR template | ${statusLabel(model.signals.pull_request_template.status)} |`,
+    `| CONTRIBUTING.md | ${statusLabel(model.signals.contributing.status)} |`,
+    `| CODE_OF_CONDUCT.md | ${statusLabel(model.signals.code_of_conduct.status)} |`,
+    `| README: Installation section | ${statusLabel(model.signals.readme_installation.status)} |`,
+    `| README: Contributing section | ${statusLabel(model.signals.readme_contributing.status)} |`,
     '',
   ]
 }

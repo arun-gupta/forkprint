@@ -12,7 +12,7 @@ import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
-import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
+import { buildOnboardingExportModel } from '@/lib/onboarding/export-model'
 
 export interface JsonExportResult {
   blob: Blob
@@ -282,29 +282,19 @@ function computeReleaseHealth(result: AnalysisResult) {
 }
 
 function computeOnboarding(result: AnalysisResult) {
-  const completeness = computeOnboardingCompleteness(result)
-  const status = (key: string): 'present' | 'missing' | 'unknown' => {
-    if ((completeness.present as string[]).includes(key)) return 'present'
-    if ((completeness.missing as string[]).includes(key)) return 'missing'
-    return 'unknown'
-  }
+  const model = buildOnboardingExportModel(result)
   return {
-    score: {
-      present: completeness.present.length,
-      total: completeness.present.length + completeness.missing.length + completeness.unknown.length,
-      percentile: completeness.percentile,
-      tone: completeness.tone,
-    },
+    score: model.score,
     signals: {
-      good_first_issues: { status: status('good_first_issues'), value: result.goodFirstIssueCount ?? 'unavailable' },
-      dev_environment_setup: { status: status('dev_environment_setup'), gitpodBonus: result.gitpodPresent === true },
-      new_contributor_acceptance: { status: status('new_contributor_acceptance'), value: result.newContributorPRAcceptanceRate ?? 'unavailable' },
-      issue_templates: { status: status('issue_templates') },
-      pull_request_template: { status: status('pull_request_template') },
-      contributing: { status: status('contributing') },
-      code_of_conduct: { status: status('code_of_conduct') },
-      readme_installation: { status: status('readme_installation') },
-      readme_contributing: { status: status('readme_contributing') },
+      good_first_issues: { status: model.signals.good_first_issues.status, value: model.goodFirstIssueCount },
+      dev_environment_setup: { status: model.signals.dev_environment_setup.status, gitpodBonus: model.gitpodBonus },
+      new_contributor_acceptance: { status: model.signals.new_contributor_acceptance.status, value: model.newContributorPRAcceptanceRate },
+      issue_templates: model.signals.issue_templates,
+      pull_request_template: model.signals.pull_request_template,
+      contributing: model.signals.contributing,
+      code_of_conduct: model.signals.code_of_conduct,
+      readme_installation: model.signals.readme_installation,
+      readme_contributing: model.signals.readme_contributing,
     },
   }
 }
