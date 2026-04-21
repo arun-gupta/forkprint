@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { CoreContributorsPane } from './CoreContributorsPane'
@@ -39,9 +39,9 @@ describe('CoreContributorsPane', () => {
     expect(screen.getByText(/contributor metrics from verified public data for the last 90 days/i)).toBeInTheDocument()
     expect(screen.getByText('Contributor composition')).toBeInTheDocument()
     expect(screen.getByText('GitHub API contributors')).toBeInTheDocument()
-    expect(
-      screen.getByTitle(/12 contributors from GitHub's repository contributors API, including anonymous contributors/i),
-    ).toBeInTheDocument()
+    fireEvent.mouseEnter(screen.getByLabelText(/contributor composition help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/12 contributors from GitHub's repository contributors API, including anonymous contributors/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/contributor composition help/i))
     expect(screen.queryByText('Active contributors (90d)')).not.toBeInTheDocument()
     expect(screen.queryByText('Repeat contributors (90d)')).not.toBeInTheDocument()
     expect(screen.getByText('3 repeat, 2 one-time, 7 inactive')).toBeInTheDocument()

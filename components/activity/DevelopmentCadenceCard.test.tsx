@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
@@ -78,14 +78,18 @@ describe('DevelopmentCadenceCard', () => {
     expect(screen.getByLabelText(/weekly commit rhythm/i)).toBeInTheDocument()
     expect(screen.getByText(/high consistency|moderate consistency|bursty/i)).toBeInTheDocument()
     expect(screen.getByText('60%')).toBeInTheDocument()
-    expect(screen.getByTitle(/an active week is any week/i)).toBeInTheDocument()
-    expect(screen.getByTitle(/3 of 5 weeks/i)).toBeInTheDocument()
+    fireEvent.mouseEnter(screen.getByLabelText(/active weeks help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/an active week is any week/i)
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/3 of 5 weeks/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/active weeks help/i))
     expect(screen.getByText('52 days')).toBeInTheDocument()
     expect(screen.getByText('Weekend Flow')).toBeInTheDocument()
     expect(screen.getByText('33% weekend')).toBeInTheDocument()
-    expect(screen.getByTitle(/2 weekend commits and 4 weekday commits/i)).toBeInTheDocument()
-    expect(screen.getByTitle(/weekend activity made up 33% of all commits/i)).toBeInTheDocument()
-    expect(screen.getByTitle(/0.50x/i)).toBeInTheDocument()
+    fireEvent.mouseEnter(screen.getByLabelText(/weekend flow help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/2 weekend commits and 4 weekday commits/i)
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/weekend activity made up 33% of all commits/i)
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/0.50x/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/weekend flow help/i))
     expect(screen.getByTitle(/W4 \(.+ to .+\): 2 commits/)).toBeInTheDocument()
     expect(screen.getByText(/W1 starts .+ The chart runs left-to-right from oldest to most recent week/i)).toBeInTheDocument()
     expect(screen.getByText(/The selected window currently spans .+ to .+\./i)).toBeInTheDocument()

@@ -10,7 +10,6 @@ describe('HelpLabel', () => {
 
     expect(screen.getByText('Merge rate')).toBeInTheDocument()
     expect(infoIcon.tagName).toBe('SPAN')
-    expect(infoIcon).toHaveAttribute('title', 'Merged pull requests divided by opened pull requests.')
     expect(infoIcon.querySelector('svg')).not.toBeNull()
   })
 

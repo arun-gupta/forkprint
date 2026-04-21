@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { ContributorsScorePane } from './ContributorsScorePane'
@@ -87,18 +87,21 @@ describe('ContributorsScorePane', () => {
     expect(screen.queryByRole('button', { name: /hide names/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /show numbers/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('list', { name: /attributed organization bars/i })).not.toBeInTheDocument()
-    expect(
-      screen.getByTitle(/4 maintainers or owners parsed from supported public repository files such as OWNERS, MAINTAINERS, CODEOWNERS, or GOVERNANCE\.md\./i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByTitle(/Observed from verified recent repository activity: Commits, Pull requests, Issues\./i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByTitle(/2 guessed organization\(s\) account for at least 50% of experimentally attributed recent commits\. Higher is generally healthier/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByTitle(/68.0% of experimentally attributed recent commits are attributable to the largest guessed public organization\. Lower is generally healthier/i),
-    ).toBeInTheDocument()
+    fireEvent.mouseEnter(screen.getByLabelText(/maintainer count help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/4 maintainers or owners parsed from supported public repository files/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/maintainer count help/i))
+
+    fireEvent.mouseEnter(screen.getByLabelText(/types of contributions help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/Observed from verified recent repository activity: Commits, Pull requests, Issues/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/types of contributions help/i))
+
+    fireEvent.mouseEnter(screen.getByLabelText(/elephant factor help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/2 guessed organization\(s\) account for at least 50% of experimentally attributed recent commits/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/elephant factor help/i))
+
+    fireEvent.mouseEnter(screen.getByLabelText(/single-vendor dependency ratio help/i))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/68.0% of experimentally attributed recent commits are attributable to the largest guessed public organization/i)
+    fireEvent.mouseLeave(screen.getByLabelText(/single-vendor dependency ratio help/i))
     expect(screen.queryByText(/^Missing data$/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/later contributor signals/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/grouped areas/i)).not.toBeInTheDocument()
