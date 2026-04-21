@@ -8,6 +8,7 @@ export interface AuthSession {
   token: string
   username: string
   scopes?: readonly string[]
+  isPAT?: boolean
 }
 
 interface AuthContextValue {

@@ -1,17 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from './AuthContext'
-import { SignInButton, type ScopeTier } from './SignInButton'
+import { useAuth, type AuthSession } from './AuthContext'
+import { SignInButton } from './SignInButton'
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { session, signIn } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const authError = searchParams.get('auth_error')
-  const [scopeTier, setScopeTier] = useState<ScopeTier>('baseline')
 
   useEffect(() => {
     // Remove stale PAT key left by the pre-OAuth token-storage implementation
@@ -95,7 +94,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <SignInButton tier={scopeTier} />
+        <SignInButton />
 
         <a
           href="/demo"
@@ -105,35 +104,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           See an example without signing in →
         </a>
 
-        <fieldset
-          className="max-w-md space-y-2 px-4 text-left text-xs text-slate-600 dark:text-slate-300"
-          aria-label="GitHub permission scope"
-        >
-          <legend className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            GitHub permission
-          </legend>
-          <ScopeRadio
-            value="baseline"
-            checked={scopeTier === 'baseline'}
-            onChange={setScopeTier}
-            label={<><span className="font-semibold">Baseline</span> (read-only public data)</>}
-            guidance="Public data only — for auditing third-party orgs."
-          />
-          <ScopeRadio
-            value="read-org"
-            checked={scopeTier === 'read-org'}
-            onChange={setScopeTier}
-            label={<><span className="font-semibold">Read org membership</span> (<code>read:org</code>)</>}
-            guidance="Adds concealed admins of orgs you belong to."
-          />
-          <ScopeRadio
-            value="admin-org"
-            checked={scopeTier === 'admin-org'}
-            onChange={setScopeTier}
-            label={<><span className="font-semibold">Org admin (read)</span> (<code>admin:org</code>)</>}
-            guidance="Adds owner-only signals like 2FA enforcement; for orgs you own."
-          />
-        </fieldset>
+        <PATForm onSuccess={signIn} />
 
         <a href="/baseline" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-400 transition hover:text-slate-600 dark:text-slate-500">View scoring methodology</a>
       </div>
@@ -144,33 +115,114 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
 }
 
-function ScopeRadio({
-  value,
-  checked,
-  onChange,
-  label,
-  guidance,
-}: {
-  value: ScopeTier
-  checked: boolean
-  onChange: (t: ScopeTier) => void
-  label: React.ReactNode
-  guidance: string
-}) {
+function PATForm({ onSuccess }: { onSuccess: (session: AuthSession) => void }) {
+  const [open, setOpen] = useState(false)
+  const [pat, setPat] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleToggle() {
+    setOpen((v) => !v)
+    if (!open) setTimeout(() => inputRef.current?.focus(), 50)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = pat.trim()
+    if (!trimmed) return
+    setStatus('loading')
+    setErrorMsg('')
+    try {
+      const res = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${trimmed}`,
+          Accept: 'application/vnd.github+json',
+        },
+      })
+      if (!res.ok) {
+        setStatus('error')
+        setErrorMsg(res.status === 401 ? 'Invalid token — check it and try again.' : `GitHub returned ${res.status}.`)
+        return
+      }
+      const body = (await res.json()) as { login?: string }
+      const username = body.login ?? 'unknown'
+      const scopesHeader = res.headers.get('x-oauth-scopes') ?? ''
+      const scopes = scopesHeader.split(',').map((s) => s.trim()).filter(Boolean)
+      onSuccess({ token: trimmed, username, scopes, isPAT: true })
+    } catch {
+      setStatus('error')
+      setErrorMsg('Network error — check your connection and try again.')
+    }
+  }
+
   return (
-    <label className="flex cursor-pointer items-start gap-2">
-      <input
-        type="radio"
-        name="scope-tier"
-        value={value}
-        checked={checked}
-        onChange={() => onChange(value)}
-        className="mt-0.5 h-3.5 w-3.5 border-slate-300 dark:border-slate-600"
-      />
-      <span className="min-w-0">
-        <span className="block">{label}</span>
-        <span className="block text-[11px] text-slate-500 dark:text-slate-400">{guidance}</span>
+    <div className="w-full max-w-md text-center">
+      <span className="group relative inline-block">
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="text-xs text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+          data-testid="pat-toggle"
+        >
+          {open ? 'Hide' : 'Use a Personal Access Token instead'}
+        </button>
+        {!open && (
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-72 -translate-x-1/2 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+          >
+            Some GitHub organizations restrict which OAuth apps can access their data. A Personal Access Token bypasses those restrictions and can be granted <code className="font-mono text-[0.7rem]">read:org</code> scope for full member and admin counts.
+          </span>
+        )}
       </span>
-    </label>
+
+      {open && (
+        <form
+          onSubmit={handleSubmit}
+          className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-white p-4 text-left dark:border-slate-700 dark:bg-slate-900"
+          data-testid="pat-form"
+        >
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            A PAT bypasses org-level OAuth app restrictions — useful when the org hasn&apos;t
+            approved this app. Recommended scope:
+          </p>
+          <ul className="ml-3 space-y-0.5 text-xs text-slate-600 dark:text-slate-300">
+            <li><code className="font-mono text-[11px]">read:org</code> — full member list, concealed admins</li>
+          </ul>
+          <a
+            href="https://github.com/settings/tokens/new?scopes=read%3Aorg&description=RepoPulse"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-xs font-medium text-sky-700 hover:underline dark:text-sky-400"
+          >
+            Create a token on GitHub with these scopes →
+          </a>
+          <input
+            ref={inputRef}
+            type="password"
+            value={pat}
+            onChange={(e) => { setPat(e.target.value); setStatus('idle') }}
+            placeholder="ghp_… or github_pat_…"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-full rounded border border-slate-300 bg-slate-50 px-3 py-1.5 font-mono text-xs text-slate-900 placeholder-slate-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
+            data-testid="pat-input"
+          />
+          {status === 'error' && (
+            <p className="text-xs text-rose-600 dark:text-rose-400" data-testid="pat-error">{errorMsg}</p>
+          )}
+          <button
+            type="submit"
+            disabled={!pat.trim() || status === 'loading'}
+            className="w-full rounded bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white"
+            data-testid="pat-submit"
+          >
+            {status === 'loading' ? 'Verifying…' : 'Sign in with PAT'}
+          </button>
+        </form>
+      )}
+    </div>
   )
 }
+

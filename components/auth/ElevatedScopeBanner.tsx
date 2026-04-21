@@ -8,6 +8,7 @@ export function ElevatedScopeBanner() {
   if (!session || elevatedScopes.length === 0 || bannerDismissed) return null
 
   const scopeList = elevatedScopes.join(', ')
+  const isPAT = session.isPAT === true
 
   return (
     <div
@@ -18,8 +19,17 @@ export function ElevatedScopeBanner() {
     >
       <div className="mx-auto flex max-w-5xl items-start justify-between gap-3 px-4 py-2 text-xs sm:text-sm">
         <p className="min-w-0 flex-1">
-          <span className="font-semibold">Elevated GitHub permissions active</span>
-          {' — this session can see concealed org admins and non-public org membership. Active scopes: '}
+          {isPAT ? (
+            <>
+              <span className="font-semibold">Personal Access Token active</span>
+              {' — bypasses org OAuth app restrictions; can see concealed org admins and non-public org membership. Active scopes: '}
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">Elevated GitHub permissions active</span>
+              {' — this session can see concealed org admins and non-public org membership. Active scopes: '}
+            </>
+          )}
           <code
             data-testid="elevated-scope-banner-scopes"
             className="rounded bg-amber-100 px-1 py-0.5 font-mono text-[0.72rem] text-amber-900 dark:bg-amber-900/40 dark:text-amber-100"
@@ -34,7 +44,7 @@ export function ElevatedScopeBanner() {
             onClick={signOut}
             className="rounded border border-amber-400 bg-white/60 px-2 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-600 dark:bg-amber-900/40 dark:text-amber-100 dark:hover:bg-amber-900/70"
           >
-            Sign out to revert
+            {isPAT ? 'Sign out' : 'Sign out to revert'}
           </button>
           <button
             type="button"
