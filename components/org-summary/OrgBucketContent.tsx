@@ -120,6 +120,7 @@ function GovernanceExtraPanels({
       <MemberPermissionDistributionPanel
         org={org}
         ownerType={ownerType}
+        elevated={elevated}
         sectionOverride={memberPermissionOverride}
       />
     </>

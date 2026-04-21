@@ -15,6 +15,8 @@ import {
 interface Props {
   org: string | null
   ownerType: OwnerType
+  /** True when the session has read:org or admin:org scope — enables full member visibility */
+  elevated?: boolean
   /** Override for tests and demo fixtures */
   sectionOverride?: MemberPermissionDistributionSection | null
   /** Override for tests */
@@ -24,6 +26,7 @@ interface Props {
 export function MemberPermissionDistributionPanel({
   org,
   ownerType,
+  elevated = false,
   sectionOverride,
   loadingOverride,
 }: Props) {
@@ -83,7 +86,14 @@ export function MemberPermissionDistributionPanel({
               ) : null}
             </div>
           </div>
-          {computedFlag ? <FlagBadge flag={computedFlag} /> : null}
+          <div className="flex items-center gap-2">
+            {!elevated && section?.applicability === 'applicable' ? (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                Baseline — public members only
+              </span>
+            ) : null}
+            {computedFlag ? <FlagBadge flag={computedFlag} /> : null}
+          </div>
         </div>
       </header>
 
@@ -95,7 +105,7 @@ export function MemberPermissionDistributionPanel({
             </p>
           ) : null}
           {!loading && section ? (
-            <SectionBody section={section} org={org ?? ''} />
+            <SectionBody section={section} org={org ?? ''} elevated={elevated} />
           ) : null}
         </>
       ) : null}
@@ -136,9 +146,11 @@ function FlagBadge({ flag }: { flag: PermissionFlag }) {
 function SectionBody({
   section,
   org,
+  elevated,
 }: {
   section: MemberPermissionDistributionSection
   org: string
+  elevated: boolean
 }) {
   if (section.applicability === 'not-applicable-non-org') {
     return (
@@ -164,7 +176,11 @@ function SectionBody({
   }
 
   const adminVal = section.adminCount ?? 0
-  const memberCount = section.memberCount ?? 0
+  // Without read:org scope, private non-admin members are invisible to the API.
+  // When memberCount computes to 0 in public-only mode, treat it as unknown.
+  const effectiveMemberCount =
+    !elevated && section.memberCount === 0 ? null : section.memberCount
+  const memberCount = effectiveMemberCount ?? 0
   const collabCount = section.outsideCollaboratorCount ?? 0
   const total = adminVal + memberCount + collabCount
   const adminPct = total > 0 ? Math.round((adminVal / total) * 100) : 0
@@ -188,7 +204,7 @@ function SectionBody({
         />
         <RoleRow
           label="Members"
-          count={memberCount}
+          count={effectiveMemberCount}
           pct={memberPct}
           countTestId="perm-member-count"
           pctTestId="perm-member-pct"
