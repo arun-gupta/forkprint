@@ -1128,7 +1128,7 @@ function RetryCountdown({ availableAt }: { availableAt: string }) {
 
 function ModeBadge({ mode }: { mode: StaleAdminMode }) {
   const config = MODE_CONFIG[mode]
-  return (
+  const badge = (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.className}`}
       data-testid={`stale-admins-mode-${mode}`}
@@ -1136,9 +1136,21 @@ function ModeBadge({ mode }: { mode: StaleAdminMode }) {
       {config.label}
     </span>
   )
+  if (!config.tooltip) return badge
+  return (
+    <span className="group relative inline-flex">
+      {badge}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full right-0 z-20 mb-1.5 w-64 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+      >
+        {config.tooltip}
+      </span>
+    </span>
+  )
 }
 
-const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string }> = {
+const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string; tooltip?: string }> = {
   baseline: {
     label: 'Baseline — public members only',
     className: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
@@ -1150,6 +1162,7 @@ const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string }> 
   'elevated-ineffective': {
     label: 'Elevated grant did not widen this view',
     className: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+    tooltip: 'The read:org scope was granted but this org restricts third-party OAuth apps — the data returned is the same as without it. Are you a member of this org? A Personal Access Token with read:org scope bypasses OAuth app restrictions.',
   },
 }
 
