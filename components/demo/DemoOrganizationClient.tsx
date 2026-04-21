@@ -16,6 +16,7 @@ import type { OrgAggregationRun } from '@/lib/org-aggregation/types'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import type { TwoFactorEnforcementSection } from '@/lib/governance/two-factor'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
+import type { MemberPermissionDistributionSection } from '@/lib/governance/member-permissions'
 import type { TabMatchCounts } from '@/lib/search/types'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 
@@ -24,6 +25,7 @@ interface DemoOrganizationClientProps {
   governance: {
     twoFactor: TwoFactorEnforcementSection | null
     staleAdmins: StaleAdminsSection | null
+    memberPermission: MemberPermissionDistributionSection | null
   }
   topReposAnalyzed: AnalysisResult[]
 }
@@ -220,6 +222,7 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
             org={response.org}
             twoFactorOverride={governance.twoFactor}
             staleAdminsOverride={governance.staleAdmins}
+            memberPermissionOverride={governance.memberPermission}
           />,
         )}
         security={view ? withNote(

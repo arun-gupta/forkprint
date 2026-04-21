@@ -5,6 +5,7 @@ import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { TwoFactorEnforcementSection } from '@/lib/governance/two-factor'
 import type { StaleAdminsSection } from '@/lib/governance/stale-admins'
+import type { MemberPermissionDistributionSection } from '@/lib/governance/member-permissions'
 import orgFixture from '@/fixtures/demo/org-ossf.json'
 
 interface OrgFixture extends OrgInventoryResponse {
@@ -12,6 +13,7 @@ interface OrgFixture extends OrgInventoryResponse {
   governance: {
     twoFactor: TwoFactorEnforcementSection | null
     staleAdmins: StaleAdminsSection | null
+    memberPermission: MemberPermissionDistributionSection | null
   }
   topReposAnalyzed: AnalysisResult[]
 }

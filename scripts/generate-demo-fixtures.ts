@@ -27,8 +27,10 @@ import { analyze } from '../lib/analyzer/analyze'
 import { analyzeOrgInventory, type OrgRepoSummary } from '../lib/analyzer/org-inventory'
 import { GET as twoFactorGET } from '../app/api/org/two-factor/route'
 import { GET as staleAdminsGET } from '../app/api/org/stale-admins/route'
+import { GET as memberPermissionGET } from '../app/api/org/member-permissions/route'
 import type { TwoFactorEnforcementSection } from '../lib/governance/two-factor'
 import type { StaleAdminsSection } from '../lib/governance/stale-admins'
+import type { MemberPermissionDistributionSection } from '../lib/governance/member-permissions'
 
 export const DEMO_REPOS = [
   'simonw/llm-echo',
@@ -77,6 +79,16 @@ async function fetchStaleAdmins(org: string, token: string): Promise<StaleAdmins
   return body.section
 }
 
+async function fetchMemberPermissions(org: string, token: string): Promise<MemberPermissionDistributionSection> {
+  const req = new Request(
+    `http://localhost/api/org/member-permissions?org=${encodeURIComponent(org)}&ownerType=Organization`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  )
+  const resp = await memberPermissionGET(req)
+  const body = (await resp.json()) as { section: MemberPermissionDistributionSection }
+  return body.section
+}
+
 function pickTopReposByStars(results: OrgRepoSummary[], n: number): string[] {
   return results
     .filter((r) => !r.archived && !r.isFork)
@@ -114,9 +126,10 @@ async function main() {
 
   // Governance signals for the org
   console.log(`[demo-fixtures] fetching governance signals for "${DEMO_ORG}"`)
-  const [twoFactor, staleAdmins] = await Promise.all([
+  const [twoFactor, staleAdmins, memberPermission] = await Promise.all([
     fetchTwoFactor(DEMO_ORG, token),
     fetchStaleAdmins(DEMO_ORG, token),
+    fetchMemberPermissions(DEMO_ORG, token),
   ])
 
   // Sort results by repo name so the fixture diff only reflects real data
@@ -130,7 +143,7 @@ async function main() {
     generatedAt,
     ...orgResponse,
     results: sortedOrgResults,
-    governance: { twoFactor, staleAdmins },
+    governance: { twoFactor, staleAdmins, memberPermission },
     topReposAnalyzed: [...topAnalysis.results].sort((a, b) => a.repo.localeCompare(b.repo)),
   }
   writeFileSync(

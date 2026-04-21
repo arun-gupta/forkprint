@@ -191,6 +191,93 @@ export async function fetchOrgAdmins(token: string, org: string): Promise<OrgAdm
   return { kind: 'ok', admins }
 }
 
+export type OrgMemberListResult =
+  | { kind: 'ok'; members: { login: string }[] }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'scope-insufficient' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgMembers(token: string, org: string): Promise<OrgMemberListResult> {
+  const members: { login: string }[] = []
+  let url: string | null = `https://api.github.com/orgs/${encodeURIComponent(org)}/members?role=all&per_page=100`
+
+  try {
+    while (url) {
+      const response: Response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      })
+
+      const status = classifyRestStatus(response)
+      if (status !== 'ok') return status as OrgMemberListResult
+
+      const payload = (await response.json()) as Array<{ login?: unknown }>
+      if (!Array.isArray(payload)) return { kind: 'unknown' }
+      for (const member of payload) {
+        if (typeof member.login === 'string' && member.login.length > 0) {
+          members.push({ login: member.login })
+        }
+      }
+
+      url = parseNextLink(response.headers.get('Link'))
+    }
+  } catch {
+    return { kind: 'network' }
+  }
+
+  return { kind: 'ok', members }
+}
+
+export type OrgCollaboratorListResult =
+  | { kind: 'ok'; collaborators: { login: string }[] }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'scope-insufficient' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgOutsideCollaborators(
+  token: string,
+  org: string,
+): Promise<OrgCollaboratorListResult> {
+  const collaborators: { login: string }[] = []
+  let url: string | null = `https://api.github.com/orgs/${encodeURIComponent(org)}/outside_collaborators?per_page=100`
+
+  try {
+    while (url) {
+      const response: Response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      })
+
+      const status = classifyRestStatus(response)
+      if (status !== 'ok') return status as OrgCollaboratorListResult
+
+      const payload = (await response.json()) as Array<{ login?: unknown }>
+      if (!Array.isArray(payload)) return { kind: 'unknown' }
+      for (const member of payload) {
+        if (typeof member.login === 'string' && member.login.length > 0) {
+          collaborators.push({ login: member.login })
+        }
+      }
+
+      url = parseNextLink(response.headers.get('Link'))
+    }
+  } catch {
+    return { kind: 'network' }
+  }
+
+  return { kind: 'ok', collaborators }
+}
+
 export type OrgTwoFactorRequirementResult =
   | { kind: 'ok'; twoFactorRequirementEnabled: boolean | null }
   | { kind: 'rate-limited' }
