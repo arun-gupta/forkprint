@@ -36,7 +36,6 @@ export function OnboardingPane({
   onTagChange,
 }: OnboardingPaneProps) {
   const devLabel = formatBoolean(devEnvironmentSetup, 'Present', 'Not detected')
-  const gitpodLabel = formatBoolean(gitpodPresent, 'Present', '—')
   const handleTagClick = (tag: string) => onTagChange?.(activeTag === tag ? null : tag)
 
   return (

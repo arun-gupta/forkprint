@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useAuth } from './AuthContext'
 
 interface UserBadgeProps {
@@ -18,9 +19,11 @@ export function UserBadge({ onSignOut }: UserBadgeProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <img
+      <Image
         src={`https://github.com/${session?.username}.png`}
         alt=""
+        width={28}
+        height={28}
         className="h-7 w-7 rounded-full border border-sky-600"
         aria-hidden="true"
       />

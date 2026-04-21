@@ -5,10 +5,8 @@ import {
   type BracketCalibration,
   type BracketKey,
   type PercentileSet,
-  formatPercentileLabel,
   getCalibration,
   getCalibrationMeta,
-  interpolatePercentile,
 } from '@/lib/scoring/config-loader'
 import calibrationData from '@/lib/scoring/calibration-data.json'
 import {

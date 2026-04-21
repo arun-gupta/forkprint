@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { BaselineView } from '@/components/baseline/BaselineView'
 import { BackToAnalyzerLink } from '@/components/baseline/BackToAnalyzerLink'
@@ -15,7 +16,14 @@ export default function BaselinePage() {
         <div className="mx-auto flex max-w-5xl items-start justify-between gap-4 px-4 py-5">
           <div>
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img src="/repo-pulse-banner.png" alt="" className="h-8 w-8 rounded object-cover" aria-hidden="true" />
+              <Image
+                src="/repo-pulse-banner.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8 rounded object-cover"
+                aria-hidden="true"
+              />
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </Link>
             <p className="mt-1 text-sm text-sky-100 md:text-base">Scoring Methodology</p>

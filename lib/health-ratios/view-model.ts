@@ -178,15 +178,3 @@ function formatHealthRatioWithPercentile(value: number | Unavailable, stars: num
   const p = interpolatePercentile(value, ps, mapping.inverted)
   return `${formatted} (${formatPercentileLabel(p)})`
 }
-
-function formatHealthRatioForHomeView(value: number | Unavailable) {
-  if (typeof value !== 'number') {
-    return 'unavailable'
-  }
-
-  return new Intl.NumberFormat('en-US', {
-    style: 'percent',
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value)
-}

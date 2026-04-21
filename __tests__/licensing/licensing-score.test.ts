@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LicensingResult } from '@/lib/analyzer/analysis-result'
-import { getLicensingScore, type LicensingRecommendation } from '@/lib/documentation/score-config'
+import { getLicensingScore } from '@/lib/documentation/score-config'
 
 function buildLicensingResult(overrides: Partial<LicensingResult> = {}): LicensingResult {
   return {

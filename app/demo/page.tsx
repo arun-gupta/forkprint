@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import fixture from '@/fixtures/demo/repositories.json'
 import orgFixture from '@/fixtures/demo/org-ossf.json'
@@ -19,7 +20,13 @@ export default function DemoLanding() {
       <main className="min-h-screen bg-slate-50 px-4 py-10 dark:bg-slate-950 sm:py-16">
         <div className="mx-auto max-w-4xl space-y-8">
           <header className="text-center">
-            <img src="/repo-pulse-banner.png" alt="RepoPulse" className="mx-auto h-16 rounded-xl shadow-lg sm:h-20" />
+            <Image
+              src="/repo-pulse-banner.png"
+              alt="RepoPulse"
+              width={480}
+              height={320}
+              className="mx-auto h-16 w-auto rounded-xl shadow-lg sm:h-20"
+            />
             <h1 className="mt-4 text-2xl font-semibold text-slate-900 sm:text-3xl dark:text-slate-100">See RepoPulse in action</h1>
             <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300 sm:text-base">
               Explore real, pre-analyzed data from six open-source repositories and one

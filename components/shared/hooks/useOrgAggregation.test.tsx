@@ -55,7 +55,7 @@ describe('useOrgAggregation — start flow (US1)', () => {
   it('per-repo status list updates live as repos complete (FR-016a)', async () => {
     const deferred: Array<(r: DispatchResult) => void> = []
     const dispatch = vi.fn(
-      (_repo: string) =>
+      () =>
         new Promise<DispatchResult>((resolve) => deferred.push(resolve)),
     )
 

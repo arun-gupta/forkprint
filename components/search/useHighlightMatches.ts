@@ -78,12 +78,13 @@ const TAB_IDS: ResultTabId[] = [
 
 export function useHighlightMatches(
   query: string,
-  _activeTab?: string,
+  activeTab?: string,
 ): { containerRef: React.RefObject<HTMLDivElement | null>; domMatchCounts: TabMatchCounts; domTotalMatches: number; domMatchedTabCount: number } {
   const containerRef = useRef<HTMLDivElement>(null)
   const [domMatchCounts, setDomMatchCounts] = useState<TabMatchCounts>({})
   const [domTotalMatches, setDomTotalMatches] = useState(0)
   const [domMatchedTabCount, setDomMatchedTabCount] = useState(0)
+  const normalizedQuery = query.trim()
 
   useEffect(() => {
     const container = containerRef.current
@@ -91,15 +92,15 @@ export function useHighlightMatches(
 
     clearHighlights(container)
 
-    if (!query.trim()) {
-      setDomMatchCounts({})
-      setDomTotalMatches(0)
-      setDomMatchedTabCount(0)
-      return
-    }
-
     // Small delay to let React finish rendering tab content
     const raf = requestAnimationFrame(() => {
+      if (!normalizedQuery) {
+        setDomMatchCounts({})
+        setDomTotalMatches(0)
+        setDomMatchedTabCount(0)
+        return
+      }
+
       const counts: TabMatchCounts = {}
       let total = 0
       let tabsWithMatches = 0
@@ -107,7 +108,7 @@ export function useHighlightMatches(
       for (const tabId of TAB_IDS) {
         const tabDiv = container.querySelector(`[data-tab-content="${tabId}"]`)
         if (!tabDiv) continue
-        const tabCount = highlightTextNodes(tabDiv as HTMLElement, query.trim())
+        const tabCount = highlightTextNodes(tabDiv as HTMLElement, normalizedQuery)
         if (tabCount > 0) {
           counts[tabId] = tabCount
           total += tabCount
@@ -124,8 +125,7 @@ export function useHighlightMatches(
       cancelAnimationFrame(raf)
       if (container) clearHighlights(container)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, _activeTab])
+  }, [activeTab, normalizedQuery])
 
   return { containerRef, domMatchCounts, domTotalMatches, domMatchedTabCount }
 }

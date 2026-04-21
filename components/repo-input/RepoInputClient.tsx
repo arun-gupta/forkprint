@@ -54,6 +54,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [resultsResetKey, setResultsResetKey] = useState(0)
   const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -98,12 +99,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setQuoteIndex(null)
 
     return undefined
-  }, [isLoading])
+  }, [isLoading, emptyQuoteIndex])
 
   const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
 
   const isEmptyState = !submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse
-  const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
 
   useEffect(() => {
     if (!isEmptyState) return

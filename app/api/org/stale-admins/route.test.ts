@@ -289,7 +289,7 @@ describe('GET /api/org/stale-admins', () => {
     ]
     // fetch should be called at most once: after the first admin, the clock
     // jumps past the 10s budget and the loop exits.
-    const fetchMock = vi.fn(async (..._args: FetchArgs) =>
+    const fetchMock = vi.fn(async () =>
       new Response('', { status: 403, headers: { 'X-RateLimit-Remaining': '0' } }),
     )
     vi.stubGlobal('fetch', fetchMock)

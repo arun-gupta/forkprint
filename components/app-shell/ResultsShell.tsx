@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import { getCalibrationMeta } from '@/lib/scoring/config-loader'
 import { resultTabs } from '@/lib/results-shell/tabs'
 import type { ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
@@ -105,7 +106,14 @@ export function ResultsShell({
               className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity disabled:cursor-default"
               disabled={!onReset}
             >
-              <img src="/repo-pulse-banner.png" alt="" className="h-8 w-8 shrink-0 rounded object-cover" aria-hidden="true" />
+              <Image
+                src="/repo-pulse-banner.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8 shrink-0 rounded object-cover"
+                aria-hidden="true"
+              />
               <h1 className="text-2xl font-semibold tracking-tight text-white">RepoPulse</h1>
             </button>
             <p className="mt-1 text-sm text-sky-100 sm:hidden">

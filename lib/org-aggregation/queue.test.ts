@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { OrgAggregationQueue } from './queue'
 import type { DispatchResult, QueueDispatcher } from './queue'
-import type { QueueEvent, RateLimitPause } from './types'
+import type { QueueEvent } from './types'
 
 function analysisStub(repo: string): AnalysisResult {
   return { repo } as unknown as AnalysisResult

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from './AuthContext'
 import { SignInButton, type ScopeTier } from './SignInButton'
@@ -56,7 +57,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-6 sm:gap-5 dark:bg-slate-800/60">
         <div className="text-center">
-          <img src="/repo-pulse-banner.png" alt="RepoPulse" className="mx-auto h-16 rounded-xl shadow-lg sm:h-24" />
+          <Image
+            src="/repo-pulse-banner.png"
+            alt="RepoPulse"
+            width={576}
+            height={384}
+            className="mx-auto h-16 w-auto rounded-xl shadow-lg sm:h-24"
+          />
           <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:mt-3 sm:text-3xl dark:text-slate-100">RepoPulse</h1>
           <p className="mt-1 text-sm text-slate-600 sm:text-base dark:text-slate-300">Know the real health of any open source project — in seconds</p>
         </div>

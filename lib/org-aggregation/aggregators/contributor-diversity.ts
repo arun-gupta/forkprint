@@ -8,16 +8,6 @@ import type {
 } from './types'
 import { CONTRIBUTOR_DIVERSITY_WINDOWS } from './types'
 
-function sumIfAvailable(values: Array<number | 'unavailable' | undefined>): number | null {
-  let sum: number | null = null
-  for (const v of values) {
-    if (typeof v === 'number') {
-      sum = (sum ?? 0) + v
-    }
-  }
-  return sum
-}
-
 function computeWindow(
   results: AnalysisResult[],
   window: ContributorDiversityWindow,

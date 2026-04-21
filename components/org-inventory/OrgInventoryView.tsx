@@ -10,13 +10,10 @@ import {
   filterOrgInventoryRows,
   getEffectiveSortState,
   getNextSortState,
-  OPTIONAL_ORG_INVENTORY_COLUMNS,
   sortOrgInventoryRows,
   toggleRepoSelection,
-  toggleVisibleColumn,
   type OrgInventoryFilters,
   type OrgInventorySortState,
-  type OrgInventoryVisibleColumn,
 } from '@/lib/org-inventory/filters'
 import { OrgInventorySummary } from './OrgInventorySummary'
 import { OrgInventoryTable } from './OrgInventoryTable'
@@ -47,7 +44,7 @@ export function OrgInventoryView({
     language: 'all',
     archived: 'all',
   })
-  const [visibleColumns, setVisibleColumns] = useState<OrgInventoryVisibleColumn[]>(DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS)
+  const visibleColumns = DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS
   const [sortState, setSortState] = useState<OrgInventorySortState>({
     sortColumn: 'repo',
     sortDirection: 'asc',
@@ -63,18 +60,6 @@ export function OrgInventoryView({
   )
   const [selectedOnly, setSelectedOnly] = useState<boolean>(false)
   const [repoTableExpanded, setRepoTableExpanded] = useState(true)
-
-  const columnLabels: Record<OrgInventoryVisibleColumn, string> = {
-    description: 'Description',
-    primaryLanguage: 'Language',
-    stars: 'Stars',
-    forks: 'Forks',
-    watchers: 'Watchers',
-    openIssues: 'Open issues',
-    pushedAt: 'Last pushed',
-    archived: 'Archived',
-    url: 'Repo URL',
-  }
 
   const filteredRows = useMemo(
     () => filterOrgInventoryRows(results, filters, { selectedOnly, selectedRepos }),

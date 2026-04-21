@@ -114,7 +114,10 @@ function mutateRepoState(run: OrgAggregationRun, repo: string, update: Partial<R
 export function useOrgAggregation(options: UseOrgAggregationOptions = {}): UseOrgAggregationReturn {
   const dispatch = options.dispatch ?? defaultDispatch
   const fetchPinned = options.fetchPinned ?? defaultFetchPinned
-  const starsForRepo = options.starsForRepo ?? (() => 'unavailable' as const)
+  const starsForRepo = useMemo(
+    () => options.starsForRepo ?? (() => 'unavailable' as const),
+    [options.starsForRepo],
+  )
   const cadence = options.updateCadence ?? ORG_AGGREGATION_CONFIG.updateCadenceDefault
 
   const [run, dispatchReducer] = useReducer(runReducer, null)

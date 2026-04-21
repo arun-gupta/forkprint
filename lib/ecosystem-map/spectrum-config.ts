@@ -1,5 +1,3 @@
-import { getCalibration } from '@/lib/scoring/config-loader'
-
 export interface TierBand<T extends string> {
   label: T
   min: number
