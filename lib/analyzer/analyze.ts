@@ -225,6 +225,9 @@ interface RepoActivityCountsResponse {
   staleIssues180: SearchCount
   staleIssues365: SearchCount
   goodFirstIssues?: SearchCount
+  goodFirstIssuesHyphenated?: SearchCount
+  goodFirstIssuesBeginner?: SearchCount
+  goodFirstIssuesStarter?: SearchCount
   recentMergedPullRequests: {
     nodes: Array<{
       createdAt: string
@@ -502,7 +505,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         staleIssues90Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore90),
         staleIssues180Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore180),
         staleIssues365Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore365),
-        goodFirstIssueQuery: buildGoodFirstIssueQuery(repoSearch),
+        ...buildGoodFirstIssueQueries(repoSearch),
       }
 
       let activityCounts: RepoActivityCountsResponse
@@ -1295,7 +1298,14 @@ interface OnboardingSignalSet {
 
 export function extractOnboardingSignals(
   repo: RepoOverviewResponse['repository'],
-  activityCounts: Pick<RepoActivityCountsResponse, 'goodFirstIssues' | 'recentMergedPullRequests'> | null,
+  activityCounts: Pick<
+    RepoActivityCountsResponse,
+    | 'goodFirstIssues'
+    | 'goodFirstIssuesHyphenated'
+    | 'goodFirstIssuesBeginner'
+    | 'goodFirstIssuesStarter'
+    | 'recentMergedPullRequests'
+  > | null,
 ): OnboardingSignalSet {
   if (!repo) {
     return {
@@ -1318,9 +1328,15 @@ export function extractOnboardingSignals(
   const gitpodPresent: boolean = repo.onbGitpod != null
 
   // goodFirstIssueCount
+  const goodFirstIssueBuckets = [
+    activityCounts?.goodFirstIssues,
+    activityCounts?.goodFirstIssuesHyphenated,
+    activityCounts?.goodFirstIssuesBeginner,
+    activityCounts?.goodFirstIssuesStarter,
+  ]
   const goodFirstIssueCount: number | Unavailable =
-    activityCounts?.goodFirstIssues != null
-      ? activityCounts.goodFirstIssues.issueCount
+    goodFirstIssueBuckets.some((bucket) => bucket != null)
+      ? goodFirstIssueBuckets.reduce((total, bucket) => total + (bucket?.issueCount ?? 0), 0)
       : 'unavailable'
 
   // newContributorPRAcceptanceRate: first-time merged / first-time total
@@ -1442,11 +1458,24 @@ function buildOpenPullRequestsOlderThanQuery(repoSearch: string, before: Date) {
   return `repo:${repoSearch} is:pr is:open created:<${before.toISOString().slice(0, 10)}`
 }
 
-export function buildGoodFirstIssueQuery(repoSearch: string): string {
-  // GitHub's GraphQL search does not scope `repo:` across OR branches, so
-  // OR variants would produce incorrect counts. We use only the canonical
-  // GitHub-recommended label; hyphenated and other variants are tracked in #382.
-  return `repo:${repoSearch} is:issue is:open label:"good first issue"`
+function buildExclusiveIssueLabelQuery(repoSearch: string, label: string, excludedLabels: string[] = []): string {
+  const exclusions = excludedLabels.map((excludedLabel) => `-label:"${excludedLabel}"`).join(' ')
+  return `repo:${repoSearch} is:issue is:open label:"${label}"${exclusions ? ` ${exclusions}` : ''}`
+}
+
+export function buildGoodFirstIssueQueries(repoSearch: string): Record<
+  | 'goodFirstIssueQuery'
+  | 'goodFirstIssueHyphenatedQuery'
+  | 'goodFirstIssueBeginnerQuery'
+  | 'goodFirstIssueStarterQuery',
+  string
+> {
+  return {
+    goodFirstIssueQuery: buildExclusiveIssueLabelQuery(repoSearch, 'good first issue'),
+    goodFirstIssueHyphenatedQuery: buildExclusiveIssueLabelQuery(repoSearch, 'good-first-issue', ['good first issue']),
+    goodFirstIssueBeginnerQuery: buildExclusiveIssueLabelQuery(repoSearch, 'beginner', ['good first issue', 'good-first-issue']),
+    goodFirstIssueStarterQuery: buildExclusiveIssueLabelQuery(repoSearch, 'starter', ['good first issue', 'good-first-issue', 'beginner']),
+  }
 }
 
 // ─── Two-pass responsiveness fetch ───────────────────────────────────────────
@@ -2504,6 +2533,9 @@ function buildUnavailableActivityCounts(): RepoActivityCountsResponse {
     issuesClosed30: unavailable, issuesClosed60: unavailable, issuesClosed90: unavailable, issuesClosed180: unavailable, issuesClosed365: unavailable,
     staleIssues30: unavailable, staleIssues60: unavailable, staleIssues90: unavailable, staleIssues180: unavailable, staleIssues365: unavailable,
     goodFirstIssues: unavailable,
+    goodFirstIssuesHyphenated: unavailable,
+    goodFirstIssuesBeginner: unavailable,
+    goodFirstIssuesStarter: unavailable,
     recentMergedPullRequests: { nodes: [] },
     recentClosedIssues: { nodes: [] },
   }

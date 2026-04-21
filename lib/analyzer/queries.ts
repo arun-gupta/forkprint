@@ -266,6 +266,9 @@ export const REPO_ACTIVITY_COUNTS_QUERY = `
     $staleIssues180Query: String!
     $staleIssues365Query: String!
     $goodFirstIssueQuery: String!
+    $goodFirstIssueHyphenatedQuery: String!
+    $goodFirstIssueBeginnerQuery: String!
+    $goodFirstIssueStarterQuery: String!
   ) {
     prsOpened30: search(query: $prsOpened30Query, type: ISSUE) {
       issueCount
@@ -343,6 +346,15 @@ export const REPO_ACTIVITY_COUNTS_QUERY = `
       issueCount
     }
     goodFirstIssues: search(query: $goodFirstIssueQuery, type: ISSUE) {
+      issueCount
+    }
+    goodFirstIssuesHyphenated: search(query: $goodFirstIssueHyphenatedQuery, type: ISSUE) {
+      issueCount
+    }
+    goodFirstIssuesBeginner: search(query: $goodFirstIssueBeginnerQuery, type: ISSUE) {
+      issueCount
+    }
+    goodFirstIssuesStarter: search(query: $goodFirstIssueStarterQuery, type: ISSUE) {
       issueCount
     }
     recentMergedPullRequests: search(query: $prsMerged365Query, type: ISSUE, first: 100) {
