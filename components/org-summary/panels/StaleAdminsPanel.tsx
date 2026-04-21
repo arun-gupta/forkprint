@@ -358,12 +358,13 @@ function MemberPermissionSummary({
       </div>
       {oauthRestricted ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          read:org scope was granted, but this org restricts the OAuth app — admin and member counts are unavailable.{' '}
+          This org restricts third-party OAuth app access — admin and member counts are unavailable.{' '}
           <button type="button" onClick={onSignOut} className="font-medium text-sky-700 hover:underline dark:text-sky-400">Sign out</button>
           {' and sign in again using a '}
           <span className="font-medium">Personal Access Token</span>
           {' with '}
-          <code className="font-mono text-[0.7rem]">read:org</code> scope for accurate counts.
+          <code className="font-mono text-[0.7rem]">read:org</code>
+          {' scope — PATs bypass OAuth app restrictions. You must also be a member of this org to see concealed admins and member counts.'}
         </p>
       ) : !elevated ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
