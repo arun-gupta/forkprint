@@ -97,7 +97,7 @@ export async function fetchOrgMembersWithRoles(
 
   try {
     while (true) {
-      const result = await queryGitHubGraphQL<OrgMembersPage>(
+      const result: GitHubGraphQLSuccess<OrgMembersPage> = await queryGitHubGraphQL<OrgMembersPage>(
         token,
         ORG_MEMBERS_WITH_ROLES_QUERY,
         { org, after },
