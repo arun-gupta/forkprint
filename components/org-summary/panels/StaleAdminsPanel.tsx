@@ -8,6 +8,7 @@ import { useMemberPermissionDistribution } from '@/components/shared/hooks/useMe
 import {
   evaluatePermissionFlag,
   type MemberPermissionDistributionSection,
+  type MemberPermissionUnavailableReason,
   type PermissionFlag,
 } from '@/lib/governance/member-permissions'
 import type {
@@ -61,10 +62,10 @@ const GROUP_CONFIG: Record<
     headerBorderClassName: 'border-l-4 border-rose-500',
   },
   unavailable: {
-    label: 'Unavailable',
+    label: 'Activity unknown',
     icon: '?',
     pillClassName: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-    groupAriaLabel: 'Admins with unavailable activity',
+    groupAriaLabel: 'Activity could not be retrieved — rate-limited or API error',
     headerBorderClassName: 'border-l-4 border-amber-500',
   },
   'no-public-activity': {
@@ -92,7 +93,8 @@ export function StaleAdminsPanel({
   nextAutoRetryAtOverride,
   memberPermissionOverride,
 }: Props) {
-  const { session, hasScope } = useAuth()
+  const { session, hasScope, signOut } = useAuth()
+  const isPAT = session?.isPAT === true
   // admin:org is a strict superset of read:org — treat either as "elevated"
   // for the concealed-admins view.
   const elevated = hasScope('read:org') || hasScope('admin:org')
@@ -125,6 +127,12 @@ export function StaleAdminsPanel({
   const memberSection = hasMemberOverride ? memberPermissionOverride : memberHookState.section
   const memberLoading = hasMemberOverride ? false : memberHookState.loading
 
+  // OAuth restriction: elevated scope was granted but org blocks the OAuth app.
+  // Detected once memberSection loads; until then, assumes elevated is effective.
+  const oauthRestricted = elevated &&
+    memberSection?.unavailableReasons?.includes('admin-list-possibly-oauth-restricted') === true
+  const effectivelyElevated = elevated && !oauthRestricted
+
   const computedFlag: PermissionFlag | null =
     memberSection && memberSection.applicability === 'applicable' && memberSection.adminCount !== null
       ? (memberSection.flag !== undefined
@@ -141,7 +149,7 @@ export function StaleAdminsPanel({
 
   return (
     <section
-      aria-label="Org admin & member overview"
+      aria-label="Org member & admin overview"
       className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       data-testid="stale-admins-panel"
     >
@@ -151,7 +159,7 @@ export function StaleAdminsPanel({
             <button
               type="button"
               onClick={() => setExpanded((e) => !e)}
-              aria-label={expanded ? 'Collapse Org admin & member overview' : 'Expand Org admin & member overview'}
+              aria-label={expanded ? 'Collapse Org member & admin overview' : 'Expand Org member & admin overview'}
               aria-expanded={expanded}
               title={expanded ? 'Collapse' : 'Expand'}
               data-testid="stale-admins-panel-toggle"
@@ -162,19 +170,21 @@ export function StaleAdminsPanel({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Org admin &amp; member overview
+                  Org member &amp; admin overview
                 </h3>
                 <ScoringHelp section={section} />
               </div>
               {expanded ? (
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Member roles and admin activity — who has elevated access and whether they&apos;re active.
+                  {effectivelyElevated
+                    ? 'Member roles and admin activity — who has elevated access and whether they\'re active.'
+                    : 'Public member overview — sign in with a PAT for full admin and member breakdown.'}
                 </p>
               ) : null}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {!elevated && memberSection?.applicability === 'applicable' ? (
+            {!effectivelyElevated && memberSection?.applicability === 'applicable' ? (
               <span
                 className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
                 title="Sign in with 'Read org membership' or 'Org admin' permission to see private member counts"
@@ -186,7 +196,7 @@ export function StaleAdminsPanel({
             {section ? <ModeBadge mode={section.mode} /> : null}
           </div>
         </div>
-        {section ? <HeaderCountStrip section={section} /> : null}
+        {section && effectivelyElevated ? <HeaderCountStrip section={section} elevated={effectivelyElevated} /> : null}
       </header>
 
       {expanded ? (
@@ -197,10 +207,13 @@ export function StaleAdminsPanel({
             loading={memberLoading}
             org={org ?? ''}
             elevated={elevated}
+            oauthRestricted={oauthRestricted}
+            isPAT={isPAT}
+            onSignOut={signOut}
           />
 
-          {/* Admin activity detail — collapsible sub-section */}
-          <details open className="group" data-testid="stale-admins-activity-detail">
+          {/* Activity detail — only shown with effective elevated scope (baseline = can't identify admins) */}
+          <details open className="group" data-testid="stale-admins-activity-detail" hidden={!effectivelyElevated}>
             <summary className="flex cursor-pointer select-none items-center gap-1.5 text-xs font-medium text-slate-600 list-none dark:text-slate-300 [&::-webkit-details-marker]:hidden">
               <svg
                 aria-hidden="true"
@@ -214,11 +227,13 @@ export function StaleAdminsPanel({
                   clipRule="evenodd"
                 />
               </svg>
-              Admin activity detail
+              {effectivelyElevated ? 'Admin activity detail' : 'Public member activity'}
             </summary>
             <div className="mt-2">
               {loading && !section ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">Loading admin activity…</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {effectivelyElevated ? 'Loading admin activity…' : 'Loading public member activity…'}
+                </p>
               ) : null}
               {section ? (
                 <SectionBody
@@ -226,6 +241,7 @@ export function StaleAdminsPanel({
                   onRetry={onRetry}
                   refreshing={loading}
                   nextAutoRetryAt={nextAutoRetryAt}
+                  elevated={effectivelyElevated}
                 />
               ) : null}
             </div>
@@ -243,11 +259,17 @@ function MemberPermissionSummary({
   loading,
   org,
   elevated,
+  oauthRestricted,
+  isPAT,
+  onSignOut,
 }: {
   section: MemberPermissionDistributionSection | null
   loading: boolean
   org: string
   elevated: boolean
+  oauthRestricted: boolean
+  isPAT: boolean
+  onSignOut: () => void
 }) {
   if (loading) {
     return (
@@ -275,15 +297,25 @@ function MemberPermissionSummary({
     )
   }
 
-  const adminVal = section.adminCount ?? 0
-  const effectiveMemberCount =
-    !elevated && section.memberCount === 0 ? null : section.memberCount
+  // "Effectively elevated" = has elevated scope AND it actually widened the view.
+  const effectivelyElevated = elevated && !oauthRestricted
+
+  // Without effective elevated scope GitHub may return unreliable counts — hide admin count.
+  const displayAdminCount = effectivelyElevated ? section.adminCount : null
+  const adminVal = displayAdminCount ?? 0
+  const effectiveMemberCount = section.memberCount === 0 ? null : section.memberCount
   const memberCount = effectiveMemberCount ?? 0
   const collabCount = section.outsideCollaboratorCount ?? 0
   const total = adminVal + memberCount + collabCount
   const adminPct = total > 0 ? Math.round((adminVal / total) * 100) : 0
   const memberPct = total > 0 ? Math.round((memberCount / total) * 100) : 0
   const collabPct = total > 0 ? Math.round((collabCount / total) * 100) : 0
+
+  const publicCount = section.publicMemberCount ?? null
+  const privateMemberCount =
+    effectiveMemberCount !== null && publicCount !== null
+      ? effectiveMemberCount - publicCount
+      : null
 
   const adminUrl = `https://github.com/orgs/${org}/people?query=role%3Aowner`
   const memberUrl = `https://github.com/orgs/${org}/people?query=role%3Amember`
@@ -293,21 +325,24 @@ function MemberPermissionSummary({
       <div className="grid grid-cols-3 gap-2 text-sm">
         <RoleRow
           label="Admins"
-          count={section.adminCount}
+          count={displayAdminCount}
           pct={adminPct}
           countTestId="perm-admin-count"
           pctTestId="perm-admin-pct"
           linkTestId="perm-admin-link"
           href={adminUrl}
+          labelTooltip={!elevated ? 'Admin status cannot be verified without read:org scope — GitHub may return all visible public members from this endpoint regardless of their actual role.' : undefined}
         />
         <RoleRow
-          label="Members"
-          count={effectiveMemberCount}
-          pct={memberPct}
+          label={effectivelyElevated ? 'Members' : 'Public members'}
+          count={effectivelyElevated ? effectiveMemberCount : publicCount}
+          pct={effectivelyElevated ? memberPct : null}
           countTestId="perm-member-count"
           pctTestId="perm-member-pct"
-          linkTestId="perm-member-link"
-          href={memberUrl}
+          linkTestId={effectivelyElevated ? 'perm-member-link' : null}
+          href={effectivelyElevated ? memberUrl : null}
+          publicCount={effectivelyElevated ? publicCount : null}
+          privateCount={effectivelyElevated ? privateMemberCount : null}
         />
         <RoleRow
           label="Outside collaborators"
@@ -317,22 +352,58 @@ function MemberPermissionSummary({
           pctTestId="perm-collab-pct"
           linkTestId={null}
           href={null}
+          labelTooltip="Requires org membership — available via a Personal Access Token with read:org scope from an org owner or admin."
+          labelTooltipAlign="right"
         />
       </div>
-      {!elevated ? (
+      {oauthRestricted ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Showing public members only. Sign in with{' '}
-          <span className="font-medium">Read org membership</span> or{' '}
-          <span className="font-medium">Org admin</span> permission for full counts.
+          This org restricts third-party OAuth app access — admin and member counts are unavailable.{' '}
+          <button type="button" onClick={onSignOut} className="font-medium text-sky-700 hover:underline dark:text-sky-400">Sign out</button>
+          {' and sign in again using a '}
+          <span className="font-medium">Personal Access Token</span>
+          {' with '}
+          <code className="font-mono text-[0.7rem]">read:org</code>
+          {' scope — PATs bypass OAuth app restrictions. You must also be a member of this org to see full member details and admin counts.'}
         </p>
-      ) : section.applicability === 'partial' && section.unavailableReasons.length > 0 ? (
+      ) : !elevated ? (
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Some data unavailable:{' '}
-          {section.unavailableReasons.join(', ')}
+          Admin and member breakdown unavailable — org may restrict OAuth app access.{' '}
+          {isPAT
+            ? <>Add <code className="font-mono text-[0.7rem]">read:org</code> scope to your token for full counts.</>
+            : <><button type="button" onClick={onSignOut} className="font-medium text-sky-700 hover:underline dark:text-sky-400">Sign out</button>{' and sign in again using a '}<span className="font-medium">Personal Access Token</span>{' with '}<code className="font-mono text-[0.7rem]">read:org</code>{' scope for full counts.'}</>
+          }
         </p>
+      ) : section.applicability === 'partial' && section.unavailableReasons.filter(r => r !== 'admin-list-possibly-oauth-restricted').length > 0 ? (
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {formatUnavailableReasons(section.unavailableReasons.filter(r => r !== 'admin-list-possibly-oauth-restricted'))}
+          {!isPAT && <>{' '}Use a <span className="font-medium">Personal Access Token</span> for full access.</>}
+        </p>
+      ) : null}
+      {section.publicMembers && section.publicMembers.length > 0 ? (
+        <PublicMemberList members={section.publicMembers} org={org} />
       ) : null}
     </div>
   )
+}
+
+function formatUnavailableReasons(reasons: MemberPermissionUnavailableReason[]): string {
+  const labels: Record<MemberPermissionUnavailableReason, string> = {
+    'admin-list-rate-limited': 'admin list rate-limited',
+    'admin-list-auth-failed': 'admin list auth failed',
+    'admin-list-scope-insufficient': 'admin list requires elevated scope',
+    'admin-list-possibly-oauth-restricted': 'admin count restricted by org OAuth policy',
+    'member-list-rate-limited': 'member list rate-limited',
+    'member-list-auth-failed': 'member list auth failed',
+    'member-list-scope-insufficient': 'member list requires elevated scope',
+    'collaborator-list-rate-limited': 'outside collaborators rate-limited',
+    'collaborator-list-auth-failed': 'outside collaborators auth failed',
+    'collaborator-list-scope-insufficient': 'outside collaborators require Org admin permission',
+    'network': 'network error',
+    'unknown': 'unknown error',
+  }
+  const parts = reasons.map((r) => labels[r] ?? r)
+  return `Some data unavailable: ${parts.join(', ')}.`
 }
 
 function RoleRow({
@@ -343,24 +414,35 @@ function RoleRow({
   pctTestId,
   linkTestId,
   href,
+  publicCount,
+  privateCount,
+  labelTooltip,
+  labelTooltipAlign,
 }: {
   label: string
   count: number | null
-  pct: number
+  pct: number | null
   countTestId: string
   pctTestId: string
   linkTestId: string | null
   href: string | null
+  publicCount?: number | null
+  privateCount?: number | null
+  labelTooltip?: string
+  labelTooltipAlign?: 'left' | 'right'
 }) {
   const countContent = (
     <span className="font-semibold text-slate-900 dark:text-slate-100" data-testid={countTestId}>
-      {count ?? 'Unavailable'}
+      {count ?? 'Not available'}
     </span>
   )
 
   return (
     <div className="rounded border border-slate-100 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">
-      <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+      <div className="flex items-center gap-1">
+        <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
+        {labelTooltip ? <LabelTooltip text={labelTooltip} align={labelTooltipAlign} /> : null}
+      </div>
       <div className="flex items-baseline gap-1">
         {href && linkTestId ? (
           <a href={href} target="_blank" rel="noreferrer" data-testid={linkTestId} className="hover:underline">
@@ -369,13 +451,178 @@ function RoleRow({
         ) : (
           countContent
         )}
-        {count !== null ? (
+        {count !== null && pct !== null ? (
           <span className="text-xs text-slate-500 dark:text-slate-400" data-testid={pctTestId}>
             ({pct}%)
           </span>
         ) : null}
       </div>
+      {count !== null && publicCount !== null && publicCount !== undefined && privateCount !== null && privateCount !== undefined ? (
+        <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500" data-testid="perm-member-split">
+          {publicCount} public · {privateCount} private
+        </p>
+      ) : null}
     </div>
+  )
+}
+
+function ElevateAccessLink({ tier, children }: { tier: 'read-org' | 'admin-org'; children: React.ReactNode }) {
+  function handleClick() {
+    if (typeof window !== 'undefined' && window.location.search) {
+      sessionStorage.setItem('oauth_return_search', window.location.search)
+    }
+  }
+  return (
+    <a
+      href={`/api/auth/login?scope_tier=${tier}`}
+      onClick={handleClick}
+      className="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
+    >
+      {children}
+    </a>
+  )
+}
+
+function LabelTooltip({ text, align = 'left' }: { text: string; align?: 'left' | 'right' }) {
+  return (
+    <span className="group relative inline-flex">
+      <span
+        aria-label={text}
+        className="inline-flex h-3.5 w-3.5 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] font-semibold text-slate-400 dark:border-slate-600 dark:text-slate-500"
+        data-testid="role-row-tooltip-trigger"
+      >
+        i
+      </span>
+      <span
+        role="tooltip"
+        className={`pointer-events-none absolute bottom-full z-20 mb-1.5 w-64 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 ${align === 'right' ? 'right-0' : 'left-0'}`}
+        data-testid="role-row-tooltip"
+      >
+        {text}
+      </span>
+    </span>
+  )
+}
+
+const PUBLIC_MEMBER_PREVIEW_LIMIT = 20
+
+function PublicMemberList({ members, org }: { members: { login: string; avatarUrl: string }[]; org: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const [query, setQuery] = useState('')
+
+  const filtered = query
+    ? members.filter((m) => m.login.toLowerCase().includes(query.toLowerCase()))
+    : members
+
+  const isSearching = query.length > 0
+  const shown = isSearching || expanded ? filtered : filtered.slice(0, PUBLIC_MEMBER_PREVIEW_LIMIT)
+  const remaining = filtered.length - PUBLIC_MEMBER_PREVIEW_LIMIT
+
+  return (
+    <details
+      open={false}
+      className="group rounded border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50"
+      data-testid="public-member-list"
+    >
+      <summary className="flex cursor-pointer select-none items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 list-none dark:text-slate-300 [&::-webkit-details-marker]:hidden">
+        <svg
+          aria-hidden="true"
+          className="h-3 w-3 shrink-0 -rotate-90 text-slate-400 transition-transform group-open:rotate-0 dark:text-slate-500"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        Public members ({members.length})
+      </summary>
+      <div className="border-t border-slate-100 px-3 py-2 dark:border-slate-700">
+        <div className="mb-2 flex items-center gap-2">
+          <div className="relative flex-1">
+            <svg aria-hidden="true" className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clipRule="evenodd" />
+            </svg>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setExpanded(false) }}
+              placeholder="Search members…"
+              aria-label="Search public members"
+              className="w-full rounded border border-slate-200 bg-white py-1 pl-7 pr-2 text-xs text-slate-700 placeholder-slate-400 focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:placeholder-slate-500"
+              data-testid="public-member-search"
+            />
+          </div>
+          {isSearching ? (
+            <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+              {filtered.length} of {members.length}
+            </span>
+          ) : null}
+        </div>
+
+        {shown.length === 0 ? (
+          <p className="py-1 text-xs text-slate-500 dark:text-slate-400">No members match &ldquo;{query}&rdquo;.</p>
+        ) : (
+          <ul className="flex flex-wrap gap-1.5" data-testid="public-member-list-items">
+            {shown.map(({ login, avatarUrl }) => (
+              <li key={login}>
+                <a
+                  href={`https://github.com/${login}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={login}
+                  className="group/chip inline-flex items-center gap-1 rounded-full bg-white py-0.5 pl-0.5 pr-2 text-xs text-slate-700 ring-1 ring-slate-200 transition hover:ring-sky-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700 dark:hover:ring-sky-700"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`${avatarUrl}&s=32`}
+                    alt=""
+                    aria-hidden="true"
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 rounded-full bg-slate-100 dark:bg-slate-800"
+                    loading="lazy"
+                  />
+                  <span className="group-hover/chip:text-sky-700 dark:group-hover/chip:text-sky-400">{login}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {!isSearching && !expanded && remaining > 0 ? (
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="text-xs text-sky-700 hover:underline dark:text-sky-400"
+              data-testid="public-member-list-show-more"
+            >
+              Show {remaining} more
+            </button>
+            <a
+              href={`https://github.com/orgs/${org}/people`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-500 hover:underline dark:text-slate-400"
+            >
+              View all on GitHub →
+            </a>
+          </div>
+        ) : !isSearching && members.length > PUBLIC_MEMBER_PREVIEW_LIMIT ? (
+          <a
+            href={`https://github.com/orgs/${org}/people`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 block text-xs text-slate-500 hover:underline dark:text-slate-400"
+          >
+            View all on GitHub →
+          </a>
+        ) : null}
+      </div>
+    </details>
   )
 }
 
@@ -411,23 +658,24 @@ function PanelChevron({ expanded }: { expanded: boolean }) {
   )
 }
 
-function HeaderCountStrip({ section }: { section: StaleAdminsSection }) {
+function HeaderCountStrip({ section, elevated }: { section: StaleAdminsSection; elevated: boolean }) {
   if (section.applicability !== 'applicable' || section.admins.length === 0) return null
   const counts = countByClassification(section.admins)
   const total = section.admins.length
+  const noun = elevated ? 'admin' : 'public member'
   return (
     <div
       className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
       data-testid="stale-admins-count-strip"
-      aria-label={`Admin summary — ${total} admins`}
+      aria-label={`${elevated ? 'Admin' : 'Public member'} summary — ${total}`}
     >
       <span className="font-medium text-slate-700 dark:text-slate-200">
-        {total} admin{total === 1 ? '' : 's'}
+        {total} {noun}{total === 1 ? '' : 's'}
       </span>
       <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
         ·
       </span>
-      {GROUP_ORDER.map((c) => (
+      {GROUP_ORDER.filter((c) => counts[c] > 0).map((c) => (
         <CountPill key={c} classification={c} count={counts[c]} />
       ))}
     </div>
@@ -491,11 +739,13 @@ function SectionBody({
   onRetry,
   refreshing,
   nextAutoRetryAt,
+  elevated = true,
 }: {
   section: StaleAdminsSection
   onRetry: () => void
   refreshing: boolean
   nextAutoRetryAt: string | null
+  elevated?: boolean
 }) {
   if (section.applicability === 'not-applicable-non-org') {
     return (
@@ -518,7 +768,7 @@ function SectionBody({
   if (section.admins.length === 0) {
     return (
       <p className="text-sm text-slate-600 dark:text-slate-300">
-        No admins were returned for this organization.
+        {elevated ? 'No admins were returned for this organization.' : 'No public members were returned for this organization.'}
       </p>
     )
   }
@@ -536,6 +786,7 @@ function SectionBody({
           onRetry={onRetry}
           refreshing={refreshing}
           nextAutoRetryAt={nextAutoRetryAt}
+          elevated={elevated}
         />
       ))}
     </div>
@@ -549,6 +800,7 @@ function GroupSection({
   onRetry,
   refreshing,
   nextAutoRetryAt,
+  elevated = true,
 }: {
   classification: StaleAdminClassification
   admins: StaleAdminRecord[]
@@ -556,6 +808,7 @@ function GroupSection({
   onRetry: () => void
   refreshing: boolean
   nextAutoRetryAt: string | null
+  elevated?: boolean
 }) {
   const config = GROUP_CONFIG[classification]
   const isUnavailable = classification === 'unavailable'
@@ -571,7 +824,7 @@ function GroupSection({
     >
       <summary
         className="flex cursor-pointer select-none items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-800 list-none dark:text-slate-100 [&::-webkit-details-marker]:hidden"
-        aria-label={config.groupAriaLabel}
+        aria-label={elevated ? config.groupAriaLabel : config.groupAriaLabel.replace(/admins?/gi, 'public members')}
       >
         <GroupChevron />
         <span aria-hidden="true">{config.icon}</span>
@@ -875,7 +1128,7 @@ function RetryCountdown({ availableAt }: { availableAt: string }) {
 
 function ModeBadge({ mode }: { mode: StaleAdminMode }) {
   const config = MODE_CONFIG[mode]
-  return (
+  const badge = (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.className}`}
       data-testid={`stale-admins-mode-${mode}`}
@@ -883,11 +1136,23 @@ function ModeBadge({ mode }: { mode: StaleAdminMode }) {
       {config.label}
     </span>
   )
+  if (!config.tooltip) return badge
+  return (
+    <span className="group relative inline-flex">
+      {badge}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full right-0 z-20 mb-1.5 w-64 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+      >
+        {config.tooltip}
+      </span>
+    </span>
+  )
 }
 
-const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string }> = {
+const MODE_CONFIG: Record<StaleAdminMode, { label: string; className: string; tooltip?: string }> = {
   baseline: {
-    label: 'Baseline — public admins only',
+    label: 'Baseline — public members only',
     className: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
   },
   'elevated-effective': {

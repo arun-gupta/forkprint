@@ -58,25 +58,7 @@ describe('AuthGate', () => {
     expect(screen.getByRole('link', { name: /sign in with github/i })).toBeInTheDocument()
   })
 
-  it('renders three scope-tier radios on the unauthenticated branch, with baseline selected by default', () => {
-    render(
-      <AuthProvider>
-        <AuthGate>
-          <p>Protected content</p>
-        </AuthGate>
-      </AuthProvider>,
-    )
-    const baseline = screen.getByRole('radio', { name: /baseline/i })
-    const readOrg = screen.getByRole('radio', { name: /read org membership/i })
-    const adminOrg = screen.getByRole('radio', { name: /org admin \(read\)/i })
-
-    expect(baseline).toBeChecked()
-    expect(readOrg).not.toBeChecked()
-    expect(adminOrg).not.toBeChecked()
-  })
-
-  it('sign-in link reflects the selected scope tier', async () => {
-    const userEvent = (await import('@testing-library/user-event')).default
+  it('sign-in link always uses baseline scope (no scope-tier picker on sign-in page)', () => {
     render(
       <AuthProvider>
         <AuthGate>
@@ -86,38 +68,6 @@ describe('AuthGate', () => {
     )
     const link = screen.getByRole('link', { name: /sign in with github/i })
     expect(link.getAttribute('href')).toBe('/api/auth/login')
-
-    await userEvent.click(screen.getByRole('radio', { name: /read org membership/i }))
-    expect(link.getAttribute('href')).toBe('/api/auth/login?scope_tier=read-org')
-
-    await userEvent.click(screen.getByRole('radio', { name: /org admin \(read\)/i }))
-    expect(link.getAttribute('href')).toBe('/api/auth/login?scope_tier=admin-org')
-
-    await userEvent.click(screen.getByRole('radio', { name: /baseline/i }))
-    expect(link.getAttribute('href')).toBe('/api/auth/login')
-  })
-
-  it('each scope tier carries a brief guidance line to help the user decide', () => {
-    render(
-      <AuthProvider>
-        <AuthGate>
-          <p>Protected content</p>
-        </AuthGate>
-      </AuthProvider>,
-    )
-    expect(screen.getByText(/public data only/i)).toBeInTheDocument()
-    expect(screen.getByText(/concealed admins/i)).toBeInTheDocument()
-    expect(screen.getByText(/2fa enforcement/i)).toBeInTheDocument()
-  })
-
-  it('omits the solo-maintainer footnote that previously sat below the picker', () => {
-    render(
-      <AuthProvider>
-        <AuthGate>
-          <p>Protected content</p>
-        </AuthGate>
-      </AuthProvider>,
-    )
-    expect(screen.queryByText(/solo-maintainer repos are auto-detected/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   })
 })

@@ -14,6 +14,7 @@ export type MemberPermissionUnavailableReason =
   | 'admin-list-rate-limited'
   | 'admin-list-auth-failed'
   | 'admin-list-scope-insufficient'
+  | 'admin-list-possibly-oauth-restricted'
   | 'member-list-rate-limited'
   | 'member-list-auth-failed'
   | 'member-list-scope-insufficient'
@@ -36,6 +37,10 @@ export interface MemberPermissionDistributionSection {
   adminCount: number | null
   /** Non-admin org members (total - admins) */
   memberCount: number | null
+  /** Public members only (no read:org needed) */
+  publicMemberCount: number | null
+  /** Public members with avatars — for the collapsible list */
+  publicMembers: { login: string; avatarUrl: string }[] | null
   outsideCollaboratorCount: number | null
   unavailableReasons: MemberPermissionUnavailableReason[]
   resolvedAt: string

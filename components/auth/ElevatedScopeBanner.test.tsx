@@ -88,4 +88,53 @@ describe('ElevatedScopeBanner', () => {
     await userEvent.click(screen.getByRole('button', { name: /sign out to revert/i }))
     expect(screen.queryByTestId('elevated-scope-banner')).not.toBeInTheDocument()
   })
+
+  it('shows "Personal Access Token active" heading for PAT sessions', () => {
+    render(
+      <AuthProvider
+        initialSession={{
+          token: 'ghp_abc',
+          username: 'arun-gupta',
+          scopes: ['read:org'],
+          isPAT: true,
+        }}
+      >
+        <ElevatedScopeBanner />
+      </AuthProvider>,
+    )
+    expect(screen.getByTestId('elevated-scope-banner')).toBeInTheDocument()
+    expect(screen.getByText(/personal access token active/i)).toBeInTheDocument()
+  })
+
+  it('shows "Sign out" (not "Sign out to revert") for PAT sessions', () => {
+    render(
+      <AuthProvider
+        initialSession={{
+          token: 'ghp_abc',
+          username: 'arun-gupta',
+          scopes: ['read:org'],
+          isPAT: true,
+        }}
+      >
+        <ElevatedScopeBanner />
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('button', { name: /^sign out$/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /sign out to revert/i })).not.toBeInTheDocument()
+  })
+
+  it('shows "Sign out to revert" for OAuth elevated sessions', () => {
+    render(
+      <AuthProvider
+        initialSession={{
+          token: 'gho_abc',
+          username: 'arun-gupta',
+          scopes: ['read:org'],
+        }}
+      >
+        <ElevatedScopeBanner />
+      </AuthProvider>,
+    )
+    expect(screen.getByRole('button', { name: /sign out to revert/i })).toBeInTheDocument()
+  })
 })

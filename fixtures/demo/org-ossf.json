@@ -1368,6 +1368,8 @@
       "applicability": "partial",
       "adminCount": 21,
       "memberCount": 0,
+      "publicMemberCount": null,
+      "publicMembers": null,
       "outsideCollaboratorCount": null,
       "unavailableReasons": [
         "unknown"

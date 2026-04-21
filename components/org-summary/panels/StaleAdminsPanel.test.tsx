@@ -74,7 +74,7 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
     const badge = screen.getByTestId('stale-admins-mode-baseline')
     expect(badge.textContent).toMatch(/baseline/i)
-    expect(badge.textContent).toMatch(/public admins only/i)
+    expect(badge.textContent).toMatch(/public members only/i)
   })
 
   it('shows per-group count pills matching the number of admins in each group', () => {
@@ -104,8 +104,17 @@ describe('StaleAdminsPanel — baseline rendering', () => {
     expect(within(unavailableSummary).getByText('1')).toBeInTheDocument()
   })
 
-  it('renders a header summary strip with totals across all classifications', () => {
+  it('hides the header summary strip in baseline mode (activity section is hidden)', () => {
     const section = makeSection({
+      admins: [mkAdmin('a1', 'active'), mkAdmin('s1', 'stale'), mkAdmin('u1', 'unavailable')],
+    })
+    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    expect(screen.queryByTestId('stale-admins-count-strip')).not.toBeInTheDocument()
+  })
+
+  it('renders a header summary strip with totals across all classifications when elevated', () => {
+    const section = makeSection({
+      mode: 'elevated-effective',
       admins: [
         mkAdmin('a1', 'active'),
         mkAdmin('a2', 'active'),
@@ -114,37 +123,41 @@ describe('StaleAdminsPanel — baseline rendering', () => {
         mkAdmin('u1', 'unavailable'),
       ],
     })
-    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    renderWithSession(
+      <StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />,
+      { scopes: ['public_repo', 'read:org'] },
+    )
 
     const strip = screen.getByTestId('stale-admins-count-strip')
-    expect(strip).toHaveAttribute('aria-label', 'Admin summary — 5 admins')
+    expect(strip).toHaveAttribute('aria-label', 'Admin summary — 5')
     expect(within(strip).getByText('5 admins')).toBeInTheDocument()
     expect(within(strip).getByTestId('stale-admins-count-stale').textContent).toMatch(/1 stale/i)
-    expect(within(strip).getByTestId('stale-admins-count-unavailable').textContent).toMatch(/1 unavailable/i)
-    expect(
-      within(strip).getByTestId('stale-admins-count-no-public-activity').textContent,
-    ).toMatch(/1 no public activity/i)
+    expect(within(strip).getByTestId('stale-admins-count-unavailable').textContent).toMatch(/1 activity unknown/i)
     expect(within(strip).getByTestId('stale-admins-count-active').textContent).toMatch(/2 active/i)
   })
 
-  it('hides the description and group list when the panel is collapsed, keeps the summary count strip visible', () => {
+  it('hides the description and group list when the panel is collapsed', () => {
     const section = makeSection({
+      mode: 'elevated-effective',
       admins: [mkAdmin('s1', 'stale'), mkAdmin('a1', 'active')],
     })
-    renderWithSession(<StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />)
+    renderWithSession(
+      <StaleAdminsPanel org="acme" ownerType="Organization" sectionOverride={section} />,
+      { scopes: ['public_repo', 'read:org'] },
+    )
 
-    // Expanded by default — strip and description are visible.
+    // Expanded by default — strip and activity section are visible.
     expect(screen.getByTestId('stale-admins-count-strip')).toBeInTheDocument()
-    expect(screen.getByText(/member roles and admin activity/i)).toBeInTheDocument()
+    expect(screen.getByTestId('stale-admins-activity-detail')).toBeInTheDocument()
 
     const toggle = screen.getByTestId('stale-admins-panel-toggle')
     fireEvent.click(toggle)
 
+    // After collapse, groups and subtitle are hidden.
     expect(screen.queryByTestId('stale-admins-group-stale')).not.toBeInTheDocument()
-    expect(screen.queryByText(/member roles and admin activity/i)).not.toBeInTheDocument()
-    // Summary strip and title stay visible so the signal is still readable at a glance.
+    // Summary strip and title stay visible.
     expect(screen.getByTestId('stale-admins-count-strip')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /org admin.*member overview/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /org member.*admin overview/i })).toBeInTheDocument()
   })
 
   it('omits the header summary strip when applicability is not applicable', () => {

@@ -6,10 +6,10 @@ function buildReq(query: string, headers: Record<string, string> = { authorizati
 }
 
 function memberPage(logins: string[]): Response {
-  return new Response(JSON.stringify(logins.map((login) => ({ login }))), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  })
+  return new Response(
+    JSON.stringify(logins.map((login) => ({ login, avatar_url: `https://github.com/${login}.png` }))),
+    { status: 200, headers: { 'Content-Type': 'application/json' } },
+  )
 }
 
 describe('GET /api/org/member-permissions', () => {
@@ -36,13 +36,14 @@ describe('GET /api/org/member-permissions', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('returns applicable with correct adminCount, memberCount (non-admin), and collaboratorCount', async () => {
+  it('returns applicable with correct adminCount, memberCount (non-admin), collaboratorCount, and publicMemberCount', async () => {
     vi.stubGlobal('fetch', vi.fn(async (input: string | URL) => {
       const url = String(input)
-      // role=admin → 2 admins; role=all → 5 total members; outside_collaborators → 1
+      // role=admin → 2 admins; role=all → 5 total members; outside_collaborators → 1; public_members → 3
       if (url.includes('role=admin')) return memberPage(['admin1', 'admin2'])
       if (url.includes('role=all')) return memberPage(['admin1', 'admin2', 'user1', 'user2', 'user3'])
       if (url.includes('outside_collaborators')) return memberPage(['ext1'])
+      if (url.includes('public_members')) return memberPage(['user1', 'user2', 'user3'])
       return new Response('', { status: 404 })
     }))
 
@@ -53,6 +54,8 @@ describe('GET /api/org/member-permissions', () => {
         adminCount: number
         memberCount: number
         outsideCollaboratorCount: number
+        publicMemberCount: number
+        publicMembers: string[]
       }
     }
 
@@ -60,6 +63,12 @@ describe('GET /api/org/member-permissions', () => {
     expect(body.section.adminCount).toBe(2)
     expect(body.section.memberCount).toBe(3) // 5 total - 2 admins
     expect(body.section.outsideCollaboratorCount).toBe(1)
+    expect(body.section.publicMemberCount).toBe(3)
+    expect(body.section.publicMembers).toEqual([
+      { login: 'user1', avatarUrl: 'https://github.com/user1.png' },
+      { login: 'user2', avatarUrl: 'https://github.com/user2.png' },
+      { login: 'user3', avatarUrl: 'https://github.com/user3.png' },
+    ])
   })
 
   it('returns member-list-unavailable when total-member fetch is rate-limited', async () => {
