@@ -336,7 +336,10 @@ export async function fetchUserPublicEvents(
     )
 
     if (response.status === 404) return { kind: 'admin-account-404' }
-    if (response.status === 403 && isRateLimited(response)) {
+    if (
+      response.status === 429 ||
+      (response.status === 403 && (isRateLimited(response) || (await hasSecondaryRateLimitBody(response))))
+    ) {
       return { kind: 'rate-limited', retryAvailableAt: parseRetryAvailableAt(response) }
     }
     if (!response.ok) return { kind: 'events-fetch-failed' }
@@ -396,8 +399,9 @@ export async function fetchUserLatestOrgCommit(
         },
       )
 
-      if (response.status === 403) {
-        const rateLimited = isRateLimited(response) || (await hasSecondaryRateLimitBody(response))
+      if (response.status === 403 || response.status === 429) {
+        const rateLimited =
+          response.status === 429 || isRateLimited(response) || (await hasSecondaryRateLimitBody(response))
         if (rateLimited) {
           if (attempt < maxRetries) {
             const wait = Math.min(
@@ -516,6 +520,9 @@ function isRateLimited(response: Response): boolean {
   // `X-RateLimit-Remaining: 0` header. Present Retry-After is GitHub telling
   // the caller to back off — classify as rate-limited.
   if (response.headers.get('Retry-After')) return true
+  // Search has a separate 30 req/min quota; a 403 with X-RateLimit-Resource:
+  // search means that quota was hit even when X-RateLimit-Remaining is not 0.
+  if (response.headers.get('X-RateLimit-Resource') === 'search') return true
   return false
 }
 

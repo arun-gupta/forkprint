@@ -275,6 +275,24 @@ describe('fetchUserPublicEvents', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 500 })))
     expect((await fetchUserPublicEvents('t', 'alice')).kind).toBe('events-fetch-failed')
   })
+
+  it('maps 429 to rate-limited', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 429 })))
+    expect((await fetchUserPublicEvents('t', 'alice')).kind).toBe('rate-limited')
+  })
+
+  it('maps 403 with secondary rate-limit body to rate-limited when headers are absent', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({ message: 'You have exceeded a secondary rate limit.' }),
+          { status: 403, headers: { 'Content-Type': 'application/json' } },
+        ),
+      ),
+    )
+    expect((await fetchUserPublicEvents('t', 'alice')).kind).toBe('rate-limited')
+  })
 })
 
 describe('fetchUserLatestOrgCommit', () => {
@@ -450,6 +468,30 @@ describe('fetchUserLatestOrgCommit', () => {
     expect(result.kind).toBe('commit-search-failed')
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(sleep).not.toHaveBeenCalled()
+  })
+
+  it('maps 429 to rate-limited (newer GitHub secondary rate limit signal)', async () => {
+    const fetchMock = vi.fn(async () => new Response('', { status: 429, headers: { 'Retry-After': '30' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('rate-limited')
+    expect(sleep).toHaveBeenCalledTimes(1)
+  })
+
+  it('maps 403 + X-RateLimit-Resource: search to rate-limited', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response('', {
+        status: 403,
+        headers: { 'X-RateLimit-Resource': 'search', 'X-RateLimit-Remaining': '5' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const sleep = vi.fn(async () => {})
+
+    const result = await fetchUserLatestOrgCommit('t', 'alice', 'x', { sleep })
+    expect(result.kind).toBe('rate-limited')
   })
 })
 
