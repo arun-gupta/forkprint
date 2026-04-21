@@ -88,22 +88,16 @@ describe('ContributorsScorePane', () => {
     expect(screen.queryByRole('button', { name: /show numbers/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('list', { name: /attributed organization bars/i })).not.toBeInTheDocument()
     expect(
-      screen.getByLabelText(
-        /Maintainer count\. 4 maintainers or owners parsed from supported public repository files such as OWNERS, MAINTAINERS, CODEOWNERS, or GOVERNANCE\.md\./i,
-      ),
+      screen.getByTitle(/4 maintainers or owners parsed from supported public repository files such as OWNERS, MAINTAINERS, CODEOWNERS, or GOVERNANCE\.md\./i),
     ).toBeInTheDocument()
     expect(
-      screen.getByLabelText(/Types of contributions\. Observed from verified recent repository activity: Commits, Pull requests, Issues\./i),
+      screen.getByTitle(/Observed from verified recent repository activity: Commits, Pull requests, Issues\./i),
     ).toBeInTheDocument()
     expect(
-      screen.getByLabelText(
-        /Elephant Factor\. 2 guessed organization\(s\) account for at least 50% of experimentally attributed recent commits\. Higher is generally healthier/i,
-      ),
+      screen.getByTitle(/2 guessed organization\(s\) account for at least 50% of experimentally attributed recent commits\. Higher is generally healthier/i),
     ).toBeInTheDocument()
     expect(
-      screen.getByLabelText(
-        /Single-vendor dependency ratio\. 68.0% of experimentally attributed recent commits are attributable to the largest guessed public organization\. Lower is generally healthier/i,
-      ),
+      screen.getByTitle(/68.0% of experimentally attributed recent commits are attributable to the largest guessed public organization\. Lower is generally healthier/i),
     ).toBeInTheDocument()
     expect(screen.queryByText(/^Missing data$/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/later contributor signals/i)).not.toBeInTheDocument()

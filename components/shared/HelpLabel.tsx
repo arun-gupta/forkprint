@@ -39,7 +39,7 @@ export function HelpLabel({ label, helpText, className }: HelpLabelProps) {
             role="button"
             tabIndex={0}
             title={helpText}
-            aria-label={`${label}. ${helpText}`}
+            aria-label={`${label} help`}
             aria-expanded={open}
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}

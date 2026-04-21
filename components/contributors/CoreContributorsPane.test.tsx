@@ -40,9 +40,7 @@ describe('CoreContributorsPane', () => {
     expect(screen.getByText('Contributor composition')).toBeInTheDocument()
     expect(screen.getByText('GitHub API contributors')).toBeInTheDocument()
     expect(
-      screen.getByLabelText(
-        /Contributor composition\. 12 contributors from GitHub's repository contributors API, including anonymous contributors/i,
-      ),
+      screen.getByTitle(/12 contributors from GitHub's repository contributors API, including anonymous contributors/i),
     ).toBeInTheDocument()
     expect(screen.queryByText('Active contributors (90d)')).not.toBeInTheDocument()
     expect(screen.queryByText('Repeat contributors (90d)')).not.toBeInTheDocument()
