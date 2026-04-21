@@ -114,22 +114,29 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
         <p className="text-lg font-bold">{hs.label}</p>
       </div>
 
-      {profileCells.length > 0 ? (
-        <div
-          className={`mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 ${isSolo ? 'opacity-50' : ''}`}
-          title={isSolo ? 'Popularity signals — not health. Dimmed for solo-maintained projects.' : undefined}
-          data-testid={isSolo ? `ecosystem-dimmed-${card.repo}` : undefined}
-        >
-          {profileCells.map((cell) => (
-            <ScorecardCell key={cell.label} {...cell} />
-          ))}
-        </div>
-      ) : null}
-      {scoreCells.length > 0 ? (
-        <div className={`mt-1.5 grid grid-cols-2 gap-1.5 ${SCORECARD_GRID_COLS[scoreCells.length] ?? 'sm:grid-cols-5'}`}>
-          {scoreCells.map((cell) => (
-            <ScorecardCell key={cell.label} {...cell} />
-          ))}
+      {(profileCells.length > 0 || scoreCells.length > 0) ? (
+        <div className="mt-2">
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="text-[9px] text-slate-400 dark:text-slate-500">percentile rank</span>
+          </div>
+          {profileCells.length > 0 ? (
+            <div
+              className={`grid grid-cols-1 gap-1.5 sm:grid-cols-3 ${isSolo ? 'opacity-50' : ''}`}
+              title={isSolo ? 'Popularity signals — not health. Dimmed for solo-maintained projects.' : undefined}
+              data-testid={isSolo ? `ecosystem-dimmed-${card.repo}` : undefined}
+            >
+              {profileCells.map((cell) => (
+                <ScorecardCell key={cell.label} {...cell} />
+              ))}
+            </div>
+          ) : null}
+          {scoreCells.length > 0 ? (
+            <div className={`mt-1.5 grid grid-cols-2 gap-1.5 ${SCORECARD_GRID_COLS[scoreCells.length] ?? 'sm:grid-cols-5'}`}>
+              {scoreCells.map((cell) => (
+                <ScorecardCell key={cell.label} {...cell} />
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -259,7 +266,7 @@ function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass, onC
     <>
       <div className="flex items-baseline justify-between gap-1">
         <span className="text-[10px] font-medium uppercase tracking-wide">{label}</span>
-        <span className="text-xs font-semibold">{percentileLabel}</span>
+        <span className="text-xs font-semibold">{percentileLabel.replace(' percentile', '')}</span>
       </div>
       <p className="mt-0.5 text-[10px] opacity-60">{detail ?? '\u00A0'}</p>
     </>

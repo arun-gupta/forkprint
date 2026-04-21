@@ -28,8 +28,9 @@ describe('MetricCard', () => {
     expect(screen.getByText(/20.8% fork rate/i)).toBeInTheDocument()
     expect(screen.getByText(/2.7% watcher rate/i)).toBeInTheDocument()
 
-    // Percentile labels present
-    expect(screen.getAllByText(/\d+\w{2} percentile/).length).toBeGreaterThanOrEqual(3)
+    // Percentile rank header shown once; cells show ordinals only
+    expect(screen.getAllByText('percentile rank').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/^\d+\w{2}$/).length).toBeGreaterThanOrEqual(3)
   })
 
   it('shows insufficient data label for scores without data', () => {
