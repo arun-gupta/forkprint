@@ -221,6 +221,13 @@ export interface AnalysisResult {
   // or 'unavailable' per Constitution §II (no estimation). Per-field
   // 'unavailable' is used for individual signals that cannot be computed.
   releaseHealthResult?: ReleaseHealthResult | Unavailable
+  // Accessibility & Onboarding signals (P2-F08 / #117). Optional — absent on
+  // fixtures predating this feature. 'unavailable' per Constitution §II when
+  // the API query cannot be completed or sample size is insufficient.
+  goodFirstIssueCount?: number | Unavailable
+  devEnvironmentSetup?: boolean | Unavailable
+  gitpodPresent?: boolean | Unavailable
+  newContributorPRAcceptanceRate?: number | Unavailable
   // Project Maturity signals (P2-F11 / #74). Optional — absent on fixtures
   // predating this feature. `createdAt` is the sole verified input for
   // `ageInDays`; `lifetimeCommits` is the default branch's

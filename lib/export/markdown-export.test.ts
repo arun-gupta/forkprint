@@ -344,6 +344,33 @@ describe('buildMarkdownReport', () => {
     expect(md).toContain('whitelist')
     expect(md).toContain('allowlist')
   })
+
+  it('includes Onboarding & Accessibility section with four signal rows', () => {
+    const response: AnalyzeResponse = {
+      ...MINIMAL_RESPONSE,
+      results: [{
+        ...MINIMAL_RESPONSE.results[0],
+        goodFirstIssueCount: 5,
+        devEnvironmentSetup: true,
+        gitpodPresent: true,
+        newContributorPRAcceptanceRate: 0.8,
+      }],
+    }
+    const md = buildMarkdownReport(response)
+    expect(md).toContain('### Onboarding & Accessibility')
+    expect(md).toContain('Good first issues')
+    expect(md).toContain('Dev environment setup')
+    expect(md).toContain('+ Gitpod')
+    expect(md).toContain('New contributor PR acceptance')
+  })
+
+  it('renders unavailable onboarding signals as —', () => {
+    const md = buildMarkdownReport(MINIMAL_RESPONSE)
+    expect(md).toContain('### Onboarding & Accessibility')
+    const onboardingStart = md.indexOf('### Onboarding & Accessibility')
+    const onboardingBlock = md.slice(onboardingStart, onboardingStart + 400)
+    expect(onboardingBlock).toContain('—')
+  })
 })
 
 describe('buildMarkdownExport', () => {

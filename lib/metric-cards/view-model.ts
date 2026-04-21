@@ -5,6 +5,7 @@ import { getHealthScore, type HealthScoreDefinition } from '@/lib/scoring/health
 import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { computeGovernanceCompleteness } from '@/lib/governance/completeness'
 import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
+import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
 
@@ -96,7 +97,7 @@ function buildLensReadouts(result: AnalysisResult): LensReadout[] {
       key: 'community',
       label: 'Community',
       percentileLabel: community.percentile !== null ? `${community.percentile}th percentile` : '—',
-      detail: `${community.present.length} of ${community.present.length + community.missing.length} signals`,
+      detail: `${community.present.filter((k) => k !== 'gitpod_bonus').length} of ${community.present.filter((k) => k !== 'gitpod_bonus').length + community.missing.length + community.unknown.length} signals`,
       tooltip: 'Community is a cross-cutting lens — count of community signals present. Does not feed the composite OSS Health Score.',
       tone: community.tone,
     })
@@ -108,7 +109,7 @@ function buildLensReadouts(result: AnalysisResult): LensReadout[] {
       key: 'governance',
       label: 'Governance',
       percentileLabel: governance.percentile !== null ? `${governance.percentile}th percentile` : '—',
-      detail: `${governance.present.length} of ${governance.present.length + governance.missing.length} signals`,
+      detail: `${governance.present.length} of ${governance.present.length + governance.missing.length + governance.unknown.length} signals`,
       tooltip: 'Governance is a cross-cutting lens — count of governance signals present (license, contributing, CoC, security, changelog, branch protection, code review, maintainers). Does not feed the composite OSS Health Score.',
       tone: governance.tone,
     })
@@ -128,10 +129,22 @@ function buildLensReadouts(result: AnalysisResult): LensReadout[] {
         ? `${releaseHealth.percentile}th percentile`
         : 'Insufficient verified public data',
       detail: hasData
-        ? `${releaseHealth.present.length} of ${releaseHealth.present.length + releaseHealth.missing.length} signals`
+        ? `${releaseHealth.present.length} of ${releaseHealth.present.length + releaseHealth.missing.length + releaseHealth.unknown.length} signals`
         : 'No verified release-health signals',
       tooltip: 'Release Health is a cross-cutting lens — count of release-health signals present (release frequency, time since last release, semver compliance, release notes quality, tag-to-release promotion). Linear fallback until per-bracket calibration lands in #152. Does not feed the composite OSS Health Score.',
       tone: releaseHealth.tone,
+    })
+  }
+
+  const onboarding = computeOnboardingCompleteness(result)
+  if (onboarding.ratio !== null) {
+    lenses.push({
+      key: 'onboarding',
+      label: 'Onboarding',
+      percentileLabel: onboarding.percentile !== null ? `${onboarding.percentile}th percentile` : '—',
+      detail: `${onboarding.present.length} of ${onboarding.present.length + onboarding.missing.length + onboarding.unknown.length} signals`,
+      tooltip: 'Onboarding is a cross-cutting lens — count of onboarding signals present across Contributors and Documentation (good first issues, dev environment, contributor acceptance rate, issue/PR templates, CONTRIBUTING.md, CODE_OF_CONDUCT.md, README installation and contributing sections). Does not feed the composite OSS Health Score.',
+      tone: onboarding.tone,
     })
   }
 

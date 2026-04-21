@@ -13,6 +13,7 @@ import { getHealthScore } from '@/lib/scoring/health-score'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness, type CommunitySignalKey } from '@/lib/community/completeness'
 import { computeReleaseHealthCompleteness, type ReleaseHealthSignalKey } from '@/lib/release-health/completeness'
+import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
 import type { ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import { encodeRepos } from '@/lib/export/shareable-url'
 import { formatMaturityAge, formatNormalizedRate, formatGrowthTrajectory } from '@/lib/maturity/format'
@@ -214,6 +215,9 @@ function renderRepo(result: AnalysisResult, appUrl?: string): string {
   if (communityLines.length > 0) {
     lines.push(...communityLines)
   }
+
+  // Onboarding signals section (P2-F08 / #117).
+  lines.push(...renderOnboardingSection(result))
 
   // Release Health section (cross-cutting lens; see P2-F09 / #69).
   const releaseHealthLines = renderReleaseHealthSection(result)
@@ -667,6 +671,45 @@ function renderCommunitySection(result: AnalysisResult): string[] {
  * status table. Per-bracket calibration is deferred to #152, so percentile
  * labels use the linear ratio → percentile fallback.
  */
+function renderOnboardingSection(result: AnalysisResult): string[] {
+  const completeness = computeOnboardingCompleteness(result)
+  const total = completeness.present.length + completeness.missing.length + completeness.unknown.length
+  if (total === 0) return []
+
+  const status = (key: string): string => {
+    if ((completeness.present as string[]).includes(key)) return '✓ Present'
+    if ((completeness.missing as string[]).includes(key)) return '✗ Missing'
+    return '—'
+  }
+
+  const fmtRate = (v: number | 'unavailable' | undefined): string => {
+    if (v === 'unavailable' || v === undefined) return '—'
+    return `${(v * 100).toFixed(1)}%`
+  }
+
+  const presentCount = completeness.present.length
+  const percentileLabel = completeness.percentile !== null ? ` · ${completeness.percentile}th percentile` : ''
+
+  return [
+    '### Onboarding & Accessibility',
+    '',
+    `**Score:** ${presentCount} of ${total} signals${percentileLabel}`,
+    '',
+    '| Signal | Value |',
+    '| --- | --- |',
+    `| Good first issues | ${result.goodFirstIssueCount === 'unavailable' || result.goodFirstIssueCount === undefined ? '—' : String(result.goodFirstIssueCount)} |`,
+    `| Dev environment setup | ${status('dev_environment_setup')}${result.gitpodPresent === true ? ' (+ Gitpod)' : ''} |`,
+    `| New contributor PR acceptance | ${fmtRate(result.newContributorPRAcceptanceRate)} |`,
+    `| Issue templates | ${status('issue_templates')} |`,
+    `| PR template | ${status('pull_request_template')} |`,
+    `| CONTRIBUTING.md | ${status('contributing')} |`,
+    `| CODE_OF_CONDUCT.md | ${status('code_of_conduct')} |`,
+    `| README: Installation section | ${status('readme_installation')} |`,
+    `| README: Contributing section | ${status('readme_contributing')} |`,
+    '',
+  ]
+}
+
 function renderReleaseHealthSection(result: AnalysisResult): string[] {
   const completeness = computeReleaseHealthCompleteness(result)
   const rh = result.releaseHealthResult

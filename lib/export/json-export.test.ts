@@ -188,6 +188,49 @@ describe('buildJsonExport', () => {
     expect(discussions.windowCount).toBeNull()
   })
 
+  it('includes onboarding block with score summary and all 9 signals', async () => {
+    const response: AnalyzeResponse = {
+      ...MINIMAL_RESPONSE,
+      results: [{
+        ...MINIMAL_RESPONSE.results[0],
+        goodFirstIssueCount: 12,
+        devEnvironmentSetup: true,
+        gitpodPresent: true,
+        newContributorPRAcceptanceRate: 0.75,
+      }],
+    }
+    const result = buildJsonExport(response)
+    const text = await result.blob.text()
+    const parsed = JSON.parse(text) as {
+      results: Array<{
+        onboarding: {
+          score: { present: number; total: number; percentile: number | null; tone: string }
+          signals: Record<string, { status: string; value?: unknown; gitpodBonus?: boolean }>
+        }
+      }>
+    }
+    const onboarding = parsed.results[0].onboarding
+    expect(onboarding).toBeDefined()
+    expect(onboarding.score.total).toBe(9)
+    expect(onboarding.signals.good_first_issues.value).toBe(12)
+    expect(onboarding.signals.dev_environment_setup.status).toBe('present')
+    expect(onboarding.signals.dev_environment_setup.gitpodBonus).toBe(true)
+    expect(onboarding.signals.new_contributor_acceptance.value).toBe(0.75)
+    expect(Object.keys(onboarding.signals)).toHaveLength(9)
+  })
+
+  it('onboarding signals show "unknown" status when all data is unavailable', async () => {
+    const result = buildJsonExport(MINIMAL_RESPONSE)
+    const text = await result.blob.text()
+    const parsed = JSON.parse(text) as {
+      results: Array<{ onboarding: { signals: Record<string, { status: string }> } }>
+    }
+    const signals = parsed.results[0].onboarding.signals
+    expect(signals.good_first_issues.status).toBe('unknown')
+    expect(signals.dev_environment_setup.status).toBe('unknown')
+    expect(signals.new_contributor_acceptance.status).toBe('unknown')
+  })
+
   it('omits security, licensing, and inclusiveNaming when data is unavailable', async () => {
     const result = buildJsonExport(MINIMAL_RESPONSE)
     const text = await result.blob.text()

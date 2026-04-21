@@ -92,6 +92,9 @@ const CTR: CatalogEntry[] = [
   { id: 'CTR-5', bucket: 'Contributors', key: 'repeat_contributor_ratio', title: 'Invest in contributor retention to grow repeat-contributor share', tags: ['contrib-ex'] },
   { id: 'CTR-6', bucket: 'Contributors', key: 'new_contributor_inflow', title: 'Surface good-first-issues and onboarding to attract new contributors', tags: ['contrib-ex'] },
   { id: 'CTR-7', bucket: 'Contributors', key: 'contribution_breadth', title: 'Encourage contributions across commits, pull requests, and issues', tags: ['contrib-ex'] },
+  { id: 'CTR-8', bucket: 'Contributors', key: 'good_first_issues', title: 'Label beginner-friendly issues to attract first-time contributors', tags: ['onboarding'] },
+  { id: 'CTR-9', bucket: 'Contributors', key: 'dev_environment_setup', title: 'Add a devcontainer or Docker Compose file to ease local setup', tags: ['onboarding'] },
+  { id: 'CTR-10', bucket: 'Contributors', key: 'new_contributor_acceptance', title: 'Improve the first-time contributor PR review and merge workflow', tags: ['onboarding'] },
 ]
 
 // ── Documentation ─────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { CONTRIBUTOR_WINDOW_DAYS, type AnalysisResult, type ContributorWindowDay
 import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { CoreContributorsPane } from './CoreContributorsPane'
 import { ContributorsScorePane } from './ContributorsScorePane'
+import { OnboardingPane } from './OnboardingPane'
 
 interface ContributorsViewProps {
   results: AnalysisResult[]
@@ -42,8 +43,11 @@ export function ContributorsView({ results, activeTag, onTagChange }: Contributo
           </div>
         </div>
       </div>
-      {sections.map((section) => {
+      {sections.map((section, idx) => {
         const isCollapsed = collapsed.has(section.repo)
+        const result = results[idx]
+        const showOnboarding = !activeTag || activeTag === 'onboarding'
+        const showCoreAndScore = !activeTag || activeTag !== 'onboarding'
         return (
           <article key={section.repo} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <button
@@ -58,14 +62,28 @@ export function ContributorsView({ results, activeTag, onTagChange }: Contributo
             {!isCollapsed ? (
               <div className="mt-4 space-y-4">
                 <p className="text-sm text-slate-600 dark:text-slate-300">{`Contributor health and diversity signals derived from verified public repository activity over the last ${section.windowDays} days.`}</p>
-                <CoreContributorsPane
-                  metrics={section.coreMetrics}
-                  heatmap={section.heatmap}
-                  windowDays={section.windowDays}
-                  includeBots={includeBots}
-                  onToggleIncludeBots={() => setIncludeBots((current) => !current)}
-                />
-                <ContributorsScorePane section={section} activeTag={activeTag} onTagChange={onTagChange} />
+                {showCoreAndScore && (
+                  <>
+                    <CoreContributorsPane
+                      metrics={section.coreMetrics}
+                      heatmap={section.heatmap}
+                      windowDays={section.windowDays}
+                      includeBots={includeBots}
+                      onToggleIncludeBots={() => setIncludeBots((current) => !current)}
+                    />
+                    <ContributorsScorePane section={section} activeTag={activeTag} onTagChange={onTagChange} />
+                  </>
+                )}
+                {showOnboarding && result && (
+                  <OnboardingPane
+                    goodFirstIssueCount={result.goodFirstIssueCount ?? 'unavailable'}
+                    devEnvironmentSetup={result.devEnvironmentSetup ?? 'unavailable'}
+                    gitpodPresent={result.gitpodPresent ?? 'unavailable'}
+                    newContributorPRAcceptanceRate={result.newContributorPRAcceptanceRate ?? 'unavailable'}
+                    activeTag={activeTag}
+                    onTagChange={onTagChange}
+                  />
+                )}
               </div>
             ) : null}
           </article>

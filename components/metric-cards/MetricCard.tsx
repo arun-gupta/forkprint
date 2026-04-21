@@ -135,18 +135,23 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
 
       {card.lenses.length > 0 ? (
         <div
-          className={`mt-2 flex flex-wrap items-center gap-1.5 ${isSolo ? 'opacity-50' : ''}`}
+          className={`mt-2 ${isSolo ? 'opacity-50' : ''}`}
           title={isSolo ? 'Community-shape lenses — structurally low for solo-maintained projects. Dimmed, not scored.' : undefined}
         >
-          <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Lenses</span>
-          {card.lenses.map((lens) => (
-            <LensPill
-              key={lens.key}
-              lens={lens}
-              active={activeTag === lens.key}
-              onClick={onTagChange ? () => handleLensClick(lens.key) : undefined}
-            />
-          ))}
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Lenses</span>
+            <span className="text-[9px] text-slate-400 dark:text-slate-500">percentile rank · signals present</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {card.lenses.map((lens) => (
+              <LensPill
+                key={lens.key}
+                lens={lens}
+                active={activeTag === lens.key}
+                onClick={onTagChange ? () => handleLensClick(lens.key) : undefined}
+              />
+            ))}
+          </div>
         </div>
       ) : null}
 
@@ -222,10 +227,11 @@ function LensPill({ lens, active, onClick }: { lens: LensReadout; active: boolea
   const ringClass = active ? `ring-2 ${LENS_RING_COLORS[lens.key] ?? 'ring-slate-400'} ring-offset-1` : ''
   const baseClass = `inline-flex items-baseline gap-1.5 rounded-full border px-2 py-0.5 text-[10px] ${scoreToneClass(lens.tone)} ${ringClass}`
 
+  const shortPercentile = lens.percentileLabel.replace(' percentile', '')
   const content = (
     <>
       <span className="font-semibold uppercase tracking-wide">{lens.label}</span>
-      <span className="font-medium">{lens.percentileLabel}</span>
+      <span className="font-medium">{shortPercentile}</span>
       <span className="opacity-60">· {lens.detail}</span>
     </>
   )

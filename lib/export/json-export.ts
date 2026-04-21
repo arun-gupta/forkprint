@@ -12,6 +12,7 @@ import { getInclusiveNamingScore } from '@/lib/inclusive-naming/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
 import { computeCommunityCompleteness } from '@/lib/community/completeness'
 import { computeReleaseHealthCompleteness } from '@/lib/release-health/completeness'
+import { computeOnboardingCompleteness } from '@/lib/onboarding/completeness'
 
 export interface JsonExportResult {
   blob: Blob
@@ -202,8 +203,9 @@ function computeCommunity(result: AnalysisResult) {
   // Signals map — one entry per CommunitySignalKey, present state is
   // 'unknown' when the signal couldn't be determined (FR-016).
   type PresentState = boolean | 'unknown'
-  const makeSignal = (key: (typeof completeness.present)[number]): { present: PresentState } => {
-    if (completeness.present.includes(key)) return { present: true }
+  type SignalKey = Exclude<(typeof completeness.present)[number], 'gitpod_bonus'>
+  const makeSignal = (key: SignalKey): { present: PresentState } => {
+    if ((completeness.present as string[]).includes(key)) return { present: true }
     if (completeness.missing.includes(key)) return { present: false }
     return { present: 'unknown' }
   }
@@ -279,6 +281,34 @@ function computeReleaseHealth(result: AnalysisResult) {
   }
 }
 
+function computeOnboarding(result: AnalysisResult) {
+  const completeness = computeOnboardingCompleteness(result)
+  const status = (key: string): 'present' | 'missing' | 'unknown' => {
+    if ((completeness.present as string[]).includes(key)) return 'present'
+    if ((completeness.missing as string[]).includes(key)) return 'missing'
+    return 'unknown'
+  }
+  return {
+    score: {
+      present: completeness.present.length,
+      total: completeness.present.length + completeness.missing.length + completeness.unknown.length,
+      percentile: completeness.percentile,
+      tone: completeness.tone,
+    },
+    signals: {
+      good_first_issues: { status: status('good_first_issues'), value: result.goodFirstIssueCount ?? 'unavailable' },
+      dev_environment_setup: { status: status('dev_environment_setup'), gitpodBonus: result.gitpodPresent === true },
+      new_contributor_acceptance: { status: status('new_contributor_acceptance'), value: result.newContributorPRAcceptanceRate ?? 'unavailable' },
+      issue_templates: { status: status('issue_templates') },
+      pull_request_template: { status: status('pull_request_template') },
+      contributing: { status: status('contributing') },
+      code_of_conduct: { status: status('code_of_conduct') },
+      readme_installation: { status: status('readme_installation') },
+      readme_contributing: { status: status('readme_contributing') },
+    },
+  }
+}
+
 function computeComparison(results: AnalysisResult[]) {
   if (results.length < 2) return undefined
   return buildComparisonSections(results).map((section) => ({
@@ -314,6 +344,7 @@ export function buildJsonExport(response: AnalyzeResponse): JsonExportResult {
       inclusiveNaming: computeInclusiveNaming(result),
       community: computeCommunity(result),
       releaseHealth: computeReleaseHealth(result),
+      onboarding: computeOnboarding(result),
     })),
     comparison: computeComparison(response.results),
   }

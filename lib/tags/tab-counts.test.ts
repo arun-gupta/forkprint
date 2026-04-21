@@ -128,6 +128,25 @@ describe('computeTabTagCounts', () => {
     expect(counts.responsiveness).toBe(0)
   })
 
+  it('counts onboarding signals across documentation and contributors tabs', () => {
+    const result = makeResult({
+      documentationResult: { fileChecks: ALL_DOC_FILES, readmeSections: [...ALL_README_SECTIONS], readmeContent: null },
+      goodFirstIssueCount: 3,
+      devEnvironmentSetup: true,
+      newContributorPRAcceptanceRate: 0.8,
+    })
+    const counts = computeTabTagCounts([result], 'onboarding')
+    // ONBOARDING_DOC_FILES = issue_templates, pull_request_template, contributing, code_of_conduct (4)
+    expect(counts.documentation).toBeGreaterThanOrEqual(4)
+    // ONBOARDING_README_SECTIONS = installation, contributing (2)
+    // total doc = 6
+    expect(counts.documentation).toBe(6)
+    // ONBOARDING_CONTRIBUTORS_METRICS = Good first issues, Dev environment setup, New contributor PR acceptance (3)
+    expect(counts.contributors).toBe(3)
+    expect(counts.activity).toBe(0)
+    expect(counts.security).toBe(0)
+  })
+
   it('sums counts across multiple repos', () => {
     const r1 = makeResult({
       documentationResult: { fileChecks: ALL_DOC_FILES, readmeSections: [], readmeContent: null },

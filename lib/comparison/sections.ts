@@ -51,6 +51,9 @@ export type ComparisonAttributeId =
   | 'contributors-factor-repeat-ratio'
   | 'contributors-factor-new-inflow'
   | 'contributors-factor-breadth'
+  | 'good-first-issues-count'
+  | 'dev-environment-setup'
+  | 'new-contributor-pr-acceptance'
 
 export type ComparisonDirection = 'higher-is-better' | 'lower-is-better' | 'neutral'
 export type ComparisonValueType = 'number' | 'percentage' | 'duration' | 'label'
@@ -334,6 +337,42 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
           const metrics = getContributorWindowMetrics(result)
           return computeHealthRatio(metrics?.newContributors ?? 'unavailable', result.totalContributors)
         },
+        formatValue: formatPercentage,
+      },
+      {
+        id: 'good-first-issues-count',
+        sectionId: 'contributors',
+        label: 'Good first issues',
+        helpText: 'Open issues labeled as good first issues, beginner, or starter.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => result.goodFirstIssueCount ?? 'unavailable',
+        formatValue: formatNumber,
+      },
+      {
+        id: 'dev-environment-setup',
+        sectionId: 'contributors',
+        label: 'Dev environment setup',
+        helpText: 'Whether a devcontainer, Docker Compose, or Gitpod configuration is present.',
+        direction: 'higher-is-better',
+        valueType: 'number',
+        getValue: (result) => {
+          if (result.devEnvironmentSetup === 'unavailable' || result.devEnvironmentSetup === undefined) return 'unavailable'
+          return result.devEnvironmentSetup ? 1 : 0
+        },
+        formatValue: (value) => {
+          if (value === 'unavailable') return '—'
+          return value === 1 ? 'Yes' : 'No'
+        },
+      },
+      {
+        id: 'new-contributor-pr-acceptance',
+        sectionId: 'contributors',
+        label: 'New contributor PR acceptance',
+        helpText: 'Fraction of first-time contributor PRs that were merged in the 365-day window.',
+        direction: 'higher-is-better',
+        valueType: 'percentage',
+        getValue: (result) => result.newContributorPRAcceptanceRate ?? 'unavailable',
         formatValue: formatPercentage,
       },
     ],

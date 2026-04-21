@@ -28,16 +28,23 @@ import {
   CONTRIB_EX_ACTIVITY_CARDS,
   LICENSING_IS_COMPLIANCE,
 } from './tag-mappings'
+import {
+  ONBOARDING_DOC_FILES,
+  ONBOARDING_README_SECTIONS,
+  ONBOARDING_CONTRIBUTORS_METRICS,
+} from './onboarding'
 
 function docFileMatches(name: string, tag: string): boolean {
   if (tag === 'governance') return GOVERNANCE_DOC_FILES.has(name)
   if (tag === 'community') return COMMUNITY_DOC_FILES.has(name)
+  if (tag === 'onboarding') return ONBOARDING_DOC_FILES.has(name)
   return getDocFileTags(name).includes(tag)
 }
 
 function contributorsMetricMatches(label: string, tag: string): boolean {
   if (tag === 'governance') return GOVERNANCE_CONTRIBUTORS_METRICS.has(label)
   if (tag === 'community') return COMMUNITY_CONTRIBUTORS_METRICS.has(label)
+  if (tag === 'onboarding') return ONBOARDING_CONTRIBUTORS_METRICS.has(label)
   return false
 }
 
@@ -67,6 +74,8 @@ function contributorsMetricLabels(result: AnalysisResult): string[] {
   if (result.hasFundingConfig === true || result.hasFundingConfig === false) {
     labels.push('Funding disclosure')
   }
+  // Onboarding metrics — always rendered in OnboardingPane regardless of availability
+  labels.push('Good first issues', 'Dev environment setup', 'New contributor PR acceptance')
   return labels
 }
 
@@ -86,7 +95,7 @@ export function computeTabTagCounts(results: AnalysisResult[], tag: string | nul
         if (docFileMatches(check.name, tag)) documentation += 1
       }
       for (const section of result.documentationResult.readmeSections) {
-        if (getReadmeSectionTags(section.name).includes(tag)) documentation += 1
+        if (tag === 'onboarding' ? ONBOARDING_README_SECTIONS.has(section.name) : getReadmeSectionTags(section.name).includes(tag)) documentation += 1
       }
     }
     if (result.licensingResult !== 'unavailable' && licensingMatches(tag)) {

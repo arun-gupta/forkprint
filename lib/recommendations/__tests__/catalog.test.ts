@@ -46,8 +46,33 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Responsiveness')).toHaveLength(3)
   })
 
-  it('has 7 contributors entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(7)
+  it('has 10 contributors entries (7 original + 3 onboarding)', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Contributors')).toHaveLength(10)
+  })
+
+  it('has 3 onboarding-tagged entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('onboarding'))).toHaveLength(3)
+  })
+
+  it('CTR-8 targets good_first_issues with onboarding tag', () => {
+    const entry = RECOMMENDATION_CATALOG.find((e) => e.id === 'CTR-8')
+    expect(entry).toBeDefined()
+    expect(entry?.key).toBe('good_first_issues')
+    expect(entry?.tags).toContain('onboarding')
+  })
+
+  it('CTR-9 targets dev_environment_setup with onboarding tag', () => {
+    const entry = RECOMMENDATION_CATALOG.find((e) => e.id === 'CTR-9')
+    expect(entry).toBeDefined()
+    expect(entry?.key).toBe('dev_environment_setup')
+    expect(entry?.tags).toContain('onboarding')
+  })
+
+  it('CTR-10 targets new_contributor_acceptance with onboarding tag', () => {
+    const entry = RECOMMENDATION_CATALOG.find((e) => e.id === 'CTR-10')
+    expect(entry).toBeDefined()
+    expect(entry?.key).toBe('new_contributor_acceptance')
+    expect(entry?.tags).toContain('onboarding')
   })
 
   it('has 21 documentation entries', () => {

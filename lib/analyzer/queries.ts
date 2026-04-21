@@ -107,6 +107,15 @@ export const REPO_OVERVIEW_QUERY = `
       commGovernanceRoot: object(expression: "HEAD:GOVERNANCE.md") { ... on Blob { oid } }
       commGovernanceGithub: object(expression: "HEAD:.github/GOVERNANCE.md") { ... on Blob { oid } }
       commGovernanceDocs: object(expression: "HEAD:docs/GOVERNANCE.md") { ... on Blob { oid } }
+      onbDevcontainerDir: object(expression: "HEAD:.devcontainer") {
+        ... on Tree {
+          entries { name }
+        }
+      }
+      onbDevcontainerJson: object(expression: "HEAD:.devcontainer.json") { ... on Blob { oid } }
+      onbDockerComposeYml: object(expression: "HEAD:docker-compose.yml") { ... on Blob { oid } }
+      onbDockerComposeYaml: object(expression: "HEAD:docker-compose.yaml") { ... on Blob { oid } }
+      onbGitpod: object(expression: "HEAD:.gitpod.yml") { ... on Blob { oid } }
       workflowDir: object(expression: "HEAD:.github/workflows") {
         ... on Tree {
           entries {
@@ -256,6 +265,7 @@ export const REPO_ACTIVITY_COUNTS_QUERY = `
     $staleIssues90Query: String!
     $staleIssues180Query: String!
     $staleIssues365Query: String!
+    $goodFirstIssueQuery: String!
   ) {
     prsOpened30: search(query: $prsOpened30Query, type: ISSUE) {
       issueCount
@@ -332,11 +342,15 @@ export const REPO_ACTIVITY_COUNTS_QUERY = `
     staleIssues365: search(query: $staleIssues365Query, type: ISSUE) {
       issueCount
     }
+    goodFirstIssues: search(query: $goodFirstIssueQuery, type: ISSUE) {
+      issueCount
+    }
     recentMergedPullRequests: search(query: $prsMerged365Query, type: ISSUE, first: 100) {
       nodes {
         ... on PullRequest {
           createdAt
           mergedAt
+          authorAssociation
         }
       }
     }

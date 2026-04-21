@@ -11,6 +11,7 @@ import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { GOVERNANCE_DOC_FILES, LICENSING_IS_GOVERNANCE } from '@/lib/tags/governance'
 import { COMMUNITY_DOC_FILES } from '@/lib/tags/community'
 import { getDocFileTags, getReadmeSectionTags, LICENSING_IS_COMPLIANCE } from '@/lib/tags/tag-mappings'
+import { ONBOARDING_DOC_FILES, ONBOARDING_README_SECTIONS } from '@/lib/tags/onboarding'
 import { ReleaseDisciplineCard } from './ReleaseDisciplineCard'
 
 interface DocumentationViewProps {
@@ -43,7 +44,14 @@ function getDocFileAllTags(name: string): string[] {
   const tags: string[] = []
   if (GOVERNANCE_DOC_FILES.has(name)) tags.push('governance')
   if (COMMUNITY_DOC_FILES.has(name)) tags.push('community')
+  if (ONBOARDING_DOC_FILES.has(name)) tags.push('onboarding')
   tags.push(...getDocFileTags(name))
+  return tags
+}
+
+function getReadmeSectionAllTags(name: string): string[] {
+  const tags = getReadmeSectionTags(name)
+  if (ONBOARDING_README_SECTIONS.has(name)) return [...tags, 'onboarding']
   return tags
 }
 
@@ -323,14 +331,14 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
               ) : null}
 
               {/* README sections — show when no filter or when contrib-ex is active */}
-              {!activeTag || readmeSections.some((s) => getReadmeSectionTags(s.name).includes(activeTag)) ? (
+              {!activeTag || readmeSections.some((s) => getReadmeSectionAllTags(s.name).includes(activeTag)) ? (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
                   <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">README sections</h3>
                   <ul className="mt-3 space-y-2">
                     {readmeSections
-                      .filter((section) => !activeTag || getReadmeSectionTags(section.name).includes(activeTag))
+                      .filter((section) => !activeTag || getReadmeSectionAllTags(section.name).includes(activeTag))
                       .map((section) => {
-                        const tags = getReadmeSectionTags(section.name)
+                        const tags = getReadmeSectionAllTags(section.name)
                         return (
                           <li key={section.name} className="flex items-start gap-2">
                             <span className={`mt-0.5 text-sm ${section.detected ? 'text-emerald-600' : 'text-red-400'}`}>

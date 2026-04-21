@@ -1,6 +1,7 @@
 import type { AnalysisResult, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { percentileToTone } from '@/lib/scoring/config-loader'
+import { newContributorAcceptanceFloor } from './score-config'
 
 /**
  * Community completeness readout (P2-F05 / #70).
@@ -24,9 +25,12 @@ export type CommunitySignalKey =
   | 'governance'
   | 'funding'
   | 'discussions_enabled'
+  | 'good_first_issues'
+  | 'dev_environment_setup'
+  | 'new_contributor_acceptance'
 
 export interface CommunityCompleteness {
-  present: CommunitySignalKey[]
+  present: Array<CommunitySignalKey | 'gitpod_bonus'>
   missing: CommunitySignalKey[]
   unknown: CommunitySignalKey[]
   /** present.length / (present.length + missing.length); null when denominator is zero. */
@@ -59,6 +63,9 @@ function extractSignalPresence(result: AnalysisResult): Record<CommunitySignalKe
     governance: fromDocFile('governance'),
     funding: booleanOrUnknown(result.hasFundingConfig),
     discussions_enabled: booleanOrUnknown(result.hasDiscussionsEnabled),
+    good_first_issues: goodFirstIssuesPresence(result.goodFirstIssueCount),
+    dev_environment_setup: booleanOrUnknown(result.devEnvironmentSetup),
+    new_contributor_acceptance: acceptanceRatePresence(result.newContributorPRAcceptanceRate),
   }
 }
 
@@ -73,12 +80,22 @@ function maintainerCountPresence(count: number | Unavailable): Presence {
   return count > 0
 }
 
+function goodFirstIssuesPresence(count: number | Unavailable | undefined): Presence {
+  if (count === undefined || count === 'unavailable') return 'unknown'
+  return count > 0
+}
+
+function acceptanceRatePresence(rate: number | Unavailable | undefined): Presence {
+  if (rate === undefined || rate === 'unavailable') return 'unknown'
+  return rate >= newContributorAcceptanceFloor
+}
+
 /**
  * Compute the community completeness readout.
  */
 export function computeCommunityCompleteness(result: AnalysisResult): CommunityCompleteness {
   const presence = extractSignalPresence(result)
-  const present: CommunitySignalKey[] = []
+  const present: Array<CommunitySignalKey | 'gitpod_bonus'> = []
   const missing: CommunitySignalKey[] = []
   const unknown: CommunitySignalKey[] = []
 
@@ -88,11 +105,17 @@ export function computeCommunityCompleteness(result: AnalysisResult): CommunityC
     else unknown.push(key)
   }
 
-  const denominator = present.length + missing.length
+  // Gitpod bonus: presence adds marginal lift without growing the denominator.
+  if (result.gitpodPresent === true) {
+    present.push('gitpod_bonus')
+  }
+
+  const denominator = present.filter((k) => k !== 'gitpod_bonus').length + missing.length
   if (denominator === 0) {
     return { present, missing, unknown, ratio: null, percentile: null, tone: 'neutral' }
   }
 
+  // Gitpod bonus contributes to numerator but not denominator (bonus lift).
   const ratio = present.length / denominator
   // Without per-bracket calibration for community-completeness ratios yet
   // (tracked in #152), map ratio → percentile linearly. Good enough for a

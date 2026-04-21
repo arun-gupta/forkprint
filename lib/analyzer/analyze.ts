@@ -154,6 +154,11 @@ interface RepoOverviewResponse {
     commGovernanceRoot?: { oid: string } | null
     commGovernanceGithub?: { oid: string } | null
     commGovernanceDocs?: { oid: string } | null
+    onbDevcontainerDir?: { entries: Array<{ name: string }> } | null
+    onbDevcontainerJson?: { oid: string } | null
+    onbDockerComposeYml?: { oid: string } | null
+    onbDockerComposeYaml?: { oid: string } | null
+    onbGitpod?: { oid: string } | null
     workflowDir?: {
       entries: Array<{
         name: string
@@ -219,10 +224,12 @@ interface RepoActivityCountsResponse {
   staleIssues90: SearchCount
   staleIssues180: SearchCount
   staleIssues365: SearchCount
+  goodFirstIssues?: SearchCount
   recentMergedPullRequests: {
     nodes: Array<{
       createdAt: string
       mergedAt: string | null
+      authorAssociation?: string | null
     }>
   }
   recentClosedIssues: {
@@ -391,6 +398,10 @@ const UNAVAILABLE_FIELDS: Array<keyof AnalysisResult> = [
   'issueFirstResponseTimestamps',
   'issueCloseTimestamps',
   'prMergeTimestamps',
+  'goodFirstIssueCount',
+  'devEnvironmentSetup',
+  'gitpodPresent',
+  'newContributorPRAcceptanceRate',
 ]
 
 export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
@@ -491,6 +502,7 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         staleIssues90Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore90),
         staleIssues180Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore180),
         staleIssues365Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore365),
+        goodFirstIssueQuery: buildGoodFirstIssueQuery(repoSearch),
       }
 
       let activityCounts: RepoActivityCountsResponse
@@ -709,6 +721,7 @@ function buildAnalysisResult(
   const issueFirstResponseTimestamps = collectIssueFirstResponseTimestamps(responsiveness.recentCreatedIssues?.nodes ?? [], 90)
   const issueCloseTimestamps = collectIssueCloseTimestamps(responsiveness.recentClosedIssues?.nodes ?? [], 90)
   const prMergeTimestamps = collectPullRequestMergeTimestamps(responsiveness.recentMergedPullRequests?.nodes ?? [], 90)
+  const onboardingSignals = extractOnboardingSignals(overview.repository, activity)
   const missingFields = [...UNAVAILABLE_FIELDS].filter((field) => {
     if (field === 'releases12mo') {
       return activityMetricsByWindow[365].releases === 'unavailable'
@@ -757,6 +770,22 @@ function buildAnalysisResult(
 
     if (field === 'prMergeTimestamps') {
       return prMergeTimestamps === 'unavailable'
+    }
+
+    if (field === 'goodFirstIssueCount') {
+      return onboardingSignals.goodFirstIssueCount === 'unavailable'
+    }
+
+    if (field === 'devEnvironmentSetup') {
+      return onboardingSignals.devEnvironmentSetup === 'unavailable'
+    }
+
+    if (field === 'gitpodPresent') {
+      return onboardingSignals.gitpodPresent === 'unavailable'
+    }
+
+    if (field === 'newContributorPRAcceptanceRate') {
+      return onboardingSignals.newContributorPRAcceptanceRate === 'unavailable'
     }
 
     return false
@@ -851,6 +880,7 @@ function buildAnalysisResult(
     securityResult: extractSecurityResult(overview.repository),
     ...extractCommunitySignals(overview.repository, 90, discussionTimestamps, discussionsTruncated),
     releaseHealthResult: extractReleaseHealthResult(activity, now),
+    ...onboardingSignals,
     ...extractMaturitySignals({
       createdAt: overview.repository?.createdAt ?? 'unavailable',
       stars: overview.repository?.stargazerCount ?? 'unavailable',
@@ -1254,6 +1284,61 @@ export function extractCommunitySignals(
   }
 }
 
+import { newContributorMinSampleSize as NEW_CONTRIBUTOR_MIN_SAMPLE_SIZE } from '@/lib/community/score-config'
+
+interface OnboardingSignalSet {
+  goodFirstIssueCount: number | Unavailable
+  devEnvironmentSetup: boolean | Unavailable
+  gitpodPresent: boolean | Unavailable
+  newContributorPRAcceptanceRate: number | Unavailable
+}
+
+export function extractOnboardingSignals(
+  repo: RepoOverviewResponse['repository'],
+  activityCounts: Pick<RepoActivityCountsResponse, 'goodFirstIssues' | 'recentMergedPullRequests'> | null,
+): OnboardingSignalSet {
+  if (!repo) {
+    return {
+      goodFirstIssueCount: 'unavailable',
+      devEnvironmentSetup: 'unavailable',
+      gitpodPresent: 'unavailable',
+      newContributorPRAcceptanceRate: 'unavailable',
+    }
+  }
+
+  // devEnvironmentSetup: any primary dev env file present
+  const hasDevcontainerDir = (repo.onbDevcontainerDir?.entries?.length ?? 0) > 0
+  const devEnvironmentSetup: boolean =
+    hasDevcontainerDir ||
+    repo.onbDevcontainerJson != null ||
+    repo.onbDockerComposeYml != null ||
+    repo.onbDockerComposeYaml != null
+
+  // gitpodPresent: bonus-only signal
+  const gitpodPresent: boolean = repo.onbGitpod != null
+
+  // goodFirstIssueCount
+  const goodFirstIssueCount: number | Unavailable =
+    activityCounts?.goodFirstIssues != null
+      ? activityCounts.goodFirstIssues.issueCount
+      : 'unavailable'
+
+  // newContributorPRAcceptanceRate: first-time merged / first-time total
+  let newContributorPRAcceptanceRate: number | Unavailable = 'unavailable'
+  if (activityCounts?.recentMergedPullRequests != null) {
+    const firstTimePRs = activityCounts.recentMergedPullRequests.nodes.filter(
+      (n) => n.authorAssociation === 'FIRST_TIME_CONTRIBUTOR',
+    )
+    const total = firstTimePRs.length
+    if (total >= NEW_CONTRIBUTOR_MIN_SAMPLE_SIZE) {
+      const merged = firstTimePRs.filter((n) => n.mergedAt != null).length
+      newContributorPRAcceptanceRate = merged / total
+    }
+  }
+
+  return { goodFirstIssueCount, devEnvironmentSetup, gitpodPresent, newContributorPRAcceptanceRate }
+}
+
 export function extractSecurityResult(repo: RepoOverviewResponse['repository']): SecurityResult | 'unavailable' {
   if (!repo) return 'unavailable'
 
@@ -1355,6 +1440,13 @@ function buildOpenIssuesOlderThanQuery(repoSearch: string, before: Date) {
 
 function buildOpenPullRequestsOlderThanQuery(repoSearch: string, before: Date) {
   return `repo:${repoSearch} is:pr is:open created:<${before.toISOString().slice(0, 10)}`
+}
+
+export function buildGoodFirstIssueQuery(repoSearch: string): string {
+  // GitHub's GraphQL search does not scope `repo:` across OR branches, so
+  // OR variants would produce incorrect counts. We use only the canonical
+  // GitHub-recommended label; hyphenated and other variants are tracked in #382.
+  return `repo:${repoSearch} is:issue is:open label:"good first issue"`
 }
 
 // ─── Two-pass responsiveness fetch ───────────────────────────────────────────
@@ -2411,6 +2503,7 @@ function buildUnavailableActivityCounts(): RepoActivityCountsResponse {
     issuesOpened30: unavailable, issuesOpened60: unavailable, issuesOpened90: unavailable, issuesOpened180: unavailable, issuesOpened365: unavailable,
     issuesClosed30: unavailable, issuesClosed60: unavailable, issuesClosed90: unavailable, issuesClosed180: unavailable, issuesClosed365: unavailable,
     staleIssues30: unavailable, staleIssues60: unavailable, staleIssues90: unavailable, staleIssues180: unavailable, staleIssues365: unavailable,
+    goodFirstIssues: unavailable,
     recentMergedPullRequests: { nodes: [] },
     recentClosedIssues: { nodes: [] },
   }
