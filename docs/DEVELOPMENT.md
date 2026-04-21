@@ -288,7 +288,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 4 | P2-F07 | Security scoring | #68 | ✅ Done |
 | 5 | P2-F04 | Governance & Transparency | #116 | ✅ Done |
 | 6 | P2-F05 | Community scoring | #70 | ✅ Done |
-| 7 | P2-F06a | CNCF foundation support | #398 (#157, #210, #211, #399) | |
+| 7 | P2-F06a | CNCF foundation support | #398 (#399, #400, #157, #210, #211) | |
 | 8 | P2-F06b | Foundation-aware recommendations (Apache, LF, others) | #119 | |
 | 9 | P2-F08 | Accessibility & Onboarding | #117 | ✅ Done |
 | 10 | P2-F09 | Release health scoring | #69 | ✅ Done |
