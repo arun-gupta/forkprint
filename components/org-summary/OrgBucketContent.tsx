@@ -1,6 +1,5 @@
 'use client'
 
-import { useAuth } from '@/components/auth/AuthContext'
 import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import type { TwoFactorEnforcementSection } from '@/lib/governance/two-factor'
