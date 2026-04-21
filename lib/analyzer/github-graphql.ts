@@ -52,6 +52,85 @@ export async function queryGitHubGraphQL<T>(
   return { data, rateLimit }
 }
 
+// ── Org member enumeration ─────────────────────────────────────────────────────
+
+const ORG_MEMBERS_WITH_ROLES_QUERY = `
+  query OrgMembersWithRoles($org: String!, $after: String) {
+    organization(login: $org) {
+      membersWithRole(first: 100, after: $after) {
+        totalCount
+        pageInfo { hasNextPage endCursor }
+        edges { role node { login } }
+      }
+    }
+    rateLimit { limit remaining resetAt }
+  }
+`
+
+interface OrgMembersPage {
+  organization?: {
+    membersWithRole: {
+      totalCount: number
+      pageInfo: { hasNextPage: boolean; endCursor: string }
+      edges: Array<{ role: 'MEMBER' | 'ADMIN'; node: { login: string } }>
+    }
+  }
+  rateLimit?: unknown
+}
+
+export type OrgMembersWithRolesResult =
+  | { kind: 'ok'; admins: string[]; nonAdminMembers: string[]; totalCount: number }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'scope-insufficient' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgMembersWithRoles(
+  token: string,
+  org: string,
+): Promise<OrgMembersWithRolesResult> {
+  const admins: string[] = []
+  const nonAdminMembers: string[] = []
+  let totalCount = 0
+  let after: string | null = null
+
+  try {
+    while (true) {
+      const result = await queryGitHubGraphQL<OrgMembersPage>(
+        token,
+        ORG_MEMBERS_WITH_ROLES_QUERY,
+        { org, after },
+      )
+
+      const connection = result.data.organization?.membersWithRole
+      if (!connection) return { kind: 'unknown' }
+
+      totalCount = connection.totalCount
+      for (const edge of connection.edges) {
+        if (edge.role === 'ADMIN') {
+          admins.push(edge.node.login)
+        } else {
+          nonAdminMembers.push(edge.node.login)
+        }
+      }
+
+      if (!connection.pageInfo.hasNextPage) break
+      after = connection.pageInfo.endCursor
+    }
+  } catch (err) {
+    const error = err as { status?: number; retryAfter?: number | 'unavailable' }
+    if (error.status === 401) return { kind: 'auth-failed' }
+    if (error.status === 403) {
+      if (typeof error.retryAfter === 'number') return { kind: 'rate-limited' }
+      return { kind: 'scope-insufficient' }
+    }
+    return { kind: 'network' }
+  }
+
+  return { kind: 'ok', admins, nonAdminMembers, totalCount }
+}
+
 function extractRateLimit(data: unknown): RateLimitState | null {
   if (!data || typeof data !== 'object' || !('rateLimit' in data)) {
     return null

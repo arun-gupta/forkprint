@@ -7,7 +7,16 @@ function makeSection(overrides: Partial<MemberPermissionDistributionSection> = {
   return {
     kind: 'member-permission-distribution',
     applicability: 'applicable',
+    adminCount: 2,
     memberCount: 8,
+    publicMemberCount: 5,
+    publicMembers: [
+      { login: 'alice', avatarUrl: 'https://github.com/alice.png' },
+      { login: 'bob', avatarUrl: 'https://github.com/bob.png' },
+      { login: 'carol', avatarUrl: 'https://github.com/carol.png' },
+      { login: 'dave', avatarUrl: 'https://github.com/dave.png' },
+      { login: 'eve', avatarUrl: 'https://github.com/eve.png' },
+    ],
     outsideCollaboratorCount: 1,
     unavailableReasons: [],
     resolvedAt: new Date().toISOString(),

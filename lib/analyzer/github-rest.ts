@@ -233,6 +233,55 @@ export async function fetchOrgMembers(token: string, org: string): Promise<OrgMe
   return { kind: 'ok', members }
 }
 
+export type OrgPublicMember = { login: string; avatarUrl: string }
+
+export type OrgPublicMemberListResult =
+  | { kind: 'ok'; members: OrgPublicMember[] }
+  | { kind: 'rate-limited' }
+  | { kind: 'auth-failed' }
+  | { kind: 'network' }
+  | { kind: 'unknown' }
+
+export async function fetchOrgPublicMembers(
+  token: string,
+  org: string,
+): Promise<OrgPublicMemberListResult> {
+  const members: OrgPublicMember[] = []
+  let url: string | null = `https://api.github.com/orgs/${encodeURIComponent(org)}/public_members?per_page=100`
+
+  try {
+    while (url) {
+      const response: Response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      })
+
+      const status = classifyRestStatus(response)
+      if (status !== 'ok') return status as OrgPublicMemberListResult
+
+      const payload = (await response.json()) as Array<{ login?: unknown; avatar_url?: unknown }>
+      if (!Array.isArray(payload)) return { kind: 'unknown' }
+      for (const m of payload) {
+        if (typeof m.login === 'string' && m.login.length > 0) {
+          members.push({
+            login: m.login,
+            avatarUrl: typeof m.avatar_url === 'string' ? m.avatar_url : `https://github.com/${m.login}.png`,
+          })
+        }
+      }
+
+      url = parseNextLink(response.headers.get('Link'))
+    }
+  } catch {
+    return { kind: 'network' }
+  }
+
+  return { kind: 'ok', members }
+}
+
 export type OrgCollaboratorListResult =
   | { kind: 'ok'; collaborators: { login: string }[] }
   | { kind: 'rate-limited' }
@@ -509,6 +558,7 @@ export async function fetchUserOrgMembership(
 function classifyRestStatus(response: Response): 'ok' | OrgAdminListResult {
   if (response.ok) return 'ok'
   if (response.status === 403 && isRateLimited(response)) return { kind: 'rate-limited' }
+  if (response.status === 403) return { kind: 'scope-insufficient' }
   if (response.status === 401) return { kind: 'auth-failed' }
   if (response.status === 404) return { kind: 'unknown' }
   return { kind: 'unknown' }
