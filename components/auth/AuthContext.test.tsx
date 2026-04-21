@@ -101,7 +101,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('elevatedScopes')).toHaveTextContent('none')
   })
 
-  it('elevatedScopes lists every non-baseline scope', () => {
+  it('elevatedScopes lists only known elevated scopes (read:org, admin:org), not public_repo', () => {
     render(
       <AuthProvider
         initialSession={{
