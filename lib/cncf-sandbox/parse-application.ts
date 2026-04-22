@@ -86,8 +86,9 @@ function assessAndRecommend(
     }
 
     case 'business-separation': {
-      if (/n\/a/i.test(content) || /no commercial/i.test(content)) {
-        return { assessment: 'adequate', recommendation: "N/A is acceptable if no commercial product exists — but clarify explicitly that no commercial product is based on this project." }
+      const noCommercialTie = /n\/a/i.test(content) || /no commercial/i.test(content) || /unrelated to any (product|service|commercial)/i.test(content) || /not (related|associated|tied|connected) to any (product|service|commercial)/i.test(content) || /no (product|service|commercial|business)/i.test(content) || /purely open.?source/i.test(content)
+      if (noCommercialTie) {
+        return { assessment: 'adequate', recommendation: "Acceptable — but explicitly state that no commercial product is based on this project to pre-empt reviewer questions." }
       }
       const hasSeparation = /separate|distinct|extension point|different roadmap|open.?source/i.test(content)
       if (hasSeparation && wordCount > 40) return { assessment: 'strong', recommendation: null }
