@@ -64,19 +64,14 @@ export async function POST(request: Request) {
         }
 
         const aspirantResult = evaluateAspirant(result, landscapeData, issues)
-        if (aspirantResult.alreadyInLandscape) {
-          result.landscapeOverride = true
-          result.aspirantResult = null
-        } else {
-          // If an application issue was found, fetch its body and parse the fields
-          if (aspirantResult.sandboxApplication) {
-            const body = await fetchSandboxIssueBody(token, aspirantResult.sandboxApplication.issueNumber)
-            if (body) {
-              aspirantResult.sandboxApplication.parsedFields = parseApplicationIssue(body)
-            }
+        // If an application issue was found, fetch its body and parse the fields
+        if (aspirantResult.sandboxApplication) {
+          const body = await fetchSandboxIssueBody(token, aspirantResult.sandboxApplication.issueNumber)
+          if (body) {
+            aspirantResult.sandboxApplication.parsedFields = parseApplicationIssue(body)
           }
-          result.aspirantResult = aspirantResult
         }
+        result.aspirantResult = aspirantResult
       }
     }
 
