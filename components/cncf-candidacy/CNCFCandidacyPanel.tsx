@@ -449,9 +449,13 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
           <button
             type="button"
             onClick={handleStop}
-            className="ml-auto rounded border border-sky-400 bg-white px-2 py-0.5 text-xs font-medium text-sky-700 hover:bg-sky-50 dark:border-sky-600 dark:bg-sky-900/40 dark:text-sky-300 dark:hover:bg-sky-900/60"
+            aria-label="Stop"
+            title="Stop"
+            className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
           >
-            Stop
+            <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+              <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
+            </svg>
           </button>
         </div>
       ) : null}
