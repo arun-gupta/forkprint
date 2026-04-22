@@ -1,7 +1,8 @@
 import { analyze } from '@/lib/analyzer/analyze'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
-import { fetchCNCFLandscape, fetchCNCFSandboxIssues } from '@/lib/cncf-sandbox/landscape'
+import { fetchCNCFLandscape, fetchCNCFSandboxIssues, fetchSandboxIssueBody } from '@/lib/cncf-sandbox/landscape'
 import { evaluateAspirant } from '@/lib/cncf-sandbox/evaluate'
+import { parseApplicationIssue } from '@/lib/cncf-sandbox/parse-application'
 
 export async function POST(request: Request) {
   try {
@@ -56,6 +57,13 @@ export async function POST(request: Request) {
           result.landscapeOverride = true
           result.aspirantResult = null
         } else {
+          // If an application issue was found, fetch its body and parse the fields
+          if (aspirantResult.sandboxApplication) {
+            const body = await fetchSandboxIssueBody(token, aspirantResult.sandboxApplication.issueNumber)
+            if (body) {
+              aspirantResult.sandboxApplication.parsedFields = parseApplicationIssue(body)
+            }
+          }
           result.aspirantResult = aspirantResult
         }
       }

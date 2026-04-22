@@ -27,12 +27,22 @@ export interface TAGRecommendation {
   fallbackNote: string | null
 }
 
+export type ApplicationFieldAssessment = 'strong' | 'adequate' | 'weak' | 'empty'
+
+export interface ParsedApplicationField {
+  fieldId: string
+  content: string | null
+  assessment: ApplicationFieldAssessment
+  recommendation: string | null
+}
+
 export interface SandboxApplicationIssue {
   issueNumber: number
   issueUrl: string
   title: string
   state: 'OPEN' | 'CLOSED'
   createdAt: string
+  parsedFields?: ParsedApplicationField[]
 }
 
 export interface AspirantReadinessResult {

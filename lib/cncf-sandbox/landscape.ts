@@ -132,6 +132,27 @@ export async function fetchCNCFSandboxIssues(token: string): Promise<SandboxAppl
   return issues
 }
 
+export async function fetchSandboxIssueBody(token: string, issueNumber: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/cncf/sandbox/issues/${issueNumber}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'RepoPulse/1.0',
+        },
+        signal: AbortSignal.timeout(10_000),
+      },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as { body?: string }
+    return data.body ?? null
+  } catch {
+    return null
+  }
+}
+
 export function findSandboxApplication(
   repoSlug: string,
   issues: SandboxApplicationIssue[],

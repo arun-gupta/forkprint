@@ -1,4 +1,4 @@
-import type { AspirantField, AspirantReadinessResult } from '@/lib/cncf-sandbox/types'
+import type { AspirantField, AspirantReadinessResult, ParsedApplicationField } from '@/lib/cncf-sandbox/types'
 
 interface CNCFReadinessTabProps {
   aspirantResult: AspirantReadinessResult
@@ -43,6 +43,50 @@ function FieldRow({ field, onNavigateToTab }: { field: AspirantField; onNavigate
       ) : null}
       {field.remediationHint && field.status !== 'ready' ? (
         <p className="text-xs text-slate-700 dark:text-slate-300">{field.remediationHint}</p>
+      ) : null}
+    </li>
+  )
+}
+
+const ASSESSMENT_BADGE: Record<string, { label: string; className: string }> = {
+  strong:   { label: '✓ Strong',   className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  adequate: { label: '~ Adequate', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  weak:     { label: '⚠ Weak',    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' },
+  empty:    { label: '✕ Empty',   className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+}
+
+function HumanFieldRow({ field, parsed }: { field: AspirantField; parsed: ParsedApplicationField | null }) {
+  const badge = parsed ? ASSESSMENT_BADGE[parsed.assessment] : null
+  const hasParsed = parsed && parsed.content
+
+  return (
+    <li className={`rounded-lg border p-3 dark:border-slate-700 ${parsed?.assessment === 'empty' ? 'border-red-200 dark:border-red-800/50' : parsed?.assessment === 'weak' ? 'border-amber-200 dark:border-amber-800/50' : 'border-slate-200'}`}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-slate-800 dark:text-slate-100">📋 {field.label}</p>
+        {badge ? (
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+            {badge.label}
+          </span>
+        ) : null}
+      </div>
+
+      {hasParsed ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+            Current answer (from filed application)
+          </summary>
+          <p className="mt-1 whitespace-pre-wrap rounded bg-slate-50 px-2 py-1.5 text-xs text-slate-700 dark:bg-slate-800/60 dark:text-slate-300 max-h-40 overflow-y-auto">
+            {parsed.content}
+          </p>
+        </details>
+      ) : null}
+
+      {parsed?.recommendation ? (
+        <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+          <span className="font-semibold">Recommendation: </span>{parsed.recommendation}
+        </p>
+      ) : !hasParsed && field.explanatoryNote ? (
+        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{field.explanatoryNote}</p>
       ) : null}
     </li>
   )
@@ -157,14 +201,12 @@ export function CNCFReadinessTab({ aspirantResult, onNavigateToTab }: CNCFReadin
               <p className="text-sm text-slate-700 dark:text-slate-300">{tagRecommendation.fallbackNote}</p>
             </li>
           ) : null}
-          {humanOnlyFields.map((field) => (
-            <li key={field.id} className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-              <p className="font-medium text-slate-800 dark:text-slate-100">📋 {field.label}</p>
-              {field.explanatoryNote ? (
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{field.explanatoryNote}</p>
-              ) : null}
-            </li>
-          ))}
+          {humanOnlyFields.map((field) => {
+            const parsed = sandboxApplication?.parsedFields?.find((p) => p.fieldId === field.id)
+            return (
+              <HumanFieldRow key={field.id} field={field} parsed={parsed ?? null} />
+            )
+          })}
         </ul>
       </section>
     </div>
