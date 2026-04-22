@@ -155,6 +155,8 @@ function buildMarkdownReport(aspirantResult: AspirantReadinessResult, repoSlug?:
     repoSlug ? `**Repository**: ${repoSlug}` : '',
     `**Generated**: ${date}`,
     '',
+    `> ⚠️ **Disclaimer**: This is an automated pre-flight check, not an official CNCF assessment. Scores are indicative only — TOC decisions are holistic and consider factors beyond what can be detected automatically. Verify TAG recommendations independently before making contact.`,
+    '',
     `## ${scoreBar} Score: ${readinessScore} / 100`,
     '',
     `${readyCount} of ${totalAutoCheckable} auto-checkable fields ready.`,
@@ -284,6 +286,11 @@ export function CNCFReadinessTab({ aspirantResult, onNavigateToTab, repoSlug }: 
         </div>
         <ExportButton aspirantResult={aspirantResult} repoSlug={repoSlug} />
       </div>
+
+      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
+        <span className="font-semibold">Automated pre-flight check only.</span>{' '}
+        This score is indicative — CNCF TOC decisions are holistic and consider factors beyond what can be detected automatically. Verify TAG recommendations independently before making contact.
+      </p>
 
       <SandboxApplicationBanner application={sandboxApplication} />
 
