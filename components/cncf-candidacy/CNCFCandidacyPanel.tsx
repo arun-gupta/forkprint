@@ -634,7 +634,7 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
               return (
                 <li key={repo.repo} className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 opacity-60 dark:border-slate-700 dark:bg-slate-800">
                   <span className="text-xs text-slate-600 dark:text-slate-300">{repo.name}</span>
-                  {status ? <LandscapePill status={status} /> : null}
+                  {status ? <LandscapePill status={status} onClick={() => setActiveStatusFilter(activeStatusFilter === status ? null : status)} active={activeStatusFilter === status} /> : null}
                 </li>
               )
             })}
