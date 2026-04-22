@@ -219,11 +219,13 @@ function ExportButton({ aspirantResult, repoSlug }: { aspirantResult: AspirantRe
 
   const handleDownload = () => {
     const slug = repoSlug ? repoSlug.replace('/', '-') : 'repo'
+    const now = new Date()
+    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`
     const blob = new Blob([markdown], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `cncf-readiness-${slug}.md`
+    a.download = `cncf-readiness-${slug}-${timestamp}.md`
     a.click()
     URL.revokeObjectURL(url)
   }
