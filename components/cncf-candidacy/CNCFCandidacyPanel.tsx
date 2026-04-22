@@ -609,6 +609,8 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
                     <td className="py-2">
                       <a
                         href={`/?repos=${encodeURIComponent(result.repo)}&foundationTarget=cncf-sandbox`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-xs font-medium text-sky-600 underline hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200"
                       >
                         View full report
