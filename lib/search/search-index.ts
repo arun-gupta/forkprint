@@ -306,6 +306,7 @@ const EXTRACTORS: Record<ResultTabId, Extractor> = {
   security: extractSecurity,
   recommendations: extractRecommendations,
   comparison: extractComparison,
+  'cncf-readiness': () => [],
 }
 
 export function buildSearchIndex(results: AnalysisResult[]): SearchIndex {

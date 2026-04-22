@@ -115,6 +115,18 @@ interface RepoOverviewResponse {
     docCodeOfConductUnderscoreLower?: DocBlob | null
     docCodeOfConductDocs?: DocBlob | null
     docCodeOfConductGithub?: DocBlob | null
+    cncfAdopters?: DocBlob | null
+    cncfAdoptersLower?: DocBlob | null
+    cncfAdoptersPlain?: DocBlob | null
+    cncfAdoptersDocs?: DocBlob | null
+    cncfRoadmap?: DocBlob | null
+    cncfRoadmapLower?: DocBlob | null
+    cncfRoadmapDocs?: DocBlob | null
+    cncfMaintainers?: DocBlob | null
+    cncfMaintainersMd?: DocBlob | null
+    cncfMaintainersMdLower?: DocBlob | null
+    cncfCodeowners?: DocBlob | null
+    cncfCodeownersGithub?: DocBlob | null
     docLicenseRst?: DocBlob | null
     docLicenseRstLower?: DocBlob | null
     docSecurity?: DocBlob | null
@@ -1181,7 +1193,23 @@ export function extractDocumentationResult(
 
   const readmeSections = detectReadmeSections(readmeContent)
 
-  return { fileChecks, readmeSections, readmeContent }
+  const adoptersFile = !!(
+    repo.cncfAdopters ?? repo.cncfAdoptersLower ?? repo.cncfAdoptersPlain ?? repo.cncfAdoptersDocs
+  )
+
+  const roadmapFile = !!(
+    repo.cncfRoadmap ?? repo.cncfRoadmapLower ?? repo.cncfRoadmapDocs
+  )
+
+  const maintainersFile = !!(
+    repo.cncfMaintainers ?? repo.cncfMaintainersMd ?? repo.cncfMaintainersMdLower ??
+    repo.cncfCodeowners ?? repo.cncfCodeownersGithub
+  )
+
+  // First 2000 bytes of CODE_OF_CONDUCT.md text for Contributor Covenant check
+  const cocContent = (repo.docCodeOfConduct?.text?.slice(0, 2000)) ?? null
+
+  return { fileChecks, readmeSections, readmeContent, adoptersFile, roadmapFile, maintainersFile, cocContent }
 }
 
 interface CommunitySignalSet {

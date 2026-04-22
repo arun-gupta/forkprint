@@ -13,11 +13,14 @@ import { COMMUNITY_DOC_FILES } from '@/lib/tags/community'
 import { getDocFileTags, getReadmeSectionTags, LICENSING_IS_COMPLIANCE } from '@/lib/tags/tag-mappings'
 import { ONBOARDING_DOC_FILES, ONBOARDING_README_SECTIONS } from '@/lib/tags/onboarding'
 import { ReleaseDisciplineCard } from './ReleaseDisciplineCard'
+import { CNCFFieldPill } from '@/components/cncf-readiness/CNCFFieldPill'
+import type { CNCFFieldBadge } from '@/lib/cncf-sandbox/types'
 
 interface DocumentationViewProps {
   results: AnalysisResult[]
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
+  cncfBadges?: CNCFFieldBadge[]
 }
 
 const FILE_LABELS: Record<string, string> = {
@@ -229,7 +232,13 @@ function InclusiveNamingPane({ inclusiveNamingResult }: { inclusiveNamingResult:
   )
 }
 
-export function DocumentationView({ results, activeTag: externalTag, onTagChange }: DocumentationViewProps) {
+const DOC_FILE_TO_CNCF_FIELD: Record<string, string> = {
+  contributing: 'contributing',
+  code_of_conduct: 'coc',
+  security: 'security',
+}
+
+export function DocumentationView({ results, activeTag: externalTag, onTagChange, cncfBadges = [] }: DocumentationViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [localTag, setLocalTag] = useState<string | null>(null)
   const activeTag = externalTag !== undefined ? externalTag : localTag
@@ -306,6 +315,8 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                       .filter((check) => !activeTag || getDocFileAllTags(check.name).includes(activeTag))
                       .map((check) => {
                         const tags = getDocFileAllTags(check.name)
+                        const cncfFieldId = DOC_FILE_TO_CNCF_FIELD[check.name]
+                        const cncfBadge = cncfFieldId ? cncfBadges.find((b) => b.fieldId === cncfFieldId) : undefined
                         return (
                           <li key={check.name} className="flex items-start gap-2">
                             <span className={`mt-0.5 text-sm ${check.found ? 'text-emerald-600' : 'text-red-400'}`}>
@@ -315,6 +326,7 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                               <p className={`break-all text-sm font-medium ${check.found ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
                                 {FILE_LABELS[check.name] ?? check.name}
                                 {check.found && check.path ? <span className="ml-1 font-normal text-slate-400 dark:text-slate-500">({check.path})</span> : null}
+                                {cncfBadge ? <span className="ml-1.5 align-middle"><CNCFFieldPill status={cncfBadge.status} /></span> : null}
                                 {tags.map((tag) => <span key={tag} className="hidden sm:inline"> <TagPill tag={tag} active={activeTag === tag} onClick={handleTagClick} /></span>)}
                               </p>
                               {!check.found ? (
@@ -326,6 +338,46 @@ export function DocumentationView({ results, activeTag: externalTag, onTagChange
                           </li>
                         )
                       })}
+                    {/* Adopters file row */}
+                    {'adoptersFile' in result.documentationResult && !activeTag ? (
+                      (() => {
+                        const found = result.documentationResult.adoptersFile
+                        const cncfBadge = cncfBadges.find((b) => b.fieldId === 'adopters')
+                        return (
+                          <li className="flex items-start gap-2">
+                            <span className={`mt-0.5 text-sm ${found ? 'text-emerald-600' : 'text-red-400'}`}>
+                              {found ? '✓' : '✗'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`break-all text-sm font-medium ${found ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                                ADOPTERS
+                                {cncfBadge ? <span className="ml-1.5 align-middle"><CNCFFieldPill status={cncfBadge.status} /></span> : null}
+                              </p>
+                            </div>
+                          </li>
+                        )
+                      })()
+                    ) : null}
+                    {/* Roadmap file row */}
+                    {'roadmapFile' in result.documentationResult && !activeTag ? (
+                      (() => {
+                        const found = result.documentationResult.roadmapFile
+                        const cncfBadge = cncfBadges.find((b) => b.fieldId === 'roadmap')
+                        return (
+                          <li className="flex items-start gap-2">
+                            <span className={`mt-0.5 text-sm ${found ? 'text-emerald-600' : 'text-red-400'}`}>
+                              {found ? '✓' : '✗'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className={`break-all text-sm font-medium ${found ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                                ROADMAP
+                                {cncfBadge ? <span className="ml-1.5 align-middle"><CNCFFieldPill status={cncfBadge.status} /></span> : null}
+                              </p>
+                            </div>
+                          </li>
+                        )
+                      })()
+                    ) : null}
                   </ul>
                 </div>
               ) : null}

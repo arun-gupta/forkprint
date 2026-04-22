@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>A single score that tells you how healthy your open source project really is.</strong><br/>
-  Calibrated against 2,400+ real GitHub repositories.
+  <strong>Measure the health of your open source project — and know exactly what to fix.</strong><br/>
+  Percentile-based scoring across 5 dimensions. Calibrated against 2,400+ real GitHub repositories.
 </p>
 
 <p align="center">
@@ -25,28 +25,32 @@ RepoPulse analyzes any public GitHub repository and produces a composite **OSS H
 
 ## Who it's for
 
-RepoPulse is built for **community-oriented projects** — multi-contributor repositories with users, maintainers, and a growth story. The primary audience is:
+RepoPulse is built for open source projects across the full maturity spectrum. The primary audience is:
 
-- Maintainers of projects with 3+ active contributors looking to close specific gaps
+- Maintainers of any open source project looking to understand and improve its health
 - OSPOs and program managers evaluating OSS health across a portfolio
 - Foundation-track projects (CNCF, Apache, Linux Foundation, etc.) preparing for stage reviews
 
-**Not the right fit at this time** for solo-maintainer projects or 1–2 person dependencies. Those projects will see low Contributors and Responsiveness scores with the current scoring surface — not a judgment, just a poor match between today's signals and the project's shape. A dedicated solo-project profile with re-weighted scoring (Activity / Security / Documentation emphasized) is planned in [#214](https://github.com/arun-gupta/repo-pulse/issues/214).
+**Solo and early-stage projects are supported.** RepoPulse auto-detects solo projects (≤2 contributors or maintainers) and switches to a re-weighted scoring profile that emphasizes Activity, Security, and Documentation — dropping Contributors and Responsiveness, which aren't meaningful signals at that scale.
 
 ## Key Features
 
 | | Feature | Description |
 |---|---------|-------------|
-| :bar_chart: | **OSS Health Score** | Composite percentile with actionable recommendations |
-| :card_index_dividers: | **8-Dimension Scorecard** | Quick signals (Reach, Attention, Engagement) plus deep-dive dimensions |
+| :bar_chart: | **OSS Health Score** | Composite percentile across 5 scored dimensions, auto-adapted for solo or community projects |
 | :chart_with_upwards_trend: | **Percentile Scoring** | Every metric shows where the repo ranks vs. 2,400+ calibrated repos |
 | :busts_in_silhouette: | **Multi-Repo Comparison** | Side-by-side analysis of up to 4 repositories |
 | :office: | **Org Inventory** | Browse and analyze all repos within a GitHub organization, with an org-summary view that surfaces Overview, Contributors, Activity, Responsiveness, Documentation, Governance (2FA enforcement, stale admin detection, member permission distribution), Security, and Recommendations (top systemic issues) across the analyzed repo set |
 | :bulb: | **Unified Recommendations** | Actionable improvement suggestions across all scoring dimensions |
+| :seedling: | **CNCF Sandbox Readiness** | Select "CNCF Sandbox" as the Foundation Target for a 0–100 pre-application readiness score, ranked remediation hints, TAG recommendation, and automatic detection of filed applications and TOC approval status |
 | :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds |
-| :outbox_tray: | **Export** | JSON, Markdown, and shareable URL |
+| :outbox_tray: | **Export** | JSON, Markdown, and shareable URL; CNCF Readiness tab adds a dedicated "Download Readiness Report" export |
 
 ## How Scoring Works
+
+RepoPulse scores each dimension as a percentile relative to repos in the same **star bracket** (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
+
+**Community profile** (3+ contributors — default for most projects):
 
 | Dimension | Weight | What it evaluates |
 |-----------|--------|-------------------|
@@ -56,7 +60,15 @@ RepoPulse is built for **community-oriented projects** — multi-contributor rep
 | **Security** | 15% | OpenSSF Scorecard, dependency automation, branch protection |
 | **Documentation** | 12% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance, inclusive naming |
 
-Each dimension is scored as a percentile relative to repos in the same **star bracket** (Emerging, Growing, Established, Popular). The weighted composite becomes the overall health score.
+**Solo profile** (auto-detected for ≤2 contributors — Contributors and Responsiveness are not meaningful signals at this scale):
+
+| Dimension | Weight | What it evaluates |
+|-----------|--------|-------------------|
+| **Security** | 35% | OpenSSF Scorecard, dependency automation, branch protection |
+| **Documentation** | 35% | README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, licensing & compliance, inclusive naming |
+| **Activity** | 30% | PR throughput, issue flow, commit cadence, release frequency |
+
+The app also surfaces a qualitative **Governance** analysis (2FA enforcement, branch protection, CODEOWNERS, maintainer bus-factor) and a **Release Health** breakdown that do not feed into the composite score but are shown as standalone tabs.
 
 ## Quick Start
 
@@ -84,7 +96,7 @@ See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel deployment instruction
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 1 | Web app + core scoring (Activity, Responsiveness, Contributors, Documentation) | :white_check_mark: Done |
-| 2 | Expand scoring — Security, Licensing & Compliance, Inclusive Naming, Governance :white_check_mark:; Community, Release Health & more upcoming | In progress |
+| 2 | Expanded scoring — Security, Licensing & Compliance, Inclusive Naming, Governance, Community, Release Health, Development Cadence, Project Maturity, Org Governance Audit, CNCF Sandbox Readiness | :white_check_mark: Mostly done (Foundation-aware recommendations for Apache/LF pending) |
 | 3 | Integrations (GitHub Action, MCP Server, CLI, PR bot, VS Code, Badge, Webhook) | Planned |
 | 4 | Git provider support (GitLab, Bitbucket, Gitea) | Planned |
 

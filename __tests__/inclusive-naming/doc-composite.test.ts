@@ -20,6 +20,10 @@ function buildDocResult(): DocumentationResult {
       { name: 'license', detected: true },
     ],
     readmeContent: '# Test',
+    adoptersFile: false,
+    roadmapFile: false,
+    maintainersFile: false,
+    cocContent: null,
   }
 }
 

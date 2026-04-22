@@ -11,14 +11,17 @@ import type { ContributorsSectionViewModel } from '@/lib/contributors/view-model
 import { GOVERNANCE_CONTRIBUTORS_METRICS } from '@/lib/tags/governance'
 import { COMMUNITY_CONTRIBUTORS_METRICS } from '@/lib/tags/community'
 import { ContributionBarChart } from './ContributionBarChart'
+import { CNCFFieldPill } from '@/components/cncf-readiness/CNCFFieldPill'
+import type { CNCFFieldBadge } from '@/lib/cncf-sandbox/types'
 
 interface ContributorsScorePaneProps {
   section: ContributorsSectionViewModel
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
+  cncfBadges?: CNCFFieldBadge[]
 }
 
-export function ContributorsScorePane({ section, activeTag: externalTag, onTagChange }: ContributorsScorePaneProps) {
+export function ContributorsScorePane({ section, activeTag: externalTag, onTagChange, cncfBadges = [] }: ContributorsScorePaneProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [showExperimentalHeatmap, setShowExperimentalHeatmap] = useState(false)
   const [showExperimentalNames, setShowExperimentalNames] = useState(true)
@@ -137,7 +140,13 @@ export function ContributorsScorePane({ section, activeTag: externalTag, onTagCh
       {!activeTag ? (
       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:bg-slate-800/60 dark:border-slate-700">
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-900 dark:text-slate-100">Organization Affiliation</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-900 dark:text-slate-100">Organization Affiliation</p>
+            {(() => {
+              const badge = cncfBadges.find((b) => b.fieldId === 'contributor-diversity')
+              return badge ? <CNCFFieldPill status={badge.status} /> : null
+            })()}
+          </div>
           <p className="text-sm text-slate-600 dark:text-slate-300">{section.experimentalWarning}</p>
           <p className="text-sm text-slate-600 dark:text-slate-300">
             <a

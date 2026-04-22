@@ -9,11 +9,14 @@ import { getSecurityScore } from '@/lib/security/score-config'
 import type { ScorecardCheck, DirectSecurityCheck, SecurityScoreDefinition } from '@/lib/security/analysis-result'
 import { GOVERNANCE_SCORECARD_CHECKS, GOVERNANCE_DIRECT_CHECKS } from '@/lib/tags/governance'
 import { getScorecardCheckTags, getDirectCheckTags } from '@/lib/tags/tag-mappings'
+import { CNCFFieldPill } from '@/components/cncf-readiness/CNCFFieldPill'
+import type { CNCFFieldBadge } from '@/lib/cncf-sandbox/types'
 
 interface SecurityViewProps {
   results: AnalysisResult[]
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
+  cncfBadges?: CNCFFieldBadge[]
 }
 
 const DIRECT_CHECK_LABELS: Record<string, string> = {
@@ -72,7 +75,7 @@ function ScorecardChecksTable({ checks, activeTag, onTagClick }: { checks: Score
   )
 }
 
-function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: DirectSecurityCheck[]; activeTag: string | null; onTagClick: (tag: string) => void }) {
+function DirectChecksSection({ checks, activeTag, onTagClick, cncfBadges = [] }: { checks: DirectSecurityCheck[]; activeTag: string | null; onTagClick: (tag: string) => void; cncfBadges?: CNCFFieldBadge[] }) {
   const filtered = activeTag ? checks.filter((c) => getAllDirectCheckTags(c.name).includes(activeTag)) : checks
   if (filtered.length === 0) return null
 
@@ -82,6 +85,7 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
       <ul className="mt-3 space-y-2">
         {filtered.map((check) => {
           const tags = getAllDirectCheckTags(check.name)
+          const cncfBadge = check.name === 'security_policy' ? cncfBadges.find((b) => b.fieldId === 'security') : undefined
           return (
             <li key={check.name} className="flex items-start gap-2">
               {check.detected === 'unavailable' ? (
@@ -92,7 +96,10 @@ function DirectChecksSection({ checks, activeTag, onTagClick }: { checks: Direct
                 <span className="mt-0.5 text-sm text-red-400">✗</span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{DIRECT_CHECK_LABELS[check.name] ?? check.name}</p>
+                <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {DIRECT_CHECK_LABELS[check.name] ?? check.name}
+                  {cncfBadge ? <CNCFFieldPill status={cncfBadge.status} /> : null}
+                </p>
                 {check.details ? (
                   <p className="text-xs text-slate-500 dark:text-slate-400">{check.details}</p>
                 ) : check.detected === 'unavailable' ? (
@@ -147,7 +154,7 @@ function SecuritySummary({
   )
 }
 
-export function SecurityView({ results, activeTag: externalTag, onTagChange }: SecurityViewProps) {
+export function SecurityView({ results, activeTag: externalTag, onTagChange, cncfBadges = [] }: SecurityViewProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [localTag, setLocalTag] = useState<string | null>(null)
   const activeTag = externalTag !== undefined ? externalTag : localTag
@@ -221,7 +228,7 @@ export function SecurityView({ results, activeTag: externalTag, onTagChange }: S
                     </section>
                   ) : null}
 
-                  <DirectChecksSection checks={result.securityResult.directChecks} activeTag={activeTag} onTagClick={handleTagClick} />
+                  <DirectChecksSection checks={result.securityResult.directChecks} activeTag={activeTag} onTagClick={handleTagClick} cncfBadges={cncfBadges} />
                 </div>
               </div>
             ) : null}

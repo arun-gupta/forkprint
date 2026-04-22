@@ -126,7 +126,7 @@ describe('buildSearchIndex', () => {
   it('includes repo name in every tab except comparison (which needs 2+ repos) and governance (org-summary only, no per-repo content)', () => {
     const index = buildSearchIndex([MOCK_RESULT])
     for (const [tabId, entries] of Object.entries(index)) {
-      if (tabId === 'comparison' || tabId === 'governance') {
+      if (tabId === 'comparison' || tabId === 'governance' || tabId === 'cncf-readiness') {
         expect(entries).toEqual([])
         continue
       }

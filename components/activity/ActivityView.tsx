@@ -14,11 +14,14 @@ import { ActivityScoreHelp } from './ActivityScoreHelp'
 import { DiscussionsCard } from './DiscussionsCard'
 import { DevelopmentCadenceCard } from './DevelopmentCadenceCard'
 import { ReleaseCadenceCard } from './ReleaseCadenceCard'
+import { CNCFFieldPill } from '@/components/cncf-readiness/CNCFFieldPill'
+import type { CNCFFieldBadge } from '@/lib/cncf-sandbox/types'
 
 interface ActivityViewProps {
   results: AnalysisResult[]
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
+  cncfBadges?: CNCFFieldBadge[]
 }
 
 function getActivityCardTags(title: string): string[] {
@@ -26,7 +29,7 @@ function getActivityCardTags(title: string): string[] {
   return []
 }
 
-export function ActivityView({ results, activeTag: externalTag, onTagChange }: ActivityViewProps) {
+export function ActivityView({ results, activeTag: externalTag, onTagChange, cncfBadges = [] }: ActivityViewProps) {
   const [windowDays, setWindowDays] = useState<ActivityWindowDays>(90)
   const [localTag, setLocalTag] = useState<string | null>(null)
   const activeTag = externalTag !== undefined ? externalTag : localTag
@@ -88,8 +91,12 @@ export function ActivityView({ results, activeTag: externalTag, onTagChange }: A
               <div className="mt-4 space-y-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                    <p className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                       Recent repository activity and delivery flow derived from verified public GitHub data.
+                      {(() => {
+                        const badge = cncfBadges.find((b) => b.fieldId === 'project-activity')
+                        return badge ? <CNCFFieldPill status={badge.status} /> : null
+                      })()}
                     </p>
                     <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{score.description}</p>
                   </div>

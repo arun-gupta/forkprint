@@ -59,13 +59,25 @@ export const REPO_OVERVIEW_QUERY = `
       docContributingLower: object(expression: "HEAD:contributing.md") { ... on Blob { oid } }
       docContributingDocs: object(expression: "HEAD:docs/CONTRIBUTING.md") { ... on Blob { oid } }
       docContributingGithub: object(expression: "HEAD:.github/CONTRIBUTING.md") { ... on Blob { oid } }
-      docCodeOfConduct: object(expression: "HEAD:CODE_OF_CONDUCT.md") { ... on Blob { oid } }
+      docCodeOfConduct: object(expression: "HEAD:CODE_OF_CONDUCT.md") { ... on Blob { oid text } }
       docCodeOfConductRst: object(expression: "HEAD:CODE_OF_CONDUCT.rst") { ... on Blob { oid } }
       docCodeOfConductTxt: object(expression: "HEAD:CODE_OF_CONDUCT.txt") { ... on Blob { oid } }
       docCodeOfConductHyphenLower: object(expression: "HEAD:code-of-conduct.md") { ... on Blob { oid } }
       docCodeOfConductUnderscoreLower: object(expression: "HEAD:code_of_conduct.md") { ... on Blob { oid } }
       docCodeOfConductDocs: object(expression: "HEAD:docs/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
       docCodeOfConductGithub: object(expression: "HEAD:.github/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
+      cncfAdopters: object(expression: "HEAD:ADOPTERS.md") { ... on Blob { oid } }
+      cncfAdoptersLower: object(expression: "HEAD:adopters.md") { ... on Blob { oid } }
+      cncfAdoptersPlain: object(expression: "HEAD:ADOPTERS") { ... on Blob { oid } }
+      cncfAdoptersDocs: object(expression: "HEAD:docs/ADOPTERS.md") { ... on Blob { oid } }
+      cncfRoadmap: object(expression: "HEAD:ROADMAP.md") { ... on Blob { oid } }
+      cncfRoadmapLower: object(expression: "HEAD:roadmap.md") { ... on Blob { oid } }
+      cncfRoadmapDocs: object(expression: "HEAD:docs/ROADMAP.md") { ... on Blob { oid } }
+      cncfMaintainers: object(expression: "HEAD:MAINTAINERS") { ... on Blob { oid } }
+      cncfMaintainersMd: object(expression: "HEAD:MAINTAINERS.md") { ... on Blob { oid } }
+      cncfMaintainersMdLower: object(expression: "HEAD:maintainers.md") { ... on Blob { oid } }
+      cncfCodeowners: object(expression: "HEAD:CODEOWNERS") { ... on Blob { oid } }
+      cncfCodeownersGithub: object(expression: "HEAD:.github/CODEOWNERS") { ... on Blob { oid } }
       docSecurity: object(expression: "HEAD:SECURITY.md") { ... on Blob { oid } }
       docSecurityLower: object(expression: "HEAD:security.md") { ... on Blob { oid } }
       docSecurityRst: object(expression: "HEAD:SECURITY.rst") { ... on Blob { oid } }

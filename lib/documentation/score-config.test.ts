@@ -20,6 +20,10 @@ function buildDocResult(overrides: Partial<DocumentationResult> = {}): Documenta
       { name: 'license', detected: true },
     ],
     readmeContent: '# Project\n\nA great project.\n\n## Installation\n\nnpm install\n\n## Usage\n\nUse it.\n\n## Contributing\n\nPRs welcome.\n\n## License\n\nMIT',
+    adoptersFile: false,
+    roadmapFile: false,
+    maintainersFile: false,
+    cocContent: null,
     ...overrides,
   }
 }
@@ -302,6 +306,10 @@ describe('documentation/score-config', () => {
         { name: 'license', detected: false },
       ],
       readmeContent: '# repo-pulse\n\nA GitHub health scorecard.\n\n## Getting Started\n\nnpm install\n\n## Contributing\n\nPRs welcome.',
+      adoptersFile: false,
+      roadmapFile: false,
+      maintainersFile: false,
+      cocContent: null,
     }
 
     const repoPulseLicensing: LicensingResult = {

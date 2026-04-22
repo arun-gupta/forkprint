@@ -68,6 +68,10 @@ describe('computeCommunityCompleteness', () => {
         ],
         readmeSections: [],
         readmeContent: null,
+        adoptersFile: false,
+        roadmapFile: false,
+        maintainersFile: false,
+        cocContent: null,
       },
     }))
 

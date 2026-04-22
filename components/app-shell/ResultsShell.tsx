@@ -12,6 +12,9 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import type { TabMatchCounts } from '@/lib/search/types'
 import { useHighlightMatches } from '@/components/search/useHighlightMatches'
 import { ResultsTabs } from './ResultsTabs'
+import type { AspirantReadinessResult } from '@/lib/cncf-sandbox/types'
+import { CNCFReadinessPill } from '@/components/overview/CNCFReadinessPill'
+import { CNCFReadinessTab } from '@/components/cncf-readiness/CNCFReadinessTab'
 
 interface ResultsShellProps {
   analysisPanel: React.ReactNode
@@ -24,6 +27,9 @@ interface ResultsShellProps {
   security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
+  aspirantResult?: AspirantReadinessResult | null
+  landscapeOverride?: boolean
+  repoSlug?: string
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
   resetKey?: number
@@ -45,6 +51,9 @@ export function ResultsShell({
   security,
   recommendations,
   comparison,
+  aspirantResult,
+  landscapeOverride,
+  repoSlug,
   tabs = resultTabs,
   initialActiveTab = 'overview',
   resetKey,
@@ -82,12 +91,26 @@ export function ResultsShell({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey])
 
+  const effectiveTabs = useMemo(() => {
+    if (aspirantResult && !landscapeOverride) {
+      const hasCncfTab = tabs.some((t) => t.id === 'cncf-readiness')
+      if (!hasCncfTab) {
+        return [
+          ...tabs,
+          { id: 'cncf-readiness' as const, label: 'CNCF Readiness', status: 'implemented' as const, description: 'CNCF Sandbox application readiness checklist.' },
+        ]
+      }
+    }
+    return tabs
+  }, [tabs, aspirantResult, landscapeOverride])
+
   const currentActiveTab = useMemo(
-    () => (tabs.some((tab) => tab.id === activeTab) ? activeTab : tabs[0]?.id ?? 'overview'),
-    [activeTab, tabs],
+    () => (effectiveTabs.some((tab) => tab.id === activeTab) ? activeTab : effectiveTabs[0]?.id ?? 'overview'),
+    [activeTab, effectiveTabs],
   )
 
   const { containerRef, domMatchCounts, domTotalMatches, domMatchedTabCount } = useHighlightMatches(searchQuery, currentActiveTab)
+
 
   useEffect(() => {
     onDomMatchCounts?.({ domMatchCounts, domTotalMatches, domMatchedTabCount })
@@ -219,13 +242,28 @@ export function ResultsShell({
           <section aria-label="Result workspace" className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             <ResultsTabs
-              tabs={tabs}
+              tabs={effectiveTabs}
               activeTab={currentActiveTab}
               onChange={setActiveTab}
               matchCounts={searchQuery.trim() ? domMatchCounts : tagMatchCounts}
             />
             <div className="mt-6" ref={containerRef}>
-              <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>{overview}</div>
+              <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>
+                {aspirantResult && !landscapeOverride ? (
+                  <div className="mb-4">
+                    <CNCFReadinessPill
+                      aspirantResult={aspirantResult}
+                      onClick={() => setActiveTab('cncf-readiness')}
+                    />
+                  </div>
+                ) : null}
+                {landscapeOverride ? (
+                  <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-700 dark:bg-sky-900/20 dark:text-sky-200">
+                    This project is already a CNCF Sandbox project. To assess readiness for Incubation, select &ldquo;CNCF Incubating&rdquo; from the foundation target selector.
+                  </div>
+                ) : null}
+                {overview}
+              </div>
               <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
               <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
               <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
@@ -234,6 +272,15 @@ export function ResultsShell({
               <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
               <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
               <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
+              <div data-tab-content="cncf-readiness" style={{ display: currentActiveTab === 'cncf-readiness' ? 'contents' : 'none' }}>
+                {aspirantResult && !landscapeOverride ? (
+                  <CNCFReadinessTab
+                    aspirantResult={aspirantResult}
+                    repoSlug={repoSlug}
+                    onNavigateToTab={(tab) => setActiveTab(tab as ResultTabId)}
+                  />
+                ) : null}
+              </div>
             </div>
           </section>
         </section>

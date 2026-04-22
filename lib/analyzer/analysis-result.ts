@@ -1,4 +1,5 @@
 import type { SecurityResult } from '@/lib/security/analysis-result'
+import type { AspirantReadinessResult } from '@/lib/cncf-sandbox/types'
 
 export type Unavailable = 'unavailable'
 export const CONTRIBUTOR_WINDOW_DAYS = [30, 60, 90, 180, 365] as const
@@ -115,6 +116,10 @@ export interface DocumentationResult {
   fileChecks: DocumentationFileCheck[]
   readmeSections: ReadmeSectionCheck[]
   readmeContent: string | null
+  adoptersFile?: boolean
+  roadmapFile?: boolean
+  maintainersFile?: boolean
+  cocContent?: string | null
 }
 
 export type InclusiveNamingCheckType = 'branch' | 'description' | 'topic'
@@ -242,6 +247,8 @@ export interface AnalysisResult {
   commitsPerMonthRecent12mo?: number | Unavailable
   growthTrajectory?: 'accelerating' | 'stable' | 'declining' | Unavailable
   missingFields: string[]
+  aspirantResult?: AspirantReadinessResult | null
+  landscapeOverride?: boolean
 }
 
 export type VersioningScheme = 'semver' | 'calver' | 'unrecognized'

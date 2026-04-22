@@ -7,14 +7,16 @@ import { buildContributorsViewModels } from '@/lib/contributors/view-model'
 import { CoreContributorsPane } from './CoreContributorsPane'
 import { ContributorsScorePane } from './ContributorsScorePane'
 import { OnboardingPane } from './OnboardingPane'
+import type { CNCFFieldBadge } from '@/lib/cncf-sandbox/types'
 
 interface ContributorsViewProps {
   results: AnalysisResult[]
   activeTag?: string | null
   onTagChange?: (tag: string | null) => void
+  cncfBadges?: CNCFFieldBadge[]
 }
 
-export function ContributorsView({ results, activeTag, onTagChange }: ContributorsViewProps) {
+export function ContributorsView({ results, activeTag, onTagChange, cncfBadges = [] }: ContributorsViewProps) {
   const [includeBots, setIncludeBots] = useState(false)
   const [windowDays, setWindowDays] = useState<ContributorWindowDays>(90)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -71,7 +73,7 @@ export function ContributorsView({ results, activeTag, onTagChange }: Contributo
                       includeBots={includeBots}
                       onToggleIncludeBots={() => setIncludeBots((current) => !current)}
                     />
-                    <ContributorsScorePane section={section} activeTag={activeTag} onTagChange={onTagChange} />
+                    <ContributorsScorePane section={section} activeTag={activeTag} onTagChange={onTagChange} cncfBadges={cncfBadges} />
                   </>
                 )}
                 {showOnboarding && result && (

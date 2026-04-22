@@ -26,6 +26,7 @@ import { PreRunWarningDialog } from '@/components/org-summary/PreRunWarningDialo
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
+import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '@/lib/cncf-sandbox/types'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
@@ -57,6 +58,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [foundationTarget, setFoundationTarget] = useState<FoundationTarget>('none')
+  const [aspirantResult, setAspirantResult] = useState<AspirantReadinessResult | null>(null)
+  const cncfBadges: CNCFFieldBadge[] = aspirantResult
+    ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
+    : []
+  const [landscapeOverride, setLandscapeOverride] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [preRunDialogRepos, setPreRunDialogRepos] = useState<string[] | null>(null)
@@ -136,7 +143,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       try {
         const response = onAnalyze
           ? await onAnalyze([repo], session.token)
-          : await submitAnalysisRequest([repo], session.token)
+          : await submitAnalysisRequest([repo], session.token, 'none')
         const first = response?.results?.[0]
         if (!first) {
           return {
@@ -247,6 +254,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setResultsResetKey((k) => k + 1)
     setSearchQuery('')
     setDebouncedQuery('')
+    setAspirantResult(null)
+    setLandscapeOverride(false)
   }
 
   useEffect(() => {
@@ -288,6 +297,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setSubmissionError(null)
     setAnalysisResponse(null)
     setOrgInventoryResponse(null)
+    setAspirantResult(null)
+    setLandscapeOverride(false)
     setResultsResetKey((current) => current + 1)
     setInputMode('repos')
     setLoadingRepos(repos)
@@ -296,11 +307,22 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     try {
       const response = onAnalyze
         ? await onAnalyze(repos, session.token)
-        : await submitAnalysisRequest(repos, session.token, controller.signal)
+        : await submitAnalysisRequest(repos, session.token, foundationTarget, controller.signal)
 
       if (response && !controller.signal.aborted) {
         setAnalysisResponse(response)
         setAnalyzedRepos(repos)
+        const firstResult = response.results[0]
+        if (firstResult?.landscapeOverride) {
+          setLandscapeOverride(true)
+          setAspirantResult(null)
+        } else if (firstResult?.aspirantResult) {
+          setAspirantResult(firstResult.aspirantResult)
+          setLandscapeOverride(false)
+        } else {
+          setAspirantResult(null)
+          setLandscapeOverride(false)
+        }
       }
     } catch (error) {
       if (controller.signal.aborted) return
@@ -365,6 +387,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       onSubmitRepos={handleSubmit}
       onSubmitOrg={handleOrgSubmit}
       initialRepoValue={initialRepoValue}
+      foundationTarget={foundationTarget}
+      onFoundationTargetChange={setFoundationTarget}
     />
   )
 
@@ -621,12 +645,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       searchQuery={debouncedQuery}
       onDomMatchCounts={handleDomMatchCounts}
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
+      aspirantResult={aspirantResult}
+      landscapeOverride={landscapeOverride}
+      repoSlug={analyzedRepos[0]}
       overview={overviewContent}
       contributors={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="contributors" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
-          <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
+          <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
         ) : (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
@@ -637,7 +664,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="activity" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
-          <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
+          <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
         ) : (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
@@ -663,7 +690,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             selectedWindow={orgWindow}
           />
         ) : analysisResponse ? (
-          <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
+          <DocumentationView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
         ) : (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
@@ -690,7 +717,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="security" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
-          <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
+          <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
         ) : (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
@@ -763,11 +790,11 @@ function formatElapsedTime(seconds: number) {
   return `${seconds}s`
 }
 
-async function submitAnalysisRequest(repos: string[], token: string, signal?: AbortSignal): Promise<AnalyzeResponse> {
+async function submitAnalysisRequest(repos: string[], token: string, foundationTarget: FoundationTarget, signal?: AbortSignal): Promise<AnalyzeResponse> {
   const response = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repos, token }),
+    body: JSON.stringify({ repos, token, foundationTarget }),
     signal,
   })
   const payload = (await response.json()) as AnalyzeResponse & { error?: string }

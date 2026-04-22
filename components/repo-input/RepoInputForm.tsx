@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { normalizeOrgInput } from '@/lib/analyzer/org-inventory'
 import { parseRepos } from '@/lib/parse-repos'
+import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
 
 interface RepoInputFormProps {
   onSubmitRepos: (repos: string[]) => void
@@ -10,6 +11,8 @@ interface RepoInputFormProps {
   mode?: 'repos' | 'org'
   onModeChange?: (mode: 'repos' | 'org') => void
   initialRepoValue?: string
+  foundationTarget?: FoundationTarget
+  onFoundationTargetChange?: (target: FoundationTarget) => void
 }
 
 export function RepoInputForm({
@@ -18,6 +21,8 @@ export function RepoInputForm({
   mode: controlledMode,
   onModeChange,
   initialRepoValue = '',
+  foundationTarget = 'none',
+  onFoundationTargetChange,
 }: RepoInputFormProps) {
   const [uncontrolledMode, setUncontrolledMode] = useState<'repos' | 'org'>('repos')
   const [repoValue, setRepoValue] = useState(initialRepoValue)
@@ -146,6 +151,22 @@ export function RepoInputForm({
           aria-label="Repository list"
           aria-describedby={error ? 'repo-input-error' : undefined}
         />
+        <div className="mt-2 flex items-center gap-2">
+          <label htmlFor="foundation-target" className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+            Foundation target:
+          </label>
+          <select
+            id="foundation-target"
+            value={foundationTarget}
+            onChange={(e) => onFoundationTargetChange?.(e.target.value as FoundationTarget)}
+            className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          >
+            <option value="none">None</option>
+            <option value="cncf-sandbox">CNCF Sandbox</option>
+            <option value="cncf-incubating" disabled>CNCF Incubating (coming soon)</option>
+            <option value="cncf-graduated" disabled>CNCF Graduated (coming soon)</option>
+          </select>
+        </div>
         </div>
       ) : (
         <input

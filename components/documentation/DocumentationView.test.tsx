@@ -50,6 +50,10 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
         { name: 'license', detected: true },
       ],
       readmeContent: '# React',
+      adoptersFile: false,
+      roadmapFile: false,
+      maintainersFile: false,
+      cocContent: null,
     },
     licensingResult: {
       license: { spdxId: 'MIT', name: 'MIT License', osiApproved: true, permissivenessTier: 'Permissive' },
