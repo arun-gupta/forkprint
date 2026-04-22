@@ -192,8 +192,10 @@ function evaluateLandscape(label: string, weight: number, result: AnalysisResult
   }
   const inLandscape = isRepoInLandscape(result.repo, landscapeData)
   if (inLandscape) return makeField('landscape', label, weight, undefined, 'ready')
-  return makeField('landscape', label, weight, undefined, 'missing', {
-    remediationHint: 'This repo is not yet listed in the CNCF landscape — it will be added after Sandbox acceptance.',
+  // Landscape listing happens automatically post-acceptance — not actionable pre-application.
+  // Use partial (not missing) so it appears informational rather than penalising the score.
+  return makeField('landscape', label, 0, undefined, 'partial', {
+    remediationHint: 'Not yet listed in the CNCF landscape. This is added automatically after Sandbox acceptance — no action needed here.',
   })
 }
 
