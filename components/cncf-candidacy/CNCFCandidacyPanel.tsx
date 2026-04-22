@@ -486,8 +486,14 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
                 <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">Repo</th>
-                <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">Confirmed (Track 1)</th>
-                <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">Evidence (Track 2)</th>
+                <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">
+                  Sandbox criteria
+                  <span className="ml-1 font-normal text-slate-400 dark:text-slate-500">/ 9</span>
+                </th>
+                <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">
+                  Context signals
+                  <span className="ml-1 font-normal text-slate-400 dark:text-slate-500">/ 9</span>
+                </th>
                 <th className="pb-2 pr-4 font-semibold text-slate-600 dark:text-slate-300">Top gaps</th>
                 <th className="pb-2 font-semibold text-slate-600 dark:text-slate-300">Action</th>
               </tr>
@@ -580,7 +586,7 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
                     <td className="py-2 pr-4">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-slate-900 dark:text-slate-100">
-                          {result.track1Score} / 9
+                          {result.track1Score}
                         </span>
                         {tierBadge ? (
                           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tierBadge.className}`}>
@@ -590,7 +596,7 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
                       </div>
                     </td>
                     <td className="py-2 pr-4 text-slate-700 dark:text-slate-300">
-                      {result.track2Score} / 9
+                      {result.track2Score}
                     </td>
                     <td className="py-2 pr-4">
                       {result.topGaps.length > 0 ? (
