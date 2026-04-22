@@ -256,6 +256,7 @@ describe('T020 — readinessScore boundary cases', () => {
       homepageUrls: new Set(),
       fetchedAt: Date.now(),
       categories: [],
+      projectStatusMap: new Map(),
     }
     const result = makeResult({ repo: 'test-org/test-repo' })
     const { alreadyInLandscape } = evaluateAspirant(result, landscapeData)
@@ -302,6 +303,7 @@ describe('T030 — alreadyInLandscape flag', () => {
       homepageUrls: new Set(),
       fetchedAt: Date.now(),
       categories: [],
+      projectStatusMap: new Map(),
     }
     const result = makeResult({ repo: 'test-org/test-repo' })
     const { alreadyInLandscape } = evaluateAspirant(result, landscapeData)

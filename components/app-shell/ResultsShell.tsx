@@ -27,6 +27,7 @@ interface ResultsShellProps {
   security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
+  cncfCandidacy?: React.ReactNode
   aspirantResult?: AspirantReadinessResult | null
   landscapeOverride?: boolean
   repoSlug?: string
@@ -51,6 +52,7 @@ export function ResultsShell({
   security,
   recommendations,
   comparison,
+  cncfCandidacy,
   aspirantResult,
   landscapeOverride,
   repoSlug,
@@ -92,17 +94,27 @@ export function ResultsShell({
   }, [resetKey])
 
   const effectiveTabs = useMemo(() => {
+    let result = tabs
+    if (cncfCandidacy) {
+      const hasCandidacyTab = result.some((t) => t.id === 'cncf-candidacy')
+      if (!hasCandidacyTab) {
+        result = [
+          ...result,
+          { id: 'cncf-candidacy' as const, label: 'CNCF Candidacy', status: 'implemented' as const, description: 'CNCF Sandbox candidacy scan ranked by readiness.' },
+        ]
+      }
+    }
     if (aspirantResult && !landscapeOverride) {
-      const hasCncfTab = tabs.some((t) => t.id === 'cncf-readiness')
+      const hasCncfTab = result.some((t) => t.id === 'cncf-readiness')
       if (!hasCncfTab) {
-        return [
-          ...tabs,
+        result = [
+          ...result,
           { id: 'cncf-readiness' as const, label: 'CNCF Readiness', status: 'implemented' as const, description: 'CNCF Sandbox application readiness checklist.' },
         ]
       }
     }
-    return tabs
-  }, [tabs, aspirantResult, landscapeOverride])
+    return result
+  }, [tabs, aspirantResult, landscapeOverride, cncfCandidacy])
 
   const currentActiveTab = useMemo(
     () => (effectiveTabs.some((tab) => tab.id === activeTab) ? activeTab : effectiveTabs[0]?.id ?? 'overview'),
@@ -280,6 +292,9 @@ export function ResultsShell({
                     onNavigateToTab={(tab) => setActiveTab(tab as ResultTabId)}
                   />
                 ) : null}
+              </div>
+              <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
+                {cncfCandidacy}
               </div>
             </div>
           </section>

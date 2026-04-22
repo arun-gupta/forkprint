@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const yaml = require('js-yaml') as { load: (text: string) => unknown }
-import type { CNCFLandscapeData, LandscapeCategory, SandboxApplicationIssue, SandboxIssueData } from './types'
+import type { CNCFLandscapeData, LandscapeCategory, LandscapeProjectStatus, SandboxApplicationIssue, SandboxIssueData } from './types'
 
 const LANDSCAPE_URL =
   'https://raw.githubusercontent.com/cncf/landscape/master/landscape.yml'
@@ -10,6 +10,7 @@ let cache: CNCFLandscapeData | null = null
 type RawItem = {
   repo_url?: string
   homepage_url?: string
+  project?: string
   [key: string]: unknown
 }
 
@@ -44,6 +45,7 @@ export async function fetchCNCFLandscape(): Promise<CNCFLandscapeData | null> {
     const repoUrls = new Set<string>()
     const homepageUrls = new Set<string>()
     const categories: LandscapeCategory[] = []
+    const projectStatusMap = new Map<string, 'sandbox' | 'incubating' | 'graduated'>()
 
     for (const cat of raw?.landscape ?? []) {
       for (const sub of cat?.subcategories ?? []) {
@@ -53,6 +55,10 @@ export async function fetchCNCFLandscape(): Promise<CNCFLandscapeData | null> {
             const normalized = normalizeUrl(item.repo_url)
             repoUrls.add(normalized)
             projectRepos.push(normalized)
+            const proj = item.project
+            if (proj === 'sandbox' || proj === 'incubating' || proj === 'graduated') {
+              projectStatusMap.set(normalized, proj)
+            }
           }
           if (item.homepage_url && typeof item.homepage_url === 'string') {
             homepageUrls.add(normalizeUrl(item.homepage_url))
@@ -68,7 +74,7 @@ export async function fetchCNCFLandscape(): Promise<CNCFLandscapeData | null> {
       }
     }
 
-    cache = { repoUrls, homepageUrls, fetchedAt: Date.now(), categories }
+    cache = { repoUrls, homepageUrls, fetchedAt: Date.now(), categories, projectStatusMap }
     return cache
   } catch {
     return null
@@ -197,4 +203,19 @@ export function isRepoInLandscape(repoSlug: string, data: CNCFLandscapeData): bo
   // Match against both github.com/owner/repo and just owner/repo forms
   const full = slug.startsWith('https://') ? normalizeUrl(slug) : `https://github.com/${slug}`
   return data.repoUrls.has(full) || data.repoUrls.has(slug)
+}
+
+/**
+ * Returns the CNCF landscape status for a repo:
+ * - 'graduated' | 'incubating' | 'sandbox' → has that project field in landscape.yml
+ * - 'landscape' → listed in landscape but no project field (cloud-native but not CNCF-hosted)
+ * - null → not listed in landscape at all
+ */
+export function getLandscapeProjectStatus(repoSlug: string, data: CNCFLandscapeData): LandscapeProjectStatus {
+  const slug = repoSlug.toLowerCase()
+  const full = slug.startsWith('https://') ? normalizeUrl(slug) : `https://github.com/${slug}`
+  const status = data.projectStatusMap.get(full) ?? data.projectStatusMap.get(slug)
+  if (status) return status
+  if (isRepoInLandscape(repoSlug, data)) return 'landscape'
+  return null
 }

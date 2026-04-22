@@ -168,6 +168,52 @@ export const REPO_README_BLOB_QUERY = `
   }
 `
 
+// ─── CNCF Candidacy lightweight criteria query (issue #400) ────────────────
+// Fetches only the file presence and metadata needed for Track 1 + Track 2
+// scoring. Much lighter than REPO_OVERVIEW_QUERY — no commit/PR/release data.
+export const CANDIDACY_CRITERIA_QUERY = `
+  query CandidacyCriteria($owner: String!, $name: String!) {
+    repository(owner: $owner, name: $name) {
+      description
+      homepageUrl
+      hasPages
+      repositoryTopics(first: 20) {
+        nodes { topic { name } }
+      }
+      licenseInfo { spdxId }
+      rootTree: object(expression: "HEAD:") {
+        ... on Tree { entries { name type } }
+      }
+      docContributing: object(expression: "HEAD:CONTRIBUTING.md") { ... on Blob { oid } }
+      docContributingLower: object(expression: "HEAD:contributing.md") { ... on Blob { oid } }
+      docContributingGithub: object(expression: "HEAD:.github/CONTRIBUTING.md") { ... on Blob { oid } }
+      docContributingDocs: object(expression: "HEAD:docs/CONTRIBUTING.md") { ... on Blob { oid } }
+      docCodeOfConduct: object(expression: "HEAD:CODE_OF_CONDUCT.md") { ... on Blob { oid } }
+      docCodeOfConductLower: object(expression: "HEAD:code_of_conduct.md") { ... on Blob { oid } }
+      docCodeOfConductGithub: object(expression: "HEAD:.github/CODE_OF_CONDUCT.md") { ... on Blob { oid } }
+      cncfMaintainers: object(expression: "HEAD:MAINTAINERS") { ... on Blob { oid } }
+      cncfMaintainersMd: object(expression: "HEAD:MAINTAINERS.md") { ... on Blob { oid } }
+      cncfMaintainersMdLower: object(expression: "HEAD:maintainers.md") { ... on Blob { oid } }
+      cncfCodeowners: object(expression: "HEAD:CODEOWNERS") { ... on Blob { oid } }
+      cncfCodeownersGithub: object(expression: "HEAD:.github/CODEOWNERS") { ... on Blob { oid } }
+      docSecurity: object(expression: "HEAD:SECURITY.md") { ... on Blob { oid } }
+      docSecurityLower: object(expression: "HEAD:security.md") { ... on Blob { oid } }
+      docSecurityGithub: object(expression: "HEAD:.github/SECURITY.md") { ... on Blob { oid } }
+      docSecurityDocs: object(expression: "HEAD:docs/SECURITY.md") { ... on Blob { oid } }
+      cncfRoadmap: object(expression: "HEAD:ROADMAP.md") { ... on Blob { oid } }
+      cncfRoadmapLower: object(expression: "HEAD:roadmap.md") { ... on Blob { oid } }
+      cncfRoadmapDocs: object(expression: "HEAD:docs/ROADMAP.md") { ... on Blob { oid } }
+      cncfAdopters: object(expression: "HEAD:ADOPTERS.md") { ... on Blob { oid } }
+      cncfAdoptersLower: object(expression: "HEAD:adopters.md") { ... on Blob { oid } }
+      cncfAdoptersPlain: object(expression: "HEAD:ADOPTERS") { ... on Blob { oid } }
+      cncfAdoptersDocs: object(expression: "HEAD:docs/ADOPTERS.md") { ... on Blob { oid } }
+      docLicense: object(expression: "HEAD:LICENSE") { ... on Blob { oid } }
+      docLicenseLower: object(expression: "HEAD:license") { ... on Blob { oid } }
+    }
+    rateLimit { limit remaining resetAt }
+  }
+`
+
 // ─── Two-pass activity queries ──────────────────────────────────────────────
 //
 // Pass 1: Commit history + releases — lightweight, stays well under

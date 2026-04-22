@@ -127,6 +127,11 @@ const DOC: CatalogEntry[] = [
   { id: 'DOC-19', bucket: 'Documentation', key: 'release_adopt_scheme', title: 'Adopt a consistent versioning scheme', tags: ['release-health'] },
   { id: 'DOC-20', bucket: 'Documentation', key: 'release_improve_notes', title: 'Expand release notes to describe what changed', tags: ['release-health', 'quick-win'] },
   { id: 'DOC-21', bucket: 'Documentation', key: 'release_promote_tags', title: 'Promote git tags to GitHub Releases', tags: ['release-health', 'quick-win'] },
+  // CNCF Sandbox candidacy criteria (issue #400)
+  { id: 'DOC-22', bucket: 'Documentation', key: 'file:roadmap', title: 'Add a ROADMAP.md or Roadmap section to README', tags: ['governance', 'quick-win'] },
+  { id: 'DOC-23', bucket: 'Documentation', key: 'file:website', title: 'Set a project website or homepage URL', tags: ['community'] },
+  { id: 'DOC-24', bucket: 'Documentation', key: 'file:adopters', title: 'Add an ADOPTERS.md listing known production users', tags: ['governance', 'community'] },
+  { id: 'DOC-25', bucket: 'Documentation', key: 'cncf:landscape', title: 'Submit your project to the CNCF Landscape', tags: ['governance', 'community'] },
 ]
 
 // ── Combined catalog ──────────────────────────────────────────────────

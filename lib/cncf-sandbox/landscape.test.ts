@@ -24,6 +24,7 @@ describe('T036 — isRepoInLandscape', () => {
     homepageUrls: new Set(),
     fetchedAt: Date.now(),
     categories: [],
+    projectStatusMap: new Map(),
   }
 
   it('T036-3: repo slug in Set → true', () => {
@@ -100,6 +101,28 @@ landscape:
     const data = await fetchCNCFLandscape()
     expect(data).not.toBeNull()
     expect(data?.repoUrls.has('https://github.com/test/project')).toBe(true)
+  })
+
+  it('T036-9: project field "sandbox" is stored in projectStatusMap', async () => {
+    const yaml = `
+landscape:
+  - name: Cat1
+    subcategories:
+      - name: Sub1
+        items:
+          - name: SandboxProject
+            repo_url: https://github.com/test/sandbox-project
+            project: sandbox
+`
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve(yaml),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const { fetchCNCFLandscape } = await import('./landscape')
+    const data = await fetchCNCFLandscape()
+    expect(data?.projectStatusMap.get('https://github.com/test/sandbox-project')).toBe('sandbox')
   })
 
   it('T036-8: fetch returns non-ok response → returns null', async () => {

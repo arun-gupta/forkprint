@@ -70,6 +70,8 @@ export interface CNCFLandscapeData {
   homepageUrls: Set<string>
   fetchedAt: number
   categories: LandscapeCategory[]
+  /** Maps normalized repo URL → CNCF project maturity level (only entries that have a project field) */
+  projectStatusMap: Map<string, 'sandbox' | 'incubating' | 'graduated'>
 }
 
 export interface LandscapeCategory {
@@ -82,4 +84,56 @@ export interface CNCFFieldBadge {
   fieldId: string
   label: string
   status: AspirantFieldStatus
+}
+
+// ── Org-level CNCF Candidacy Scan (issue #400) ──────────────────────────────
+
+/** Pill shown on each repo in the org-level candidacy picker */
+export type LandscapeProjectStatus = 'graduated' | 'incubating' | 'sandbox' | 'landscape' | null
+
+/** Binary Track 1 criteria (auto-detectable, 9 criteria out of 9) */
+export interface CandidacyTrack1 {
+  license: boolean
+  contributing: boolean
+  codeOfConduct: boolean
+  maintainers: boolean
+  security: boolean
+  roadmap: boolean
+  website: boolean
+  adopters: boolean
+  landscape: boolean
+}
+
+/** Track 2 evidence (partially auto-detectable, 9 criteria out of 9) */
+export interface CandidacyTrack2 {
+  lfxInsights: boolean
+  projectSummary: boolean
+  roadmapContext: boolean
+  specOrStandard: boolean
+  businessSeparation: boolean
+  cloudNativeIntegration: boolean
+  cloudNativeOverlap: boolean
+  similarProjects: boolean
+  tagReview: boolean
+}
+
+export type CandidacyTier = 'strong' | 'needs-work' | 'not-ready'
+
+export interface CandidacyGap {
+  catalogId: string
+  title: string
+}
+
+/** Full per-repo candidacy scan result */
+export interface CandidacyRepoResult {
+  repo: string
+  stars: number
+  landscapeStatus: LandscapeProjectStatus
+  track1Score: number
+  track1: CandidacyTrack1
+  track2Score: number
+  track2: CandidacyTrack2
+  tier: CandidacyTier
+  topGaps: CandidacyGap[]
+  readmeFirstParagraph: string | null
 }
