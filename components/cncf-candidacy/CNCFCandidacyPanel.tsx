@@ -362,6 +362,20 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
 
   const hasMoreRepos = batchOffset < selectable.length
 
+  // Summary counts derived from all repos + loaded results
+  const summary = useMemo(() => {
+    const statusCounts: Partial<Record<NonNullable<LandscapeProjectStatus>, number>> = {}
+    for (const repo of repos) {
+      const s = getRepoStatus(repo)
+      if (s) statusCounts[s] = (statusCounts[s] ?? 0) + 1
+    }
+    const tierCounts = { strong: 0, 'needs-work': 0, 'not-ready': 0 }
+    for (const { rowState } of rankedResults) {
+      if (rowState.status === 'loaded') tierCounts[rowState.result.tier]++
+    }
+    return { statusCounts, tierCounts, loadedCount: rankedResults.filter(r => r.rowState.status === 'loaded').length }
+  }, [repos, rankedResults, getRepoStatus])
+
   const filteredResults = useMemo(() => {
     if (!activeStatusFilter) return rankedResults
     return rankedResults.filter(({ repo }) => getRepoStatus(repo) === activeStatusFilter)
@@ -400,6 +414,35 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
           ) : null}
         </div>
       </div>
+
+      {/* Summary chips */}
+      {(summary.statusCounts.graduated ?? 0) + (summary.statusCounts.incubating ?? 0) + (summary.statusCounts.sandbox ?? 0) + (summary.statusCounts.landscape ?? 0) + summary.loadedCount > 0 ? (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {(['graduated', 'incubating', 'sandbox', 'landscape'] as const).map((s) => {
+            const count = summary.statusCounts[s]
+            if (!count) return null
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setActiveStatusFilter(activeStatusFilter === s ? null : s)}
+                aria-pressed={activeStatusFilter === s}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 font-medium transition-shadow hover:ring-2 hover:ring-current ${PILL_CLASSES[s]}${activeStatusFilter === s ? ' ring-2 ring-current' : ''}`}
+              >
+                <span>{count}</span>
+                <span>{PILL_LABELS[s]}</span>
+              </button>
+            )
+          })}
+          {summary.loadedCount > 0 ? (
+            <span className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              {summary.tierCounts.strong > 0 ? <span className="text-emerald-700 dark:text-emerald-400"><span className="font-semibold">{summary.tierCounts.strong}</span> strong</span> : null}
+              {summary.tierCounts['needs-work'] > 0 ? <span className="text-amber-700 dark:text-amber-400"><span className="font-semibold">{summary.tierCounts['needs-work']}</span> needs work</span> : null}
+              {summary.tierCounts['not-ready'] > 0 ? <span className="text-red-700 dark:text-red-400"><span className="font-semibold">{summary.tierCounts['not-ready']}</span> not ready</span> : null}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Search */}
       <div className="relative">
