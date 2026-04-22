@@ -645,7 +645,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
       aspirantResult={aspirantResult}
       landscapeOverride={landscapeOverride}
-      cncfReadiness={aspirantResult ? <CNCFReadinessTab aspirantResult={aspirantResult} /> : undefined}
+      cncfReadiness={aspirantResult ? <CNCFReadinessTab aspirantResult={aspirantResult} repoSlug={analyzedRepos[0]} /> : undefined}
       overview={overviewContent}
       contributors={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
