@@ -391,6 +391,13 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
             Ranks repos in <span className="font-mono">{org}</span> by CNCF Sandbox readiness.
             Graduated / Incubating / Sandbox repos are greyed out.
           </p>
+          {selectable.length > 0 ? (
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+              {rankedResults.length} of {selectable.length} repos scanned
+              {activeStatusFilter ? ` · ${filteredResults.length} shown` : ''}
+              {cncfHosted.length > 0 ? ` · ${cncfHosted.length} existing CNCF projects` : ''}
+            </p>
+          ) : null}
         </div>
       </div>
 

@@ -104,7 +104,7 @@ export function ResultsShell({
         ]
       }
     }
-    if (aspirantResult && !landscapeOverride) {
+    if (aspirantResult && !landscapeOverride && !cncfCandidacy) {
       const hasCncfTab = result.some((t) => t.id === 'cncf-readiness')
       if (!hasCncfTab) {
         result = [
