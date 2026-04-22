@@ -133,6 +133,18 @@ function assessAndRecommend(
       return { assessment: 'adequate', recommendation: null }
     }
 
+    case 'contact-email': {
+      const hasEmail = /\S+@\S+\.\S+/.test(content)
+      if (hasEmail) return { assessment: 'strong', recommendation: null }
+      return { assessment: 'weak', recommendation: "Provide at least one valid email address for the primary submitter." }
+    }
+
+    case 'signatory':
+    case 'trademark-ip': {
+      if (wordCount >= 3) return { assessment: 'strong', recommendation: null }
+      return { assessment: 'weak', recommendation: null }
+    }
+
     default: {
       if (wordCount < 5) return { assessment: 'weak', recommendation: null }
       if (wordCount > 20) return { assessment: 'strong', recommendation: null }
