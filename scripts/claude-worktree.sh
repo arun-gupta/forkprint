@@ -10,19 +10,21 @@ Provision an isolated Claude worktree for an issue and launch Claude in it.
 
 Usage:
   scripts/claude-worktree.sh [--headless] [--no-speckit] <issue-number> [slug]
-  scripts/claude-worktree.sh --approve-spec   <issue-number>
-  scripts/claude-worktree.sh --revise-spec    <issue-number> <feedback>
-  scripts/claude-worktree.sh --remove         [<issue-number>]
-  scripts/claude-worktree.sh --cleanup-merged [<issue-number>]
+  scripts/claude-worktree.sh --approve-spec        <issue-number>
+  scripts/claude-worktree.sh --revise-spec         <issue-number> <feedback>
+  scripts/claude-worktree.sh --remove              [<issue-number>]
+  scripts/claude-worktree.sh --cleanup-merged      [<issue-number>]
+  scripts/claude-worktree.sh --cleanup-all-merged
 
 Options:
-  --headless        Run claude -p in background (log -> claude.log)
-  --no-speckit      Skip SpecKit lifecycle; Claude opens a PR directly (no spec pause)
-  --approve-spec    Release the spec-review pause for a paused headless spawn
-  --revise-spec     Send non-empty revision feedback to a paused spawn
-  --remove          Discard worktree (works on unmerged work)
-  --cleanup-merged  Post-merge: pull main, remove worktree, delete local+remote branch
-  -h, --help        Show this help and exit
+  --headless             Run claude -p in background (log -> claude.log)
+  --no-speckit           Skip SpecKit lifecycle; Claude opens a PR directly (no spec pause)
+  --approve-spec         Release the spec-review pause for a paused headless spawn
+  --revise-spec          Send non-empty revision feedback to a paused spawn
+  --remove               Discard worktree (works on unmerged work)
+  --cleanup-merged       Post-merge: pull main, remove worktree, delete local+remote branch
+  --cleanup-all-merged   Batch sweep: run --cleanup-merged on every worktree whose PR is MERGED
+  -h, --help             Show this help and exit
 
 For --remove and --cleanup-merged, the issue number is inferred from the branch
 when run from inside a linked worktree. See docs/DEVELOPMENT.md for full behavior,
@@ -31,6 +33,7 @@ the numbering rule, and the permission model.
 Batch example:
   for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
   for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done
+  scripts/claude-worktree.sh --cleanup-all-merged
 EOF
 }
 
@@ -259,6 +262,75 @@ cleanup_merged() {
   print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
 }
 
+cleanup_all_merged() {
+  # Guard: primary worktree must be on main before we start the sweep.
+  local current_branch
+  current_branch="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
+  if [[ "$current_branch" != "main" ]]; then
+    echo "Primary worktree at $REPO_ROOT is on '$current_branch'; checking out main..."
+    if ! git -C "$REPO_ROOT" checkout main; then
+      echo "Cannot check out main in $REPO_ROOT — primary worktree has uncommitted changes or a conflict." >&2
+      echo "Resolve it manually (commit/stash/revert) and re-run." >&2
+      exit 1
+    fi
+  fi
+
+  local cleaned=0 skipped=0 failed=0
+
+  # Collect all linked worktree paths (porcelain emits primary first; skip it).
+  local skip_first=1
+  while IFS= read -r wt_path; do
+    if (( skip_first )); then
+      skip_first=0
+      continue
+    fi
+
+    local branch=""
+    branch="$(git -C "$wt_path" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
+      echo "Skipping $wt_path: detached HEAD or cannot determine branch"
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+
+    local pr_state=""
+    if ! pr_state="$(cd "$REPO_ROOT" && gh pr view "$branch" --json state -q .state 2>/dev/null)"; then
+      echo "Skipping $branch: no PR found"
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+    if [[ "$pr_state" != "MERGED" ]]; then
+      echo "Skipping $branch: PR is $pr_state"
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+
+    local issue=""
+    if [[ "$branch" =~ ^([0-9]+)- ]]; then
+      issue="${BASH_REMATCH[1]}"
+    else
+      echo "Skipping $branch: no numeric issue prefix in branch name"
+      skipped=$(( skipped + 1 ))
+      continue
+    fi
+
+    echo "--- Cleaning issue $issue ($branch) ---"
+    if ( cleanup_merged "$issue" ); then
+      cleaned=$(( cleaned + 1 ))
+    else
+      echo "FAILED to clean issue $issue ($branch)" >&2
+      failed=$(( failed + 1 ))
+    fi
+  done < <(git -C "$REPO_ROOT" worktree list --porcelain | awk '/^worktree/ {print $2}')
+
+  echo ""
+  echo "$cleaned merged worktrees cleaned, $skipped skipped"
+  if (( failed > 0 )); then
+    echo "$failed cleanup(s) failed" >&2
+    return 1
+  fi
+}
+
 release_paused_session() {
   local issue="$1"
   local prompt="$2"
@@ -329,6 +401,13 @@ fi
 if [[ "${1:-}" == "--cleanup-merged" ]]; then
   resolve_cleanup_issue --cleanup-merged "${2:-}"
   cleanup_merged "$RESOLVED_CLEANUP_ISSUE"
+  exit 0
+fi
+
+if [[ "${1:-}" == "--cleanup-all-merged" ]]; then
+  if ! cleanup_all_merged; then
+    exit 1
+  fi
   exit 0
 fi
 
