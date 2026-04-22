@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>A single score that tells you how healthy your open source project really is — with actionable recommendations to improve it.</strong><br/>
-  Calibrated against 2,400+ real GitHub repositories.
+  <strong>Measure the health of your open source project — and know exactly what to fix.</strong><br/>
+  Percentile-based scoring across 5 dimensions. Calibrated against 2,400+ real GitHub repositories.
 </p>
 
 <p align="center">
