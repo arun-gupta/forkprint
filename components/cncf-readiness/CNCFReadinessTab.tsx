@@ -209,10 +209,22 @@ function buildMarkdownReport(aspirantResult: AspirantReadinessResult, repoSlug?:
     lines.push('')
   }
 
+  const EXPORT_GROUP_LABEL: Record<string, string> = {
+    empty:    '🔴 Critical — must be filled',
+    weak:     '🟡 Needs strengthening',
+    adequate: '🔵 Acceptable — could be improved',
+    strong:   '🟢 Looking good',
+  }
+  let lastExportGroup: string | null = null
+
   for (const f of sortedHumanOnlyForExport) {
     const parsed = sandboxApplication?.parsedFields?.find((p) => p.fieldId === f.id)
-    const badge = parsed ? ` (${parsed.assessment})` : ''
-    lines.push(`### 📋 ${f.label}${badge}`)
+    const group = parsed?.assessment ?? null
+    if (group && group !== lastExportGroup) {
+      lines.push(`### ${EXPORT_GROUP_LABEL[group]}`, '')
+      lastExportGroup = group
+    }
+    lines.push(`#### 📋 ${f.label}`)
     if (parsed?.recommendation) {
       lines.push('', `**Recommendation**: ${parsed.recommendation}`)
     } else if (!parsed?.content && f.explanatoryNote) {
