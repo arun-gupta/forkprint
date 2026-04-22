@@ -14,6 +14,7 @@ import { useHighlightMatches } from '@/components/search/useHighlightMatches'
 import { ResultsTabs } from './ResultsTabs'
 import type { AspirantReadinessResult } from '@/lib/cncf-sandbox/types'
 import { CNCFReadinessPill } from '@/components/overview/CNCFReadinessPill'
+import { CNCFReadinessTab } from '@/components/cncf-readiness/CNCFReadinessTab'
 
 interface ResultsShellProps {
   analysisPanel: React.ReactNode
@@ -26,9 +27,9 @@ interface ResultsShellProps {
   security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
-  cncfReadiness?: React.ReactNode
   aspirantResult?: AspirantReadinessResult | null
   landscapeOverride?: boolean
+  repoSlug?: string
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
   resetKey?: number
@@ -50,9 +51,9 @@ export function ResultsShell({
   security,
   recommendations,
   comparison,
-  cncfReadiness,
   aspirantResult,
   landscapeOverride,
+  repoSlug,
   tabs = resultTabs,
   initialActiveTab = 'overview',
   resetKey,
@@ -271,7 +272,15 @@ export function ResultsShell({
               <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
               <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
               <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
-              <div data-tab-content="cncf-readiness" style={{ display: currentActiveTab === 'cncf-readiness' ? 'contents' : 'none' }}>{cncfReadiness}</div>
+              <div data-tab-content="cncf-readiness" style={{ display: currentActiveTab === 'cncf-readiness' ? 'contents' : 'none' }}>
+                {aspirantResult && !landscapeOverride ? (
+                  <CNCFReadinessTab
+                    aspirantResult={aspirantResult}
+                    repoSlug={repoSlug}
+                    onNavigateToTab={(tab) => setActiveTab(tab as ResultTabId)}
+                  />
+                ) : null}
+              </div>
             </div>
           </section>
         </section>

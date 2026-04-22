@@ -27,7 +27,6 @@ import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregato
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '@/lib/cncf-sandbox/types'
-import { CNCFReadinessTab } from '@/components/cncf-readiness/CNCFReadinessTab'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
@@ -648,7 +647,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
       aspirantResult={aspirantResult}
       landscapeOverride={landscapeOverride}
-      cncfReadiness={aspirantResult ? <CNCFReadinessTab aspirantResult={aspirantResult} repoSlug={analyzedRepos[0]} /> : undefined}
+      repoSlug={analyzedRepos[0]}
       overview={overviewContent}
       contributors={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
