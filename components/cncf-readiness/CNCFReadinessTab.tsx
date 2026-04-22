@@ -357,34 +357,33 @@ export function CNCFReadinessTab({ aspirantResult, onNavigateToTab, repoSlug }: 
               <p className="text-sm text-slate-700 dark:text-slate-300">{tagRecommendation.fallbackNote}</p>
             </div>
           ) : null}
-          {(() => {
+          {sortedHumanOnlyFields.map((field, i) => {
+            const parsed = sandboxApplication?.parsedFields?.find((p) => p.fieldId === field.id)
+            const group = parsed?.assessment ?? null
+            const prevGroup = i > 0
+              ? (sandboxApplication?.parsedFields?.find((p) => p.fieldId === sortedHumanOnlyFields[i - 1].id)?.assessment ?? null)
+              : null
+            const showDivider = group !== null && group !== prevGroup
             const GROUP_LABEL: Record<string, { label: string; className: string }> = {
               empty: { label: 'Critical — must be filled', className: 'text-red-600 dark:text-red-400' },
               weak:  { label: 'Needs strengthening', className: 'text-amber-600 dark:text-amber-400' },
               adequate: { label: 'Acceptable — could be improved', className: 'text-blue-600 dark:text-blue-400' },
               strong: { label: 'Looking good', className: 'text-emerald-600 dark:text-emerald-400' },
             }
-            let lastGroup: string | null = null
-            return sortedHumanOnlyFields.map((field) => {
-              const parsed = sandboxApplication?.parsedFields?.find((p) => p.fieldId === field.id)
-              const group = parsed?.assessment ?? null
-              const showDivider = group !== lastGroup && group !== null
-              lastGroup = group
-              return (
-                <li key={field.id} className="list-none">
-                  {showDivider ? (
-                    <div className="mb-2 mt-4 flex items-center gap-2 first:mt-0">
-                      <span className={`text-xs font-semibold uppercase tracking-wide ${GROUP_LABEL[group!]?.className ?? ''}`}>
-                        {GROUP_LABEL[group!]?.label}
-                      </span>
-                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-                    </div>
-                  ) : null}
-                  <HumanFieldRow field={field} parsed={parsed ?? null} />
-                </li>
-              )
-            })
-          })()}
+            return (
+              <li key={field.id} className="list-none">
+                {showDivider ? (
+                  <div className="mb-2 mt-4 flex items-center gap-2 first:mt-0">
+                    <span className={`text-xs font-semibold uppercase tracking-wide ${GROUP_LABEL[group!]?.className ?? ''}`}>
+                      {GROUP_LABEL[group!]?.label}
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                ) : null}
+                <HumanFieldRow field={field} parsed={parsed ?? null} />
+              </li>
+            )
+          })}
         </div>
       </section>
     </div>

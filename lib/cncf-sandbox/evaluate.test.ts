@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { evaluateAspirant } from './evaluate'
 import type { AnalysisResult, DocumentationResult, LicensingResult, ReleaseHealthResult } from '@/lib/analyzer/analysis-result'
 import type { CNCFLandscapeData } from './types'
