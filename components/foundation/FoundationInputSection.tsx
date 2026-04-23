@@ -72,10 +72,12 @@ export function FoundationInputSection({
       {/* Smart input field */}
       <div className="relative">
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Enter <span className="font-medium text-slate-700 dark:text-slate-300">repos</span>{' '}
-            <span className="font-mono">owner/repo</span> or an <span className="font-medium text-slate-700 dark:text-slate-300">org</span>{' '}
-            <span className="font-mono">cncf</span> / <span className="font-mono">github.com/cncf</span>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <span className="font-medium text-slate-700 dark:text-slate-300">Repos:</span>{' '}
+            <span className="font-mono">owner/repo</span>
+            <span className="mx-2 text-slate-300 dark:text-slate-600">·</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">Org:</span>{' '}
+            <span className="font-mono">cncf</span> or <span className="font-mono">github.com/cncf</span>
           </p>
           <div ref={tooltipRef} className="relative">
             <button
@@ -122,8 +124,7 @@ export function FoundationInputSection({
         <textarea
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
-          placeholder={'owner/repo\nowner/another-repo\n— or —\ncncf'}
-
+          placeholder={'owner/repo\nowner/another-repo\n— or — cncf'}
           rows={3}
           className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           aria-label="Foundation input"
