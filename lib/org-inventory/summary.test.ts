@@ -39,6 +39,7 @@ function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
     openIssues: 2,
     pushedAt: '2026-03-31T00:00:00Z',
     archived: false,
+    isFork: false,
     url: `https://github.com/${repo}`,
     ...overrides,
   }

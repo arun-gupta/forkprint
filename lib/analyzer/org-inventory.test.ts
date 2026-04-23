@@ -38,6 +38,7 @@ describe('analyzer/org-inventory', () => {
       pushedAt: '2026-04-02T00:00:00Z',
       isArchived: false,
       isFork: false,
+      parent: null,
       url: 'https://github.com/facebook/react',
     })
 

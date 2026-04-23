@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
 import type { CandidacyRepoResult, LandscapeProjectStatus } from '@/lib/cncf-sandbox/types'
+import type { RateLimitState } from '@/lib/analyzer/analysis-result'
 import { useAuth } from '@/components/auth/AuthContext'
 
 interface CNCFCandidacyPanelProps {
@@ -157,6 +158,8 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
   const [activeTierFilter, setActiveTierFilter] = useState<string | null>(null)
   const [scanStarted, setScanStarted] = useState(false)
   const [concurrency, setConcurrency] = useState(5)
+  const [repoLimit, setRepoLimit] = useState(25)
+  const [rateLimit, setRateLimit] = useState<{ remaining: number; limit: number } | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const fetchStartRef = useRef<number>(0)
@@ -259,6 +262,15 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
             | { repo: string; success: true; result: CandidacyRepoResult }
             | { repo: string; success: false; error: string }
           >
+          rateLimit?: RateLimitState | null
+        }
+        if (data.rateLimit &&
+          typeof data.rateLimit.remaining === 'number' &&
+          typeof data.rateLimit.limit === 'number') {
+          const { remaining, limit } = data.rateLimit as { remaining: number; limit: number }
+          setRateLimit((prev) =>
+            prev === null || remaining < prev.remaining ? { remaining, limit } : prev,
+          )
         }
         const item = data.results[0]
         if (item?.success) {
@@ -298,14 +310,15 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
     [token, concurrency, fetchRepo, startTimer, stopTimer],
   )
 
-  // Load first batch once scan is started, landscape is ready, and token available
+  // Load repos up to repoLimit once scan is started, landscape is ready, and token available
   useEffect(() => {
     if (!scanStarted || landscapeLoading || !token || selectable.length === 0 || batchOffset > 0) return
-    const firstBatch = selectable.slice(0, BATCH_SIZE)
-    const newSelected = new Set(firstBatch.map((r) => r.repo))
+    const limit = Math.min(repoLimit, selectable.length)
+    const initialBatch = selectable.slice(0, limit)
+    const newSelected = new Set(initialBatch.map((r) => r.repo))
     setSelected(newSelected)
-    setBatchOffset(BATCH_SIZE)
-    fetchBatch(firstBatch)
+    setBatchOffset(limit)
+    fetchBatch(initialBatch)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanStarted, landscapeLoading, token, selectable.length])
 
@@ -325,12 +338,22 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
 
   const handleShowNext = useCallback(() => {
     if (!token) return
-    const nextBatch = selectable.slice(batchOffset, batchOffset + BATCH_SIZE)
+    const nextBatch = selectable.slice(batchOffset, batchOffset + repoLimit)
     if (nextBatch.length === 0) return
     const newSelected = new Set([...selected, ...nextBatch.map((r) => r.repo)])
     setSelected(newSelected)
-    setBatchOffset((prev) => prev + BATCH_SIZE)
+    setBatchOffset((prev) => prev + repoLimit)
     fetchBatch(nextBatch)
+  }, [token, selectable, batchOffset, repoLimit, selected, fetchBatch])
+
+  const handleLoadAll = useCallback(() => {
+    if (!token) return
+    const remaining = selectable.slice(batchOffset)
+    if (remaining.length === 0) return
+    const newSelected = new Set([...selected, ...remaining.map((r) => r.repo)])
+    setSelected(newSelected)
+    setBatchOffset(selectable.length)
+    fetchBatch(remaining)
   }, [token, selectable, batchOffset, selected, fetchBatch])
 
   const handleToggleSelect = useCallback(
@@ -433,7 +456,8 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
     for (const { rowState } of rankedResults) {
       if (rowState?.status === 'loaded') tierCounts[rowState.result.tier]++
     }
-    return { statusCounts, tierCounts, loadedCount: rankedResults.filter(r => r.rowState?.status === 'loaded').length }
+    const completedCount = rankedResults.filter(r => r.rowState?.status === 'loaded' || r.rowState?.status === 'error').length
+    return { statusCounts, tierCounts, loadedCount: rankedResults.filter(r => r.rowState?.status === 'loaded').length, completedCount }
   }, [repos, rankedResults, getRepoStatus])
 
   const filteredResults = useMemo(() => {
@@ -457,8 +481,9 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
   if (repos.length === 0) return null
 
   if (!scanStarted) {
-    const scannable = selectable.length
-    const estimatedSeconds = Math.ceil(scannable / concurrency)
+    const maxRepos = selectable.length
+    const effectiveLimit = Math.min(repoLimit, maxRepos)
+    const estimatedSeconds = Math.ceil(effectiveLimit / concurrency)
     const estimateLabel = estimatedSeconds < 60
       ? `~${estimatedSeconds}s`
       : `~${Math.ceil(estimatedSeconds / 60)}m`
@@ -467,37 +492,55 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
       <section aria-label="CNCF Candidacy Scan" className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">CNCF Sandbox Candidacy Scan</h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Ranks the {scannable} repos in <span className="font-mono">{org}</span> by CNCF Sandbox readiness — health checks, maturity signals, and top gaps.
+          Ranks repos in <span className="font-mono">{org}</span> by CNCF Sandbox readiness — health checks, maturity signals, and top gaps.
         </p>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-5 space-y-5">
+          {/* Repos slider */}
           <div>
-            <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-              Concurrency — repos fetched in parallel
-            </p>
-            <div className="flex gap-2">
-              {[1, 3, 5, 10].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setConcurrency(c)}
-                  aria-pressed={concurrency === c}
-                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    concurrency === c
-                      ? 'border-sky-400 bg-sky-100 text-sky-800 dark:border-sky-500 dark:bg-sky-900/40 dark:text-sky-200'
-                      : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Repos to scan</p>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{effectiveLimit} <span className="font-normal text-slate-400">of {maxRepos}</span></span>
+            </div>
+            <input
+              type="range"
+              min={Math.min(10, maxRepos)}
+              max={maxRepos}
+              step={maxRepos > 200 ? 10 : maxRepos > 50 ? 5 : 1}
+              value={effectiveLimit}
+              onChange={(e) => setRepoLimit(Number(e.target.value))}
+              className="w-full accent-sky-500"
+            />
+            <div className="mt-0.5 flex justify-between text-[10px] text-slate-400">
+              <span>{Math.min(10, maxRepos)}</span>
+              <span>{maxRepos}</span>
+            </div>
+          </div>
+
+          {/* Concurrency slider */}
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Concurrency — repos fetched in parallel</p>
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{concurrency}</span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              step={1}
+              value={concurrency}
+              onChange={(e) => setConcurrency(Number(e.target.value))}
+              className="w-full accent-sky-500"
+            />
+            <div className="mt-0.5 flex justify-between text-[10px] text-slate-400">
+              <span>1</span>
+              <span>10{concurrency >= 8 ? <span className="ml-1 text-amber-500"> ⚠ may hit rate limits</span> : ''}</span>
             </div>
           </div>
 
           <p className="text-xs text-slate-400 dark:text-slate-500">
             Estimated time: <span className="font-medium text-slate-600 dark:text-slate-300">{estimateLabel}</span>
-            {' '}for {scannable} repos at concurrency {concurrency}
-            {concurrency >= 10 ? <span className="ml-1 text-amber-600 dark:text-amber-400">(may hit GitHub rate limits)</span> : null}
+            {' '}for {effectiveLimit} repos at concurrency {concurrency}
           </p>
 
           <button
@@ -528,11 +571,29 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
             Ranks repos in <span className="font-mono">{org}</span> by CNCF Sandbox readiness.
             Graduated / Incubating / Sandbox repos are greyed out.
           </p>
-          {selectable.length > 0 ? (
-            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-              {rankedResults.length} of {selectable.length} repos scanned
-              {(activeStatusFilter || activeTierFilter) ? ` · ${filteredResults.length} shown` : ''}
-            </p>
+          {batchOffset > 0 ? (
+            <div className="mt-1">
+              {fetchStatus === 'fetching' ? (
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <span className="font-medium text-slate-600 dark:text-slate-300">{summary.completedCount}</span>
+                    {' / '}{batchOffset} scanned
+                    {selectable.length > batchOffset ? ` · ${selectable.length - batchOffset} more available` : ''}
+                  </p>
+                  <div className="h-1.5 w-48 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                    <div
+                      className="h-full rounded-full bg-sky-500 transition-all duration-300"
+                      style={{ width: `${Math.round((summary.completedCount / batchOffset) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                  {batchOffset} of {selectable.length} repos scanned
+                  {(activeStatusFilter || activeTierFilter) ? ` · ${filteredResults.length} shown` : ''}
+                </p>
+              )}
+            </div>
           ) : null}
         </div>
       </div>
@@ -658,6 +719,55 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
         </div>
       ) : null}
 
+      {/* Rate limit banner */}
+      {rateLimit && scanStarted ? (() => {
+        const pct = Math.floor((rateLimit.remaining / rateLimit.limit) * 100)
+        if (pct > 50) return null
+        const isCountdown = pct <= 10
+        const bgClass = pct <= 10
+          ? 'border-red-300 bg-red-50 dark:border-red-700/50 dark:bg-red-900/20'
+          : pct <= 20
+            ? 'border-orange-300 bg-orange-50 dark:border-orange-700/50 dark:bg-orange-900/20'
+            : pct <= 30
+              ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-700/50 dark:bg-yellow-900/20'
+              : 'border-amber-200 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-900/20'
+        const textClass = pct <= 10
+          ? 'text-red-800 dark:text-red-200'
+          : pct <= 20
+            ? 'text-orange-800 dark:text-orange-200'
+            : pct <= 30
+              ? 'text-yellow-800 dark:text-yellow-200'
+              : 'text-amber-800 dark:text-amber-200'
+        return (
+          <div className={`flex items-center gap-3 rounded-md border px-3 py-2 ${bgClass}`}>
+            {isCountdown ? (
+              <span className={`text-3xl font-bold tabular-nums ${textClass}`}>{pct}</span>
+            ) : null}
+            <div className="flex-1">
+              <span className={`text-sm font-medium ${textClass}`}>
+                {isCountdown
+                  ? `% rate limit remaining — slow down or stop`
+                  : `Rate limit at ${pct}% — ${rateLimit.remaining.toLocaleString()} of ${rateLimit.limit.toLocaleString()} points remaining`}
+              </span>
+              {isCountdown ? (
+                <p className={`text-xs ${textClass} opacity-80`}>
+                  {rateLimit.remaining.toLocaleString()} of {rateLimit.limit.toLocaleString()} points remaining
+                </p>
+              ) : null}
+            </div>
+            {fetchStatus === 'fetching' ? (
+              <button
+                type="button"
+                onClick={handleStop}
+                className={`rounded border px-3 py-1 text-xs font-medium ${pct <= 10 ? 'border-red-400 bg-red-100 text-red-800 hover:bg-red-200 dark:border-red-600 dark:bg-red-900/40 dark:text-red-200' : 'border-current bg-white/60 hover:bg-white/90 dark:bg-slate-800/60'} ${textClass}`}
+              >
+                Stop scan
+              </button>
+            ) : null}
+          </div>
+        )
+      })() : null}
+
       {/* All-batch-CNCF-member message */}
       {allBatchAreCncfHosted ? (
         <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -686,7 +796,39 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
         </div>
       ) : null}
 
+      {/* Load more — top */}
+      {hasMoreRepos && fetchStatus !== 'fetching' ? (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleShowNext}
+            disabled={!token}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            Load {Math.min(repoLimit, selectable.length - batchOffset)} more{' '}
+            <span className="text-slate-400 dark:text-slate-500">
+              ({batchOffset + 1}–{Math.min(batchOffset + repoLimit, selectable.length)} of {selectable.length})
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleLoadAll}
+            disabled={!token}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            Load all remaining{' '}
+            <span className="text-slate-400 dark:text-slate-500">({selectable.length - batchOffset})</span>
+          </button>
+        </div>
+      ) : null}
+
       {/* Results table */}
+      {rankedResults.length > 0 ? (
+        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+          Sorted by: CNCF status (Graduated → Incubating → Sandbox → Landscape → other) · health check score ↓ · stars ↓
+        </p>
+      ) : null}
+
       {rankedResults.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -809,9 +951,18 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
                           onChange={() => handleToggleSelect(repo.repo)}
                           className="h-4 w-4 rounded border-slate-300"
                         />
-                        <a href={repo.url} target="_blank" rel="noopener noreferrer" className="font-medium text-sky-600 hover:underline dark:text-sky-400">
-                          {repo.name}
-                        </a>
+                        <div>
+                          <a href={repo.url} target="_blank" rel="noopener noreferrer" className="font-medium text-sky-600 hover:underline dark:text-sky-400">
+                            {repo.name}
+                          </a>
+                          {repo.isFork && repo.parentRepo ? (
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                              ⚠ fork of {repo.parentRepo}
+                            </p>
+                          ) : repo.isFork ? (
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400">⚠ fork</p>
+                          ) : null}
+                        </div>
                         {status ? <LandscapePill status={status} onClick={() => setActiveStatusFilter(activeStatusFilter === status ? null : status)} active={activeStatusFilter === status} /> : null}
                       </div>
                     </td>
@@ -862,19 +1013,28 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
         </div>
       ) : null}
 
-      {/* Show next 25 */}
+      {/* Load more — bottom */}
       {hasMoreRepos && fetchStatus !== 'fetching' ? (
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center gap-2 pt-2">
           <button
             type="button"
             onClick={handleShowNext}
             disabled={!token}
             className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
-            Show next {Math.min(BATCH_SIZE, selectable.length - batchOffset)}{' '}
+            Load {Math.min(repoLimit, selectable.length - batchOffset)} more{' '}
             <span className="text-slate-400 dark:text-slate-500">
-              ({batchOffset + 1}–{Math.min(batchOffset + BATCH_SIZE, selectable.length)} of {selectable.length})
+              ({batchOffset + 1}–{Math.min(batchOffset + repoLimit, selectable.length)} of {selectable.length})
             </span>
+          </button>
+          <button
+            type="button"
+            onClick={handleLoadAll}
+            disabled={!token}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            Load all remaining{' '}
+            <span className="text-slate-400 dark:text-slate-500">({selectable.length - batchOffset})</span>
           </button>
         </div>
       ) : null}

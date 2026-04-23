@@ -3,6 +3,7 @@ import { CANDIDACY_CRITERIA_QUERY, REPO_README_BLOB_QUERY } from '@/lib/analyzer
 import { fetchCNCFLandscape } from '@/lib/cncf-sandbox/landscape'
 import { scoreCandidacyRepo } from '@/lib/cncf-sandbox/candidacy-scoring'
 import type { CandidacyRepoResult } from '@/lib/cncf-sandbox/types'
+import type { RateLimitState } from '@/lib/analyzer/analysis-result'
 
 const README_FILENAME_PATTERN = /^readme(\.[a-z0-9]+)?$/i
 
@@ -67,6 +68,8 @@ export async function POST(request: Request) {
     const [landscapeData] = await Promise.allSettled([fetchCNCFLandscape()])
     const landscape = landscapeData.status === 'fulfilled' ? landscapeData.value : null
 
+    let latestRateLimit: RateLimitState | null = null
+
     const results: BatchResultItem[] = await Promise.all(
       body.repos.map(async (repoSlug): Promise<BatchResultItem> => {
         const parts = repoSlug.split('/')
@@ -83,6 +86,8 @@ export async function POST(request: Request) {
             CANDIDACY_CRITERIA_QUERY,
             { owner, name },
           )
+
+          if (criteriaResp.rateLimit) latestRateLimit = criteriaResp.rateLimit
 
           const repo = criteriaResp.data.repository
           if (!repo) {
@@ -103,6 +108,7 @@ export async function POST(request: Request) {
                 name,
                 expression: `HEAD:${readmeEntry.name}`,
               })
+              if (readmeResp.rateLimit) latestRateLimit = readmeResp.rateLimit
               readmeContent = readmeResp.data.repository?.object?.text ?? null
             } catch {
               // Non-fatal — proceed without README content
@@ -153,7 +159,7 @@ export async function POST(request: Request) {
       }),
     )
 
-    return Response.json({ results })
+    return Response.json({ results, rateLimit: latestRateLimit })
   } catch (error) {
     console.error('[cncf-candidacy] Request failed:', error)
     return Response.json({ error: 'Candidacy scan request failed.' }, { status: 500 })
