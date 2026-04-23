@@ -14,9 +14,10 @@ interface FoundationResultsViewProps {
   result: FoundationResult | null
   loading: boolean
   error: string | null
+  loadingItems?: string[]
 }
 
-export function FoundationResultsView({ result, loading, error }: FoundationResultsViewProps) {
+export function FoundationResultsView({ result, loading, error, loadingItems = [] }: FoundationResultsViewProps) {
   if (loading) {
     return (
       <section role="status" aria-label="Foundation scan loading" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
@@ -27,6 +28,11 @@ export function FoundationResultsView({ result, loading, error }: FoundationResu
           </svg>
           <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing foundation readiness…</h2>
         </div>
+        {loadingItems.length > 0 ? (
+          <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
+            {loadingItems.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        ) : null}
       </section>
     )
   }

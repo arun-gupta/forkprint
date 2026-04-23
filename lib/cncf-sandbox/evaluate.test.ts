@@ -293,6 +293,52 @@ describe('T020 — readinessScore boundary cases', () => {
 })
 
 // ---------------------------------------------------------------------------
+// CoC content check — Contributor Covenant detection
+// ---------------------------------------------------------------------------
+
+describe('CoC — Contributor Covenant content detection', () => {
+  function cocDoc(cocContent: string | null, found = true): DocumentationResult {
+    return {
+      ...minimalDoc,
+      fileChecks: minimalDoc.fileChecks.map((f) =>
+        f.name === 'code_of_conduct' ? { ...f, found, path: found ? 'CODE_OF_CONDUCT.md' : null } : f,
+      ),
+      cocContent,
+    }
+  }
+
+  it('status ready when cocContent contains "Contributor Covenant" (standard heading)', () => {
+    const result = makeResult({ documentationResult: cocDoc('# Contributor Covenant Code of Conduct\n\nVersion 2.1') })
+    const { autoFields } = evaluateAspirant(result, null)
+    expect(autoFields.find((f) => f.id === 'coc')?.status).toBe('ready')
+  })
+
+  it('status ready when cocContent contains contributor-covenant.org URL', () => {
+    const result = makeResult({ documentationResult: cocDoc('See https://www.contributor-covenant.org/version/2/1/code_of_conduct.html') })
+    const { autoFields } = evaluateAspirant(result, null)
+    expect(autoFields.find((f) => f.id === 'coc')?.status).toBe('ready')
+  })
+
+  it('status partial when CoC file found but cocContent is null (content unavailable)', () => {
+    const result = makeResult({ documentationResult: cocDoc(null) })
+    const { autoFields } = evaluateAspirant(result, null)
+    expect(autoFields.find((f) => f.id === 'coc')?.status).toBe('partial')
+  })
+
+  it('status partial when CoC file found but content does not mention Contributor Covenant', () => {
+    const result = makeResult({ documentationResult: cocDoc('Be nice to each other.') })
+    const { autoFields } = evaluateAspirant(result, null)
+    expect(autoFields.find((f) => f.id === 'coc')?.status).toBe('partial')
+  })
+
+  it('status missing when CoC file not found', () => {
+    const result = makeResult({ documentationResult: cocDoc(null, false) })
+    const { autoFields } = evaluateAspirant(result, null)
+    expect(autoFields.find((f) => f.id === 'coc')?.status).toBe('missing')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // T030 — alreadyInLandscape flag
 // ---------------------------------------------------------------------------
 

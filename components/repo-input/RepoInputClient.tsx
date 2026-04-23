@@ -71,6 +71,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [foundationInput, setFoundationInput] = useState('')
   const [foundationResult, setFoundationResult] = useState<FoundationResult | null>(null)
   const [loadingFoundation, setLoadingFoundation] = useState(false)
+  const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
   const [foundationError, setFoundationError] = useState<string | null>(null)
   const cncfBadges: CNCFFieldBadge[] = aspirantResult
     ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
@@ -271,6 +272,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setAspirantResult(null)
     setFoundationResult(null)
     setFoundationError(null)
+    setFoundationLoadingItems([])
   }
 
   async function handleFoundationSubmit(input: string) {
@@ -291,6 +293,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setFoundationError(null)
     setFoundationResult(null)
     setLoadingFoundation(true)
+    setFoundationLoadingItems(parsed.kind === 'repos' ? parsed.repos : [parsed.kind === 'org' ? parsed.org : ''])
 
     try {
       if (parsed.kind === 'repos') {
@@ -699,6 +702,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         <FoundationResultsView
           result={foundationResult}
           loading={loadingFoundation}
+          loadingItems={foundationLoadingItems}
           error={foundationError}
         />
       ) : null}
