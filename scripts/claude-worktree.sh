@@ -25,14 +25,9 @@ Options:
   --remove               Discard worktree (works on unmerged work)
   --cleanup-merged       Post-merge: pull main, remove worktree, delete local+remote branch
   --cleanup-all-merged   Batch sweep: run --cleanup-merged on every worktree whose PR is MERGED
-  --status, --list       Print one row per linked worktree: issue, branch, port, PIDs,
-                         spec state, PR state, and session ID. Dead PIDs are flagged as
-                         PID(dead). Worktrees with no .claude.session-id show blanks.
-                         Spec state: no-spec | paused | in-progress | done.
-                         PR state: none | OPEN | MERGED | CLOSED.
-                         Note: fetches PR state via gh for each worktree; with many worktrees
-                         this may take a few seconds.
-  --status --verbose     Same as --status but adds the full worktree PATH column.
+  --status, --list       Overview table of all linked worktrees (issue, branch, port,
+                         PIDs, spec state, PR state, session ID).
+  --status --verbose     Same, with the full worktree PATH column added.
   -h, --help             Show this help and exit
 
 For --remove and --cleanup-merged, the issue number is inferred from the branch
