@@ -321,15 +321,11 @@ describe('RepoInputClient', () => {
   })
 
   it('shows loading state while analysis is running and then displays formatted rate-limit metadata', async () => {
-    let resolveAnalysis: ((value: {
-      results: never[]
-      failures: never[]
-      rateLimit: { limit: number; remaining: number; resetAt: string; retryAfter: 'unavailable' }
-    }) => void) | null = null
+    const settling = { resolve: () => {} }
     const onAnalyze = vi.fn(
-      () =>
-        new Promise((resolve) => {
-          resolveAnalysis = resolve
+      (_repos: string[], _token: string) =>
+        new Promise<{ results: never[]; failures: never[]; rateLimit: { limit: number; remaining: number; resetAt: string; retryAfter: 'unavailable' } }>((r) => {
+          settling.resolve = () => r({ results: [], failures: [], rateLimit: { limit: 5000, remaining: 800, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' } })
         }),
     )
 
@@ -342,11 +338,7 @@ describe('RepoInputClient', () => {
     expect(within(loadingState).getByText(/analyzing repositories/i)).toBeInTheDocument()
     expect(within(loadingState).getByText('facebook/react')).toBeInTheDocument()
 
-    resolveAnalysis?.({
-      results: [],
-      failures: [],
-      rateLimit: { limit: 5000, remaining: 800, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
-    })
+    settling.resolve()
 
     expect(await screen.findByText(/remaining api calls: 800/i)).toBeInTheDocument()
     expect(screen.getByText(/rate limit resets at:/i)).toBeInTheDocument()
@@ -419,8 +411,7 @@ describe('RepoInputClient', () => {
   })
 
   it('clears previous results and returns to the overview tab when a new analysis starts', async () => {
-    let resolveSecondAnalysis: ((value: { results: never[]; failures: never[]; rateLimit: null }) => void) | null = null
-
+    const settling2 = { resolve: () => {} }
     const onAnalyze = vi
       .fn()
       .mockResolvedValueOnce({
@@ -429,9 +420,9 @@ describe('RepoInputClient', () => {
         rateLimit: null,
       })
       .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            resolveSecondAnalysis = resolve
+        (_repos: string[], _token: string) =>
+          new Promise<{ results: never[]; failures: never[]; rateLimit: null }>((r) => {
+            settling2.resolve = () => r({ results: [], failures: [], rateLimit: null })
           }),
       )
 
@@ -454,7 +445,7 @@ describe('RepoInputClient', () => {
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByRole('tab', { name: 'Activity' })).toHaveAttribute('aria-selected', 'false')
 
-    resolveSecondAnalysis?.({ results: [], failures: [], rateLimit: null })
+    settling2.resolve()
   })
 
   it('renders activity content after a successful analysis', async () => {

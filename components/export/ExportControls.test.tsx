@@ -44,6 +44,7 @@ const MINIMAL_RESPONSE: AnalyzeResponse = {
       issueCloseTimestamps: [],
       prMergeTimestamps: [],
       documentationResult: 'unavailable',
+      licensingResult: 'unavailable',
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: {

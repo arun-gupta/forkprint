@@ -1,10 +1,32 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import type { AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
+import type { ActivityCadenceMetrics, AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
 import { DevelopmentCadenceCard } from './DevelopmentCadenceCard'
 
-function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'day', Partial<TrendComparisonMetrics>>> = {}) {
+function stubCadenceEntry(overrides: Partial<ActivityCadenceMetrics> = {}): ActivityCadenceMetrics {
+  return {
+    totalWeeks: 0,
+    weeklyCommitCounts: [],
+    activeWeeksRatio: 0,
+    commitRegularity: 0,
+    longestGapDays: 0,
+    weekendToWeekdayRatio: 0,
+    weekendCommitCount: 0,
+    weekdayCommitCount: 0,
+    trendComparisons: 'unavailable',
+    ...overrides,
+  }
+}
+
+function buildCadenceWindows(
+  partial: Partial<Record<30 | 60 | 90 | 180 | 365, ActivityCadenceMetrics>> = {},
+): Record<30 | 60 | 90 | 180 | 365, ActivityCadenceMetrics> {
+  const stub = stubCadenceEntry()
+  return { 30: stub, 60: stub, 90: stub, 180: stub, 365: stub, ...partial }
+}
+
+function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'day', Partial<TrendComparisonMetrics>>> = {}): Record<'month' | 'week' | 'day', TrendComparisonMetrics> {
   return {
     month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 3, delta: 1, direction: 'accelerating', ...overrides.month },
     week: { currentPeriodCommitCount: 3, previousPeriodCommitCount: 6, delta: -0.5, direction: 'decelerating', ...overrides.week },
@@ -40,6 +62,7 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     issueCloseTimestamps: 'unavailable',
     prMergeTimestamps: 'unavailable',
     documentationResult: 'unavailable',
+    licensingResult: 'unavailable',
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: 'unavailable',
@@ -54,8 +77,8 @@ describe('DevelopmentCadenceCard', () => {
     render(
       <DevelopmentCadenceCard
         result={buildResult({
-          activityCadenceByWindow: {
-            30: {
+          activityCadenceByWindow: buildCadenceWindows({
+            30: stubCadenceEntry({
               totalWeeks: 5,
               weeklyCommitCounts: [1, 0, 1, 2, 0],
               activeWeeksRatio: 0.6,
@@ -65,8 +88,8 @@ describe('DevelopmentCadenceCard', () => {
               weekendCommitCount: 2,
               weekdayCommitCount: 4,
               trendComparisons: createTrendComparisons(),
-            },
-          },
+            }),
+          }),
         })}
         windowDays={30}
       />,
@@ -113,8 +136,8 @@ describe('DevelopmentCadenceCard', () => {
     render(
       <DevelopmentCadenceCard
         result={buildResult({
-          activityCadenceByWindow: {
-            365: {
+          activityCadenceByWindow: buildCadenceWindows({
+            365: stubCadenceEntry({
               totalWeeks: 13,
               weeklyCommitCounts: [2, 1, 1, 2, 2, 3, 1, 2, 1, 1, 2, 3, 1],
               activeWeeksRatio: 1,
@@ -126,8 +149,8 @@ describe('DevelopmentCadenceCard', () => {
               trendComparisons: createTrendComparisons({
                 month: { currentPeriodCommitCount: 411, previousPeriodCommitCount: 525, delta: -0.22, direction: 'decelerating' },
               }),
-            },
-          },
+            }),
+          }),
         })}
         windowDays={365}
       />,
@@ -152,8 +175,8 @@ describe('DevelopmentCadenceCard', () => {
     render(
       <DevelopmentCadenceCard
         result={buildResult({
-          activityCadenceByWindow: {
-            30: {
+          activityCadenceByWindow: buildCadenceWindows({
+            30: stubCadenceEntry({
               totalWeeks: 5,
               weeklyCommitCounts: [1, 0, 1, 2, 0],
               activeWeeksRatio: 0.6,
@@ -163,8 +186,8 @@ describe('DevelopmentCadenceCard', () => {
               weekendCommitCount: 2,
               weekdayCommitCount: 4,
               trendComparisons: createTrendComparisons(),
-            },
-          },
+            }),
+          }),
         })}
         windowDays={30}
       />,
@@ -184,8 +207,8 @@ describe('DevelopmentCadenceCard', () => {
     render(
       <DevelopmentCadenceCard
         result={buildResult({
-          activityCadenceByWindow: {
-            30: {
+          activityCadenceByWindow: buildCadenceWindows({
+            30: stubCadenceEntry({
               totalWeeks: 5,
               weeklyCommitCounts: [1, 0, 1, 2, 0],
               activeWeeksRatio: 0.6,
@@ -202,8 +225,8 @@ describe('DevelopmentCadenceCard', () => {
                   direction: 'unavailable',
                 },
               }),
-            },
-          },
+            }),
+          }),
         })}
         windowDays={30}
       />,

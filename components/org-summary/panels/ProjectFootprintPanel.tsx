@@ -34,18 +34,36 @@ export function ProjectFootprintPanel({ panel }: Props) {
           <Stat label="Total stars" value={panel.value.totalStars} />
           <Stat label="Total forks" value={panel.value.totalForks} />
           <Stat label="Total watchers" value={panel.value.totalWatchers} />
-          <Stat label="Total contributors" value={panel.value.totalContributors} />
+          <Stat
+            label="Unique contributors (365d)"
+            value={panel.value.totalContributors}
+            tooltip="Unique contributors across all analyzed repos in the last 365 days"
+          />
         </dl>
       )}
     </section>
   )
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({
+  label,
+  value,
+  tooltip,
+}: {
+  label: string
+  value: number | 'unavailable'
+  tooltip?: string
+}) {
   return (
-    <div>
+    <div title={tooltip}>
       <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</dt>
-      <dd className="text-xl font-semibold text-slate-900 dark:text-slate-100">{value.toLocaleString()}</dd>
+      <dd className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+        {value === 'unavailable' ? (
+          <span className="text-sm text-slate-400 dark:text-slate-500">—</span>
+        ) : (
+          value.toLocaleString()
+        )}
+      </dd>
     </div>
   )
 }

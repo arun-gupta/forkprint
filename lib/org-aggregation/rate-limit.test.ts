@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classifyRateLimitResponse } from './rate-limit'
+import { classifyRateLimitResponse, type RateLimitClassification } from './rate-limit'
 
 function headers(init: Record<string, string>): Headers {
   const h = new Headers()
@@ -16,7 +16,7 @@ describe('classifyRateLimitResponse', () => {
     }) }
     const classification = classifyRateLimitResponse(res)
     expect(classification.kind).toBe('primary')
-    expect(classification.resumesAt?.getTime()).toBe(resetUnix * 1000)
+    expect((classification as Extract<RateLimitClassification, { resumesAt: Date }>).resumesAt.getTime()).toBe(resetUnix * 1000)
   })
 
   it('detects secondary rate-limit: 429 + Retry-After', () => {
@@ -24,7 +24,7 @@ describe('classifyRateLimitResponse', () => {
     const res = { status: 429, headers: headers({ 'Retry-After': '60' }) }
     const classification = classifyRateLimitResponse(res, now)
     expect(classification.kind).toBe('secondary')
-    expect(classification.resumesAt?.getTime()).toBe(now + 60_000)
+    expect((classification as Extract<RateLimitClassification, { resumesAt: Date }>).resumesAt.getTime()).toBe(now + 60_000)
   })
 
   it('detects secondary rate-limit: 403 + Retry-After (abuse detection path)', () => {
@@ -32,7 +32,7 @@ describe('classifyRateLimitResponse', () => {
     const res = { status: 403, headers: headers({ 'Retry-After': '30' }) }
     const classification = classifyRateLimitResponse(res, now)
     expect(classification.kind).toBe('secondary')
-    expect(classification.resumesAt?.getTime()).toBe(now + 30_000)
+    expect((classification as Extract<RateLimitClassification, { resumesAt: Date }>).resumesAt.getTime()).toBe(now + 30_000)
   })
 
   it('returns `none` for 403 without rate-limit headers (e.g. scope error)', () => {
@@ -59,7 +59,7 @@ describe('classifyRateLimitResponse', () => {
     }) }
     const classification = classifyRateLimitResponse(res)
     expect(classification.kind).toBe('primary')
-    expect(classification.resumesAt?.getTime()).toBe(resetUnix * 1000)
+    expect((classification as Extract<RateLimitClassification, { resumesAt: Date }>).resumesAt.getTime()).toBe(resetUnix * 1000)
   })
 
   it('x-ratelimit-remaining > 0 means primary is NOT exhausted', () => {

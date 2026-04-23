@@ -223,6 +223,7 @@ function buildResult(repo: string, overrides: Partial<AnalysisResult> = {}): Ana
     issueCloseTimestamps: 'unavailable',
     prMergeTimestamps: 'unavailable',
     documentationResult: 'unavailable',
+    licensingResult: 'unavailable',
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: {

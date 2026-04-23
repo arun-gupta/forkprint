@@ -35,7 +35,7 @@ function emptyView(): OrgSummaryViewModel {
       pause: null,
       etaMs: null,
       elapsedMs: 0,
-      concurrency: { chosen: 1, max: 1 },
+      concurrency: { chosen: 1, effective: 1 },
     },
     flagshipRepos: [],
     panels: {},

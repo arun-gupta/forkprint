@@ -27,15 +27,16 @@ const RESULT_BASE = {
   issueFirstResponseTimestamps: [],
   issueCloseTimestamps: [],
   prMergeTimestamps: [],
-  documentationResult: 'unavailable',
+  documentationResult: 'unavailable' as const,
+  licensingResult: 'unavailable' as const,
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: {
       defaultBranchName: 'main',
-      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
+      branchCheck: { checkType: 'branch' as const, term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
       metadataChecks: [],
     },
-    securityResult: 'unavailable',
+    securityResult: 'unavailable' as const,
     missingFields: [],
 }
 

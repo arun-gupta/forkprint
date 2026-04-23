@@ -164,6 +164,7 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     issueCloseTimestamps: ['2026-03-02T10:00:00Z'],
     prMergeTimestamps: ['2026-03-03T10:00:00Z'],
     documentationResult: 'unavailable',
+    licensingResult: 'unavailable',
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: {

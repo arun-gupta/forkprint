@@ -89,7 +89,7 @@ export type ProjectFootprintValue = {
   totalStars: number
   totalForks: number
   totalWatchers: number
-  totalContributors: number
+  totalContributors: number | 'unavailable'
 }
 
 export type ActivityRollupValue = {

@@ -9,16 +9,22 @@ describe('ContributorsScorePane', () => {
       <ContributorsScorePane
         section={{
           repo: 'facebook/react',
+          windowDays: 90,
+          botModeSummary: 'Detected bot accounts are excluded from recent-commit contributor metrics for the last 90 days by default.',
+          heatmap: [],
           coreMetrics: [],
           contributorsScore: {
             value: 45,
             tone: 'warning',
             description: 'Contributor concentration ranks at the 45th percentile among Growing (100–999 stars) repositories.',
+            summary: '',
             percentile: 45,
             bracketLabel: 'Growing (100–999 stars)',
             concentration: 0.625,
             topContributorCount: 1,
             contributorCount: 5,
+            weightedFactors: [],
+            missingInputs: [],
           },
           contributorsMetrics: [
             { label: 'Top 20% contributor share', value: '62.5%', supportingText: '1 of 5 active contributors' },
@@ -137,16 +143,22 @@ describe('ContributorsScorePane', () => {
       <ContributorsScorePane
         section={{
           repo: 'facebook/react',
+          windowDays: 90,
+          botModeSummary: 'Detected bot accounts are excluded from recent-commit contributor metrics for the last 90 days by default.',
+          heatmap: [],
           coreMetrics: [],
           contributorsScore: {
             value: 82,
             tone: 'success',
             description: 'Contributor concentration ranks at the 82nd percentile among Growing (100–999 stars) repositories.',
+            summary: '',
             percentile: 82,
             bracketLabel: 'Growing (100–999 stars)',
             concentration: 0.4,
             topContributorCount: 1,
             contributorCount: 5,
+            weightedFactors: [],
+            missingInputs: [],
           },
           contributorsMetrics: [{ label: 'Top 20% contributor share', value: '40.0%', supportingText: '1 of 5 active contributors' }],
           experimentalMetrics: [],

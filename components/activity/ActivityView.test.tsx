@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { ActivityView } from './ActivityView'
 import type { AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
 
-function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'day', Partial<TrendComparisonMetrics>>> = {}) {
+function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'day', Partial<TrendComparisonMetrics>>> = {}): Record<'month' | 'week' | 'day', TrendComparisonMetrics> {
   return {
     month: { currentPeriodCommitCount: 3, previousPeriodCommitCount: 2, delta: 0.5, direction: 'accelerating', ...overrides.month },
     week: { currentPeriodCommitCount: 2, previousPeriodCommitCount: 1, delta: 1, direction: 'accelerating', ...overrides.week },
@@ -123,6 +123,7 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
         }),
       },
     },
+    licensingResult: 'unavailable',
     missingFields: [],
     ...overrides,
   }

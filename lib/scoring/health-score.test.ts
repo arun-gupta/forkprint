@@ -162,6 +162,9 @@ describe('health-score sub-factor recommendation gate (#230)', () => {
       summary: '',
       percentile: 50,
       bracketLabel: '',
+      concentration: 'unavailable',
+      topContributorCount: 'unavailable',
+      contributorCount: 'unavailable',
       weightedFactors: Object.entries(factors).map(([label, percentile]) => ({
         label,
         weightLabel: '20%',

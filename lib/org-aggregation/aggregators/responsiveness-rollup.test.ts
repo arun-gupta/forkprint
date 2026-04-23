@@ -1,6 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import type { AnalysisResult, ResponsivenessMetrics } from '@/lib/analyzer/analysis-result'
 import { responsivenessRollupAggregator, weightedMedian } from './responsiveness-rollup'
+
+function stubMetrics(partial: Partial<ResponsivenessMetrics>): ResponsivenessMetrics {
+  return {
+    issueFirstResponseMedianHours: 'unavailable',
+    issueFirstResponseP90Hours: 'unavailable',
+    prFirstReviewMedianHours: 'unavailable',
+    prFirstReviewP90Hours: 'unavailable',
+    issueResolutionMedianHours: 'unavailable',
+    issueResolutionP90Hours: 'unavailable',
+    prMergeMedianHours: 'unavailable',
+    prMergeP90Hours: 'unavailable',
+    issueResolutionRate: 'unavailable',
+    contributorResponseRate: 'unavailable',
+    botResponseRatio: 'unavailable',
+    humanResponseRatio: 'unavailable',
+    staleIssueRatio: 'unavailable',
+    stalePrRatio: 'unavailable',
+    prReviewDepth: 'unavailable',
+    issuesClosedWithoutCommentRatio: 'unavailable',
+    openIssueCount: 'unavailable',
+    openPullRequestCount: 'unavailable',
+    ...partial,
+  }
+}
 
 function partialResult(repo: string, override: Partial<AnalysisResult> = {}): AnalysisResult {
   return {
@@ -46,28 +70,19 @@ describe('responsivenessRollupAggregator — FR-021', () => {
   it('typical: computes weighted medians from multiple repos', () => {
     const results = [
       partialResult('o/alpha', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 4,
-          medianTimeToMerge: 24,
-        },
+        responsivenessMetrics: stubMetrics({ issueFirstResponseMedianHours: 4, prMergeMedianHours: 24 }),
         issuesOpen: 50,
         medianTimeToMergeHours: 24,
         prsMerged90d: 10,
       }),
       partialResult('o/bravo', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 12,
-          medianTimeToMerge: 48,
-        },
+        responsivenessMetrics: stubMetrics({ issueFirstResponseMedianHours: 12, prMergeMedianHours: 48 }),
         issuesOpen: 100,
         medianTimeToMergeHours: 48,
         prsMerged90d: 20,
       }),
       partialResult('o/charlie', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 8,
-          medianTimeToMerge: 36,
-        },
+        responsivenessMetrics: stubMetrics({ issueFirstResponseMedianHours: 8, prMergeMedianHours: 36 }),
         issuesOpen: 30,
         medianTimeToMergeHours: 36,
         prsMerged90d: 5,
@@ -101,20 +116,14 @@ describe('responsivenessRollupAggregator — FR-021', () => {
   it('mixed: unavailable repos excluded but available ones still contribute', () => {
     const results = [
       partialResult('o/alpha', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 6,
-          medianTimeToMerge: 30,
-        },
+        responsivenessMetrics: stubMetrics({ issueFirstResponseMedianHours: 6, prMergeMedianHours: 30 }),
         issuesOpen: 20,
         medianTimeToMergeHours: 30,
         prsMerged90d: 8,
       }),
       partialResult('o/bravo'), // all unavailable
       partialResult('o/charlie', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 'unavailable',
-          medianTimeToMerge: 'unavailable',
-        },
+        responsivenessMetrics: stubMetrics({}),
         medianTimeToMergeHours: 'unavailable',
       }),
     ]
@@ -162,10 +171,7 @@ describe('responsivenessRollupAggregator — FR-021', () => {
   it('uses default weight of 1 when issuesOpen/prsMerged90d is unavailable or zero', () => {
     const results = [
       partialResult('o/alpha', {
-        responsivenessMetrics: {
-          issueFirstResponseMedianHours: 10,
-          medianTimeToMerge: 20,
-        },
+        responsivenessMetrics: stubMetrics({ issueFirstResponseMedianHours: 10, prMergeMedianHours: 20 }),
         issuesOpen: 'unavailable',
         medianTimeToMergeHours: 20,
         prsMerged90d: 0,

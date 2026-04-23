@@ -44,7 +44,7 @@ const CONTEXT = { totalReposInRun: 3, flagshipRepos: [], inactiveRepoWindowMonth
 
 const DOC_WITH_GOVERNANCE = {
   documentationResult: {
-    fileChecks: [{ name: 'governance', found: true, path: 'GOVERNANCE.md' }],
+    fileChecks: [{ name: 'governance' as const, found: true, path: 'GOVERNANCE.md' }],
     readmeSections: [],
     readmeContent: null,
   },
@@ -52,7 +52,7 @@ const DOC_WITH_GOVERNANCE = {
 
 const DOC_WITHOUT_GOVERNANCE = {
   documentationResult: {
-    fileChecks: [{ name: 'governance', found: false, path: null }],
+    fileChecks: [{ name: 'governance' as const, found: false, path: null }],
     readmeSections: [],
     readmeContent: null,
   },

@@ -306,7 +306,7 @@ describe('GET /api/org/stale-admins', () => {
     })
     // First admin consumed: events fetch + commit search (1 call after maxRetries=0).
     // After processing, sleep advances clock past the 10s deadline, so u2 is skipped.
-    const usernames = fetchMock.mock.calls.map((c) => String(c[0]))
+    const usernames = (fetchMock.mock.calls as unknown as Array<[string | URL, ...unknown[]]>).map((c) => String(c[0]))
     expect(usernames.some((u) => u.includes('/users/u1/events/public'))).toBe(true)
     expect(usernames.some((u) => u.includes('/users/u2/events/public'))).toBe(false)
   })

@@ -174,6 +174,7 @@ function buildResult(overrides: Partial<AnalysisResult>): AnalysisResult {
     issueCloseTimestamps: 'unavailable',
     prMergeTimestamps: 'unavailable',
     documentationResult: 'unavailable',
+    licensingResult: 'unavailable',
     defaultBranchName: 'main',
     topics: [],
     inclusiveNamingResult: {
