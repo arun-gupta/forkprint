@@ -438,31 +438,7 @@ print_status() {
     fi
   done < <(git -C "$REPO_ROOT" worktree list --porcelain | awk '/^worktree/ {print $2}')
 
-  # Drop columns where every data row shows "-" (e.g. no .dev.pid files anywhere),
-  # then align the remaining columns for terminal reading.
-  printf '%b\n' "${rows[@]}" | awk '
-    BEGIN { FS="\t"; nrows=0 }
-    { rows[++nrows] = $0 }
-    END {
-      if (nrows == 0) exit
-      # Scan data rows (row 2 onward) to find columns with at least one real value.
-      for (r = 2; r <= nrows; r++) {
-        n = split(rows[r], f, "\t")
-        for (i = 1; i <= n; i++) if (f[i] != "-") has[i] = 1
-      }
-      # If no data rows exist, show the header as-is.
-      if (nrows == 1) { print rows[1]; exit }
-      # Emit only columns that have at least one non-dash value.
-      for (r = 1; r <= nrows; r++) {
-        n = split(rows[r], f, "\t")
-        out = ""
-        for (i = 1; i <= n; i++) {
-          if (has[i]) out = (out == "") ? f[i] : out "\t" f[i]
-        }
-        print out
-      }
-    }
-  ' | column -t -s $'\t'
+  printf '%b\n' "${rows[@]}" | column -t -s $'\t'
 }
 
 release_paused_session() {
