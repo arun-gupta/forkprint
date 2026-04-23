@@ -25,13 +25,14 @@ Options:
   --remove               Discard worktree (works on unmerged work)
   --cleanup-merged       Post-merge: pull main, remove worktree, delete local+remote branch
   --cleanup-all-merged   Batch sweep: run --cleanup-merged on every worktree whose PR is MERGED
-  --status, --list       Print one row per linked worktree: issue, branch, path, port, PIDs,
+  --status, --list       Print one row per linked worktree: issue, branch, port, PIDs,
                          spec state, PR state, and session ID. Dead PIDs are flagged as
                          PID(dead). Worktrees with no .claude.session-id show blanks.
                          Spec state: no-spec | paused | in-progress | done.
                          PR state: none | OPEN | MERGED | CLOSED.
                          Note: fetches PR state via gh for each worktree; with many worktrees
                          this may take a few seconds.
+  --status --verbose     Same as --status but adds the full worktree PATH column.
   -h, --help             Show this help and exit
 
 For --remove and --cleanup-merged, the issue number is inferred from the branch
@@ -341,15 +342,21 @@ cleanup_all_merged() {
 }
 
 # Print a single-screen status table of every linked worktree provisioned by this script.
-# Columns: ISSUE  BRANCH  PATH  PORT  DEV-PID  CLAUDE-PID  SPEC  PR  SESSION
+# Terse (default): ISSUE  BRANCH  PORT  DEV-PID  CLAUDE-PID  SPEC  PR  SESSION
+# Verbose (--verbose): adds PATH column between BRANCH and PORT
 # Spec states:  no-spec | paused | in-progress | done
 # PR states:    none | OPEN | MERGED | CLOSED
 print_status() {
+  local verbose="${1:-0}"
   local branch issue port dev_pid_str claude_pid_str spec_state pr_state session_str
   local _p _dpid _cpid _prst _sid skip_first wt_path
   local -a rows
 
-  rows=("ISSUE\tBRANCH\tPATH\tPORT\tDEV-PID\tCLAUDE-PID\tSPEC\tPR\tSESSION")
+  if (( verbose )); then
+    rows=("ISSUE\tBRANCH\tPATH\tPORT\tDEV-PID\tCLAUDE-PID\tSPEC\tPR\tSESSION")
+  else
+    rows=("ISSUE\tBRANCH\tPORT\tDEV-PID\tCLAUDE-PID\tSPEC\tPR\tSESSION")
+  fi
 
   skip_first=1
   while IFS= read -r wt_path; do
@@ -424,7 +431,11 @@ print_status() {
       [[ -n "${_sid:-}" ]] && session_str="${_sid:0:8}"
     fi
 
-    rows+=("${issue:-?}\t${branch:-?}\t${wt_path}\t${port}\t${dev_pid_str}\t${claude_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
+    if (( verbose )); then
+      rows+=("${issue:-?}\t${branch:-?}\t${wt_path}\t${port}\t${dev_pid_str}\t${claude_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
+    else
+      rows+=("${issue:-?}\t${branch:-?}\t${port}\t${dev_pid_str}\t${claude_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
+    fi
   done < <(git -C "$REPO_ROOT" worktree list --porcelain | awk '/^worktree/ {print $2}')
 
   printf '%b\n' "${rows[@]}" | column -t -s $'\t'
@@ -511,7 +522,9 @@ if [[ "${1:-}" == "--cleanup-all-merged" ]]; then
 fi
 
 if [[ "${1:-}" == "--status" || "${1:-}" == "--list" ]]; then
-  print_status
+  _verbose=0
+  [[ "${2:-}" == "--verbose" ]] && _verbose=1
+  print_status "$_verbose"
   exit 0
 fi
 
