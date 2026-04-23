@@ -89,23 +89,16 @@ function makeReposResult(repos: string[]): FoundationResult {
   } as unknown as FoundationResult
 }
 
-describe('FoundationResultsView — loading state', () => {
-  it('renders a loading indicator when loading is true', () => {
-    render(<FoundationResultsView result={null} loading={true} error={null} />)
-    expect(screen.getByRole('status')).toBeInTheDocument()
-  })
-})
-
 describe('FoundationResultsView — error state', () => {
   it('renders an error message when error is set', () => {
-    render(<FoundationResultsView result={null} loading={false} error="Something went wrong" />)
+    render(<FoundationResultsView result={null} error="Something went wrong" />)
     expect(screen.getByRole('alert')).toHaveTextContent('Something went wrong')
   })
 })
 
 describe('FoundationResultsView — null result (empty state)', () => {
-  it('renders nothing (empty state) when result is null and not loading', () => {
-    const { container } = render(<FoundationResultsView result={null} loading={false} error={null} />)
+  it('renders nothing (empty state) when result is null', () => {
+    const { container } = render(<FoundationResultsView result={null} error={null} />)
     expect(container.firstChild).toBeNull()
   })
 })
@@ -113,14 +106,14 @@ describe('FoundationResultsView — null result (empty state)', () => {
 describe('FoundationResultsView — repos branch', () => {
   it('renders CNCFReadinessTab for each result', () => {
     const result = makeReposResult(['facebook/react', 'vercel/next.js'])
-    render(<FoundationResultsView result={result} loading={false} error={null} />)
+    render(<FoundationResultsView result={result} error={null} />)
     const tabs = screen.getAllByTestId('cncf-readiness-tab')
     expect(tabs).toHaveLength(2)
   })
 
   it('renders CNCFReadinessTab with correct repoSlug', () => {
     const result = makeReposResult(['facebook/react'])
-    render(<FoundationResultsView result={result} loading={false} error={null} />)
+    render(<FoundationResultsView result={result} error={null} />)
     expect(screen.getByTestId('cncf-readiness-tab')).toHaveTextContent('facebook/react')
   })
 
@@ -133,7 +126,7 @@ describe('FoundationResultsView — repos branch', () => {
         rateLimit: null,
       },
     } as unknown as FoundationResult
-    render(<FoundationResultsView result={failResult} loading={false} error={null} />)
+    render(<FoundationResultsView result={failResult} error={null} />)
     expect(screen.getByText(/bad\/repo/)).toBeInTheDocument()
   })
 
@@ -146,7 +139,7 @@ describe('FoundationResultsView — repos branch', () => {
         rateLimit: null,
       },
     } as unknown as FoundationResult
-    render(<FoundationResultsView result={mixedResult} loading={false} error={null} />)
+    render(<FoundationResultsView result={mixedResult} error={null} />)
     expect(screen.getByTestId('cncf-readiness-tab')).toBeInTheDocument()
     expect(screen.getByText(/bad\/repo/)).toBeInTheDocument()
   })
@@ -172,7 +165,7 @@ describe('FoundationResultsView — org branch', () => {
         failure: null,
       },
     } as unknown as FoundationResult
-    render(<FoundationResultsView result={result} loading={false} error={null} />)
+    render(<FoundationResultsView result={result} error={null} />)
     expect(screen.getByTestId('cncf-candidacy-panel')).toHaveTextContent('cncf')
   })
 })
@@ -180,7 +173,7 @@ describe('FoundationResultsView — org branch', () => {
 describe('FoundationResultsView — projects-board branch', () => {
   it('renders a coming-soon message for projects-board results', () => {
     const result: FoundationResult = { kind: 'projects-board', url: 'https://github.com/orgs/cncf/projects/14' }
-    render(<FoundationResultsView result={result} loading={false} error={null} />)
+    render(<FoundationResultsView result={result} error={null} />)
     expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
   })
 })

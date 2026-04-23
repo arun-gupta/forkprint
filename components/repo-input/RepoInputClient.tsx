@@ -82,10 +82,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [notificationOptIn, setNotificationOptIn] = useState(false)
   const repoFetchAbortRef = useRef<AbortController | null>(null)
   const orgFetchAbortRef = useRef<AbortController | null>(null)
+  const foundationFetchAbortRef = useRef<AbortController | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const isLoading = loadingRepos.length > 0 || !!loadingOrg
+  const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
   useEffect(() => {
     if (isLoading) {
@@ -290,6 +291,10 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       return
     }
 
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
     setFoundationError(null)
     setFoundationResult(null)
     setLoadingFoundation(true)
@@ -297,26 +302,26 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
     try {
       if (parsed.kind === 'repos') {
-        // Reuse existing submitAnalysisRequest — same endpoint, same pattern as Repos mode
         const response = onAnalyze
           ? await onAnalyze(parsed.repos, session.token)
-          : await submitAnalysisRequest(parsed.repos, session.token, foundationTarget)
-        if (response) {
+          : await submitAnalysisRequest(parsed.repos, session.token, foundationTarget, controller.signal)
+        if (response && !controller.signal.aborted) {
           setFoundationResult({ kind: 'repos', results: response })
         }
       } else {
-        // Reuse existing submitOrgInventoryRequest — same endpoint as Org mode
         const response = onAnalyzeOrg
           ? await onAnalyzeOrg(parsed.org, session.token)
           : await submitOrgInventoryRequest(parsed.org, session.token)
-        if (response) {
+        if (response && !controller.signal.aborted) {
           setFoundationResult({ kind: 'org', inventory: response })
         }
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       setFoundationError(error instanceof Error ? error.message : 'Foundation scan failed.')
     } finally {
       setLoadingFoundation(false)
+      foundationFetchAbortRef.current = null
     }
   }
 
@@ -408,6 +413,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     repoFetchAbortRef.current?.abort()
     repoFetchAbortRef.current = null
     setLoadingRepos([])
+  }
+
+  function handleCancelFoundationFetch() {
+    foundationFetchAbortRef.current?.abort()
+    foundationFetchAbortRef.current = null
+    setLoadingFoundation(false)
+    setFoundationLoadingItems([])
   }
 
   async function handleOrgSubmit(org: string) {
@@ -597,6 +609,47 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           ) : null}
         </section>
       ) : null}
+      {loadingFoundation ? (
+        <section aria-label="Foundation scan loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing foundation readiness...</h2>
+            <div className="flex items-center gap-3">
+              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
+              <button
+                type="button"
+                onClick={handleCancelFoundationFetch}
+                aria-label="Cancel"
+                title="Cancel"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+                  <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {foundationLoadingItems.length > 0 ? (
+            <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
+              {foundationLoadingItems.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          ) : null}
+          {elapsedSeconds >= 10 ? (
+            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+              Large repositories with extensive commit history may take longer to analyze.
+            </p>
+          ) : null}
+          {elapsedSeconds >= 30 ? (
+            <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+              Still working — fetching commit history and computing contributor metrics.
+            </p>
+          ) : null}
+          {currentQuote ? (
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
+              &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
       {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
           {orgInventoryResponse && orgAggregation.view ? (
@@ -701,8 +754,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       {inputMode === 'foundation' ? (
         <FoundationResultsView
           result={foundationResult}
-          loading={loadingFoundation}
-          loadingItems={foundationLoadingItems}
           error={foundationError}
         />
       ) : null}
