@@ -737,6 +737,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       initialActiveTab={initialTab}
       onReset={handleReset}
       analysisPanel={analysisPanel}
+      hideTabs={inputMode === 'foundation'}
       toolbar={inputMode === 'org' && orgAnalysisComplete ? <OrgWindowSelector selected={orgWindow} onChange={setOrgWindow} /> : exportToolbar}
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
       searchQuery={debouncedQuery}

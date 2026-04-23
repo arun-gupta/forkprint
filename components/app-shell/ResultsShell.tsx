@@ -25,6 +25,7 @@ interface ResultsShellProps {
   recommendations: React.ReactNode
   comparison: React.ReactNode
   cncfCandidacy?: React.ReactNode
+  hideTabs?: boolean
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
   resetKey?: number
@@ -47,6 +48,7 @@ export function ResultsShell({
   recommendations,
   comparison,
   cncfCandidacy,
+  hideTabs = false,
   tabs = resultTabs,
   initialActiveTab = 'overview',
   resetKey,
@@ -235,28 +237,34 @@ export function ResultsShell({
 
           <section aria-label="Result workspace" className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
-            <ResultsTabs
-              tabs={effectiveTabs}
-              activeTab={currentActiveTab}
-              onChange={setActiveTab}
-              matchCounts={searchQuery.trim() ? domMatchCounts : tagMatchCounts}
-            />
-            <div className="mt-6" ref={containerRef}>
-              <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>
-                {overview}
-              </div>
-              <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
-              <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
-              <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
-              <div data-tab-content="documentation" style={{ display: currentActiveTab === 'documentation' ? 'contents' : 'none' }}>{documentation}</div>
-              <div data-tab-content="governance" style={{ display: currentActiveTab === 'governance' ? 'contents' : 'none' }}>{governance}</div>
-              <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
-              <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
-              <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
-              <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
-                {cncfCandidacy}
-              </div>
-            </div>
+            {hideTabs ? (
+              <div ref={containerRef}>{overview}</div>
+            ) : (
+              <>
+                <ResultsTabs
+                  tabs={effectiveTabs}
+                  activeTab={currentActiveTab}
+                  onChange={setActiveTab}
+                  matchCounts={searchQuery.trim() ? domMatchCounts : tagMatchCounts}
+                />
+                <div className="mt-6" ref={containerRef}>
+                  <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>
+                    {overview}
+                  </div>
+                  <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
+                  <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
+                  <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
+                  <div data-tab-content="documentation" style={{ display: currentActiveTab === 'documentation' ? 'contents' : 'none' }}>{documentation}</div>
+                  <div data-tab-content="governance" style={{ display: currentActiveTab === 'governance' ? 'contents' : 'none' }}>{governance}</div>
+                  <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
+                  <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
+                  <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
+                  <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
+                    {cncfCandidacy}
+                  </div>
+                </div>
+              </>
+            )}
           </section>
         </section>
       </div>

@@ -77,7 +77,7 @@ describe('FoundationInputSection — input field', () => {
   })
 })
 
-describe('FoundationInputSection — tooltip', () => {
+describe('FoundationInputSection — info tooltip', () => {
   it('renders an info icon button', () => {
     render(<FoundationInputSection {...defaultProps} />)
     expect(screen.getByRole('button', { name: /accepted input formats/i })).toBeInTheDocument()
@@ -85,25 +85,42 @@ describe('FoundationInputSection — tooltip', () => {
 
   it('shows tooltip with repo formats on hover', () => {
     render(<FoundationInputSection {...defaultProps} />)
-    const infoBtn = screen.getByRole('button', { name: /accepted input formats/i })
-    fireEvent.mouseEnter(infoBtn)
-    expect(screen.getByRole('tooltip')).toBeInTheDocument()
-    expect(screen.getByRole('tooltip')).toHaveTextContent(/owner\/repo/i)
+    fireEvent.mouseEnter(screen.getByRole('button', { name: /accepted input formats/i }))
+    expect(screen.getByTestId('format-tooltip')).toHaveTextContent(/owner\/repo/i)
   })
 
   it('shows tooltip with org format on hover', () => {
     render(<FoundationInputSection {...defaultProps} />)
-    const infoBtn = screen.getByRole('button', { name: /accepted input formats/i })
-    fireEvent.mouseEnter(infoBtn)
-    const tooltip = screen.getByRole('tooltip')
-    expect(tooltip).toHaveTextContent(/org/i)
+    fireEvent.mouseEnter(screen.getByRole('button', { name: /accepted input formats/i }))
+    expect(screen.getByTestId('format-tooltip')).toHaveTextContent(/org/i)
   })
 
   it('does NOT mention Projects board in the tooltip', () => {
     render(<FoundationInputSection {...defaultProps} />)
-    const infoBtn = screen.getByRole('button', { name: /accepted input formats/i })
-    fireEvent.mouseEnter(infoBtn)
-    const tooltip = screen.getByRole('tooltip')
-    expect(tooltip).not.toHaveTextContent(/projects board/i)
+    fireEvent.mouseEnter(screen.getByRole('button', { name: /accepted input formats/i }))
+    expect(screen.getByTestId('format-tooltip')).not.toHaveTextContent(/projects board/i)
+  })
+})
+
+describe('FoundationInputSection — picker tooltips', () => {
+  it('renders a tooltip for the CNCF Sandbox picker', () => {
+    render(<FoundationInputSection {...defaultProps} />)
+    const tooltips = screen.getAllByRole('tooltip')
+    const sandboxTooltip = tooltips.find((t) => /cncf sandbox/i.test(t.textContent ?? ''))
+    expect(sandboxTooltip).toBeDefined()
+  })
+
+  it('CNCF Sandbox tooltip mentions readiness score', () => {
+    render(<FoundationInputSection {...defaultProps} />)
+    const tooltips = screen.getAllByRole('tooltip')
+    const sandboxTooltip = tooltips.find((t) => /cncf sandbox/i.test(t.textContent ?? ''))
+    expect(sandboxTooltip?.textContent).toMatch(/score/i)
+  })
+
+  it('renders a tooltip for each disabled picker with "coming soon" text', () => {
+    render(<FoundationInputSection {...defaultProps} />)
+    const tooltips = screen.getAllByRole('tooltip')
+    const comingSoon = tooltips.filter((t) => /coming soon/i.test(t.textContent ?? ''))
+    expect(comingSoon.length).toBeGreaterThanOrEqual(3)
   })
 })

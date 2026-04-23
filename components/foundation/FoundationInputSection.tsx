@@ -38,26 +38,34 @@ export function FoundationInputSection({
       {/* Foundation picker — rendered from FOUNDATION_REGISTRY */}
       <div className="flex flex-wrap gap-2">
         {FOUNDATION_REGISTRY.map((entry) => (
-          <button
-            key={entry.target}
-            type="button"
-            disabled={!entry.active}
-            aria-pressed={entry.target === foundationTarget}
-            aria-label={entry.active ? entry.label : `${entry.label} (coming soon)`}
-            onClick={() => {
-              if (entry.active) onFoundationTargetChange(entry.target)
-            }}
-            className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
-              entry.target === foundationTarget && entry.active
-                ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-500 dark:bg-emerald-600'
-                : entry.active
-                  ? 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                  : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-600'
-            }`}
-          >
-            {entry.label}
-            {!entry.active ? <span className="ml-1 text-xs opacity-70">(soon)</span> : null}
-          </button>
+          <div key={entry.target} className="group relative">
+            <button
+              type="button"
+              disabled={!entry.active}
+              aria-pressed={entry.target === foundationTarget}
+              aria-label={entry.active ? entry.label : `${entry.label} (coming soon)`}
+              onClick={() => {
+                if (entry.active) onFoundationTargetChange(entry.target)
+              }}
+              className={`rounded-full border px-3 py-1 text-sm font-medium transition ${
+                entry.target === foundationTarget && entry.active
+                  ? 'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-500 dark:bg-emerald-600'
+                  : entry.active
+                    ? 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                    : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-600'
+              }`}
+            >
+              {entry.label}
+              {!entry.active ? <span className="ml-1 text-xs opacity-70">(soon)</span> : null}
+            </button>
+            <div
+              role="tooltip"
+              className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            >
+              {entry.tooltip}
+              <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-200 dark:border-t-slate-700" />
+            </div>
+          </div>
         ))}
       </div>
 
