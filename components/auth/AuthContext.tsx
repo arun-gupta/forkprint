@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 export const BASELINE_SCOPE = ''
 
@@ -31,6 +31,27 @@ const AuthContext = createContext<AuthContextValue>({
   dismissBanner: () => {},
 })
 
+const STORAGE_KEY = 'repo_pulse_session'
+
+function readStoredSession(): AuthSession | null {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    return raw ? (JSON.parse(raw) as AuthSession) : null
+  } catch {
+    return null
+  }
+}
+
+function writeStoredSession(session: AuthSession | null): void {
+  try {
+    if (session) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  } catch {}
+}
+
 function normalizeScopes(input: readonly string[] | undefined): readonly string[] {
   if (!input || input.length === 0) return [] as const
   return input
@@ -49,21 +70,41 @@ export function AuthProvider({
   children: React.ReactNode
   initialSession?: AuthSession | null
 }) {
-  const [session, setSession] = useState<AuthSession | null>(
-    initialSession
-      ? { ...initialSession, scopes: normalizeScopes(initialSession.scopes) }
-      : null,
-  )
+  const [session, setSession] = useState<AuthSession | null>(() => {
+    if (initialSession) return { ...initialSession, scopes: normalizeScopes(initialSession.scopes) }
+    const stored = readStoredSession()
+    return stored ? { ...stored, scopes: normalizeScopes(stored.scopes) } : null
+  })
   const [bannerDismissed, setBannerDismissed] = useState(false)
 
   const signIn = useCallback((newSession: AuthSession) => {
-    setSession({ ...newSession, scopes: normalizeScopes(newSession.scopes) })
+    const normalized = { ...newSession, scopes: normalizeScopes(newSession.scopes) }
+    setSession(normalized)
+    writeStoredSession(normalized)
     setBannerDismissed(false)
   }, [])
 
   const signOut = useCallback(() => {
     setSession(null)
+    writeStoredSession(null)
     setBannerDismissed(false)
+  }, [])
+
+  // Sync sign-in / sign-out across tabs
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY) return
+      if (!e.newValue) {
+        setSession(null)
+      } else {
+        try {
+          const stored = JSON.parse(e.newValue) as AuthSession
+          setSession({ ...stored, scopes: normalizeScopes(stored.scopes) })
+        } catch {}
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
   const hasScope = useCallback(

@@ -6,6 +6,7 @@ import { DemoSignInDialog } from '@/components/demo/DemoSignInDialog'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { OrgInventoryView } from '@/components/org-inventory/OrgInventoryView'
 import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
+import { CNCFCandidacyPanel } from '@/components/cncf-candidacy/CNCFCandidacyPanel'
 import { OrgWindowSelector } from '@/components/org-summary/OrgWindowSelector'
 import { ReportSearchBar } from '@/components/search/ReportSearchBar'
 import { SearchProvider } from '@/components/search/SearchContext'
@@ -72,6 +73,12 @@ const DEMO_ORG_TABS: ResultTabDefinition[] = [
     label: 'Security',
     status: 'implemented',
     description: 'Org-level OpenSSF Scorecard rollup (top repos).',
+  },
+  {
+    id: 'cncf-candidacy',
+    label: 'CNCF Candidacy',
+    status: 'implemented',
+    description: 'CNCF Sandbox candidacy scan — ranks repos by readiness.',
   },
 ]
 
@@ -230,6 +237,11 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
         ) : emptyPanel}
         recommendations={emptyPanel}
         comparison={emptyPanel}
+        cncfCandidacy={
+          response.results.length > 0 ? (
+            <CNCFCandidacyPanel org={response.org} repos={response.results} />
+          ) : emptyPanel
+        }
       />
     </SearchProvider>
   )

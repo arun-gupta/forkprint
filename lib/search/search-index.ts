@@ -307,6 +307,7 @@ const EXTRACTORS: Record<ResultTabId, Extractor> = {
   recommendations: extractRecommendations,
   comparison: extractComparison,
   'cncf-readiness': () => [],
+  'cncf-candidacy': () => [],
 }
 
 export function buildSearchIndex(results: AnalysisResult[]): SearchIndex {

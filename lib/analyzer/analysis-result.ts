@@ -249,6 +249,7 @@ export interface AnalysisResult {
   missingFields: string[]
   aspirantResult?: AspirantReadinessResult | null
   landscapeOverride?: boolean
+  landscapeStatus?: 'sandbox' | 'incubating' | 'graduated'
 }
 
 export type VersioningScheme = 'semver' | 'calver' | 'unrecognized'

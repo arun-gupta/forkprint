@@ -75,12 +75,12 @@ describe('RECOMMENDATION_CATALOG', () => {
     expect(entry?.tags).toContain('onboarding')
   })
 
-  it('has 21 documentation entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(21)
+  it('has 25 documentation entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => e.bucket === 'Documentation')).toHaveLength(25)
   })
 
-  it('has 5 community-tagged entries', () => {
-    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('community'))).toHaveLength(5)
+  it('has 8 community-tagged entries', () => {
+    expect(RECOMMENDATION_CATALOG.filter((e) => (e.tags ?? []).includes('community'))).toHaveLength(8)
   })
 
   it('has 7 release-health-tagged entries', () => {
@@ -137,7 +137,7 @@ describe('getCatalogEntriesByTag', () => {
     expect(ids).toEqual([
       'CTR-2', 'CTR-3', 'CTR-4',
       'DOC-12', 'DOC-13', 'DOC-14', 'DOC-17',
-      'DOC-2', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
+      'DOC-2', 'DOC-22', 'DOC-24', 'DOC-25', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-17', 'SEC-3', 'SEC-5',
     ])
   })
@@ -154,7 +154,7 @@ describe('getCatalogEntriesByTag', () => {
     const entries = getCatalogEntriesByTag('quick-win')
     const ids = entries.map((e) => e.id).sort()
     expect(ids).toEqual([
-      'DOC-1', 'DOC-17', 'DOC-2', 'DOC-20', 'DOC-21', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
+      'DOC-1', 'DOC-17', 'DOC-2', 'DOC-20', 'DOC-21', 'DOC-22', 'DOC-3', 'DOC-4', 'DOC-5', 'DOC-6',
       'SEC-14', 'SEC-16', 'SEC-6',
     ])
   })
@@ -183,7 +183,7 @@ describe('getCatalogEntriesByTag', () => {
   it('returns community-tagged entries', () => {
     const entries = getCatalogEntriesByTag('community')
     const ids = entries.map((e) => e.id).sort()
-    expect(ids).toEqual(['ACT-5', 'CTR-3', 'DOC-15', 'DOC-16', 'DOC-17'])
+    expect(ids).toEqual(['ACT-5', 'CTR-3', 'DOC-15', 'DOC-16', 'DOC-17', 'DOC-23', 'DOC-24', 'DOC-25'])
   })
 
   it('entries with multiple tags return for each tag', () => {

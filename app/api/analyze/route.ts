@@ -1,6 +1,6 @@
 import { analyze } from '@/lib/analyzer/analyze'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
-import { fetchCNCFLandscape, fetchCNCFSandboxIssues, fetchSandboxIssueBody, findSandboxApplication } from '@/lib/cncf-sandbox/landscape'
+import { fetchCNCFLandscape, fetchCNCFSandboxIssues, fetchSandboxIssueBody, findSandboxApplication, getLandscapeProjectStatus } from '@/lib/cncf-sandbox/landscape'
 import { evaluateAspirant } from '@/lib/cncf-sandbox/evaluate'
 import { parseApplicationIssue } from '@/lib/cncf-sandbox/parse-application'
 
@@ -56,6 +56,17 @@ export async function POST(request: Request) {
         const preliminaryMatch = issues.length > 0
           ? findSandboxApplication(result.repo, issues)
           : null
+
+        // Check if repo is already a CNCF-hosted project (sandbox/incubating/graduated)
+        const existingStatus = landscapeData
+          ? getLandscapeProjectStatus(result.repo, landscapeData)
+          : null
+        if (existingStatus === 'sandbox' || existingStatus === 'incubating' || existingStatus === 'graduated') {
+          result.landscapeOverride = true
+          result.landscapeStatus = existingStatus
+          result.aspirantResult = null
+          continue
+        }
 
         if (preliminaryMatch?.approved) {
           result.landscapeOverride = true

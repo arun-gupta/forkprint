@@ -27,8 +27,10 @@ interface ResultsShellProps {
   security: React.ReactNode
   recommendations: React.ReactNode
   comparison: React.ReactNode
+  cncfCandidacy?: React.ReactNode
   aspirantResult?: AspirantReadinessResult | null
   landscapeOverride?: boolean
+  landscapeStatus?: 'sandbox' | 'incubating' | 'graduated'
   repoSlug?: string
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
@@ -51,8 +53,10 @@ export function ResultsShell({
   security,
   recommendations,
   comparison,
+  cncfCandidacy,
   aspirantResult,
   landscapeOverride,
+  landscapeStatus,
   repoSlug,
   tabs = resultTabs,
   initialActiveTab = 'overview',
@@ -92,17 +96,27 @@ export function ResultsShell({
   }, [resetKey])
 
   const effectiveTabs = useMemo(() => {
-    if (aspirantResult && !landscapeOverride) {
-      const hasCncfTab = tabs.some((t) => t.id === 'cncf-readiness')
+    let result = tabs
+    if (cncfCandidacy) {
+      const hasCandidacyTab = result.some((t) => t.id === 'cncf-candidacy')
+      if (!hasCandidacyTab) {
+        result = [
+          ...result,
+          { id: 'cncf-candidacy' as const, label: 'CNCF Candidacy', status: 'implemented' as const, description: 'CNCF Sandbox candidacy scan ranked by readiness.' },
+        ]
+      }
+    }
+    if (aspirantResult && !landscapeOverride && !cncfCandidacy) {
+      const hasCncfTab = result.some((t) => t.id === 'cncf-readiness')
       if (!hasCncfTab) {
-        return [
-          ...tabs,
+        result = [
+          ...result,
           { id: 'cncf-readiness' as const, label: 'CNCF Readiness', status: 'implemented' as const, description: 'CNCF Sandbox application readiness checklist.' },
         ]
       }
     }
-    return tabs
-  }, [tabs, aspirantResult, landscapeOverride])
+    return result
+  }, [tabs, aspirantResult, landscapeOverride, cncfCandidacy])
 
   const currentActiveTab = useMemo(
     () => (effectiveTabs.some((tab) => tab.id === activeTab) ? activeTab : effectiveTabs[0]?.id ?? 'overview'),
@@ -259,7 +273,13 @@ export function ResultsShell({
                 ) : null}
                 {landscapeOverride ? (
                   <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-700 dark:bg-sky-900/20 dark:text-sky-200">
-                    This project is already a CNCF Sandbox project. To assess readiness for Incubation, select &ldquo;CNCF Incubating&rdquo; from the foundation target selector.
+                    {landscapeStatus === 'graduated'
+                      ? 'This project is already a CNCF Graduated project.'
+                      : landscapeStatus === 'incubating'
+                        ? 'This project is already a CNCF Incubating project. To assess readiness for Graduation, select “CNCF Graduated” from the foundation target selector.'
+                        : landscapeStatus === 'sandbox'
+                          ? 'This project is already a CNCF Sandbox project. To assess readiness for Incubation, select “CNCF Incubating” from the foundation target selector.'
+                          : 'This project is already listed in the CNCF landscape.'}
                   </div>
                 ) : null}
                 {overview}
@@ -280,6 +300,9 @@ export function ResultsShell({
                     onNavigateToTab={(tab) => setActiveTab(tab as ResultTabId)}
                   />
                 ) : null}
+              </div>
+              <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
+                {cncfCandidacy}
               </div>
             </div>
           </section>
