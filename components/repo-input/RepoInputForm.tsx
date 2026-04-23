@@ -4,27 +4,36 @@ import { useEffect, useRef, useState } from 'react'
 import { normalizeOrgInput } from '@/lib/analyzer/org-inventory'
 import { parseRepos } from '@/lib/parse-repos'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
+import { FoundationInputSection } from '@/components/foundation/FoundationInputSection'
 
 interface RepoInputFormProps {
   onSubmitRepos: (repos: string[]) => void
   onSubmitOrg: (org: string) => void
-  mode?: 'repos' | 'org'
-  onModeChange?: (mode: 'repos' | 'org') => void
+  onSubmitFoundation?: (input: string) => void
+  mode?: 'repos' | 'org' | 'foundation'
+  onModeChange?: (mode: 'repos' | 'org' | 'foundation') => void
   initialRepoValue?: string
   foundationTarget?: FoundationTarget
   onFoundationTargetChange?: (target: FoundationTarget) => void
+  foundationInputValue?: string
+  onFoundationInputChange?: (value: string) => void
+  foundationError?: string | null
 }
 
 export function RepoInputForm({
   onSubmitRepos,
   onSubmitOrg,
+  onSubmitFoundation,
   mode: controlledMode,
   onModeChange,
   initialRepoValue = '',
-  foundationTarget = 'none',
+  foundationTarget = 'cncf-sandbox',
   onFoundationTargetChange,
+  foundationInputValue = '',
+  onFoundationInputChange,
+  foundationError = null,
 }: RepoInputFormProps) {
-  const [uncontrolledMode, setUncontrolledMode] = useState<'repos' | 'org'>('repos')
+  const [uncontrolledMode, setUncontrolledMode] = useState<'repos' | 'org' | 'foundation'>('repos')
   const [repoValue, setRepoValue] = useState(initialRepoValue)
   const [orgValue, setOrgValue] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -52,7 +61,7 @@ export function RepoInputForm({
     textarea.style.height = `${textarea.scrollHeight}px`
   }, [mode, repoValue])
 
-  function updateMode(nextMode: 'repos' | 'org') {
+  function updateMode(nextMode: 'repos' | 'org' | 'foundation') {
     onModeChange?.(nextMode)
     if (controlledMode === undefined) {
       setUncontrolledMode(nextMode)
@@ -61,6 +70,11 @@ export function RepoInputForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (mode === 'foundation') {
+      onSubmitFoundation?.(foundationInputValue)
+      return
+    }
 
     if (mode === 'repos') {
       const result = parseRepos(repoValue)
@@ -87,28 +101,29 @@ export function RepoInputForm({
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="mb-3 flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={`rounded-full border px-4 py-2 text-sm font-medium transition ${ mode === 'repos' ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900' : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200' }`}
-          onClick={() => {
-            updateMode('repos')
-            setError(null)
-          }}
-        >
-          Repositories
-        </button>
-        <button
-          type="button"
-          className={`rounded-full border px-4 py-2 text-sm font-medium transition ${ mode === 'org' ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900' : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200' }`}
-          onClick={() => {
-            updateMode('org')
-            setError(null)
-          }}
-        >
-          Organization
-        </button>
+        {(['repos', 'org', 'foundation'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition ${ mode === m ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900' : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200' }`}
+            onClick={() => {
+              updateMode(m)
+              setError(null)
+            }}
+          >
+            {m === 'repos' ? 'Repositories' : m === 'org' ? 'Organization' : 'Foundation'}
+          </button>
+        ))}
       </div>
-      {mode === 'repos' ? (
+      {mode === 'foundation' ? (
+        <FoundationInputSection
+          foundationTarget={foundationTarget}
+          onFoundationTargetChange={(t) => onFoundationTargetChange?.(t)}
+          inputValue={foundationInputValue}
+          onInputChange={(v) => onFoundationInputChange?.(v)}
+          error={foundationError}
+        />
+      ) : mode === 'repos' ? (
         <div className="relative">
           <div className="mb-1 flex items-center justify-end">
             <div ref={tooltipRef} className="relative">
@@ -141,54 +156,45 @@ export function RepoInputForm({
               )}
             </div>
           </div>
-        <textarea
-          ref={repoTextareaRef}
-          value={repoValue}
-          onChange={(e) => setRepoValue(e.target.value)}
-          placeholder={'facebook/react ollama/ollama\ngithub.com/kubernetes/kubernetes\nhttps://github.com/pytorch/pytorch'}
-          rows={3}
-          className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-          aria-label="Repository list"
-          aria-describedby={error ? 'repo-input-error' : undefined}
-        />
-        <div className="mt-2 flex items-center gap-2">
-          <label htmlFor="foundation-target" className="text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-            Foundation target:
-          </label>
-          <select
-            id="foundation-target"
-            value={foundationTarget}
-            onChange={(e) => onFoundationTargetChange?.(e.target.value as FoundationTarget)}
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          >
-            <option value="none">None</option>
-            <option value="cncf-sandbox">CNCF Sandbox</option>
-            <option value="cncf-incubating" disabled>CNCF Incubating (coming soon)</option>
-            <option value="cncf-graduated" disabled>CNCF Graduated (coming soon)</option>
-          </select>
-        </div>
+          <textarea
+            ref={repoTextareaRef}
+            value={repoValue}
+            onChange={(e) => setRepoValue(e.target.value)}
+            placeholder={'facebook/react ollama/ollama\ngithub.com/kubernetes/kubernetes\nhttps://github.com/pytorch/pytorch'}
+            rows={3}
+            className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            aria-label="Repository list"
+            aria-describedby={error ? 'repo-input-error' : undefined}
+          />
+          {error ? (
+            <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600 dark:text-red-300">
+              {error}
+            </p>
+          ) : null}
         </div>
       ) : (
-        <input
-          value={orgValue}
-          onChange={(e) => setOrgValue(e.target.value)}
-          placeholder="facebook, github.com/facebook, or https://github.com/facebook"
-          className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-          aria-label="Organization input"
-          aria-describedby={error ? 'repo-input-error' : undefined}
-        />
-      )}
-      {error && (
-        <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600 dark:text-red-300">
-          {error}
-        </p>
+        <div>
+          <input
+            value={orgValue}
+            onChange={(e) => setOrgValue(e.target.value)}
+            placeholder="facebook, github.com/facebook, or https://github.com/facebook"
+            className="w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            aria-label="Organization input"
+            aria-describedby={error ? 'repo-input-error' : undefined}
+          />
+          {error ? (
+            <p id="repo-input-error" role="alert" data-testid="repo-error" className="mt-1 text-sm text-red-600 dark:text-red-300">
+              {error}
+            </p>
+          ) : null}
+        </div>
       )}
       <button
         type="submit"
-        title="Run the full repo health dashboard for any valid set of repositories."
+        title={mode === 'foundation' ? 'Scan for foundation readiness.' : 'Run the full repo health dashboard for any valid set of repositories.'}
         className="mt-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-2 dark:focus:ring-offset-slate-900"
       >
-        Analyze
+        {mode === 'foundation' ? 'Scan' : 'Analyze'}
       </button>
     </form>
   )

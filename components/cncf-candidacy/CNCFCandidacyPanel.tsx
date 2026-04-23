@@ -5,14 +5,13 @@ import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
 import type { CandidacyRepoResult, LandscapeProjectStatus } from '@/lib/cncf-sandbox/types'
 import type { RateLimitState } from '@/lib/analyzer/analysis-result'
 import { useAuth } from '@/components/auth/AuthContext'
+import { encodeFoundationUrl } from '@/lib/export/shareable-url'
 
 interface CNCFCandidacyPanelProps {
   org: string
   repos: OrgRepoSummary[]
 }
 
-const BATCH_SIZE = 25
-const FETCH_CONCURRENCY = 5
 const CNCF_HOSTED_STATUSES = new Set<LandscapeProjectStatus>(['sandbox', 'incubating', 'graduated'])
 
 type RepoRowState =
@@ -1069,7 +1068,7 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
                     </td>
                     <td className="py-2">
                       <a
-                        href={`/?repos=${encodeURIComponent(result.repo)}&foundationTarget=cncf-sandbox&tab=cncf-readiness`}
+                        href={encodeFoundationUrl({ foundation: 'cncf-sandbox', input: result.repo })}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs font-medium text-sky-600 underline hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200"

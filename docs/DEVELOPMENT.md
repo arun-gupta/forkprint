@@ -298,6 +298,8 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 14 | P2-F01b | Documentation scoring (advanced) | #110, #67 | |
 | 15 | P2-F13 | Org governance audit — stale admin detection, 2FA enforcement | #287, #286 (children of #285) | ✅ Done |
 | 16 | P2-F14 | Org governance audit — member permission distribution | #288 | ✅ Done |
+| 17 | P2-F15 | Foundation input mode — top-level tab (repos + org) | #413 | ✅ Done |
+| 18 | P2-F16 | Foundation input mode — Projects board sub-mode | #411 | |
 
 ## Phase 3 feature order
 

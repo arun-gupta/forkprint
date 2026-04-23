@@ -12,9 +12,6 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import type { TabMatchCounts } from '@/lib/search/types'
 import { useHighlightMatches } from '@/components/search/useHighlightMatches'
 import { ResultsTabs } from './ResultsTabs'
-import type { AspirantReadinessResult } from '@/lib/cncf-sandbox/types'
-import { CNCFReadinessPill } from '@/components/overview/CNCFReadinessPill'
-import { CNCFReadinessTab } from '@/components/cncf-readiness/CNCFReadinessTab'
 
 interface ResultsShellProps {
   analysisPanel: React.ReactNode
@@ -28,10 +25,6 @@ interface ResultsShellProps {
   recommendations: React.ReactNode
   comparison: React.ReactNode
   cncfCandidacy?: React.ReactNode
-  aspirantResult?: AspirantReadinessResult | null
-  landscapeOverride?: boolean
-  landscapeStatus?: 'sandbox' | 'incubating' | 'graduated'
-  repoSlug?: string
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
   resetKey?: number
@@ -54,10 +47,6 @@ export function ResultsShell({
   recommendations,
   comparison,
   cncfCandidacy,
-  aspirantResult,
-  landscapeOverride,
-  landscapeStatus,
-  repoSlug,
   tabs = resultTabs,
   initialActiveTab = 'overview',
   resetKey,
@@ -106,17 +95,8 @@ export function ResultsShell({
         ]
       }
     }
-    if (aspirantResult && !landscapeOverride && !cncfCandidacy) {
-      const hasCncfTab = result.some((t) => t.id === 'cncf-readiness')
-      if (!hasCncfTab) {
-        result = [
-          ...result,
-          { id: 'cncf-readiness' as const, label: 'CNCF Readiness', status: 'implemented' as const, description: 'CNCF Sandbox application readiness checklist.' },
-        ]
-      }
-    }
     return result
-  }, [tabs, aspirantResult, landscapeOverride, cncfCandidacy])
+  }, [tabs, cncfCandidacy])
 
   const currentActiveTab = useMemo(
     () => (effectiveTabs.some((tab) => tab.id === activeTab) ? activeTab : effectiveTabs[0]?.id ?? 'overview'),
@@ -263,25 +243,6 @@ export function ResultsShell({
             />
             <div className="mt-6" ref={containerRef}>
               <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>
-                {aspirantResult && !landscapeOverride ? (
-                  <div className="mb-4">
-                    <CNCFReadinessPill
-                      aspirantResult={aspirantResult}
-                      onClick={() => setActiveTab('cncf-readiness')}
-                    />
-                  </div>
-                ) : null}
-                {landscapeOverride ? (
-                  <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800 dark:border-sky-700 dark:bg-sky-900/20 dark:text-sky-200">
-                    {landscapeStatus === 'graduated'
-                      ? 'This project is already a CNCF Graduated project.'
-                      : landscapeStatus === 'incubating'
-                        ? 'This project is already a CNCF Incubating project. To assess readiness for Graduation, select “CNCF Graduated” from the foundation target selector.'
-                        : landscapeStatus === 'sandbox'
-                          ? 'This project is already a CNCF Sandbox project. To assess readiness for Incubation, select “CNCF Incubating” from the foundation target selector.'
-                          : 'This project is already listed in the CNCF landscape.'}
-                  </div>
-                ) : null}
                 {overview}
               </div>
               <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
@@ -292,15 +253,6 @@ export function ResultsShell({
               <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
               <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
               <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
-              <div data-tab-content="cncf-readiness" style={{ display: currentActiveTab === 'cncf-readiness' ? 'contents' : 'none' }}>
-                {aspirantResult && !landscapeOverride ? (
-                  <CNCFReadinessTab
-                    aspirantResult={aspirantResult}
-                    repoSlug={repoSlug}
-                    onNavigateToTab={(tab) => setActiveTab(tab as ResultTabId)}
-                  />
-                ) : null}
-              </div>
               <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
                 {cncfCandidacy}
               </div>

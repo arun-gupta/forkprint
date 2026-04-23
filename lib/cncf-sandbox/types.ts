@@ -1,4 +1,4 @@
-export type FoundationTarget = 'none' | 'cncf-sandbox'
+export type FoundationTarget = 'none' | 'cncf-sandbox' | 'cncf-incubating' | 'cncf-graduation' | 'apache-incubator'
 
 export type AspirantFieldStatus = 'ready' | 'partial' | 'missing' | 'human-only'
 
