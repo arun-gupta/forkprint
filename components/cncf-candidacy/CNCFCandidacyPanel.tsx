@@ -184,18 +184,25 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
     [landscapeStatuses],
   )
 
-  // Map lowercase repo name → landscape slug for repos NOT in this org (used for name-collision warnings)
+  // Map lowercase repo name → display label for CNCF landscape entries NOT in this org.
+  // Handles both repo URLs (github.com/owner/repo) and org-level URLs (github.com/tensorflow).
   const landscapeNameMap = useMemo(() => {
     const map: Record<string, string> = {}
     for (const url of Object.keys(landscapeStatuses)) {
-      // url = https://github.com/owner/repo
       const path = url.replace('https://github.com/', '')
       const slash = path.indexOf('/')
-      if (slash === -1) continue
-      const owner = path.slice(0, slash).toLowerCase()
-      const repoName = path.slice(slash + 1).toLowerCase()
-      if (owner && repoName && owner !== org.toLowerCase()) {
-        map[repoName] = `${owner}/${repoName}`
+      if (slash === -1) {
+        // Org-level URL: https://github.com/tensorflow
+        const orgName = path.toLowerCase()
+        if (orgName && orgName !== org.toLowerCase()) {
+          map[orgName] = `${orgName} (CNCF landscape org)`
+        }
+      } else {
+        const owner = path.slice(0, slash).toLowerCase()
+        const repoName = path.slice(slash + 1).toLowerCase()
+        if (owner && repoName && owner !== org.toLowerCase()) {
+          map[repoName] = `${owner}/${repoName}`
+        }
       }
     }
     return map
