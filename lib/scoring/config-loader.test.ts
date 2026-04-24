@@ -154,9 +154,10 @@ describe('interpolatePercentile', () => {
       expect(interpolatePercentile(25, ps)).toBe(24)
     })
 
-    it('returns 25 for a value just above p25 (entered the p25–p50 segment)', () => {
-      expect(interpolatePercentile(25, ps)).toBeGreaterThanOrEqual(24)
-      expect(interpolatePercentile(50, ps)).toBe(50)
+    it('returns a value between 24 and 50 for a value just above p25', () => {
+      const result = interpolatePercentile(26, ps)
+      expect(result).toBeGreaterThan(24)
+      expect(result).toBeLessThan(50)
     })
 
     it('returns 50 for a value exactly at p50', () => {
