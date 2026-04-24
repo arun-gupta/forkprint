@@ -30,7 +30,7 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeRepos, decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
+import { decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
 import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
@@ -48,14 +48,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const { session } = useAuth()
   const searchParams = useSearchParams()
   // Raw slugs for textarea display — show everything from the URL including invalid entries
-  // so users can see and correct them. decodeRepos (validated) is used only for auto-trigger gating.
+  // so users can see and correct them; isValidRepoSlug gates the auto-trigger below.
   const initialRawRepos = (() => {
     const raw = new URLSearchParams(searchParams.toString()).get('repos')
     if (!raw) return []
     return raw.split(',').map((s) => s.trim()).filter(Boolean)
   })()
   const initialRepoValue = initialRawRepos.join('\n')
-  const initialRepos = decodeRepos(searchParams.toString())
   const initialFoundationState = decodeFoundationUrl(searchParams.toString())
   const initialFoundationTarget = (initialFoundationState?.foundation ?? 'cncf-sandbox') as FoundationTarget
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
@@ -105,6 +104,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   // re-running (and resetting the elapsed timer) each time the idle quote rotates.
   const emptyQuoteIndexRef = useRef(emptyQuoteIndex)
   emptyQuoteIndexRef.current = emptyQuoteIndex
+  // Latest-ref wrappers so one-shot auto-trigger effects always call the current handler
+  // without taking it as a dep (which would cause the effects to re-run on every render).
+  const handleSubmitRef = useRef(handleSubmit)
+  handleSubmitRef.current = handleSubmit
+  const handleFoundationSubmitRef = useRef(handleFoundationSubmit)
+  handleFoundationSubmitRef.current = handleFoundationSubmit
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
@@ -139,8 +144,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setQuoteIndex(null)
 
     return undefined
-  // emptyQuoteIndex intentionally excluded — read via ref to avoid resetting elapsed timer
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading])
 
   const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
@@ -401,9 +404,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     autoTriggeredRef.current = true
     const parsed = parseRepos(initialRepoValue)
     if (!parsed.valid) return
-    void handleSubmit(parsed.repos)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.token])
+    void handleSubmitRef.current(parsed.repos)
+  }, [session?.token, initialRawRepos, initialRepoValue])
 
   // Auto-trigger Foundation scan when URL has mode=foundation params
   useEffect(() => {
@@ -415,9 +417,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setInputMode('foundation')
     setFoundationTarget(initialFoundationState.foundation)
     setFoundationInput(initialFoundationState.input)
-    void handleFoundationSubmit(initialFoundationState.input)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.token])
+    void handleFoundationSubmitRef.current(initialFoundationState.input)
+  }, [session?.token, initialFoundationState, setInputMode, setFoundationTarget, setFoundationInput])
 
   async function handleSubmit(repos: string[]) {
     if (!session?.token) return

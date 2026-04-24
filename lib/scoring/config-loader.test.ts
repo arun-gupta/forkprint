@@ -11,12 +11,14 @@ import {
   SEMVER_ADOPTION_THRESHOLD,
   SEMVER_REGEX,
   STALE_RELEASE_CUTOFF_DAYS,
+  WEIGHTS,
   getBracket,
   getBracketLabel,
   getCalibrationForStars,
   interpolatePercentile,
   isSoloFallback,
 } from './config-loader'
+import { SOLO_WEIGHTS } from './solo-profile'
 
 describe('getBracket', () => {
   it('routes community stars to star-tier brackets', () => {
@@ -213,5 +215,19 @@ describe('interpolatePercentile', () => {
       expect(interpolatePercentile(180, ps, true)).toBeLessThan(10)
       expect(interpolatePercentile(180, ps, true)).toBeGreaterThanOrEqual(0)
     })
+  })
+})
+
+describe('WEIGHTS', () => {
+  it('sums to 1.00 (constitution §VI: composite bucket weights)', () => {
+    const total = Object.values(WEIGHTS).reduce((s, v) => s + v, 0)
+    expect(total).toBeCloseTo(1, 10)
+  })
+})
+
+describe('SOLO_WEIGHTS', () => {
+  it('sums to 1.00 (constitution §VI: solo profile bucket weights)', () => {
+    const total = Object.values(SOLO_WEIGHTS).reduce((s, v) => s + v, 0)
+    expect(total).toBeCloseTo(1, 10)
   })
 })

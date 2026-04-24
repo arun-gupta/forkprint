@@ -342,11 +342,11 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
     const limit = Math.min(repoLimit, selectable.length)
     const initialBatch = selectable.slice(0, limit)
     const newSelected = new Set(initialBatch.map((r) => r.repo))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelected(newSelected)
     setBatchOffset(limit)
     fetchBatch(initialBatch)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scanStarted, landscapeLoading, token, selectable.length])
+  }, [scanStarted, landscapeLoading, token, selectable, repoLimit, fetchBatch, batchOffset])
 
   const stopAndClearLoading = useCallback((byRateLimit = false) => {
     abortRef.current?.abort()
@@ -368,6 +368,7 @@ export function CNCFCandidacyPanel({ org, repos }: CNCFCandidacyPanelProps) {
   useEffect(() => {
     if (!rateLimit || fetchStatus !== 'fetching') return
     const pct = Math.floor((rateLimit.remaining / rateLimit.limit) * 100)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (pct <= 10) stopAndClearLoading(true)
   }, [rateLimit, fetchStatus, stopAndClearLoading])
 

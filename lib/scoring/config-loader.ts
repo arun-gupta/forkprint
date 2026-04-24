@@ -30,6 +30,19 @@ export const DOCUMENTATION_TAG_PROMOTION_BONUS = 0.02
 export const ACTIVITY_LONG_GAP_ALERT_DAYS = 45
 
 /**
+ * Composite OSS Health Score bucket weights (constitution §VI).
+ * These must sum to 1.0 and are the authoritative values — health-score.ts
+ * imports and re-exports them for backward compatibility.
+ */
+export const WEIGHTS = {
+  activity: 0.25,
+  responsiveness: 0.25,
+  contributors: 0.23,
+  documentation: 0.12,
+  security: 0.15,
+} as const
+
+/**
  * Project Maturity (P2-F11 / #74) — shared config consumed by the analyzer,
  * Activity + Resilience scoring, and the metric-card view-model.
  *

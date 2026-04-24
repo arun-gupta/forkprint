@@ -4,7 +4,7 @@ import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/li
 import { getContributorsScore, type ContributorsScoreDefinition } from '@/lib/contributors/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
-import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, percentileToTone } from '@/lib/scoring/config-loader'
+import { RECOMMENDATION_PERCENTILE_GATE, WEIGHTS, formatPercentileLabel, percentileToTone } from '@/lib/scoring/config-loader'
 import { SOLO_WEIGHTS, detectSoloProjectProfile, type SoloProjectDetection } from '@/lib/scoring/solo-profile'
 import { generateReleaseHealthRecommendations } from '@/lib/release-health/recommendations'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
@@ -39,13 +39,7 @@ export interface HealthScoreDefinition {
   soloDetection: SoloProjectDetection
 }
 
-export const WEIGHTS = {
-  activity: 0.25,
-  responsiveness: 0.25,
-  contributors: 0.23,
-  documentation: 0.12,
-  security: 0.15,
-} as const
+export { WEIGHTS }
 
 export interface HealthScoreOptions {
   /**
