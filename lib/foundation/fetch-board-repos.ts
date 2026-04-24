@@ -106,7 +106,7 @@ const GQL_QUERY = `
                 body
               }
             }
-            fieldValues(first: 8) {
+            fieldValues(first: 20) {
               nodes {
                 ... on ProjectV2ItemFieldSingleSelectValue {
                   name
@@ -128,72 +128,114 @@ const GQL_QUERY = `
 
 type BoardItem = { issueNumber: number; issueUrl: string; title: string; body: string | null }
 
+// Match column name by prefix so "New 🌱" still matches "new"
+function matchesColumn(name: string): boolean {
+  const lower = name.toLowerCase()
+  return BOARD_COLUMNS.has(lower) || [...BOARD_COLUMNS].some((col) => lower.startsWith(col))
+}
+
 /**
- * Throws a descriptive error if the project is inaccessible so callers can
- * fall back gracefully instead of mistaking null for "no items".
+ * Fetch one page of project items. Returns null if the project is inaccessible
+ * (null projectV2), so the caller can retry with a different auth header.
+ */
+async function fetchOnePage(
+  authHeader: string | null,
+  org: string,
+  projectNumber: number,
+  cursor: string | null,
+): Promise<{ items: BoardItem[]; nextCursor: string | null } | null> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'RepoPulse/1.0',
+  }
+  if (authHeader) headers['Authorization'] = authHeader
+
+  const res = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ query: GQL_QUERY, variables: { org, number: projectNumber, cursor } }),
+    signal: AbortSignal.timeout(15_000),
+  })
+
+  if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}`)
+
+  const data = (await res.json()) as GraphQLResponse
+
+  if (data.errors?.length) {
+    throw new Error(`GraphQL error: ${data.errors.map((e) => e.message).join('; ')}`)
+  }
+
+  // null means access denied — signal to caller to retry differently
+  if (data.data?.organization === null || data.data?.organization?.projectV2 === null) {
+    return null
+  }
+
+  const projectItems = data.data?.organization?.projectV2?.items
+  if (!projectItems) return { items: [], nextCursor: null }
+
+  const items: BoardItem[] = []
+  for (const node of projectItems.nodes ?? []) {
+    if (!node.content?.number) continue
+
+    const status = node.fieldValues.nodes.find(
+      (fv) => fv.field?.name?.toLowerCase() === 'status',
+    )
+    // Include item if it has a matching Status value; if no Status field is set
+    // at all on an item, include it too (board default = "New" column)
+    if (status?.name && !matchesColumn(status.name)) continue
+
+    items.push({
+      issueNumber: node.content.number,
+      issueUrl: node.content.url ?? '',
+      title: node.content.title ?? '',
+      body: node.content.body ?? null,
+    })
+  }
+
+  const nextCursor = projectItems.pageInfo?.hasNextPage
+    ? (projectItems.pageInfo.endCursor ?? null)
+    : null
+
+  return { items, nextCursor }
+}
+
+async function paginateBoard(
+  authHeader: string | null,
+  org: string,
+  projectNumber: number,
+): Promise<BoardItem[] | null> {
+  const all: BoardItem[] = []
+  let cursor: string | null = null
+
+  do {
+    const page = await fetchOnePage(authHeader, org, projectNumber, cursor)
+    if (page === null) return null // access denied
+    all.push(...page.items)
+    cursor = page.nextCursor
+  } while (cursor)
+
+  return all
+}
+
+/**
+ * Try with auth token first; if projectV2 returns null (scope issue), retry
+ * without Authorization — GitHub allows unauthenticated reads of public org
+ * projects at 60 req/hr, which is fine for a one-shot scan.
  */
 async function fetchBoardItemsViaGraphQL(
   token: string,
   org: string,
   projectNumber: number,
 ): Promise<BoardItem[]> {
-  const items: BoardItem[] = []
-  let cursor: string | null = null
+  const withAuth = await paginateBoard(`Bearer ${token}`, org, projectNumber)
+  if (withAuth !== null) return withAuth
 
-  do {
-    const res = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'User-Agent': 'RepoPulse/1.0',
-      },
-      body: JSON.stringify({ query: GQL_QUERY, variables: { org, number: projectNumber, cursor } }),
-      signal: AbortSignal.timeout(15_000),
-    })
+  // Authenticated attempt returned null (access denied) — retry without auth
+  // for public boards
+  const withoutAuth = await paginateBoard(null, org, projectNumber)
+  if (withoutAuth !== null) return withoutAuth
 
-    if (!res.ok) {
-      throw new Error(`GraphQL HTTP ${res.status}`)
-    }
-
-    const data = (await res.json()) as GraphQLResponse
-
-    if (data.errors?.length) {
-      throw new Error(`GraphQL error: ${data.errors.map((e) => e.message).join('; ')}`)
-    }
-
-    if (data.data?.organization === null) {
-      throw new Error('Organization not found or token lacks read:org scope')
-    }
-
-    if (data.data?.organization?.projectV2 === null) {
-      throw new Error('Project not found or token lacks project read access')
-    }
-
-    const projectItems = data.data?.organization?.projectV2?.items
-    if (!projectItems) break
-
-    for (const node of projectItems.nodes ?? []) {
-      if (!node.content?.number) continue
-
-      const status = node.fieldValues.nodes.find(
-        (fv) => fv.field?.name?.toLowerCase() === 'status',
-      )
-      if (!status?.name || !BOARD_COLUMNS.has(status.name.toLowerCase())) continue
-
-      items.push({
-        issueNumber: node.content.number,
-        issueUrl: node.content.url ?? '',
-        title: node.content.title ?? '',
-        body: node.content.body ?? null,
-      })
-    }
-
-    const pageInfo = projectItems.pageInfo
-    cursor = pageInfo?.hasNextPage ? (pageInfo.endCursor ?? null) : null
-  } while (cursor)
-
-  return items
+  throw new Error('Project not accessible (private, or not found)')
 }
 
 // ─── Label fallback path ──────────────────────────────────────────────────────
