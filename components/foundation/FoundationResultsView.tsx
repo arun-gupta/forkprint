@@ -48,6 +48,7 @@ function ScoreBadge({ score }: { score: number }) {
 
 function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const allExpanded = expanded.size === repoResults.length
 
   function toggle(repo: string) {
     setExpanded(prev => {
@@ -58,7 +59,21 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
     })
   }
 
+  function toggleAll() {
+    setExpanded(allExpanded ? new Set() : new Set(repoResults.map((r) => r.repo)))
+  }
+
   return (
+    <div>
+      <div className="mb-2 flex justify-end">
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="text-xs text-slate-500 underline hover:no-underline dark:text-slate-400"
+        >
+          {allExpanded ? 'Collapse all' : 'Expand all'}
+        </button>
+      </div>
     <div className="divide-y divide-slate-200 dark:divide-slate-700 rounded border border-slate-200 dark:border-slate-700">
       {repoResults.map((repoResult) => {
         const isOpen = expanded.has(repoResult.repo)
@@ -111,6 +126,7 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
           </div>
         )
       })}
+    </div>
     </div>
   )
 }
