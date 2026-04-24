@@ -30,7 +30,7 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeRepos, decodeFoundationUrl, encodeFoundationUrl } from '@/lib/export/shareable-url'
+import { decodeRepos, decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
 import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
@@ -47,8 +47,15 @@ interface RepoInputClientProps {
 export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
   const { session } = useAuth()
   const searchParams = useSearchParams()
+  // Raw slugs for textarea display — show everything from the URL including invalid entries
+  // so users can see and correct them. decodeRepos (validated) is used only for auto-trigger gating.
+  const initialRawRepos = (() => {
+    const raw = new URLSearchParams(searchParams.toString()).get('repos')
+    if (!raw) return []
+    return raw.split(',').map((s) => s.trim()).filter(Boolean)
+  })()
+  const initialRepoValue = initialRawRepos.join('\n')
   const initialRepos = decodeRepos(searchParams.toString())
-  const initialRepoValue = initialRepos.join('\n')
   const initialFoundationState = decodeFoundationUrl(searchParams.toString())
   const initialFoundationTarget = (initialFoundationState?.foundation ?? 'cncf-sandbox') as FoundationTarget
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
@@ -388,7 +395,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   useEffect(() => {
     if (autoTriggeredRef.current) return
     if (!session?.token) return
-    if (initialRepos.length === 0) return
+    if (initialRawRepos.length === 0) return
+    if (!initialRawRepos.every(isValidRepoSlug)) return
 
     autoTriggeredRef.current = true
     const parsed = parseRepos(initialRepoValue)
