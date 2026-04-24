@@ -1206,8 +1206,8 @@ export function extractDocumentationResult(
     repo.cncfCodeowners ?? repo.cncfCodeownersGithub
   )
 
-  // First 2000 bytes of CODE_OF_CONDUCT.md text for Contributor Covenant check
-  const cocContent = (repo.docCodeOfConduct?.text?.slice(0, 2000)) ?? null
+  // First 2000 chars of whichever CoC filename variant was found
+  const cocContent = (codeOfConductBlob?.text?.slice(0, 2000)) ?? null
 
   return { fileChecks, readmeSections, readmeContent, adoptersFile, roadmapFile, maintainersFile, cocContent }
 }

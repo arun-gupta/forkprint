@@ -132,7 +132,8 @@ function evaluateCoC(label: string, weight: number, homeTab: string | undefined,
     })
   }
   const content = doc.cocContent
-  if (content && content.toLowerCase().includes('contributor covenant')) {
+  const lower = content?.toLowerCase() ?? ''
+  if (content && (lower.includes('contributor covenant') || lower.includes('contributor-covenant.org'))) {
     return makeField('coc', label, weight, homeTab, 'ready')
   }
   return makeField('coc', label, weight, homeTab, 'partial', {

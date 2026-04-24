@@ -23,7 +23,6 @@ import { OrgSummaryView } from '@/components/org-summary/OrgSummaryView'
 import { OrgBucketContent } from '@/components/org-summary/OrgBucketContent'
 import { OrgWindowSelector } from '@/components/org-summary/OrgWindowSelector'
 import { PreRunWarningDialog } from '@/components/org-summary/PreRunWarningDialog'
-import { CNCFCandidacyPanel } from '@/components/cncf-candidacy/CNCFCandidacyPanel'
 import type { ContributorDiversityWindow } from '@/lib/org-aggregation/aggregators/types'
 import { useOrgAggregation } from '@/components/shared/hooks/useOrgAggregation'
 import { isRateLimitLow, type AnalysisResult, type AnalyzeResponse } from '@/lib/analyzer/analysis-result'
@@ -31,10 +30,13 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeRepos } from '@/lib/export/shareable-url'
+import { decodeRepos, decodeFoundationUrl } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
+import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
 import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
+import { FoundationResultsView, type FoundationResult } from '@/components/foundation/FoundationResultsView'
+import { FoundationNudge } from '@/components/foundation/FoundationNudge'
 
 interface RepoInputClientProps {
   onAnalyze?: (repos: string[], token: string) => Promise<AnalyzeResponse> | AnalyzeResponse | void
@@ -46,9 +48,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const searchParams = useSearchParams()
   const initialRepos = decodeRepos(searchParams.toString())
   const initialRepoValue = initialRepos.join('\n')
-  const initialFoundationTarget = (searchParams.get('foundationTarget') ?? 'none') as FoundationTarget
+  const initialFoundationState = decodeFoundationUrl(searchParams.toString())
+  const initialFoundationTarget = (initialFoundationState?.foundation ?? 'cncf-sandbox') as FoundationTarget
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
   const autoTriggeredRef = useRef(false)
+  const foundationAutoTriggeredRef = useRef(false)
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
   const [analyzedRepos, setAnalyzedRepos] = useState<string[]>([])
   const [orgInventoryResponse, setOrgInventoryResponse] = useState<OrgInventoryResponse | null>(null)
@@ -56,28 +60,33 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingRepos, setLoadingRepos] = useState<string[]>([])
   const [loadingOrg, setLoadingOrg] = useState<string | null>(null)
   const [resultsResetKey, setResultsResetKey] = useState(0)
-  const [inputMode, setInputMode] = useState<'repos' | 'org'>('repos')
+  const [inputMode, setInputMode] = useState<'repos' | 'org' | 'foundation'>('repos')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [foundationTarget, setFoundationTarget] = useState<FoundationTarget>(initialFoundationTarget)
   const [aspirantResult, setAspirantResult] = useState<AspirantReadinessResult | null>(null)
+  // Foundation mode state
+  const [foundationInput, setFoundationInput] = useState('')
+  const [foundationResult, setFoundationResult] = useState<FoundationResult | null>(null)
+  const [loadingFoundation, setLoadingFoundation] = useState(false)
+  const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
+  const [foundationError, setFoundationError] = useState<string | null>(null)
   const cncfBadges: CNCFFieldBadge[] = aspirantResult
     ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
     : []
-  const [landscapeOverride, setLandscapeOverride] = useState(false)
-  const [landscapeStatus, setLandscapeStatus] = useState<'sandbox' | 'incubating' | 'graduated' | undefined>(undefined)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [preRunDialogRepos, setPreRunDialogRepos] = useState<string[] | null>(null)
   const [notificationOptIn, setNotificationOptIn] = useState(false)
   const repoFetchAbortRef = useRef<AbortController | null>(null)
   const orgFetchAbortRef = useRef<AbortController | null>(null)
+  const foundationFetchAbortRef = useRef<AbortController | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const isLoading = loadingRepos.length > 0 || !!loadingOrg
+  const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
   useEffect(() => {
     if (isLoading) {
@@ -246,12 +255,10 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     return () => clearTimeout(timeout)
   }, [searchQuery])
 
-  function handleModeChange(mode: 'repos' | 'org') {
+  function handleModeChange(mode: 'repos' | 'org' | 'foundation') {
     setInputMode(mode)
     if (mode === 'org') {
       setAspirantResult(null)
-      setLandscapeOverride(false)
-      setLandscapeStatus(undefined)
     }
   }
 
@@ -264,7 +271,58 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setSearchQuery('')
     setDebouncedQuery('')
     setAspirantResult(null)
-    setLandscapeOverride(false)
+    setFoundationResult(null)
+    setFoundationError(null)
+    setFoundationLoadingItems([])
+  }
+
+  async function handleFoundationSubmit(input: string) {
+    if (!session?.token) return
+
+    const parsed = parseFoundationInput(input)
+
+    if (parsed.kind === 'invalid') {
+      setFoundationError(parsed.error)
+      return
+    }
+
+    if (parsed.kind === 'projects-board') {
+      setFoundationResult({ kind: 'projects-board', url: parsed.url })
+      return
+    }
+
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
+    setFoundationError(null)
+    setFoundationResult(null)
+    setLoadingFoundation(true)
+    setFoundationLoadingItems(parsed.kind === 'repos' ? parsed.repos : [parsed.kind === 'org' ? parsed.org : ''])
+
+    try {
+      if (parsed.kind === 'repos') {
+        const response = onAnalyze
+          ? await onAnalyze(parsed.repos, session.token)
+          : await submitAnalysisRequest(parsed.repos, session.token, foundationTarget, controller.signal)
+        if (response && !controller.signal.aborted) {
+          setFoundationResult({ kind: 'repos', results: response })
+        }
+      } else {
+        const response = onAnalyzeOrg
+          ? await onAnalyzeOrg(parsed.org, session.token)
+          : await submitOrgInventoryRequest(parsed.org, session.token)
+        if (response && !controller.signal.aborted) {
+          setFoundationResult({ kind: 'org', inventory: response })
+        }
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return
+      setFoundationError(error instanceof Error ? error.message : 'Foundation scan failed.')
+    } finally {
+      setLoadingFoundation(false)
+      foundationFetchAbortRef.current = null
+    }
   }
 
   useEffect(() => {
@@ -296,6 +354,20 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.token])
 
+  // Auto-trigger Foundation scan when URL has mode=foundation params
+  useEffect(() => {
+    if (foundationAutoTriggeredRef.current) return
+    if (!session?.token) return
+    if (!initialFoundationState) return
+
+    foundationAutoTriggeredRef.current = true
+    setInputMode('foundation')
+    setFoundationTarget(initialFoundationState.foundation)
+    setFoundationInput(initialFoundationState.input)
+    void handleFoundationSubmit(initialFoundationState.input)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.token])
+
   async function handleSubmit(repos: string[]) {
     if (!session?.token) return
 
@@ -307,7 +379,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setAnalysisResponse(null)
     setOrgInventoryResponse(null)
     setAspirantResult(null)
-    setLandscapeOverride(false)
     setResultsResetKey((current) => current + 1)
     setInputMode('repos')
     setLoadingRepos(repos)
@@ -322,18 +393,10 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         setAnalysisResponse(response)
         setAnalyzedRepos(repos)
         const firstResult = response.results[0]
-        if (firstResult?.landscapeOverride) {
-          setLandscapeOverride(true)
-          setLandscapeStatus(firstResult.landscapeStatus)
-          setAspirantResult(null)
-        } else if (firstResult?.aspirantResult) {
+        if (firstResult?.aspirantResult && !firstResult?.landscapeOverride) {
           setAspirantResult(firstResult.aspirantResult)
-          setLandscapeOverride(false)
-          setLandscapeStatus(undefined)
         } else {
           setAspirantResult(null)
-          setLandscapeOverride(false)
-          setLandscapeStatus(undefined)
         }
       }
     } catch (error) {
@@ -352,6 +415,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setLoadingRepos([])
   }
 
+  function handleCancelFoundationFetch() {
+    foundationFetchAbortRef.current?.abort()
+    foundationFetchAbortRef.current = null
+    setLoadingFoundation(false)
+    setFoundationLoadingItems([])
+  }
+
   async function handleOrgSubmit(org: string) {
     if (!session?.token) return
 
@@ -363,7 +433,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setAnalysisResponse(null)
     setOrgInventoryResponse(null)
     setAspirantResult(null)
-    setLandscapeOverride(false)
     setResultsResetKey((current) => current + 1)
     setInputMode('org')
     setLoadingRepos([])
@@ -400,9 +469,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       onModeChange={handleModeChange}
       onSubmitRepos={handleSubmit}
       onSubmitOrg={handleOrgSubmit}
+      onSubmitFoundation={handleFoundationSubmit}
       initialRepoValue={initialRepoValue}
       foundationTarget={foundationTarget}
       onFoundationTargetChange={setFoundationTarget}
+      foundationInputValue={foundationInput}
+      onFoundationInputChange={setFoundationInput}
+      foundationError={foundationError}
     />
   )
 
@@ -430,13 +503,11 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level hygiene and policy — account activity, maintainers, governance files, license consistency.' },
         { id: 'security', label: 'Security', status: 'implemented', description: 'Org-level OpenSSF Scorecard rollup.' },
         { id: 'recommendations', label: 'Recommendations', status: 'implemented', description: 'Top systemic issues across the analyzed repos, grouped by CHAOSS dimension.' },
-        { id: 'cncf-candidacy', label: 'CNCF Candidacy', status: 'implemented', description: 'CNCF Sandbox candidacy scan — ranks repos by readiness.' },
       ]
     : orgInventoryResponse?.org
       ? [
           { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
           { id: 'governance', label: 'Governance', status: 'implemented', description: 'Org-level security signals available without analyzing individual repos — 2FA enforcement, admin activity.' },
-          { id: 'cncf-candidacy', label: 'CNCF Candidacy', status: 'implemented', description: 'CNCF Sandbox candidacy scan — ranks repos by readiness.' },
         ]
       : [
           { id: 'overview', label: 'Overview', status: 'implemented', description: 'Organization inventory summary and lightweight public repository metadata.' },
@@ -448,6 +519,18 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const overviewContent = (
     <div className="space-y-4">
+      {inputMode === 'foundation' && !foundationResult && !foundationError && !loadingFoundation ? (
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Enter one or more repos or an org slug above and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to check foundation readiness.
+          </p>
+          {emptyQuote ? (
+            <p className="text-xs italic text-slate-400 dark:text-slate-500">
+              &ldquo;{emptyQuote.text}&rdquo; — {emptyQuote.author}{emptyQuote.context ? `, ${emptyQuote.context}` : ''}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {isEmptyState && inputMode === 'repos' ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -538,6 +621,47 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           ) : null}
         </section>
       ) : null}
+      {loadingFoundation ? (
+        <section aria-label="Foundation scan loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing foundation readiness...</h2>
+            <div className="flex items-center gap-3">
+              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
+              <button
+                type="button"
+                onClick={handleCancelFoundationFetch}
+                aria-label="Cancel"
+                title="Cancel"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
+              >
+                <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
+                  <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {foundationLoadingItems.length > 0 ? (
+            <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
+              {foundationLoadingItems.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          ) : null}
+          {elapsedSeconds >= 10 ? (
+            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+              Large repositories with extensive commit history may take longer to analyze.
+            </p>
+          ) : null}
+          {elapsedSeconds >= 30 ? (
+            <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+              Still working — fetching commit history and computing contributor metrics.
+            </p>
+          ) : null}
+          {currentQuote ? (
+            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
+              &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
       {inputMode === 'repos' && analysisResponse ? (
         <section aria-label="Analysis results" className="space-y-4">
           {orgInventoryResponse && orgAggregation.view ? (
@@ -572,6 +696,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               ) : null}
             </section>
           ) : null}
+          {/* Nudge: invite user to check Foundation readiness for these repos */}
+          <FoundationNudge
+            label={`Check CNCF Sandbox readiness for ${analyzedRepos.length === 1 ? analyzedRepos[0] : `${analyzedRepos.length} repos`}`}
+            prefillValue={analyzedRepos.join('\n')}
+            onActivate={(prefill) => {
+              setInputMode('foundation')
+              setFoundationInput(prefill)
+            }}
+          />
         </section>
       ) : null}
       {inputMode === 'org' && orgInventoryResponse ? (
@@ -617,9 +750,24 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
                   </div>
                 ) : undefined}
               />
+              {/* Nudge: invite user to check Foundation readiness for this org */}
+              <FoundationNudge
+                label={`Check CNCF Sandbox candidacy for ${orgInventoryResponse.org}`}
+                prefillValue={orgInventoryResponse.org}
+                onActivate={(prefill) => {
+                  setInputMode('foundation')
+                  setFoundationInput(prefill)
+                }}
+              />
             </>
           )}
         </section>
+      ) : null}
+      {inputMode === 'foundation' ? (
+        <FoundationResultsView
+          result={foundationResult}
+          error={foundationError}
+        />
       ) : null}
       {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (
         <section className="rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200">
@@ -656,15 +804,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       initialActiveTab={initialTab}
       onReset={handleReset}
       analysisPanel={analysisPanel}
+      hideTabs={inputMode === 'foundation'}
       toolbar={inputMode === 'org' && orgAnalysisComplete ? <OrgWindowSelector selected={orgWindow} onChange={setOrgWindow} /> : exportToolbar}
       tabs={showOrgWorkspace ? orgInventoryTabs : repoTabs}
       searchQuery={debouncedQuery}
       onDomMatchCounts={handleDomMatchCounts}
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
-      aspirantResult={inputMode === 'repos' ? aspirantResult : null}
-      landscapeOverride={inputMode === 'repos' ? landscapeOverride : false}
-      landscapeStatus={inputMode === 'repos' ? landscapeStatus : undefined}
-      repoSlug={analyzedRepos[0]}
       overview={overviewContent}
       contributors={
         inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
@@ -751,11 +896,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
         )
-      }
-      cncfCandidacy={
-        inputMode === 'org' && orgInventoryResponse && orgInventoryResponse.results.length > 0 ? (
-          <CNCFCandidacyPanel org={orgInventoryResponse.org} repos={orgInventoryResponse.results} />
-        ) : null
       }
       comparison={
         analysisResponse && successfulRepoCount >= 2 ? (

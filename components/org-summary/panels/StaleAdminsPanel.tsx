@@ -466,23 +466,6 @@ function RoleRow({
   )
 }
 
-function ElevateAccessLink({ tier, children }: { tier: 'read-org' | 'admin-org'; children: React.ReactNode }) {
-  function handleClick() {
-    if (typeof window !== 'undefined' && window.location.search) {
-      sessionStorage.setItem('oauth_return_search', window.location.search)
-    }
-  }
-  return (
-    <a
-      href={`/api/auth/login?scope_tier=${tier}`}
-      onClick={handleClick}
-      className="font-medium text-sky-700 underline-offset-2 hover:underline dark:text-sky-400"
-    >
-      {children}
-    </a>
-  )
-}
-
 function LabelTooltip({ text, align = 'left' }: { text: string; align?: 'left' | 'right' }) {
   return (
     <span className="group relative inline-flex">
