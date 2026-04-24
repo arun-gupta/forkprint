@@ -167,12 +167,14 @@ export function findSandboxApplication(
   repoSlug: string,
   issues: SandboxApplicationIssue[],
 ): SandboxApplicationIssue | null {
-  const repoName = repoSlug.split('/')[1] ?? repoSlug
-  const normalized = repoName.toLowerCase().replace(/[-_]/g, '')
+  const parts = repoSlug.split('/')
+  const repoName = parts[1] ?? repoSlug
+  const orgName = parts[0] ?? ''
+  const repoNorm = repoName.toLowerCase().replace(/[-_]/g, '')
+  const orgNorm = orgName.toLowerCase().replace(/[-_]/g, '')
 
   for (const issue of issues) {
     const titleNorm = issue.title.toLowerCase().replace(/[-_]/g, '')
-    // Extract project name from title: strip common prefixes/brackets
     const stripped = titleNorm
       .replace(/\[sandbox\]/g, '')
       .replace(/\[project onboarding\]/g, '')
@@ -180,15 +182,27 @@ export function findSandboxApplication(
       .replace(/\[update project\].*?:/g, '')
       .trim()
 
-    // Word-boundary match: the repo name must appear as a standalone word
+    // Strategy 1: word-boundary match — repo name appears as a standalone token
     const words = stripped.split(/\s+/)
     for (const word of words) {
       const wordNorm = word.replace(/[^a-z0-9]/g, '')
-      if (wordNorm === normalized || wordNorm.startsWith(normalized)) {
-        if (normalized.length >= 4 && wordNorm.length >= 4) {
+      if (wordNorm === repoNorm || wordNorm.startsWith(repoNorm)) {
+        if (repoNorm.length >= 4 && wordNorm.length >= 4) {
           return issue
         }
       }
+    }
+
+    // Strategy 2: substring match on concatenated title — catches multi-word repo
+    // names (e.g. ai-platform-engineering → "aiplatformengineering" appears inside
+    // "cnoe ai platform engineering" when joined) and short abbreviations via the
+    // org name (e.g. dso → org "docker-secret-operator" appears in title).
+    const concat = stripped.replace(/[^a-z0-9]/g, '')
+    if (repoNorm.length >= 4 && concat.includes(repoNorm)) {
+      return issue
+    }
+    if (orgNorm.length >= 5 && concat.includes(orgNorm)) {
+      return issue
     }
   }
   return null

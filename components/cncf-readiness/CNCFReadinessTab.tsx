@@ -119,13 +119,27 @@ function HumanFieldRow({ field, parsed }: { field: AspirantField; parsed: Parsed
   )
 }
 
-function SandboxApplicationBanner({ application }: { application: import('@/lib/cncf-sandbox/types').SandboxApplicationIssue | null }) {
+function SandboxApplicationBanner({ application, repoSlug }: { application: import('@/lib/cncf-sandbox/types').SandboxApplicationIssue | null; repoSlug?: string }) {
+  const repoLink = repoSlug ? (
+    <a
+      href={`https://github.com/${repoSlug}`}
+      target="_blank"
+      rel="noreferrer"
+      className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400"
+    >
+      {repoSlug}
+    </a>
+  ) : null
+
   if (application === null) {
     return (
       <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
         <span className="mt-0.5 text-base" aria-hidden="true">📋</span>
         <div>
-          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">No application found in cncf/sandbox</p>
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
+            No application found in cncf/sandbox
+            {repoLink ? <>{' '}&mdash;{' '}{repoLink}</> : null}
+          </p>
           <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
             When ready, file an issue at{' '}
             <a href="https://github.com/cncf/sandbox/issues/new/choose" target="_blank" rel="noreferrer" className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400">
@@ -150,6 +164,7 @@ function SandboxApplicationBanner({ application }: { application: import('@/lib/
           <a href={application.issueUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400">
             #{application.issueNumber}
           </a>
+          {repoLink ? <>{' '}&middot;{' '}{repoLink}</> : null}
         </p>
         <p className="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-400">
           {application.title} &middot; filed {date}
@@ -334,7 +349,7 @@ export function CNCFReadinessTab({ aspirantResult, onNavigateToTab, repoSlug }: 
         </a>.
       </p>
 
-      <SandboxApplicationBanner application={sandboxApplication} />
+      <SandboxApplicationBanner application={sandboxApplication} repoSlug={repoSlug} />
 
       {needsWorkFields.length > 0 ? (
         <section>

@@ -7,7 +7,7 @@ export type FoundationParseResult =
   | { kind: 'projects-board'; url: string }
   | { kind: 'invalid';        error: string }
 
-const PROJECTS_BOARD_RE = /^https?:\/\/github\.com\/orgs\/[^/]+\/projects\/\d+/i
+const PROJECTS_BOARD_RE = /^(?:https?:\/\/)?github\.com\/orgs\/[^/]+\/projects\/\d+/i
 const GITHUB_URL_PREFIX_RE = /^(?:https?:\/\/)?github\.com\//i
 const ORG_SLUG_RE = /^[a-zA-Z0-9][a-zA-Z0-9.-]*$/
 

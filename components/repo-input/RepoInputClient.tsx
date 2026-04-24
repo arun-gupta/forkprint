@@ -30,9 +30,10 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeRepos, decodeFoundationUrl } from '@/lib/export/shareable-url'
+import { decodeRepos, decodeFoundationUrl, encodeFoundationUrl } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
+import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
 import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 import { FoundationResultsView, type FoundationResult } from '@/components/foundation/FoundationResultsView'
@@ -73,6 +74,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingFoundation, setLoadingFoundation] = useState(false)
   const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
   const [foundationError, setFoundationError] = useState<string | null>(null)
+  const [pendingBoardScan, setPendingBoardScan] = useState<{
+    repos: string[]
+    skipped: SkippedIssue[]
+    method: 'graphql' | 'labels'
+    url: string
+    issueMap: Record<string, number>
+  } | null>(null)
   const cncfBadges: CNCFFieldBadge[] = aspirantResult
     ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
     : []
@@ -83,15 +91,20 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const repoFetchAbortRef = useRef<AbortController | null>(null)
   const orgFetchAbortRef = useRef<AbortController | null>(null)
   const foundationFetchAbortRef = useRef<AbortController | null>(null)
+  const previousFoundationResultRef = useRef<FoundationResult | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Ref so the loading-start effect can read the current emptyQuoteIndex without
+  // re-running (and resetting the elapsed timer) each time the idle quote rotates.
+  const emptyQuoteIndexRef = useRef(emptyQuoteIndex)
+  emptyQuoteIndexRef.current = emptyQuoteIndex
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
   useEffect(() => {
     if (isLoading) {
       setElapsedSeconds(0)
-      setQuoteIndex(emptyQuoteIndex)
+      setQuoteIndex(emptyQuoteIndexRef.current)
       timerRef.current = setInterval(() => {
         setElapsedSeconds((s) => s + 1)
       }, 1000)
@@ -119,7 +132,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setQuoteIndex(null)
 
     return undefined
-  }, [isLoading, emptyQuoteIndex])
+  // emptyQuoteIndex intentionally excluded — read via ref to avoid resetting elapsed timer
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading])
 
   const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
 
@@ -274,6 +289,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setFoundationResult(null)
     setFoundationError(null)
     setFoundationLoadingItems([])
+    setPendingBoardScan(null)
+    previousFoundationResultRef.current = null
   }
 
   async function handleFoundationSubmit(input: string) {
@@ -286,18 +303,44 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       return
     }
 
-    if (parsed.kind === 'projects-board') {
-      setFoundationResult({ kind: 'projects-board', url: parsed.url })
-      return
-    }
-
     foundationFetchAbortRef.current?.abort()
     const controller = new AbortController()
     foundationFetchAbortRef.current = controller
 
+    previousFoundationResultRef.current = foundationResult
     setFoundationError(null)
     setFoundationResult(null)
+    setPendingBoardScan(null)
     setLoadingFoundation(true)
+
+    if (parsed.kind === 'projects-board') {
+      // Phase 1: resolve repos (fast) — then pause for user review
+      setFoundationLoadingItems(['Resolving repositories from board…'])
+      try {
+        const { repos, skipped, method, issueMap } = await fetchBoardRepos(session.token, parsed.url)
+
+        if (controller.signal.aborted) return
+
+        if (repos.length === 0) {
+          setFoundationError(
+            'No repositories could be resolved from the CNCF sandbox board. The New and review/tech columns may be empty, or issue bodies may not contain parseable repository URLs.',
+          )
+          return
+        }
+
+        // Pause here — show review panel so user can confirm before analysis
+        setPendingBoardScan({ repos, skipped, method, url: parsed.url, issueMap })
+      } catch (error) {
+        if (controller.signal.aborted) return
+        setFoundationError(error instanceof Error ? error.message : 'Board scan failed.')
+      } finally {
+        setLoadingFoundation(false)
+        setFoundationLoadingItems([])
+        foundationFetchAbortRef.current = null
+      }
+      return
+    }
+
     setFoundationLoadingItems(parsed.kind === 'repos' ? parsed.repos : [parsed.kind === 'org' ? parsed.org : ''])
 
     try {
@@ -420,6 +463,89 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     foundationFetchAbortRef.current = null
     setLoadingFoundation(false)
     setFoundationLoadingItems([])
+    // If analysis was aborted for a board scan, keep pendingBoardScan so the
+    // review panel reappears; otherwise restore the previous result.
+    if (!pendingBoardScan) {
+      setFoundationResult(previousFoundationResultRef.current)
+    }
+    previousFoundationResultRef.current = null
+  }
+
+  async function handleStartBoardAnalysis() {
+    if (!session?.token || !pendingBoardScan) return
+
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
+    previousFoundationResultRef.current = foundationResult
+    setFoundationError(null)
+    setFoundationResult(null)
+    setLoadingFoundation(true)
+    setFoundationLoadingItems(pendingBoardScan.repos)
+
+    const { repos, skipped, method, url, issueMap } = pendingBoardScan
+
+    try {
+      const response = onAnalyze
+        ? await onAnalyze(repos, session.token)
+        : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal, issueMap)
+
+      if (response && !controller.signal.aborted) {
+        setFoundationResult({ kind: 'projects-board', url, results: response, skipped, method })
+        setPendingBoardScan(null)
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return
+      setFoundationError(error instanceof Error ? error.message : 'Board scan failed.')
+    } finally {
+      setLoadingFoundation(false)
+      setFoundationLoadingItems([])
+      foundationFetchAbortRef.current = null
+    }
+  }
+
+  async function handleReanalyzeBoard(url: string) {
+    if (!session?.token) return
+
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
+    previousFoundationResultRef.current = foundationResult
+    setFoundationError(null)
+    setFoundationResult(null)
+    setPendingBoardScan(null)
+    setLoadingFoundation(true)
+    setFoundationLoadingItems(['Resolving repositories from board…'])
+
+    try {
+      const { repos, skipped, method, issueMap } = await fetchBoardRepos(session.token, url)
+      if (controller.signal.aborted) return
+
+      if (repos.length === 0) {
+        setFoundationError(
+          'No repositories could be resolved from the CNCF sandbox board. The New and review/tech columns may be empty, or issue bodies may not contain parseable repository URLs.',
+        )
+        return
+      }
+
+      setFoundationLoadingItems(repos)
+      const response = onAnalyze
+        ? await onAnalyze(repos, session.token)
+        : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal, issueMap)
+
+      if (response && !controller.signal.aborted) {
+        setFoundationResult({ kind: 'projects-board', url, results: response, skipped, method })
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return
+      setFoundationError(error instanceof Error ? error.message : 'Board re-analysis failed.')
+    } finally {
+      setLoadingFoundation(false)
+      setFoundationLoadingItems([])
+      foundationFetchAbortRef.current = null
+    }
   }
 
   async function handleOrgSubmit(org: string) {
@@ -479,7 +605,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     />
   )
 
-  const exportToolbar = analysisResponse ? (
+  const exportToolbar = analysisResponse && inputMode === 'repos' ? (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <ReportSearchBar
         query={searchQuery}
@@ -519,7 +645,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const overviewContent = (
     <div className="space-y-4">
-      {inputMode === 'foundation' && !foundationResult && !foundationError && !loadingFoundation ? (
+      {inputMode === 'foundation' && !foundationResult && !foundationError && !loadingFoundation && !pendingBoardScan ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter one or more repos or an org slug above and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to check foundation readiness.
@@ -549,17 +675,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         </p>
       ) : null}
       {loadingRepos.length > 0 && inputMode === 'repos' ? (
-        <section aria-label="Analysis loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
+        <section aria-label="Analysis loading state">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing repositories...</h2>
+            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Analyzing repositories...</h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
+              <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{formatElapsedTime(elapsedSeconds)}</span>
               <button
                 type="button"
                 onClick={handleCancelRepoFetch}
                 aria-label="Cancel"
                 title="Cancel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                   <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
@@ -567,40 +693,40 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </button>
             </div>
           </div>
-          <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
+          <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 dark:text-slate-300">
             {loadingRepos.map((repo) => (
               <li key={repo}>{repo}</li>
             ))}
           </ul>
           {elapsedSeconds >= 10 ? (
-            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               Large repositories with extensive commit history may take longer to analyze.
             </p>
           ) : null}
           {elapsedSeconds >= 30 ? (
-            <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Still working — fetching commit history and computing contributor metrics.
             </p>
           ) : null}
           {currentQuote ? (
-            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
+            <p className="mt-3 border-t border-slate-200 pt-3 text-xs italic text-slate-400 dark:border-slate-700 dark:text-slate-500">
               &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
         </section>
       ) : null}
       {loadingOrg ? (
-        <section aria-label="Org inventory loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
+        <section aria-label="Org inventory loading state">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Loading org inventory for:</h2>
+            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Loading org inventory for:</h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
+              <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{formatElapsedTime(elapsedSeconds)}</span>
               <button
                 type="button"
                 onClick={handleCancelOrgFetch}
                 aria-label="Cancel"
                 title="Cancel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                   <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
@@ -608,31 +734,31 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               </button>
             </div>
           </div>
-          <p className="mt-2 text-sm text-blue-900 dark:text-blue-200">{loadingOrg}</p>
+          <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{loadingOrg}</p>
           {elapsedSeconds >= 10 ? (
-            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               Large organizations with many repositories may take longer to load.
             </p>
           ) : null}
           {currentQuote ? (
-            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
+            <p className="mt-3 border-t border-slate-200 pt-3 text-xs italic text-slate-400 dark:border-slate-700 dark:text-slate-500">
               &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
         </section>
       ) : null}
       {loadingFoundation ? (
-        <section aria-label="Foundation scan loading state" className="rounded border border-blue-200 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800/60">
+        <section aria-label="Foundation scan loading state">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-blue-900 dark:text-blue-200">Analyzing foundation readiness...</h2>
+            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Analyzing foundation readiness...</h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs tabular-nums text-blue-700 dark:text-blue-300">{formatElapsedTime(elapsedSeconds)}</span>
+              <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{formatElapsedTime(elapsedSeconds)}</span>
               <button
                 type="button"
                 onClick={handleCancelFoundationFetch}
                 aria-label="Cancel"
                 title="Cancel"
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700 dark:bg-slate-900"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-slate-300 bg-white text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:border-slate-600 dark:bg-slate-800 dark:text-rose-400 dark:hover:bg-slate-700"
               >
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor">
                   <rect x="3.5" y="3.5" width="9" height="9" rx="1" />
@@ -641,22 +767,22 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             </div>
           </div>
           {foundationLoadingItems.length > 0 ? (
-            <ul className="mt-2 list-disc pl-5 text-sm text-blue-900 dark:text-blue-200">
+            <ul className="mt-2 list-disc pl-5 text-sm text-slate-700 dark:text-slate-300">
               {foundationLoadingItems.map((item) => <li key={item}>{item}</li>)}
             </ul>
           ) : null}
           {elapsedSeconds >= 10 ? (
-            <p className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               Large repositories with extensive commit history may take longer to analyze.
             </p>
           ) : null}
           {elapsedSeconds >= 30 ? (
-            <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Still working — fetching commit history and computing contributor metrics.
             </p>
           ) : null}
           {currentQuote ? (
-            <p className="mt-3 border-t border-blue-200 pt-3 text-xs italic text-blue-600 dark:border-blue-800/60 dark:text-blue-400">
+            <p className="mt-3 border-t border-slate-200 pt-3 text-xs italic text-slate-400 dark:border-slate-700 dark:text-slate-500">
               &ldquo;{currentQuote.text}&rdquo; — {currentQuote.author}{currentQuote.context ? `, ${currentQuote.context}` : ''}
             </p>
           ) : null}
@@ -763,10 +889,97 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           )}
         </section>
       ) : null}
-      {inputMode === 'foundation' ? (
+      {inputMode === 'foundation' && pendingBoardScan && !loadingFoundation ? (
+        <section className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-semibold text-slate-800 dark:text-slate-200">
+                {pendingBoardScan.repos.length} {pendingBoardScan.repos.length === 1 ? 'repository' : 'repositories'} found
+              </p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {pendingBoardScan.method === 'graphql' ? (
+                  <>Resolved from the <strong>New</strong> and <strong>review/tech</strong> columns of the board via the GitHub Projects API.</>
+                ) : (
+                  <>Resolved from open issues in{' '}
+                  <a href="https://github.com/cncf/sandbox/issues" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">cncf/sandbox</a>
+                  {' '}matching{' '}
+                  <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-700">label:New -label:gitvote/passed</code>
+                  {' '}or{' '}
+                  <code className="rounded bg-slate-100 px-1 text-xs dark:bg-slate-700">label:review/tech -label:sandbox</code>.</>
+                )}
+              </p>
+              <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">
+                Review the list below, then click <strong>Analyze</strong> to run the CNCF Sandbox readiness scan.
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => void handleStartBoardAnalysis()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500"
+              >
+                Analyze
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingBoardScan(null)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+            {pendingBoardScan.repos.map((repo) => (
+              <li key={repo} className="truncate text-sm text-slate-700 dark:text-slate-300">
+                <a
+                  href={`https://github.com/${repo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:no-underline"
+                >
+                  {repo}
+                </a>
+              </li>
+            ))}
+          </ul>
+          {pendingBoardScan.skipped.length > 0 ? (
+            <section className="rounded border border-amber-200 bg-amber-50 p-4 dark:bg-amber-900/20 dark:border-amber-800/60">
+              <h2 className="font-semibold text-amber-900 dark:text-amber-200">
+                Skipped issues ({pendingBoardScan.skipped.length})
+              </h2>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                These issues could not be resolved to a repository URL and will be excluded from the scan.
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-amber-900 dark:text-amber-200">
+                {pendingBoardScan.skipped.map((s) => (
+                  <li key={s.issueNumber}>
+                    <a href={s.issueUrl} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
+                      #{s.issueNumber} {s.title}
+                    </a>: {s.reason}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </section>
+      ) : null}
+      {inputMode === 'foundation' && !pendingBoardScan ? (
         <FoundationResultsView
           result={foundationResult}
           error={foundationError}
+          shareableUrl={
+            foundationResult && foundationInput
+              ? encodeFoundationUrl({ foundation: foundationTarget, input: foundationInput })
+              : undefined
+          }
+          onReanalyze={
+            foundationResult && !loadingFoundation
+              ? foundationResult.kind === 'projects-board'
+                ? () => void handleReanalyzeBoard(foundationResult.url)
+                : () => void handleFoundationSubmit(foundationInput)
+              : undefined
+          }
         />
       ) : null}
       {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (
@@ -952,11 +1165,11 @@ function formatElapsedTime(seconds: number) {
   return `${seconds}s`
 }
 
-async function submitAnalysisRequest(repos: string[], token: string, foundationTarget: FoundationTarget, signal?: AbortSignal): Promise<AnalyzeResponse> {
+async function submitAnalysisRequest(repos: string[], token: string, foundationTarget: FoundationTarget, signal?: AbortSignal, sandboxIssueNumbers?: Record<string, number>): Promise<AnalyzeResponse> {
   const response = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repos, token, foundationTarget }),
+    body: JSON.stringify({ repos, token, foundationTarget, sandboxIssueNumbers }),
     signal,
   })
   const payload = (await response.json()) as AnalyzeResponse & { error?: { message: string; code: string } }
