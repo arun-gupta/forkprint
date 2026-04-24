@@ -125,14 +125,20 @@ remove_worktree() {
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
-    echo "No worktree found for issue $issue" >&2
-    exit 1
+    echo "note: no registered worktree found for issue $issue — will still clean up branches."
   fi
-  branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+
+  if [[ -n "${wt:-}" ]]; then
+    branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  else
+    branch="$(git -C "$REPO_ROOT" for-each-ref --format='%(refname:short)' "refs/heads/${issue}-*" | head -1)"
+  fi
 
   echo "WARNING: This will permanently discard all uncommitted and unpushed work for issue #${issue}." >&2
-  echo "         Worktree:      $wt" >&2
+  [[ -n "${wt:-}" ]]     && echo "         Worktree:      $wt" >&2
+  [[ -z "${wt:-}" ]]     && echo "         Worktree:      (none registered)" >&2
   [[ -n "${branch:-}" ]] && echo "         Branch:        $branch (local + remote will be deleted)" >&2
+  [[ -z "${branch:-}" ]] && echo "         Branch:        (none found)" >&2
   echo "         This action is NOT recoverable." >&2
   printf 'Type YES to confirm: '
   local confirm
@@ -142,14 +148,16 @@ remove_worktree() {
     exit 1
   fi
 
-  if [[ -f "$wt/.dev.pid" ]]; then
-    kill "$(cat "$wt/.dev.pid")" 2>/dev/null || true
+  if [[ -n "${wt:-}" ]]; then
+    if [[ -f "$wt/.dev.pid" ]]; then
+      kill "$(cat "$wt/.dev.pid")" 2>/dev/null || true
+    fi
+    if [[ -f "$wt/.claude.pid" ]]; then
+      kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
+    fi
+    git -C "$REPO_ROOT" worktree remove --force "$wt"
+    echo "Removed $wt"
   fi
-  if [[ -f "$wt/.claude.pid" ]]; then
-    kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
-  fi
-  git -C "$REPO_ROOT" worktree remove --force "$wt"
-  echo "Removed $wt"
 
   if [[ -n "${branch:-}" && "$branch" != "HEAD" ]]; then
     if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$branch"; then
