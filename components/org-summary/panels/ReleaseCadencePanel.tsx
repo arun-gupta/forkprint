@@ -2,7 +2,7 @@
 
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { ReleaseCadenceValue } from '@/lib/org-aggregation/aggregators/types'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props {
   panel: AggregatePanel<ReleaseCadenceValue>
@@ -10,29 +10,9 @@ interface Props {
 
 export function ReleaseCadencePanel({ panel }: Props) {
   return (
-    <section
-      aria-label="Release cadence"
-      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-    >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Release cadence</h3>
-        {panel.lastUpdatedAt ? (
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            updated {panel.lastUpdatedAt.toLocaleTimeString()}
-          </span>
-        ) : null}
-      </header>
-
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          No release data available across this run.
-        </p>
-      ) : (
-        <Body value={panel.value} />
-      )}
-    </section>
+    <PanelShell label="Release cadence" panel={panel} noDataMessage="No release data available across this run.">
+      <Body value={panel.value!} />
+    </PanelShell>
   )
 }
 

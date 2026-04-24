@@ -2,7 +2,7 @@
 
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { ActivityRollupValue } from '@/lib/org-aggregation/aggregators/types'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props {
   panel: AggregatePanel<ActivityRollupValue>
@@ -10,29 +10,9 @@ interface Props {
 
 export function ActivityRollupPanel({ panel }: Props) {
   return (
-    <section
-      aria-label="Activity rollup"
-      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-    >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Activity rollup</h3>
-        {panel.lastUpdatedAt ? (
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            updated {panel.lastUpdatedAt.toLocaleTimeString()}
-          </span>
-        ) : null}
-      </header>
-
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          No activity data available across this run.
-        </p>
-      ) : (
-        <Body value={panel.value} />
-      )}
-    </section>
+    <PanelShell label="Activity rollup" panel={panel} noDataMessage="No activity data available across this run.">
+      <Body value={panel.value!} />
+    </PanelShell>
   )
 }
 
