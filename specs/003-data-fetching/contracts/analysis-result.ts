@@ -31,14 +31,25 @@ export interface RepositoryFetchFailure {
   code: string
 }
 
+export interface AnalysisDiagnostic {
+  level: 'warn' | 'error'
+  repo: string
+  source: string
+  message: string
+  status?: number
+  retryAfter?: number | Unavailable
+}
+
 export interface RateLimitState {
+  limit: number | Unavailable
   remaining: number | Unavailable
   resetAt: string | Unavailable
   retryAfter: number | Unavailable
 }
 
-export interface AnalyzeApiResponse {
+export interface AnalyzeResponse {
   results: AnalysisResult[]
   failures: RepositoryFetchFailure[]
   rateLimit: RateLimitState | null
+  diagnostics?: AnalysisDiagnostic[]
 }
