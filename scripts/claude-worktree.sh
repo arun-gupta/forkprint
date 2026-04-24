@@ -42,7 +42,7 @@ Batch example:
 EOF
 }
 
-if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" || $# -eq 0 ]]; then
   print_usage
   exit 0
 fi
