@@ -115,20 +115,20 @@ function evaluateRoadmap(label: string, weight: number, homeTab: string | undefi
 }
 
 function evaluateContributing(label: string, weight: number, homeTab: string | undefined, doc: DocumentationResult | null): AspirantField {
-  if (!doc) return makeField('contributing', label, weight, homeTab, 'missing', { remediationHint: 'Add a CONTRIBUTING.md file describing how to contribute.' })
+  if (!doc) return makeField('contributing', label, weight, homeTab, 'missing', { remediationHint: 'Add a CONTRIBUTING.md file describing how to contribute. Use the CNCF template as a starting point: github.com/cncf/project-template/blob/main/CONTRIBUTING.md' })
   const found = doc.fileChecks.find((f) => f.name === 'contributing')?.found ?? false
   if (found) return makeField('contributing', label, weight, homeTab, 'ready')
   return makeField('contributing', label, weight, homeTab, 'missing', {
-    remediationHint: 'Add a CONTRIBUTING.md file. Even a brief guide covering how to file issues and submit PRs significantly helps reviewer confidence.',
+    remediationHint: 'Add a CONTRIBUTING.md file. Even a brief guide covering how to file issues and submit PRs significantly helps reviewer confidence. Use the CNCF template as a starting point: github.com/cncf/project-template/blob/main/CONTRIBUTING.md',
   })
 }
 
 function evaluateCoC(label: string, weight: number, homeTab: string | undefined, doc: DocumentationResult | null): AspirantField {
-  if (!doc) return makeField('coc', label, weight, homeTab, 'missing', { remediationHint: 'Add a CODE_OF_CONDUCT.md referencing the Contributor Covenant.' })
+  if (!doc) return makeField('coc', label, weight, homeTab, 'missing', { remediationHint: 'Add a CODE_OF_CONDUCT.md referencing the Contributor Covenant. Use the CNCF template: github.com/cncf/project-template/blob/main/CODE_OF_CONDUCT.md' })
   const found = doc.fileChecks.find((f) => f.name === 'code_of_conduct')?.found ?? false
   if (!found) {
     return makeField('coc', label, weight, homeTab, 'missing', {
-      remediationHint: 'Add a CODE_OF_CONDUCT.md referencing the Contributor Covenant (v1.x or v2.x) — required for CNCF Sandbox.',
+      remediationHint: 'Add a CODE_OF_CONDUCT.md referencing the Contributor Covenant (v1.x or v2.x) — required for CNCF Sandbox. Use the CNCF template: github.com/cncf/project-template/blob/main/CODE_OF_CONDUCT.md',
     })
   }
   const content = doc.cocContent
@@ -142,10 +142,10 @@ function evaluateCoC(label: string, weight: number, homeTab: string | undefined,
 }
 
 function evaluateMaintainers(label: string, weight: number, homeTab: string | undefined, doc: DocumentationResult | null): AspirantField {
-  if (!doc) return makeField('maintainers', label, weight, homeTab, 'missing', { remediationHint: 'Add a MAINTAINERS.md or CODEOWNERS file listing project maintainers.' })
+  if (!doc) return makeField('maintainers', label, weight, homeTab, 'missing', { remediationHint: 'Add a MAINTAINERS.md or CODEOWNERS file listing project maintainers. CNCF provides governance templates including MAINTAINERS.md and GOVERNANCE.md at github.com/cncf/project-template' })
   if (doc.maintainersFile) return makeField('maintainers', label, weight, homeTab, 'ready')
   return makeField('maintainers', label, weight, homeTab, 'missing', {
-    remediationHint: 'Add a MAINTAINERS.md or CODEOWNERS file. This demonstrates governance maturity and is checked by TOC reviewers.',
+    remediationHint: 'Add a MAINTAINERS.md or CODEOWNERS file. This demonstrates governance maturity and is checked by TOC reviewers. CNCF provides governance templates including MAINTAINERS.md and GOVERNANCE.md at github.com/cncf/project-template',
   })
 }
 
