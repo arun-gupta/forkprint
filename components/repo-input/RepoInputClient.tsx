@@ -925,6 +925,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         <FoundationResultsView
           result={foundationResult}
           error={foundationError}
+          onRerun={foundationResult && !loadingFoundation ? () => void handleFoundationSubmit(foundationInput) : undefined}
         />
       ) : null}
       {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (
