@@ -80,7 +80,14 @@ export function FoundationInputSection({
             <span className="font-mono">org-slug</span>
             <span className="mx-2 text-slate-300 dark:text-slate-600">·</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">Board:</span>{' '}
-            <span className="font-mono">github.com/orgs/org/projects/14</span>
+            <a
+              href="https://github.com/orgs/cncf/projects/14"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono underline decoration-dotted hover:decoration-solid"
+            >
+              github.com/orgs/org/projects/14
+            </a>
           </p>
           <div ref={tooltipRef} className="relative">
             <button
