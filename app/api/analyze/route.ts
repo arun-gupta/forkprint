@@ -1,4 +1,5 @@
 import { analyze } from '@/lib/analyzer/analyze'
+import type { AnalysisResult, AnalyzeResponse } from '@/lib/analyzer/analysis-result'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
 import { fetchCNCFLandscape, fetchCNCFSandboxIssues, fetchSandboxIssueBody, findSandboxApplication, getLandscapeProjectStatus } from '@/lib/cncf-sandbox/landscape'
 import { evaluateAspirant } from '@/lib/cncf-sandbox/evaluate'
@@ -14,6 +15,47 @@ function isValidRepoSlug(slug: string): boolean {
   const owner = slug.slice(0, slash)
   const name = slug.slice(slash + 1)
   return owner.length > 0 && name.length > 0 && !name.includes('/')
+}
+
+/** Minimal AnalysisResult stub for repos already in the CNCF landscape — skips expensive GitHub analysis. */
+function makeLandscapeOverrideResult(repo: string, status: 'sandbox' | 'incubating' | 'graduated' | null): AnalysisResult {
+  return {
+    repo,
+    name: 'unavailable',
+    description: 'unavailable',
+    createdAt: 'unavailable',
+    primaryLanguage: 'unavailable',
+    stars: 'unavailable',
+    forks: 'unavailable',
+    watchers: 'unavailable',
+    commits30d: 'unavailable',
+    commits90d: 'unavailable',
+    releases12mo: 'unavailable',
+    prsOpened90d: 'unavailable',
+    prsMerged90d: 'unavailable',
+    issuesOpen: 'unavailable',
+    issuesClosed90d: 'unavailable',
+    uniqueCommitAuthors90d: 'unavailable',
+    totalContributors: 'unavailable',
+    maintainerCount: 'unavailable',
+    commitCountsByAuthor: 'unavailable',
+    commitCountsByExperimentalOrg: 'unavailable',
+    experimentalAttributedAuthors90d: 'unavailable',
+    experimentalUnattributedAuthors90d: 'unavailable',
+    issueFirstResponseTimestamps: 'unavailable',
+    issueCloseTimestamps: 'unavailable',
+    prMergeTimestamps: 'unavailable',
+    documentationResult: 'unavailable',
+    licensingResult: 'unavailable',
+    defaultBranchName: 'unavailable',
+    topics: [],
+    inclusiveNamingResult: 'unavailable',
+    securityResult: 'unavailable',
+    missingFields: [],
+    landscapeOverride: true,
+    ...(status ? { landscapeStatus: status } : {}),
+    aspirantResult: null,
+  }
 }
 
 export async function POST(request: Request) {
@@ -49,13 +91,14 @@ export async function POST(request: Request) {
     console.log(`[analyze] Starting analysis for ${body.repos.length} repo(s): ${body.repos.join(', ')}`)
     const start = Date.now()
 
-    const response = await analyze({
-      repos: body.repos,
-      token,
-    })
-
-    // Fetch CNCF landscape data when CNCF Sandbox target is selected
+    // For CNCF Sandbox: fetch landscape data first so already-CNCF repos are
+    // identified before the expensive GitHub analysis runs (fail-fast).
     let landscapeData = null
+    let issues: Awaited<ReturnType<typeof fetchCNCFSandboxIssues>> = []
+    let approvedCorpus: Awaited<ReturnType<typeof buildApprovedCorpusSummary>> | undefined
+    const landscapeOverrideResults: AnalysisResult[] = []
+    let reposToAnalyze = body.repos
+
     if (foundationTarget === 'cncf-sandbox') {
       const [landscapeResult, sandboxIssues, approvedCorpusResult] = await Promise.allSettled([
         fetchCNCFLandscape(),
@@ -64,8 +107,8 @@ export async function POST(request: Request) {
       ])
 
       landscapeData = landscapeResult.status === 'fulfilled' ? landscapeResult.value : null
-      const issues = sandboxIssues.status === 'fulfilled' ? sandboxIssues.value : []
-      const approvedCorpus = approvedCorpusResult.status === 'fulfilled' ? approvedCorpusResult.value : undefined
+      issues = sandboxIssues.status === 'fulfilled' ? sandboxIssues.value : []
+      approvedCorpus = approvedCorpusResult.status === 'fulfilled' ? approvedCorpusResult.value : undefined
 
       if (landscapeResult.status === 'rejected') {
         console.warn('[analyze] CNCF landscape fetch failed — proceeding without landscape data')
@@ -79,10 +122,42 @@ export async function POST(request: Request) {
 
       const knownIssueNumbers = body.sandboxIssueNumbers ?? {}
 
-      // Attach aspirant evaluation results to each repo result
+      // Pre-filter: build lightweight stubs for repos already in the CNCF
+      // landscape so analyze() is never called for them.
+      reposToAnalyze = []
+      for (const repo of body.repos) {
+        const existingStatus = landscapeData ? getLandscapeProjectStatus(repo, landscapeData) : null
+        if (existingStatus === 'sandbox' || existingStatus === 'incubating' || existingStatus === 'graduated') {
+          landscapeOverrideResults.push(makeLandscapeOverrideResult(repo, existingStatus))
+          continue
+        }
+
+        const knownNumber = knownIssueNumbers[repo]
+        const preliminaryMatch = knownNumber
+          ? (issues.find((i) => i.issueNumber === knownNumber) ?? null)
+          : issues.length > 0
+            ? findSandboxApplication(repo, issues)
+            : null
+
+        if (preliminaryMatch?.approved) {
+          landscapeOverrideResults.push(makeLandscapeOverrideResult(repo, null))
+          continue
+        }
+
+        reposToAnalyze.push(repo)
+      }
+    }
+
+    // Run GitHub analysis only for repos that need it.
+    const response: AnalyzeResponse = reposToAnalyze.length > 0
+      ? await analyze({ repos: reposToAnalyze, token })
+      : { results: [], failures: [], rateLimit: null }
+
+    // Attach aspirant evaluation results to analyzed repos.
+    if (foundationTarget === 'cncf-sandbox' && reposToAnalyze.length > 0) {
+      const knownIssueNumbers = body.sandboxIssueNumbers ?? {}
+
       for (const result of response.results) {
-        // Direct lookup when the caller knows the sandbox issue number (board scan);
-        // fall back to fuzzy title matching for manually-entered repos.
         const knownNumber = knownIssueNumbers[result.repo]
         const preliminaryMatch = knownNumber
           ? (issues.find((i) => i.issueNumber === knownNumber) ?? null)
@@ -90,34 +165,25 @@ export async function POST(request: Request) {
             ? findSandboxApplication(result.repo, issues)
             : null
 
-        // Check if repo is already a CNCF-hosted project (sandbox/incubating/graduated)
-        const existingStatus = landscapeData
-          ? getLandscapeProjectStatus(result.repo, landscapeData)
-          : null
-        if (existingStatus === 'sandbox' || existingStatus === 'incubating' || existingStatus === 'graduated') {
-          result.landscapeOverride = true
-          result.landscapeStatus = existingStatus
-          result.aspirantResult = null
-          continue
+        const aspirantResult = evaluateAspirant(result, landscapeData, issues, knownNumber)
+        if (aspirantResult.sandboxApplication) {
+          const issueBody = await fetchSandboxIssueBody(token, aspirantResult.sandboxApplication.issueNumber)
+          if (issueBody) {
+            aspirantResult.sandboxApplication.parsedFields = parseApplicationIssue(issueBody, approvedCorpus)
+          }
         }
-
+        // Re-check preliminary match in case evaluateAspirant changed state (defensive).
         if (preliminaryMatch?.approved) {
           result.landscapeOverride = true
           result.aspirantResult = null
-          continue
+        } else {
+          result.aspirantResult = aspirantResult
         }
-
-        const aspirantResult = evaluateAspirant(result, landscapeData, issues, knownNumber)
-        // If an application issue was found, fetch its body and parse the fields
-        if (aspirantResult.sandboxApplication) {
-          const body = await fetchSandboxIssueBody(token, aspirantResult.sandboxApplication.issueNumber)
-          if (body) {
-            aspirantResult.sandboxApplication.parsedFields = parseApplicationIssue(body, approvedCorpus)
-          }
-        }
-        result.aspirantResult = aspirantResult
       }
     }
+
+    // Merge landscape-override stubs into results.
+    response.results.push(...landscapeOverrideResults)
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(1)
     console.log(`[analyze] Completed in ${elapsed}s — ${response.results.length} succeeded, ${response.failures.length} failed`)
