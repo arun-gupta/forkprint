@@ -84,6 +84,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const repoFetchAbortRef = useRef<AbortController | null>(null)
   const orgFetchAbortRef = useRef<AbortController | null>(null)
   const foundationFetchAbortRef = useRef<AbortController | null>(null)
+  const previousFoundationResultRef = useRef<FoundationResult | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // Ref so the loading-start effect can read the current emptyQuoteIndex without
@@ -281,6 +282,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setFoundationResult(null)
     setFoundationError(null)
     setFoundationLoadingItems([])
+    previousFoundationResultRef.current = null
   }
 
   async function handleFoundationSubmit(input: string) {
@@ -297,6 +299,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     const controller = new AbortController()
     foundationFetchAbortRef.current = controller
 
+    previousFoundationResultRef.current = foundationResult
     setFoundationError(null)
     setFoundationResult(null)
     setLoadingFoundation(true)
@@ -456,6 +459,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     foundationFetchAbortRef.current = null
     setLoadingFoundation(false)
     setFoundationLoadingItems([])
+    setFoundationResult(previousFoundationResultRef.current)
+    previousFoundationResultRef.current = null
   }
 
   async function handleOrgSubmit(org: string) {
