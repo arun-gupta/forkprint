@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
-# Provision an isolated Claude worktree for an issue and launch Claude in it.
-# Run `scripts/claude-worktree.sh --help` for usage.
+# Provision an isolated agent worktree for an issue and launch a coding agent in it.
+# Run `scripts/agent.sh --help` for usage.
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 print_usage() {
   cat <<'EOF'
-Provision an isolated Claude worktree for an issue and launch Claude in it.
+Provision an isolated agent worktree for an issue and launch a coding agent in it.
 
 Usage:
-  scripts/claude-worktree.sh [--headless] [--no-speckit] <issue-number> [slug]
-  scripts/claude-worktree.sh --approve-spec        <issue-number>
-  scripts/claude-worktree.sh --revise-spec         <issue-number> <feedback>
-  scripts/claude-worktree.sh --discard             [<issue-number>]
-  scripts/claude-worktree.sh --cleanup-merged      [<issue-number>]
-  scripts/claude-worktree.sh --cleanup-all-merged
-  scripts/claude-worktree.sh --status
+  scripts/agent.sh [--agent <name>] [--headless] [--no-speckit] <issue-number> [slug]
+  scripts/agent.sh --approve-spec        <issue-number>
+  scripts/agent.sh --revise-spec         <issue-number> <feedback>
+  scripts/agent.sh --discard             [<issue-number>]
+  scripts/agent.sh --cleanup-merged      [<issue-number>]
+  scripts/agent.sh --cleanup-all-merged
+  scripts/agent.sh --status
 
 Options:
-  --headless             Run claude -p in background (log -> claude.log)
-  --no-speckit           Skip SpecKit lifecycle; Claude opens a PR directly (no spec pause)
+  --agent <name>         Select coding agent adapter (default: claude). Must appear before issue number.
+  --headless             Run agent in background (log -> agent.log)
+  --no-speckit           Skip SpecKit lifecycle; agent opens a PR directly (no spec pause)
   --approve-spec         Release the spec-review pause for a paused headless spawn
   --revise-spec          Send non-empty revision feedback to a paused spawn
   --discard              Discard worktree + delete local/remote branch (unrecoverable; prompts for confirmation)
@@ -30,15 +33,19 @@ Options:
   --status --verbose     Same, with the full worktree PATH column added.
   -h, --help             Show this help and exit
 
+Available adapters:
+  claude      Claude Code CLI (default)
+  copilot     GitHub Copilot (stub)
+
 For --discard and --cleanup-merged, the issue number is inferred from the branch
 when run from inside a linked worktree. See docs/DEVELOPMENT.md for full behavior,
 the numbering rule, and the permission model.
 
 Batch example:
-  for i in 210 211 212; do scripts/claude-worktree.sh --headless "$i"; done
-  for i in 210 211 212; do scripts/claude-worktree.sh --approve-spec "$i"; done
-  scripts/claude-worktree.sh --cleanup-all-merged
-  scripts/claude-worktree.sh --status
+  for i in 210 211 212; do scripts/agent.sh --headless "$i"; done
+  for i in 210 211 212; do scripts/agent.sh --approve-spec "$i"; done
+  scripts/agent.sh --cleanup-all-merged
+  scripts/agent.sh --status
 EOF
 }
 
@@ -58,6 +65,24 @@ fi
 PARENT_DIR="$(dirname "$REPO_ROOT")"
 BASE_PORT=3010
 MAX_PORT=3100
+
+# Read a single key from a .agent key=value file.
+read_agent_key() {
+  local file="$1" key="$2"
+  grep "^${key}=" "$file" 2>/dev/null | head -1 | cut -d= -f2- || true
+}
+
+# Source an adapter by name. Exits if the adapter file is not found.
+source_adapter() {
+  local name="$1"
+  local adapter_path="${SCRIPT_DIR}/agents/${name}.sh"
+  if [[ ! -f "$adapter_path" ]]; then
+    echo "Unknown agent adapter: $name (no file at $adapter_path)" >&2
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "$adapter_path"
+}
 
 # Populates globals describing the caller's worktree context:
 #   CTX_IS_IN_LINKED_WT  0|1 — are we inside a linked (non-primary) worktree?
@@ -152,11 +177,12 @@ remove_worktree() {
   fi
 
   if [[ -n "${wt:-}" ]]; then
-    if [[ -f "$wt/.dev.pid" ]]; then
-      kill "$(cat "$wt/.dev.pid")" 2>/dev/null || true
-    fi
-    if [[ -f "$wt/.claude.pid" ]]; then
-      kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
+    if [[ -f "$wt/.agent" ]]; then
+      local dev_pid agent_pid
+      dev_pid="$(read_agent_key "$wt/.agent" dev-pid)"
+      agent_pid="$(read_agent_key "$wt/.agent" agent-pid)"
+      [[ -n "${dev_pid:-}" ]] && kill "$dev_pid" 2>/dev/null || true
+      [[ -n "${agent_pid:-}" ]] && kill "$agent_pid" 2>/dev/null || true
     fi
     git -C "$REPO_ROOT" worktree remove --force "$wt"
     echo "Removed $wt"
@@ -235,12 +261,12 @@ cleanup_merged() {
   if ! pr_state="$(cd "$REPO_ROOT" && gh pr view "$branch" --json state -q .state 2>/dev/null)"; then
     echo "Could not determine PR state for $branch." >&2
     echo "Is gh installed and authenticated? If this branch has no PR, use:" >&2
-    echo "  scripts/claude-worktree.sh --discard $issue" >&2
+    echo "  scripts/agent.sh --discard $issue" >&2
     exit 1
   fi
   if [[ "$pr_state" != "MERGED" ]]; then
     echo "PR for $branch is $pr_state, not MERGED." >&2
-    echo "Use: scripts/claude-worktree.sh --discard $issue" >&2
+    echo "Use: scripts/agent.sh --discard $issue" >&2
     exit 1
   fi
 
@@ -249,13 +275,13 @@ cleanup_merged() {
 
   if [[ -n "$wt" && -d "$wt" ]]; then
     dev_pid=""
-    if [[ -f "$wt/.dev.pid" ]]; then
-      dev_pid="$(cat "$wt/.dev.pid")"
-      kill "$dev_pid" 2>/dev/null || true
+    local agent_pid=""
+    if [[ -f "$wt/.agent" ]]; then
+      dev_pid="$(read_agent_key "$wt/.agent" dev-pid)"
+      agent_pid="$(read_agent_key "$wt/.agent" agent-pid)"
     fi
-    if [[ -f "$wt/.claude.pid" ]]; then
-      kill "$(cat "$wt/.claude.pid")" 2>/dev/null || true
-    fi
+    [[ -n "${dev_pid:-}" ]] && kill "$dev_pid" 2>/dev/null || true
+    [[ -n "${agent_pid:-}" ]] && kill "$agent_pid" 2>/dev/null || true
     # kill(2) is asynchronous — give next dev a beat to release .next/ handles
     # before git tries to rmdir them, so we don't hit ENOTEMPTY mid-sequence.
     if [[ -n "$dev_pid" ]]; then
@@ -381,21 +407,41 @@ cleanup_all_merged() {
   fi
 }
 
+# Compute SpecKit lifecycle state for a worktree+issue from filesystem artifacts.
+# done: spec + plan + tasks all generated
+# in-progress: spec + plan generated, awaiting tasks/implementation
+# paused: spec generated, awaiting human approval before plan
+# no-spec: no spec for this issue (e.g. --no-speckit worktree)
+compute_spec_state() {
+  local wt="$1" issue="$2"
+  local state="no-spec"
+  if [[ -n "${issue:-}" ]] && compgen -G "$wt/specs/${issue}-*/spec.md" > /dev/null 2>&1; then
+    if compgen -G "$wt/specs/${issue}-*/tasks.md" > /dev/null 2>&1; then
+      state="done"
+    elif compgen -G "$wt/specs/${issue}-*/plan.md" > /dev/null 2>&1; then
+      state="in-progress"
+    else
+      state="paused"
+    fi
+  fi
+  echo "$state"
+}
+
 # Print a single-screen status table of every linked worktree provisioned by this script.
-# Terse (default): ISSUE  BRANCH  PORT  DEV-PID  CLAUDE-PID  SPEC  PR  SESSION
+# Terse (default): ISSUE  BRANCH  PORT  DEV-PID  AGENT-PID  SPEC  PR  SESSION
 # Verbose (--verbose): adds PATH column between BRANCH and PORT
 # Spec states:  no-spec | paused | in-progress | done
 # PR states:    none | OPEN | MERGED | CLOSED
 print_status() {
   local verbose="${1:-0}"
-  local branch issue port dev_pid_str claude_pid_str spec_state pr_state session_str
-  local _p _dpid _cpid _prst _sid skip_first wt_path
+  local branch issue port dev_pid_str agent_pid_str spec_state pr_state session_str
+  local _p _dpid _apid _prst _sid skip_first wt_path
   local -a rows
 
   if (( verbose )); then
-    rows=("ISSUE\tBRANCH\tPATH\tPORT\tDEV-PID\tCLAUDE-PID\tSPEC\tPR\tSESSION")
+    rows=("ISSUE\tBRANCH\tPATH\tPORT\tDEV-PID\tAGENT-PID\tSPEC\tPR\tSESSION")
   else
-    rows=("ISSUE\tBRANCH\tPORT\tDEV-PID\tCLAUDE-PID\tSPEC\tPR\tSESSION")
+    rows=("ISSUE\tBRANCH\tPORT\tDEV-PID\tAGENT-PID\tSPEC\tPR\tSESSION")
   fi
 
   skip_first=1
@@ -419,8 +465,8 @@ print_status() {
     fi
 
     dev_pid_str="-"
-    if [[ -f "$wt_path/.dev.pid" ]]; then
-      _dpid="$(cat "$wt_path/.dev.pid" 2>/dev/null || true)"
+    if [[ -f "$wt_path/.agent" ]]; then
+      _dpid="$(read_agent_key "$wt_path/.agent" dev-pid)"
       if [[ -n "${_dpid:-}" ]]; then
         if kill -0 "$_dpid" 2>/dev/null; then
           dev_pid_str="$_dpid"
@@ -430,35 +476,21 @@ print_status() {
       fi
     fi
 
-    claude_pid_str="-"
-    if [[ -f "$wt_path/.claude.pid" ]]; then
-      _cpid="$(cat "$wt_path/.claude.pid" 2>/dev/null || true)"
-      if [[ -n "${_cpid:-}" ]]; then
-        if kill -0 "$_cpid" 2>/dev/null; then
-          claude_pid_str="$_cpid"
+    agent_pid_str="-"
+    if [[ -f "$wt_path/.agent" ]]; then
+      _apid="$(read_agent_key "$wt_path/.agent" agent-pid)"
+      if [[ -n "${_apid:-}" ]]; then
+        if kill -0 "$_apid" 2>/dev/null; then
+          agent_pid_str="$_apid"
         else
-          claude_pid_str="${_cpid}(dead)"
+          agent_pid_str="${_apid}(dead)"
         fi
       fi
     fi
 
-    # Detect SpecKit lifecycle stage from filesystem artifacts scoped to this
-    # issue's spec directory (specs/<issue>-*/) to avoid matching specs from
-    # prior features that were committed to main and inherited by every worktree.
-    # done: spec + plan + tasks all generated (full lifecycle ran)
-    # in-progress: spec + plan generated (awaiting tasks/implementation)
-    # paused: spec generated, awaiting human approval before plan
-    # no-spec: no spec for this issue (e.g. --no-speckit worktree)
-    spec_state="no-spec"
-    if [[ -n "${issue:-}" ]] && compgen -G "$wt_path/specs/${issue}-*/spec.md" > /dev/null 2>&1; then
-      if compgen -G "$wt_path/specs/${issue}-*/tasks.md" > /dev/null 2>&1; then
-        spec_state="done"
-      elif compgen -G "$wt_path/specs/${issue}-*/plan.md" > /dev/null 2>&1; then
-        spec_state="in-progress"
-      else
-        spec_state="paused"
-      fi
-    fi
+    # Spec state derived from filesystem artifacts scoped to this issue's
+    # spec directory to avoid matching specs from prior features on main.
+    spec_state="$(compute_spec_state "$wt_path" "$issue")"
 
     pr_state="none"
     if [[ -n "${branch:-}" && "$branch" != "HEAD" ]]; then
@@ -468,15 +500,15 @@ print_status() {
     fi
 
     session_str="-"
-    if [[ -f "$wt_path/.claude.session-id" ]]; then
-      _sid="$(cat "$wt_path/.claude.session-id" 2>/dev/null || true)"
+    if [[ -f "$wt_path/.agent" ]]; then
+      _sid="$(read_agent_key "$wt_path/.agent" session-id)"
       [[ -n "${_sid:-}" ]] && session_str="${_sid:0:8}"
     fi
 
     if (( verbose )); then
-      rows+=("${issue:-?}\t${branch:-?}\t${wt_path}\t${port}\t${dev_pid_str}\t${claude_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
+      rows+=("${issue:-?}\t${branch:-?}\t${wt_path}\t${port}\t${dev_pid_str}\t${agent_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
     else
-      rows+=("${issue:-?}\t${branch:-?}\t${port}\t${dev_pid_str}\t${claude_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
+      rows+=("${issue:-?}\t${branch:-?}\t${port}\t${dev_pid_str}\t${agent_pid_str}\t${spec_state}\t${pr_state}\t${session_str}")
     fi
   done < <(git -C "$REPO_ROOT" worktree list --porcelain | awk '/^worktree/ {print $2}')
 
@@ -486,32 +518,33 @@ print_status() {
 release_paused_session() {
   local issue="$1"
   local prompt="$2"
-  local wt session_id
+  local wt agent
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
     echo "No worktree found for issue $issue" >&2
     exit 1
   fi
-  if [[ ! -f "$wt/.claude.session-id" ]]; then
-    echo "No session ID recorded for issue $issue; cannot resume non-interactively." >&2
+  if [[ ! -f "$wt/.agent" ]]; then
+    echo "No .agent file found for issue $issue; cannot resume non-interactively." >&2
     echo "Use 'cd $wt && claude --resume' instead." >&2
     exit 1
   fi
-  session_id="$(cat "$wt/.claude.session-id")"
-  if [[ -z "$session_id" ]]; then
-    echo "Session ID file for issue $issue is empty; cannot resume." >&2
+  agent="$(read_agent_key "$wt/.agent" agent)"
+  if [[ -z "${agent:-}" ]]; then
+    echo ".agent file for issue $issue missing 'agent' key; cannot resume." >&2
     exit 1
   fi
+  source_adapter "$agent"
   # Paused state is reached once /speckit.specify has written a spec file.
   if ! compgen -G "$wt/specs/*/spec.md" > /dev/null; then
     echo "Spec not yet generated for issue $issue; paused state not reached." >&2
-    echo "Tail $wt/claude.log to confirm and retry once the pause is reported." >&2
+    echo "Tail $wt/agent.log to confirm and retry once the pause is reported." >&2
     exit 1
   fi
-  ( cd "$wt" && nohup claude -p "$prompt" --resume "$session_id" >> claude.log 2>&1 & )
+  agent_resume "$wt" "$prompt"
   echo "Released pause for issue $issue; Stage 2 running in background."
-  echo "Tail: $wt/claude.log"
+  echo "Tail: $wt/agent.log"
 }
 
 # Populates RESOLVED_CLEANUP_ISSUE from an explicit CLI arg or, failing that,
@@ -586,23 +619,31 @@ if [[ "${1:-}" == "--revise-spec" ]]; then
   exit 0
 fi
 
+# --- Spawn flow ---
+
 HEADLESS=0
 NO_SPECKIT=0
+AGENT="claude"
 while [[ "${1:-}" == --* ]]; do
   case "$1" in
-    --headless) HEADLESS=1; shift ;;
+    --headless)   HEADLESS=1; shift ;;
     --no-speckit) NO_SPECKIT=1; shift ;;
+    --agent)
+      [[ -n "${2:-}" ]] || { echo "--agent requires a name" >&2; exit 1; }
+      AGENT="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
 
-ISSUE="${1:?Usage: $0 [--headless] [--no-speckit] <issue-number> [slug]}"
+ISSUE="${1:?Usage: $0 [--agent <name>] [--headless] [--no-speckit] <issue-number> [slug]}"
 SLUG="${2:-}"
+
+source_adapter "$AGENT"
 
 if (( NO_SPECKIT )); then
   echo "WARNING: --no-speckit skips the SpecKit lifecycle and the spec-review pause." >&2
   echo "         This run is fully automated with NO human-in-the-loop checkpoint." >&2
-  echo "         Claude will make changes and open a PR without spec approval." >&2
+  echo "         The agent will make changes and open a PR without spec approval." >&2
 fi
 
 if [[ -z "$SLUG" ]]; then
@@ -660,20 +701,24 @@ fi
 echo "PORT=$port" >> "$WT_PATH/.env.local"
 ( cd "$WT_PATH" && npm install --silent )
 
-# 4. Start dev server
-( cd "$WT_PATH" && nohup npm run dev -- -p "$port" > dev.log 2>&1 & echo $! > .dev.pid )
+# 4. Start dev server; capture PID for the .agent state file
+DEV_PID="$( cd "$WT_PATH" && nohup npm run dev -- -p "$port" > dev.log 2>&1 & echo $! )"
 echo "Dev server: http://localhost:$port (log: $WT_PATH/dev.log)"
 
-# 5. Launch Claude with a kickoff prompt
-# Pre-generate a session UUID so --approve-spec / --revise-spec can resume
-# this exact session non-interactively without probing the CLI's session store.
+# 5. Generate session UUID and write the .agent state file
+# Core writes: agent, session-id, dev-pid. The adapter appends agent-pid.
 if ! command -v uuidgen >/dev/null 2>&1; then
   echo "uuidgen not found; required for session addressability" >&2
   exit 1
 fi
 SESSION_ID="$(uuidgen | tr '[:upper:]' '[:lower:]')"
-echo "$SESSION_ID" > "$WT_PATH/.claude.session-id"
+{
+  echo "agent=$AGENT"
+  echo "session-id=$SESSION_ID"
+  echo "dev-pid=$DEV_PID"
+} > "$WT_PATH/.agent"
 
+# 6. Build kickoff prompt and launch agent
 if (( NO_SPECKIT )); then
   KICKOFF="Work on GitHub issue #${ISSUE}. Read CLAUDE.md for project conventions. Skip the SpecKit lifecycle — do NOT run /speckit.specify, /speckit.plan, /speckit.tasks, or /speckit.implement. Make the changes directly, then push the branch and open a PR; do not merge.
 
@@ -688,13 +733,4 @@ STAGE 2: After approval, run /speckit.plan, then /speckit.tasks, then /speckit.i
 Dev server is already running on port ${port}."
 fi
 
-cd "$WT_PATH"
-if (( HEADLESS )); then
-  nohup claude -p "$KICKOFF" --session-id "$SESSION_ID" > claude.log 2>&1 &
-  echo $! > .claude.pid
-  echo "Claude (headless) PID $(cat .claude.pid) — log: $WT_PATH/claude.log"
-  echo "Session ID: $SESSION_ID (recorded in $WT_PATH/.claude.session-id)"
-  echo "Release the pause with: scripts/claude-worktree.sh --approve-spec $ISSUE"
-else
-  exec claude --session-id "$SESSION_ID" "$KICKOFF"
-fi
+agent_launch "$WT_PATH" "$ISSUE" "$port" "$SESSION_ID" "$KICKOFF" "$HEADLESS"

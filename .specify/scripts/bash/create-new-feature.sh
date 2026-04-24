@@ -252,7 +252,7 @@ fi
 # Detect whether the currently checked-out branch already has a recognised
 # feature prefix — if so, reuse it verbatim instead of creating a new branch.
 # This is what aligns spec dir + branch + GitHub issue number when
-# claude-worktree.sh has already created the <N>-<slug> branch for us.
+# agent.sh has already created the <N>-<slug> branch for us.
 # Recognised prefixes (order matters — timestamp is checked first so its
 # leading digit-run isn't greedily consumed by the sequential regex):
 #   <YYYYMMDD>-<HHMMSS>-<slug>  — timestamp mode
@@ -320,7 +320,7 @@ fi
 
 if [ "$HAS_GIT" = true ]; then
     if [ "$REUSE_CURRENT_BRANCH" = true ]; then
-        # The branch was already created and checked out (e.g. by claude-worktree.sh).
+        # The branch was already created and checked out (e.g. by agent.sh).
         # Nothing to do — reusing verbatim is the whole point of this path.
         :
     elif ! git checkout -b "$BRANCH_NAME" 2>/dev/null; then

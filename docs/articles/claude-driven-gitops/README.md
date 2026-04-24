@@ -1,6 +1,6 @@
 # Claude-Driven GitOps Workflow: From Issue to PR with Spec-Driven Development and Human-in-the-Loop
 
-GitHub issues pile up faster than humans can work them. What if every issue could spin up its own isolated Claude session, one that reads the spec, writes the code, opens the PR, and cleans up after itself with a one-liner when the PR merges? That's exactly what a single shell script, `claude-worktree.sh`, allowed me to do on [RepoPulse](https://github.com/arun-gupta/repo-pulse).
+GitHub issues pile up faster than humans can work them. What if every issue could spin up its own isolated Claude session, one that reads the spec, writes the code, opens the PR, and cleans up after itself with a one-liner when the PR merges? That's exactly what a single shell script, `agent.sh`, allowed me to do on [RepoPulse](https://github.com/arun-gupta/repo-pulse).
 
 This post walks through how the script composes five ideas (**git worktrees**, **Claude Code sessions**, **Spec-Driven Development**, **human-in-the-loop review**, and **lifecycle cleanup**) into a repeatable, Claude-driven GitOps loop. Toward the end it also covers **Claude Code sub-agents**: small, scoped helpers for checklist-style gates so the main session keeps a smaller context window.
 
@@ -23,7 +23,7 @@ The issue is the spec of the spec. Claude handles the rest, autonomously when yo
 ## The One-Liner That Starts It All
 
 ```bash
-scripts/claude-worktree.sh 212
+scripts/agent.sh 212
 ```
 
 That command does a surprising amount of work:
@@ -31,7 +31,7 @@ That command does a surprising amount of work:
 1. Uses `gh` to read issue **#212** and builds a short slug from the title (or pass your own slug as the second argument).
 2. Creates a sibling worktree `../<repo-prefix>-212-<slug>` and a matching branch. The prefix is hardcoded in the script (e.g. `repo-pulse-`); edit it once if you fork the script into another repo.
 3. Picks a free port, copies `.env.local` from the main checkout, runs `npm install`, and starts `npm run dev` in the background (`dev.log`).
-4. Writes a session UUID to `.claude.session-id` and launches Claude with a kickoff prompt for that issue (add `--headless` to run in the background).
+4. Writes a `.agent` state file (agent name, session UUID, dev-server PID) and launches Claude with a kickoff prompt for that issue (add `--headless` to run in the background).
 
 Each issue gets its own sandbox: its own working tree, its own port, its own dev server, its own Claude session. You can run three of these in parallel and they won't collide on ports, branches, or working trees.
 
@@ -56,31 +56,31 @@ The spec is the highest-leverage artifact in the loop. Every downstream step com
 Spec approval is mandatory, but it's asynchronous. Headless mode is where this shines:
 
 ```bash
-scripts/claude-worktree.sh --headless 212
+scripts/agent.sh --headless 212
 ```
 
-Claude runs `/speckit.specify` in the background, writes the spec, logs to `claude.log`, and pauses. You review the spec on your own time: lunch, the next morning, whenever.
+Claude runs `/speckit.specify` in the background, writes the spec, logs to `agent.log`, and pauses. You review the spec on your own time: lunch, the next morning, whenever.
 
 Approve it and Stage 2 runs unattended:
 
 ```bash
-scripts/claude-worktree.sh --approve-spec 212
+scripts/agent.sh --approve-spec 212
 ```
 
 Or push back with specific feedback:
 
 ```bash
-scripts/claude-worktree.sh --revise-spec 212 \
+scripts/agent.sh --revise-spec 212 \
   "Add a constraint: results must stream; no full-page reloads."
 ```
 
-Both commands resume the *exact* Claude session. The pre-generated session UUID stored in `.claude.session-id` makes that possible. No context is lost between approval and implementation. The revision path re-enters the pause, so you can iterate on the spec until you're happy, then release.
+Both commands resume the *exact* Claude session. The pre-generated session UUID stored in `.agent` makes that possible. No context is lost between approval and implementation. The revision path re-enters the pause, so you can iterate on the spec until you're happy, then release.
 
 This is the sweet spot: humans review intent, Claude executes the mechanical stages. Batch three issues in the morning:
 
 ```bash
 for i in 210 211 212; do
-  scripts/claude-worktree.sh --headless "$i"
+  scripts/agent.sh --headless "$i"
 done
 ```
 
@@ -88,7 +88,7 @@ Review three specs at lunch:
 
 ```bash
 for i in 210 211 212; do
-  scripts/claude-worktree.sh --approve-spec "$i"
+  scripts/agent.sh --approve-spec "$i"
 done
 ```
 
@@ -99,7 +99,7 @@ Come back to three open PRs.
 Sometimes you have a small, crisp issue: a typo, a config tweak, a one-line bugfix. The SpecKit lifecycle is overkill. That's what `--no-speckit` is for:
 
 ```bash
-scripts/claude-worktree.sh --no-speckit 275
+scripts/agent.sh --no-speckit 275
 ```
 
 This skips the spec/plan/tasks stages entirely. Claude reads the issue, makes the changes, pushes the branch, and opens a PR. No review gate, no human-in-the-loop checkpoint.
@@ -109,7 +109,7 @@ The script is loud about this trade-off:
 ```
 WARNING: --no-speckit skips the SpecKit lifecycle and the spec-review pause.
          This run is fully automated with NO human-in-the-loop checkpoint.
-         Claude will make changes and open a PR without spec approval.
+         The agent will make changes and open a PR without spec approval.
 ```
 
 The PR review itself becomes your review gate. For small issues that's the right call. An approved spec for a one-line fix is ceremony, not quality.
@@ -118,22 +118,16 @@ The PR review itself becomes your review gate. For small issues that's the right
 
 Worktrees accumulate. Branches linger. The script provides two cleanup paths, and the distinction matters:
 
-**`--remove`** discards a worktree regardless of PR state. Use it when you abandoned the work, or Claude went down a wrong path and you want to start over:
+**`--discard`** discards a worktree regardless of PR state. Use it when you abandoned the work, or Claude went down a wrong path and you want to start over. It removes the worktree and deletes the local and remote branch (prompts for `YES` confirmation):
 
 ```bash
-scripts/claude-worktree.sh --remove 212
-```
-
-One gotcha: `--remove` only tears down the worktree; the local branch stays. If you plan to re-run `claude-worktree.sh <issue>`, delete the branch too, otherwise `git worktree add` will fail with `a branch named '…' already exists`:
-
-```bash
-git branch -D 212-<slug>
+scripts/agent.sh --discard 212
 ```
 
 **`--cleanup-merged`** is the happy-path cleanup. It's careful:
 
 ```bash
-scripts/claude-worktree.sh --cleanup-merged 212
+scripts/agent.sh --cleanup-merged 212
 ```
 
 It queries the GitHub PR state via `gh pr view`, not local ancestry, because squash and rebase merges produce a merge commit that isn't an ancestor of the local feature branch. Only when the PR is `MERGED` does it:
@@ -185,4 +179,4 @@ Some possible extensions:
 
 The current script is already doing something interesting. It treats Claude not as a chatbot but as a controller in a GitOps loop, one that respects spec-driven discipline, honors human approval gates, and cleans up after itself.
 
-The script is ~460 lines of bash. You can read the whole thing in a few minutes. Go look: [`scripts/claude-worktree.sh`](https://github.com/arun-gupta/repo-pulse/blob/main/scripts/claude-worktree.sh).
+The script is ~300 lines of bash (core) plus adapter plugins. You can read the whole thing in a few minutes. Go look: [`scripts/agent.sh`](https://github.com/arun-gupta/repo-pulse/blob/main/scripts/agent.sh).
