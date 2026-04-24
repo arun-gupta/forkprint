@@ -86,13 +86,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const foundationFetchAbortRef = useRef<AbortController | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Ref so the loading-start effect can read the current emptyQuoteIndex without
+  // re-running (and resetting the elapsed timer) each time the idle quote rotates.
+  const emptyQuoteIndexRef = useRef(emptyQuoteIndex)
+  emptyQuoteIndexRef.current = emptyQuoteIndex
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
   useEffect(() => {
     if (isLoading) {
       setElapsedSeconds(0)
-      setQuoteIndex(emptyQuoteIndex)
+      setQuoteIndex(emptyQuoteIndexRef.current)
       timerRef.current = setInterval(() => {
         setElapsedSeconds((s) => s + 1)
       }, 1000)
@@ -120,7 +124,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setQuoteIndex(null)
 
     return undefined
-  }, [isLoading, emptyQuoteIndex])
+  // emptyQuoteIndex intentionally excluded — read via ref to avoid resetting elapsed timer
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading])
 
   const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
 
@@ -298,7 +304,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     if (parsed.kind === 'projects-board') {
       setFoundationLoadingItems(['Resolving repositories from CNCF sandbox board…'])
       try {
-        const { repos, skipped } = await fetchBoardRepos(session.token)
+        const { repos, skipped } = await fetchBoardRepos(session.token, parsed.url)
 
         if (controller.signal.aborted) return
 
