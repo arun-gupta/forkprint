@@ -3,7 +3,7 @@
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { ResponsivenessRollupValue } from '@/lib/org-aggregation/aggregators/types'
 import { HelpLabel } from '@/components/shared/HelpLabel'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props {
   panel: AggregatePanel<ResponsivenessRollupValue>
@@ -18,26 +18,13 @@ function formatHours(hours: number): string {
 
 export function ResponsivenessRollupPanel({ panel }: Props) {
   return (
-    <section
-      aria-label="Responsiveness rollup"
-      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+    <PanelShell
+      label="Responsiveness"
+      ariaLabel="Responsiveness rollup"
+      panel={panel}
+      noDataMessage="No responsiveness data available across this run."
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Responsiveness</h3>
-        {panel.lastUpdatedAt ? (
-          <span className="text-xs text-slate-400 dark:text-slate-500">
-            updated {panel.lastUpdatedAt.toLocaleTimeString()}
-          </span>
-        ) : null}
-      </header>
-
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          No responsiveness data available across this run.
-        </p>
-      ) : (
+      {panel.value ? (
         <dl className="grid grid-cols-2 gap-3">
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -66,7 +53,7 @@ export function ResponsivenessRollupPanel({ panel }: Props) {
             </dd>
           </div>
         </dl>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   )
 }

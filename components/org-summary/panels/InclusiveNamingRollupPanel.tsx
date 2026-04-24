@@ -3,7 +3,7 @@
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { InclusiveNamingRollupValue } from '@/lib/org-aggregation/aggregators/types'
 import { HelpLabel } from '@/components/shared/HelpLabel'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props { panel: AggregatePanel<InclusiveNamingRollupValue> }
 
@@ -15,14 +15,8 @@ const TIER_TOOLTIPS = {
 
 export function InclusiveNamingRollupPanel({ panel }: Props) {
   return (
-    <section aria-label="Inclusive naming" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Inclusive naming</h3>
-        {panel.lastUpdatedAt ? <span className="text-xs text-slate-400 dark:text-slate-500">updated {panel.lastUpdatedAt.toLocaleTimeString()}</span> : null}
-      </header>
-      {panel.status === 'in-progress' && !panel.value ? <EmptyState /> : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No inclusive naming data available.</p>
-      ) : (
+    <PanelShell label="Inclusive naming" panel={panel} noDataMessage="No inclusive naming data available.">
+      {panel.value ? (
         <>
           <dl className="mb-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat
@@ -55,8 +49,8 @@ export function InclusiveNamingRollupPanel({ panel }: Props) {
             Tier counts are violation occurrences (one repo can contribute multiple). Hover each label for the tier definition.
           </p>
         </>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   )
 }
 

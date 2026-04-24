@@ -3,7 +3,7 @@
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { SecurityRollupValue } from '@/lib/org-aggregation/aggregators/types'
 import { HelpLabel } from '@/components/shared/HelpLabel'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props {
   panel: AggregatePanel<SecurityRollupValue>
@@ -22,22 +22,14 @@ function pct(present: number, total: number): string {
 
 export function SecurityRollupPanel({ panel }: Props) {
   return (
-    <section aria-label="Security rollup" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Security (OpenSSF Scorecard)</h3>
-        {panel.lastUpdatedAt ? (
-          <span className="text-xs text-slate-400 dark:text-slate-500">updated {panel.lastUpdatedAt.toLocaleTimeString()}</span>
-        ) : null}
-      </header>
-
-      {panel.status === 'in-progress' && !panel.value ? (
-        <EmptyState />
-      ) : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No security data available across this run.</p>
-      ) : (
-        <Body value={panel.value} />
-      )}
-    </section>
+    <PanelShell
+      label="Security (OpenSSF Scorecard)"
+      ariaLabel="Security rollup"
+      panel={panel}
+      noDataMessage="No security data available across this run."
+    >
+      {panel.value ? <Body value={panel.value} /> : null}
+    </PanelShell>
   )
 }
 

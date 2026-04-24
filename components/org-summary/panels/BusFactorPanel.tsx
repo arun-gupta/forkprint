@@ -2,20 +2,14 @@
 
 import type { AggregatePanel } from '@/lib/org-aggregation/types'
 import type { BusFactorValue } from '@/lib/org-aggregation/aggregators/types'
-import { EmptyState } from '../EmptyState'
+import { PanelShell } from '../PanelShell'
 
 interface Props { panel: AggregatePanel<BusFactorValue> }
 
 export function BusFactorPanel({ panel }: Props) {
   return (
-    <section aria-label="Bus factor" className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Bus factor</h3>
-        {panel.lastUpdatedAt ? <span className="text-xs text-slate-400 dark:text-slate-500">updated {panel.lastUpdatedAt.toLocaleTimeString()}</span> : null}
-      </header>
-      {panel.status === 'in-progress' && !panel.value ? <EmptyState /> : panel.status === 'unavailable' || !panel.value ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">No commit author data available.</p>
-      ) : panel.value.highConcentrationRepos.length === 0 ? (
+    <PanelShell label="Bus factor" panel={panel} noDataMessage="No commit author data available.">
+      {panel.value ? panel.value.highConcentrationRepos.length === 0 ? (
         <p className="text-sm text-emerald-700 dark:text-emerald-400 dark:text-emerald-300">No repos have a single author contributing &gt;{(panel.value.threshold * 100).toFixed(0)}% of commits.</p>
       ) : (
         <>
@@ -29,7 +23,7 @@ export function BusFactorPanel({ panel }: Props) {
             ))}
           </ul>
         </>
-      )}
-    </section>
+      ) : null}
+    </PanelShell>
   )
 }
