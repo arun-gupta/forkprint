@@ -88,7 +88,7 @@ Given that feature description, do this:
    - The JSON is provided in the terminal as output - always refer to it to get the actual content you're looking for
    - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
-   - If the current branch already matches `<N>-<slug>` or `<YYYYMMDD>-<HHMMSS>-<slug>` (e.g. `agent.sh` has pre-created the branch for an issue-driven spawn), `create-new-feature.sh` detects and reuses it — no branch-switch happens and the spec directory is created to match. You do not need to pass any extra flag; the default invocation works in both the worktree-driven and manual paths.
+   - If the current branch already matches `<N>-<slug>` or `<YYYYMMDD>-<HHMMSS>-<slug>` (e.g. `agentctl spawn` has pre-created the branch for an issue-driven spawn), `create-new-feature.sh` detects and reuses it — no branch-switch happens and the spec directory is created to match. You do not need to pass any extra flag; the default invocation works in both the worktree-driven and manual paths.
 
 3. Load `.specify/templates/spec-template.md` to understand required sections.
 

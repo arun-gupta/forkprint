@@ -164,49 +164,42 @@ Safety layers:
 
 See issue #207 for the full rationale and constitution discussion.
 
-### Spawning worktrees with `scripts/agent.sh`
+### Spawning worktrees with `agentctl`
 
-`scripts/agent.sh` automates the parallel-worktree workflow: it provisions an isolated git worktree per issue, picks a free dev-server port, copies `.env.local` (so `DEV_GITHUB_PAT` flows through), starts `next dev`, and launches a coding agent with a kickoff prompt pointing at the issue.
+Install `agentctl` before use: see the [install guide](https://github.com/arun-gupta/agentctl/blob/main/docs/install.md).
 
-Run `scripts/agent.sh --help` for the canonical usage reference.
+`agentctl` automates the parallel-worktree workflow: it provisions an isolated git worktree per issue, picks a free dev-server port, copies `.env.local` (so `DEV_GITHUB_PAT` flows through), starts `next dev`, and launches a coding agent with a kickoff prompt pointing at the issue.
+
+Run `agentctl --help` for the canonical usage reference.
 
 **Spawn:**
 
 ```bash
 # interactive — slug auto-derived from the GitHub issue title
-scripts/agent.sh 207
+agentctl spawn 207
 
 # headless — agent runs in background, log -> agent.log
-scripts/agent.sh --headless 207
+agentctl spawn --headless 207
 
 # batch
-for i in 210 211 212; do scripts/agent.sh --headless "$i"; done
+for i in 210 211 212; do agentctl spawn --headless "$i"; done
 ```
 
-The script creates `../repo-pulse-<issue>-<slug>/` on a new branch named `<issue>-<slug>`, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`), writes a `.agent` key=value state file, and launches the agent with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
+`agentctl spawn` creates `../repo-pulse-<issue>-<slug>/` on a new branch named `<issue>-<slug>`, picks the next free port in `3010–3100`, runs `npm install`, starts `next dev` in the background (log: `dev.log`), writes a `.agent` key=value state file, and launches the agent with a prompt that runs the SpecKit lifecycle and opens a PR (never merges — see CLAUDE.md).
 
 **Agent selection:**
 
-The `--agent <name>` flag selects which coding agent adapter to use. Flags and the issue number can appear in any order.
+The `--agent <name>` flag selects which coding agent adapter to use.
 
 ```bash
-scripts/agent.sh 207                        # uses claude adapter (default)
-scripts/agent.sh 207 --agent copilot        # uses copilot adapter
-scripts/agent.sh 207 --headless --agent copilot
-scripts/agent.sh --agent copilot --headless 207
+agentctl spawn 207                          # uses claude adapter (default)
+agentctl spawn --agent copilot 207          # uses copilot adapter
+agentctl spawn --headless --agent copilot 207
 ```
-
-Available adapters live in `scripts/agents/`. Each adapter implements three functions sourced by the core:
-
-| Function | Signature | Purpose |
-|---|---|---|
-| `agent_launch` | `<wt> <issue> <port> <session_id> <kickoff> <headless>` | Start the agent; append `agent-pid=<pid>` to `<wt>/.agent` |
-| `agent_resume` | `<wt> <prompt>` | Resume a paused session; read whatever state it needs from `<wt>/.agent` |
-| `agent_pause_state` | `<wt> <issue>` | Derive SpecKit lifecycle state from `<wt>/specs/<issue>-*/` (read-only) |
 
 **`.agent` state file:**
 
-The core writes a single key=value `.agent` file in the worktree root (replaces the old `.dev.pid`, `.claude.pid`, and `.claude.session-id` files):
+`agentctl` writes a single key=value `.agent` file in the worktree root:
 
 ```
 agent=claude
@@ -227,7 +220,7 @@ The branch, worktree, and spec directory for a feature always share the same num
 | Manual sequential | *(none)* | `230-some-refactor` | `specs/230-some-refactor/` |
 | Timestamp (opt-in) | *(none)* | `20260416-143022-refactor` | `specs/20260416-143022-refactor/` |
 
-When `scripts/agent.sh <N>` pre-creates the branch `<N>-<slug>`, `/speckit.specify` inside the worktree detects the `^[0-9]+-` prefix on the current HEAD and reuses it verbatim — it does not scan `specs/` for the next free sequential number. Outside the worktree flow (a manual `/speckit.specify` on `main`), the sequential-scan fallback applies unchanged.
+When `agentctl spawn <N>` pre-creates the branch `<N>-<slug>`, `/speckit.specify` inside the worktree detects the `^[0-9]+-` prefix on the current HEAD and reuses it verbatim — it does not scan `specs/` for the next free sequential number. Outside the worktree flow (a manual `/speckit.specify` on `main`), the sequential-scan fallback applies unchanged.
 
 The rare collision — manual sequential claims slot N just before issue #N is filed and worktree-spawned — surfaces as a loud error naming the conflicting branch or spec directory. Resolution: rename/remove the colliding entity, or pick a different issue number. `/speckit.specify` never silently renumbers.
 
@@ -252,10 +245,10 @@ Explicitly not allowed: `Bash(rm:*)`, `Bash(curl:*)`, `Bash(wget:*)`, `Bash(sudo
 
 ```bash
 # Approve the generated spec and run Stage 2 (plan → tasks → implement → PR) in the background:
-scripts/agent.sh --approve-spec <issue>
+agentctl approve-spec <issue>
 
 # Or send revision feedback to the paused session; it edits the spec in place and re-enters the pause:
-scripts/agent.sh --revise-spec <issue> "Add an acceptance scenario for empty input."
+agentctl revise-spec <issue> "Add an acceptance scenario for empty input."
 ```
 
 Both commands resolve the worktree for `<issue>`, read the `agent` key from `<worktree>/.agent` to load the correct adapter, then call `agent_resume` as a detached `nohup` process appending to `agent.log`. They return control to your shell in under 5 seconds — you do not need to keep the invoking terminal open.
@@ -266,36 +259,36 @@ Preconditions (both commands exit non-zero with a clear error if unmet):
 - `<worktree>/.agent` exists and contains both `agent` and `session-id` keys.
 - At least one `<worktree>/specs/*/spec.md` exists (the paused state has been reached).
 
-Additional rule for `--revise-spec`: empty feedback is rejected. Repeated `--revise-spec` rounds accumulate — each round edits the spec as it stands after the previous round.
+Additional rule for `revise-spec`: empty feedback is rejected. Repeated `revise-spec` rounds accumulate — each round edits the spec as it stands after the previous round.
 
-Manual fallback (still supported): `cd ../repo-pulse-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `--approve-spec` / `--revise-spec` do not.
+Manual fallback (still supported): `cd ../repo-pulse-<issue>-<slug> && claude --resume` opens an interactive session if you want to review and revise the spec conversationally. This attaches your terminal; `approve-spec` / `revise-spec` do not.
 
-The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do scripts/agent.sh --headless "$i"; done`) you review and release each worktree independently, but the release itself is fire-and-forget, so `for i in 210 211 212; do scripts/agent.sh --approve-spec "$i"; done` walks away with three PRs on the way.
+The pause is per-worktree: in a batch spawn (`for i in 210 211 212; do agentctl spawn --headless "$i"; done`) you review and release each worktree independently, but the release itself is fire-and-forget, so `for i in 210 211 212; do agentctl approve-spec "$i"; done` walks away with three PRs on the way.
 
 **Cleanup:**
 
 ```bash
 # Post-merge, from the main repo: pull main, kill processes, remove the
 # worktree, delete the local+remote branch (refuses if unmerged).
-scripts/agent.sh --cleanup-merged 207
+agentctl cleanup-merged 207
 
 # Discard unmerged work (unrecoverable: kills processes, removes worktree,
 # deletes local + remote branch — prompts for YES confirmation).
-scripts/agent.sh --discard 207
+agentctl discard 207
 ```
 
 ```bash
 # From inside the worktree (e.g. the same shell the agent session ran in),
 # the issue number is inferred from the current branch's `^[0-9]+-` prefix:
 cd ../repo-pulse-207-<slug>
-scripts/agent.sh --cleanup-merged    # no arg needed
+agentctl cleanup-merged    # no arg needed
 ```
 
-When invoked with no argument from a linked worktree, the script chdirs to the main repo, auto-checks out `main` if the primary worktree is on another branch (refuses on dirty state — never force-discards), then runs the standard cleanup flow. On success, if the caller's current working directory was the removed worktree, the script prints a final-line notice of the form `note: your shell's previous CWD (...) no longer exists — run \`cd <main-repo-path>\` to continue` so the stranded shell knows where to go. Inference only fires from inside a linked worktree — the no-argument form from the main repo clone still prints the existing usage error and takes no destructive action.
+When invoked with no argument from a linked worktree, the command chdirs to the main repo, auto-checks out `main` if the primary worktree is on another branch (refuses on dirty state — never force-discards), then runs the standard cleanup flow. On success, if the caller's current working directory was the removed worktree, the command prints a final-line notice of the form `note: your shell's previous CWD (...) no longer exists — run \`cd <main-repo-path>\` to continue` so the stranded shell knows where to go. Inference only fires from inside a linked worktree — the no-argument form from the main repo clone still prints the existing usage error and takes no destructive action.
 
-`--cleanup-merged` verifies merge status by querying the associated PR's state via `gh pr view <branch> --json state` — **not** by local ancestry. This matters because squash-merges and rebase-merges on GitHub produce a merge commit that is not an ancestor of the local feature branch, so the older ancestry check (`git branch -d`) would silently refuse even after a real merge. When the PR state is `MERGED`, the local branch is force-deleted, then `git push origin --delete <branch>` removes the remote ref. If the remote was already removed (e.g. GitHub's "Automatically delete head branches" setting fired at merge time), the step prints `Remote branch <branch> already removed` and exits 0. Any other remote-delete failure (network, auth, protected branch) surfaces a warning and exits non-zero — the worktree and local branch are already gone, so only a manual `git push origin --delete <branch>` remains. When the PR is `OPEN`, `CLOSED` without merge, missing, or `gh` cannot reach GitHub, the command refuses and points to `--discard`. Use `--discard` as the escape hatch for unmerged branches; it also deletes the local and remote branch.
+`cleanup-merged` verifies merge status by querying the associated PR's state via `gh pr view <branch> --json state` — **not** by local ancestry. This matters because squash-merges and rebase-merges on GitHub produce a merge commit that is not an ancestor of the local feature branch, so the older ancestry check (`git branch -d`) would silently refuse even after a real merge. When the PR state is `MERGED`, the local branch is force-deleted, then `git push origin --delete <branch>` removes the remote ref. If the remote was already removed (e.g. GitHub's "Automatically delete head branches" setting fired at merge time), the step prints `Remote branch <branch> already removed` and exits 0. Any other remote-delete failure (network, auth, protected branch) surfaces a warning and exits non-zero — the worktree and local branch are already gone, so only a manual `git push origin --delete <branch>` remains. When the PR is `OPEN`, `CLOSED` without merge, missing, or `gh` cannot reach GitHub, the command refuses and points to `discard`. Use `discard` as the escape hatch for unmerged branches; it also deletes the local and remote branch.
 
-`--cleanup-merged` is self-healing around two common failure modes. First, after killing the dev-server PID it waits up to 5 s for the process to exit before calling `git worktree remove`, because `next dev` can still hold file descriptors under `.next/` when `kill` returns and macOS rejects the rmdir with `Directory not empty`. Second, if `git worktree remove --force` still fails but git has already unregistered the worktree admin dir, the script falls back to `rm -rf <dir>` and continues — the partial success is treated as a full cleanup rather than a hard failure. Re-invoking the command after an earlier mid-sequence failure also works: the script detects an orphaned dir / local branch / remote branch for `<issue>` by matching the `^<issue>-*` branch prefix, and finishes whatever remains. The `MERGED` PR-state guard is still enforced on the recovery path.
+`cleanup-merged` is self-healing around two common failure modes. First, after killing the dev-server PID it waits up to 5 s for the process to exit before calling `git worktree remove`, because `next dev` can still hold file descriptors under `.next/` when `kill` returns and macOS rejects the rmdir with `Directory not empty`. Second, if `git worktree remove --force` still fails but git has already unregistered the worktree admin dir, the command falls back to `rm -rf <dir>` and continues — the partial success is treated as a full cleanup rather than a hard failure. Re-invoking the command after an earlier mid-sequence failure also works: the command detects an orphaned dir / local branch / remote branch for `<issue>` by matching the `^<issue>-*` branch prefix, and finishes whatever remains. The `MERGED` PR-state guard is still enforced on the recovery path.
 
 If something gets stuck:
 
