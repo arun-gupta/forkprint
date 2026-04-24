@@ -2,7 +2,18 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { buildResult as _buildResult, INCLUSIVE_NAMING_CLEAN } from '@/lib/testing/fixtures'
 import { ContributorsView } from './ContributorsView'
+
+function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
+  return _buildResult({
+    repo: 'facebook/react',
+    uniqueCommitAuthors90d: 2,
+    commitCountsByAuthor: { 'login:alice': 2, 'login:bob': 1 },
+    inclusiveNamingResult: INCLUSIVE_NAMING_CLEAN,
+    ...overrides,
+  })
+}
 
 describe('ContributorsView', () => {
   it('renders core and contributors-score panes for each repository section', () => {
@@ -65,48 +76,3 @@ describe('ContributorsView', () => {
     expect(screen.getByText('alice')).toHaveClass('truncate')
   })
 })
-
-function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'facebook/react',
-    name: 'react',
-    description: 'The library for web and native user interfaces.',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 25,
-    watchers: 10,
-    commits30d: 7,
-    commits90d: 18,
-    releases12mo: 'unavailable',
-    prsOpened90d: 4,
-    prsMerged90d: 3,
-    issuesOpen: 5,
-    issuesClosed90d: 6,
-    uniqueCommitAuthors90d: 2,
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: {
-      'login:alice': 2,
-      'login:bob': 1,
-    },
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: {
-      defaultBranchName: 'main',
-      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
-      metadataChecks: [],
-    },
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...overrides,
-  }
-}

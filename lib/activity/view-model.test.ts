@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildDevelopmentCadenceCard } from './view-model'
+import { buildResult } from '@/lib/testing/fixtures'
 
 // Spy on interpolatePercentile and getCalibrationForStars to control percentile values in boundary tests
 vi.mock('@/lib/scoring/config-loader', async (importOriginal) => {
@@ -11,44 +12,6 @@ vi.mock('@/lib/scoring/config-loader', async (importOriginal) => {
     getCalibrationForStars: vi.fn(actual.getCalibrationForStars),
   }
 })
-
-function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'facebook/react',
-    name: 'react',
-    description: 'A UI library',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 25,
-    watchers: 10,
-    commits30d: 7,
-    commits90d: 18,
-    releases12mo: 6,
-    prsOpened90d: 4,
-    prsMerged90d: 3,
-    issuesOpen: 5,
-    issuesClosed90d: 6,
-    uniqueCommitAuthors90d: 'unavailable',
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: 'unavailable',
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...overrides,
-  }
-}
 
 const baseCadence = {
   totalWeeks: 5,

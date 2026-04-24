@@ -2,7 +2,12 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { ActivityCadenceMetrics, AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
+import { buildResult as _buildResult } from '@/lib/testing/fixtures'
 import { DevelopmentCadenceCard } from './DevelopmentCadenceCard'
+
+function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
+  return _buildResult({ repo: 'facebook/react', defaultBranchName: 'main', ...overrides })
+}
 
 function stubCadenceEntry(overrides: Partial<ActivityCadenceMetrics> = {}): ActivityCadenceMetrics {
   return {
@@ -31,44 +36,6 @@ function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'da
     month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 3, delta: 1, direction: 'accelerating', ...overrides.month },
     week: { currentPeriodCommitCount: 3, previousPeriodCommitCount: 6, delta: -0.5, direction: 'decelerating', ...overrides.week },
     day: { currentPeriodCommitCount: 1, previousPeriodCommitCount: 0, delta: 1, direction: 'accelerating', ...overrides.day },
-  }
-}
-
-function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'facebook/react',
-    name: 'react',
-    description: 'A UI library',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 25,
-    watchers: 10,
-    commits30d: 7,
-    commits90d: 18,
-    releases12mo: 6,
-    prsOpened90d: 4,
-    prsMerged90d: 3,
-    issuesOpen: 5,
-    issuesClosed90d: 6,
-    uniqueCommitAuthors90d: 'unavailable',
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: 'unavailable',
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...overrides,
   }
 }
 

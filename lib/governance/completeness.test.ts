@@ -1,44 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { computeGovernanceCompleteness } from './completeness'
-
-function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'foo/bar',
-    name: 'bar',
-    description: '—',
-    createdAt: '2024-01-01T00:00:00Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 10,
-    watchers: 5,
-    commits30d: 5,
-    commits90d: 15,
-    releases12mo: 2,
-    prsOpened90d: 3,
-    prsMerged90d: 2,
-    issuesOpen: 4,
-    issuesClosed90d: 3,
-    uniqueCommitAuthors90d: 4,
-    totalContributors: 10,
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: { 'login:alice': 5 },
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...overrides,
-  }
-}
+import { buildResult } from '@/lib/testing/fixtures'
 
 describe('computeGovernanceCompleteness', () => {
   it('all-unknown bare fixture → ratio=null, percentile=null, neutral tone', () => {

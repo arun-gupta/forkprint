@@ -1,46 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { buildResult as baseResult } from '@/lib/testing/fixtures'
 import { getContributorsScore } from '@/lib/contributors/score-config'
 import { getActivityScore } from '@/lib/activity/score-config'
 import { MATURITY_CONFIG } from './config-loader'
-
-function baseResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  const base = {
-    repo: 'owner/repo',
-    name: 'repo',
-    description: 'test',
-    createdAt: '2025-01-01T00:00:00Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 10,
-    watchers: 5,
-    commits30d: 5,
-    commits90d: 15,
-    releases12mo: 2,
-    prsOpened90d: 4,
-    prsMerged90d: 3,
-    issuesOpen: 2,
-    issuesClosed90d: 5,
-    uniqueCommitAuthors90d: 3,
-    totalContributors: 4,
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: { alice: 10, bob: 5 },
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
-  } as unknown as AnalysisResult
-  return { ...base, ...overrides }
-}
 
 describe('Contributors age-guard (P2-F11)', () => {
   it('renders "Insufficient" when ageInDays is below the Resilience threshold', () => {

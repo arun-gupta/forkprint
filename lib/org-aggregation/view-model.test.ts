@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
+import { buildResult } from '@/lib/testing/fixtures'
 import { buildOrgSummaryViewModel, computeRunStatusHeader } from './view-model'
 import type { OrgAggregationRun, RepoRunState } from './types'
 
@@ -31,21 +32,11 @@ function analysisStub(
   // Include the minimum set of `unavailable` sentinels that downstream
   // scoring functions (getHealthScore, detectSoloProjectProfile) touch, so
   // the stub can flow through the full view-model pipeline without NPEs.
-  return {
+  return buildResult({
     repo,
     commitCountsByAuthor,
-    contributorMetricsByWindow: {
-      90: { commitCountsByAuthor },
-    },
-    documentationResult: 'unavailable',
-    securityResult: 'unavailable',
-    licensingResult: 'unavailable',
-    inclusiveNamingResult: 'unavailable',
-    totalContributors: 'unavailable',
-    uniqueCommitAuthors90d: 'unavailable',
-    maintainerCount: 'unavailable',
-    stars: 'unavailable',
-  } as unknown as AnalysisResult
+    contributorMetricsByWindow: { 90: { commitCountsByAuthor } } as AnalysisResult['contributorMetricsByWindow'],
+  })
 }
 
 describe('computeRunStatusHeader', () => {

@@ -3,51 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { RecommendationsView } from './RecommendationsView'
-
-function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'facebook/react',
-    name: 'react',
-    description: 'A UI library',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 1000,
-    forks: 25,
-    watchers: 10,
-    commits30d: 7,
-    commits90d: 18,
-    releases12mo: 6,
-    prsOpened90d: 4,
-    prsMerged90d: 3,
-    issuesOpen: 5,
-    issuesClosed90d: 6,
-    uniqueCommitAuthors90d: 'unavailable',
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: 'unavailable',
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    staleIssueRatio: 0.2,
-    medianTimeToMergeHours: 24,
-    medianTimeToCloseHours: 36,
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: {
-      defaultBranchName: 'main',
-      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
-      metadataChecks: [],
-    },
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...overrides,
-  }
-}
+import { buildResult } from '@/lib/testing/fixtures'
 
 describe('RecommendationsView security recommendations', () => {
   it('renders grouped security recommendations with category headings', () => {
