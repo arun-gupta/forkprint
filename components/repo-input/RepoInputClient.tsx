@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useLoadingTimer } from './useLoadingTimer'
+import { useSearchDebounce } from './useSearchDebounce'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
@@ -30,11 +32,10 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeRepos, decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
+import { decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
 import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
-import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 import { FoundationResultsView, type FoundationResult } from '@/components/foundation/FoundationResultsView'
 import { FoundationNudge } from '@/components/foundation/FoundationNudge'
@@ -47,16 +48,17 @@ interface RepoInputClientProps {
 export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProps) {
   const { session } = useAuth()
   const searchParams = useSearchParams()
-  // Raw slugs for textarea display — show everything from the URL including invalid entries
-  // so users can see and correct them. decodeRepos (validated) is used only for auto-trigger gating.
-  const initialRawRepos = (() => {
+  // Captured once from URL params on mount. useState initializer gives a stable reference
+  // so these can appear in effect dependency arrays without causing re-runs.
+  // Raw slugs include invalid entries so the textarea shows exactly what was in the URL;
+  // isValidRepoSlug guards the auto-trigger to suppress it for malformed inputs.
+  const [initialRawRepos] = useState(() => {
     const raw = new URLSearchParams(searchParams.toString()).get('repos')
-    if (!raw) return []
+    if (!raw) return [] as string[]
     return raw.split(',').map((s) => s.trim()).filter(Boolean)
-  })()
-  const initialRepoValue = initialRawRepos.join('\n')
-  const initialRepos = decodeRepos(searchParams.toString())
-  const initialFoundationState = decodeFoundationUrl(searchParams.toString())
+  })
+  const [initialRepoValue] = useState(() => initialRawRepos.join('\n'))
+  const [initialFoundationState] = useState(() => decodeFoundationUrl(searchParams.toString()))
   const initialFoundationTarget = (initialFoundationState?.foundation ?? 'cncf-sandbox') as FoundationTarget
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
   const autoTriggeredRef = useRef(false)
@@ -69,9 +71,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingOrg, setLoadingOrg] = useState<string | null>(null)
   const [resultsResetKey, setResultsResetKey] = useState(0)
   const [inputMode, setInputMode] = useState<'repos' | 'org' | 'foundation'>('repos')
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
-  const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [foundationTarget, setFoundationTarget] = useState<FoundationTarget>(initialFoundationTarget)
   const [aspirantResult, setAspirantResult] = useState<AspirantReadinessResult | null>(null)
@@ -92,72 +91,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
     : []
   const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [preRunDialogRepos, setPreRunDialogRepos] = useState<string[] | null>(null)
   const [notificationOptIn, setNotificationOptIn] = useState(false)
   const repoFetchAbortRef = useRef<AbortController | null>(null)
   const orgFetchAbortRef = useRef<AbortController | null>(null)
   const foundationFetchAbortRef = useRef<AbortController | null>(null)
   const previousFoundationResultRef = useRef<FoundationResult | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const quoteTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // Ref so the loading-start effect can read the current emptyQuoteIndex without
-  // re-running (and resetting the elapsed timer) each time the idle quote rotates.
-  const emptyQuoteIndexRef = useRef(emptyQuoteIndex)
-  emptyQuoteIndexRef.current = emptyQuoteIndex
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
-
-  useEffect(() => {
-    if (isLoading) {
-      setElapsedSeconds(0)
-      setQuoteIndex(emptyQuoteIndexRef.current)
-      timerRef.current = setInterval(() => {
-        setElapsedSeconds((s) => s + 1)
-      }, 1000)
-
-      // Rotate quote every 10 seconds
-      quoteTimerRef.current = setInterval(() => {
-        setQuoteIndex((current) => getRandomQuoteIndex(current))
-      }, 10000)
-
-      return () => {
-        if (timerRef.current) clearInterval(timerRef.current)
-        if (quoteTimerRef.current) clearInterval(quoteTimerRef.current)
-      }
-    }
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-    if (quoteTimerRef.current) {
-      clearInterval(quoteTimerRef.current)
-      quoteTimerRef.current = null
-    }
-    setElapsedSeconds(0)
-    setQuoteIndex(null)
-
-    return undefined
-  // emptyQuoteIndex intentionally excluded — read via ref to avoid resetting elapsed timer
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading])
-
-  const currentQuote = quoteIndex !== null ? LOADING_QUOTES[quoteIndex] : null
-
   const isEmptyState = !submissionError && !loadingRepos.length && !loadingOrg && !analysisResponse && !orgInventoryResponse
 
-  useEffect(() => {
-    if (!isEmptyState) return
-
-    const interval = setInterval(() => {
-      setEmptyQuoteIndex((current) => getRandomQuoteIndex(current))
-    }, 10000)
-
-    return () => clearInterval(interval)
-  }, [isEmptyState])
-
-  const emptyQuote = LOADING_QUOTES[emptyQuoteIndex]
+  const { elapsedSeconds, currentQuote, emptyQuote } = useLoadingTimer(isLoading, isEmptyState)
 
   // Search: DOM-based match counts (populated by ResultsShell after highlighting)
   const [domTotalMatches, setDomTotalMatches] = useState(0)
@@ -265,16 +209,14 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setDomMatchedTabCount(counts.domMatchedTabCount)
   }).current
 
-  // Search: debounce query
+  const debouncedQuery = useSearchDebounce(searchQuery)
+
+  // Reset DOM match counts whenever the search query is cleared
   useEffect(() => {
     if (!searchQuery) {
-      setDebouncedQuery('')
       setDomTotalMatches(0)
       setDomMatchedTabCount(0)
-      return
     }
-    const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 300)
-    return () => clearTimeout(timeout)
   }, [searchQuery])
 
   function handleModeChange(mode: 'repos' | 'org' | 'foundation') {
@@ -291,7 +233,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setSubmissionError(null)
     setResultsResetKey((k) => k + 1)
     setSearchQuery('')
-    setDebouncedQuery('')
     setAspirantResult(null)
     setFoundationResult(null)
     setFoundationError(null)
@@ -392,32 +333,37 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     }
   }, [analysisResponse])
 
+  // Stable latest-value refs so auto-trigger effects can call the handlers without
+  // including them as deps (which would re-run the effect on every render).
+  // Function declarations are hoisted, so these refs are valid here even though
+  // handleSubmit and handleFoundationSubmit are defined later in the file.
+  const handleSubmitRef = useRef(handleSubmit)
+  handleSubmitRef.current = handleSubmit
+  const handleFoundationSubmitRef = useRef(handleFoundationSubmit)
+  handleFoundationSubmitRef.current = handleFoundationSubmit
+
   useEffect(() => {
     if (autoTriggeredRef.current) return
     if (!session?.token) return
     if (initialRawRepos.length === 0) return
     if (!initialRawRepos.every(isValidRepoSlug)) return
-
     autoTriggeredRef.current = true
     const parsed = parseRepos(initialRepoValue)
     if (!parsed.valid) return
-    void handleSubmit(parsed.repos)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.token])
+    void handleSubmitRef.current(parsed.repos)
+  }, [session?.token, initialRawRepos, initialRepoValue])
 
   // Auto-trigger Foundation scan when URL has mode=foundation params
   useEffect(() => {
     if (foundationAutoTriggeredRef.current) return
     if (!session?.token) return
     if (!initialFoundationState) return
-
     foundationAutoTriggeredRef.current = true
     setInputMode('foundation')
     setFoundationTarget(initialFoundationState.foundation)
     setFoundationInput(initialFoundationState.input)
-    void handleFoundationSubmit(initialFoundationState.input)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.token])
+    void handleFoundationSubmitRef.current(initialFoundationState.input)
+  }, [session?.token, initialFoundationState])
 
   async function handleSubmit(repos: string[]) {
     if (!session?.token) return
