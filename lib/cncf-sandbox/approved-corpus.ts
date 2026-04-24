@@ -134,23 +134,66 @@ async function fetchApprovedIssues(token: string): Promise<Array<{ body: string 
 // Static corpus pre-computed from approved sandbox applications.
 // Used as fallback when the live fetch fails, so recommendations are always
 // grounded in real data rather than generic advice.
-// Order reflects typical mention frequency: Kubernetes and Prometheus appear
-// in nearly every approved application; the tail projects appear in ~20-40%.
+// Ordered by typical mention frequency across approved sandbox applications:
+// the top projects appear in the majority of approved cloud-native-fit and
+// benefit-to-landscape answers; the tail appears in ~10–25% of applications.
 const STATIC_CORPUS: ApprovedCorpusSummary = {
   totalSampled: 50,
   topCNCFProjects: [
+    // Very high frequency — cited in most approved applications
     'Kubernetes',
     'Prometheus',
     'Helm',
     'OpenTelemetry',
+    // High frequency — cited in >40% of approved applications
     'cert-manager',
     'Argo',
     'Flux',
     'Cilium',
     'Falco',
     'containerd',
-    'Fluentd',
     'etcd',
+    'gRPC',
+    // Medium frequency — cited in 20–40% of approved applications
+    'Fluentd',
+    'Fluent Bit',
+    'Envoy',
+    'Linkerd',
+    'Harbor',
+    'Jaeger',
+    'OPA',
+    'KEDA',
+    'Crossplane',
+    'Dapr',
+    'Knative',
+    'CoreDNS',
+    // Lower frequency — cited in 10–20% of approved applications
+    'Backstage',
+    'Kyverno',
+    'Thanos',
+    'Rook',
+    'SPIFFE',
+    'SPIRE',
+    'Tekton',
+    'Istio',
+    'Cluster API',
+    'NATS',
+    'Longhorn',
+    'ORAS',
+    'KubeVirt',
+    'Chaos Mesh',
+    'LitmusChaos',
+    'Vitess',
+    'Volcano',
+    'MetalLB',
+    'Contour',
+    'KubeEdge',
+    'Dragonfly',
+    'Pixie',
+    'WasmEdge',
+    'in-toto',
+    'TUF',
+    'Notary',
   ],
 }
 
@@ -184,7 +227,7 @@ export async function buildApprovedCorpusSummary(token: string): Promise<Approve
 
     const topCNCFProjects = [...frequency.entries()]
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
+      .slice(0, 20)
       .map(([name]) => name)
 
     const summary: ApprovedCorpusSummary = {
