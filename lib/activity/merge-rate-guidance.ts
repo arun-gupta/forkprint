@@ -1,5 +1,5 @@
 import type { Unavailable } from '@/lib/analyzer/analysis-result'
-import { formatPercentileLabel, getCalibrationForStars, interpolatePercentile } from '@/lib/scoring/config-loader'
+import { formatPercentileLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface MergeRateGuidance {
   ratio: number | Unavailable
@@ -40,16 +40,17 @@ export function getMergeRateGuidance(
   const cal = getCalibrationForStars(stars)
   const percentile = interpolatePercentile(ratio, cal.prMergeRate)
   const percentileLabel = formatPercentileLabel(percentile)
+  const tone = percentileToTone(percentile)
 
-  const summary = percentile >= 75
+  const summary = tone === 'success'
     ? 'Healthy merge throughput relative to incoming PR volume.'
-    : percentile >= 40
+    : tone === 'warning'
       ? 'Some PR throughput is healthy, but a meaningful share of opened PRs are not being merged.'
       : 'Many opened PRs are not reaching merge in the selected window.'
 
-  const recommendation = percentile >= 75
+  const recommendation = tone === 'success'
     ? 'Keep reviewer capacity and triage discipline aligned with incoming PR volume so throughput stays healthy.'
-    : percentile >= 40
+    : tone === 'warning'
       ? 'Triage stalled PRs faster and tighten reviewer coverage or contribution scope to improve conversion.'
       : 'Reduce PR backlog, speed up reviewer response, or close low-likelihood PRs sooner so maintainers can focus on mergeable changes.'
 
