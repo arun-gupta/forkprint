@@ -79,52 +79,54 @@ export function DemoRepositoriesClient({ response }: DemoRepositoriesClientProps
         searchQuery={debouncedQuery}
         onDomMatchCounts={handleDomMatchCounts}
         tagMatchCounts={computeTabTagCounts(response.results, activeTag)}
-        overview={overviewContent}
-        contributors={
-          <ContributorsView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        activity={
-          <ActivityView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        responsiveness={
-          <ResponsivenessView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        documentation={
-          <DocumentationView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        security={
-          <SecurityView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        recommendations={
-          <RecommendationsView
-            results={response.results}
-            activeTag={activeTag}
-            onTagChange={setActiveTag}
-          />
-        }
-        comparison={
-          <ComparisonView results={response.results} rateLimit={response.rateLimit} />
-        }
+        slots={{
+          overview: overviewContent,
+          contributors: (
+            <ContributorsView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          activity: (
+            <ActivityView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          responsiveness: (
+            <ResponsivenessView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          documentation: (
+            <DocumentationView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          security: (
+            <SecurityView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          recommendations: (
+            <RecommendationsView
+              results={response.results}
+              activeTag={activeTag}
+              onTagChange={setActiveTag}
+            />
+          ),
+          comparison: (
+            <ComparisonView results={response.results} rateLimit={response.rateLimit} />
+          ),
+        }}
       />
     </SearchProvider>
   )

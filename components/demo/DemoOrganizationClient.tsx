@@ -198,50 +198,50 @@ export function DemoOrganizationClient({ response, governance, topReposAnalyzed 
             {view ? <OrgWindowSelector selected={orgWindow} onChange={setOrgWindow} /> : null}
           </div>
         }
-        overview={
-          <OrgInventoryView
-            org={response.org}
-            summary={response.summary}
-            results={response.results}
-            rateLimit={response.rateLimit}
-            onAnalyzeRepo={(repo) => setSignInDialogRepos([repo])}
-            onAnalyzeSelected={(repos) => setSignInDialogRepos(repos)}
-            onAnalyzeAllActive={(repos) => setSignInDialogRepos(repos)}
-          />
-        }
-        contributors={view ? withNote(
-          <OrgBucketContent bucketId="contributors" view={view} selectedWindow={orgWindow} />,
-        ) : emptyPanel}
-        activity={view ? withNote(
-          <OrgBucketContent bucketId="activity" view={view} selectedWindow={orgWindow} />,
-        ) : emptyPanel}
-        responsiveness={view ? withNote(
-          <OrgBucketContent bucketId="responsiveness" view={view} selectedWindow={orgWindow} />,
-        ) : emptyPanel}
-        documentation={view ? withNote(
-          <OrgBucketContent bucketId="documentation" view={view} selectedWindow={orgWindow} />,
-        ) : emptyPanel}
-        governance={withNote(
-          <OrgBucketContent
-            bucketId="governance"
-            view={view}
-            selectedWindow={orgWindow}
-            org={response.org}
-            twoFactorOverride={governance.twoFactor}
-            staleAdminsOverride={governance.staleAdmins}
-            memberPermissionOverride={governance.memberPermission}
-          />,
-        )}
-        security={view ? withNote(
-          <OrgBucketContent bucketId="security" view={view} selectedWindow={orgWindow} />,
-        ) : emptyPanel}
-        recommendations={emptyPanel}
-        comparison={emptyPanel}
-        cncfCandidacy={
-          response.results.length > 0 ? (
+        slots={{
+          overview: (
+            <OrgInventoryView
+              org={response.org}
+              summary={response.summary}
+              results={response.results}
+              rateLimit={response.rateLimit}
+              onAnalyzeRepo={(repo) => setSignInDialogRepos([repo])}
+              onAnalyzeSelected={(repos) => setSignInDialogRepos(repos)}
+              onAnalyzeAllActive={(repos) => setSignInDialogRepos(repos)}
+            />
+          ),
+          contributors: view ? withNote(
+            <OrgBucketContent bucketId="contributors" view={view} selectedWindow={orgWindow} />,
+          ) : emptyPanel,
+          activity: view ? withNote(
+            <OrgBucketContent bucketId="activity" view={view} selectedWindow={orgWindow} />,
+          ) : emptyPanel,
+          responsiveness: view ? withNote(
+            <OrgBucketContent bucketId="responsiveness" view={view} selectedWindow={orgWindow} />,
+          ) : emptyPanel,
+          documentation: view ? withNote(
+            <OrgBucketContent bucketId="documentation" view={view} selectedWindow={orgWindow} />,
+          ) : emptyPanel,
+          governance: withNote(
+            <OrgBucketContent
+              bucketId="governance"
+              view={view}
+              selectedWindow={orgWindow}
+              org={response.org}
+              twoFactorOverride={governance.twoFactor}
+              staleAdminsOverride={governance.staleAdmins}
+              memberPermissionOverride={governance.memberPermission}
+            />,
+          ),
+          security: view ? withNote(
+            <OrgBucketContent bucketId="security" view={view} selectedWindow={orgWindow} />,
+          ) : emptyPanel,
+          recommendations: emptyPanel,
+          comparison: emptyPanel,
+          'cncf-candidacy': response.results.length > 0 ? (
             <CNCFCandidacyPanel org={response.org} repos={response.results} />
-          ) : emptyPanel
-        }
+          ) : emptyPanel,
+        }}
       />
     </SearchProvider>
   )

@@ -1031,9 +1031,9 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       searchQuery={debouncedQuery}
       onDomMatchCounts={handleDomMatchCounts}
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
-      overview={overviewContent}
-      contributors={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+      slots={{
+        overview: overviewContent,
+        contributors: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="contributors" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
           <ContributorsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
@@ -1041,10 +1041,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      activity={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ),
+        activity: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="activity" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
           <ActivityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
@@ -1052,10 +1050,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      responsiveness={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ),
+        responsiveness: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="responsiveness" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
           <ResponsivenessView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
@@ -1063,10 +1059,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      documentation={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ),
+        documentation: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent
             bucketId="documentation"
             view={orgAggregation.view}
@@ -1078,10 +1072,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      governance={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ),
+        governance: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent
             bucketId="governance"
             view={orgAggregation.view}
@@ -1094,10 +1086,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
             view={null}
             org={orgInventoryResponse.org}
           />
-        ) : null
-      }
-      security={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ) : undefined,
+        security: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="security" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
           <SecurityView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} cncfBadges={cncfBadges} />
@@ -1105,10 +1095,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      recommendations={
-        inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
+        ),
+        recommendations: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
           <OrgBucketContent bucketId="recommendations" view={orgAggregation.view} selectedWindow={orgWindow} />
         ) : analysisResponse ? (
           <RecommendationsView results={analysisResponse.results} activeTag={activeTag} onTagChange={setActiveTag} />
@@ -1116,10 +1104,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
-      comparison={
-        analysisResponse && successfulRepoCount >= 2 ? (
+        ),
+        comparison: analysisResponse && successfulRepoCount >= 2 ? (
           <ComparisonView results={analysisResponse.results} rateLimit={analysisResponse.rateLimit} />
         ) : loadingRepos.length >= 2 ? (
           <p className="text-sm text-slate-600 dark:text-slate-300">
@@ -1138,8 +1124,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter 2 or more repositories and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to get started.
           </p>
-        )
-      }
+        ),
+      }}
     />
     </SearchProvider>
   )

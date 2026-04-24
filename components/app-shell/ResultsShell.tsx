@@ -15,16 +15,7 @@ import { ResultsTabs } from './ResultsTabs'
 
 interface ResultsShellProps {
   analysisPanel: React.ReactNode
-  overview: React.ReactNode
-  contributors: React.ReactNode
-  activity: React.ReactNode
-  responsiveness: React.ReactNode
-  documentation: React.ReactNode
-  governance?: React.ReactNode
-  security: React.ReactNode
-  recommendations: React.ReactNode
-  comparison: React.ReactNode
-  cncfCandidacy?: React.ReactNode
+  slots: Partial<Record<ResultTabId, React.ReactNode>>
   hideTabs?: boolean
   tabs?: ResultTabDefinition[]
   initialActiveTab?: ResultTabId
@@ -38,16 +29,7 @@ interface ResultsShellProps {
 
 export function ResultsShell({
   analysisPanel,
-  overview,
-  contributors,
-  activity,
-  responsiveness,
-  documentation,
-  governance,
-  security,
-  recommendations,
-  comparison,
-  cncfCandidacy,
+  slots,
   hideTabs = false,
   tabs = resultTabs,
   initialActiveTab = 'overview',
@@ -88,7 +70,7 @@ export function ResultsShell({
 
   const effectiveTabs = useMemo(() => {
     let result = tabs
-    if (cncfCandidacy) {
+    if (slots['cncf-candidacy']) {
       const hasCandidacyTab = result.some((t) => t.id === 'cncf-candidacy')
       if (!hasCandidacyTab) {
         result = [
@@ -98,7 +80,7 @@ export function ResultsShell({
       }
     }
     return result
-  }, [tabs, cncfCandidacy])
+  }, [tabs, slots])
 
   const currentActiveTab = useMemo(
     () => (effectiveTabs.some((tab) => tab.id === activeTab) ? activeTab : effectiveTabs[0]?.id ?? 'overview'),
@@ -238,7 +220,7 @@ export function ResultsShell({
           <section aria-label="Result workspace" className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-6">
             {toolbar ? <div className="mb-4">{toolbar}</div> : null}
             {hideTabs ? (
-              <div ref={containerRef}>{overview}</div>
+              <div ref={containerRef}>{slots.overview}</div>
             ) : (
               <>
                 <ResultsTabs
@@ -248,20 +230,11 @@ export function ResultsShell({
                   matchCounts={searchQuery.trim() ? domMatchCounts : tagMatchCounts}
                 />
                 <div className="mt-6" ref={containerRef}>
-                  <div data-tab-content="overview" style={{ display: currentActiveTab === 'overview' ? 'contents' : 'none' }}>
-                    {overview}
-                  </div>
-                  <div data-tab-content="contributors" style={{ display: currentActiveTab === 'contributors' ? 'contents' : 'none' }}>{contributors}</div>
-                  <div data-tab-content="activity" style={{ display: currentActiveTab === 'activity' ? 'contents' : 'none' }}>{activity}</div>
-                  <div data-tab-content="responsiveness" style={{ display: currentActiveTab === 'responsiveness' ? 'contents' : 'none' }}>{responsiveness}</div>
-                  <div data-tab-content="documentation" style={{ display: currentActiveTab === 'documentation' ? 'contents' : 'none' }}>{documentation}</div>
-                  <div data-tab-content="governance" style={{ display: currentActiveTab === 'governance' ? 'contents' : 'none' }}>{governance}</div>
-                  <div data-tab-content="security" style={{ display: currentActiveTab === 'security' ? 'contents' : 'none' }}>{security}</div>
-                  <div data-tab-content="recommendations" style={{ display: currentActiveTab === 'recommendations' ? 'contents' : 'none' }}>{recommendations}</div>
-                  <div data-tab-content="comparison" style={{ display: currentActiveTab === 'comparison' ? 'contents' : 'none' }}>{comparison}</div>
-                  <div data-tab-content="cncf-candidacy" style={{ display: currentActiveTab === 'cncf-candidacy' ? 'contents' : 'none' }}>
-                    {cncfCandidacy}
-                  </div>
+                  {(Object.entries(slots) as [ResultTabId, React.ReactNode][]).map(([tabId, content]) => (
+                    <div key={tabId} data-tab-content={tabId} style={{ display: currentActiveTab === tabId ? 'contents' : 'none' }}>
+                      {content}
+                    </div>
+                  ))}
                 </div>
               </>
             )}
