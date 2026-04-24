@@ -959,8 +959,8 @@ async function submitAnalysisRequest(repos: string[], token: string, foundationT
     body: JSON.stringify({ repos, token, foundationTarget }),
     signal,
   })
-  const payload = (await response.json()) as AnalyzeResponse & { error?: string }
-  if (!response.ok) throw new Error(payload.error ?? 'Analysis request failed.')
+  const payload = (await response.json()) as AnalyzeResponse & { error?: { message: string; code: string } }
+  if (!response.ok) throw new Error(payload.error?.message ?? 'Analysis request failed.')
   return payload
 }
 
@@ -971,7 +971,7 @@ async function submitOrgInventoryRequest(org: string, token: string, signal?: Ab
     body: JSON.stringify({ org, token }),
     signal,
   })
-  const payload = (await response.json()) as OrgInventoryResponse & { error?: string }
-  if (!response.ok) throw new Error(payload.error ?? 'Organization inventory request failed.')
+  const payload = (await response.json()) as OrgInventoryResponse & { error?: { message: string; code: string } }
+  if (!response.ok) throw new Error(payload.error?.message ?? 'Organization inventory request failed.')
   return payload
 }
