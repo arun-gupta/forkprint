@@ -12,7 +12,7 @@ Usage:
   scripts/claude-worktree.sh [--headless] [--no-speckit] <issue-number> [slug]
   scripts/claude-worktree.sh --approve-spec        <issue-number>
   scripts/claude-worktree.sh --revise-spec         <issue-number> <feedback>
-  scripts/claude-worktree.sh --remove              [<issue-number>]
+  scripts/claude-worktree.sh --discard             [<issue-number>]
   scripts/claude-worktree.sh --cleanup-merged      [<issue-number>]
   scripts/claude-worktree.sh --cleanup-all-merged
   scripts/claude-worktree.sh --status
@@ -22,7 +22,7 @@ Options:
   --no-speckit           Skip SpecKit lifecycle; Claude opens a PR directly (no spec pause)
   --approve-spec         Release the spec-review pause for a paused headless spawn
   --revise-spec          Send non-empty revision feedback to a paused spawn
-  --remove               Discard worktree (works on unmerged work)
+  --discard              Discard worktree + delete local/remote branch (unrecoverable; prompts for confirmation)
   --cleanup-merged       Post-merge: pull main, remove worktree, delete local+remote branch
   --cleanup-all-merged   Batch sweep: run --cleanup-merged on every worktree whose PR is MERGED
   --status, --list       Overview table of all linked worktrees (issue, branch, port,
@@ -30,7 +30,7 @@ Options:
   --status --verbose     Same, with the full worktree PATH column added.
   -h, --help             Show this help and exit
 
-For --remove and --cleanup-merged, the issue number is inferred from the branch
+For --discard and --cleanup-merged, the issue number is inferred from the branch
 when run from inside a linked worktree. See docs/DEVELOPMENT.md for full behavior,
 the numbering rule, and the permission model.
 
@@ -121,13 +121,27 @@ remove_worktree() {
   local issue="$1"
   local caller_cwd
   caller_cwd="$(pwd -P)"  # physical path so we match git's canonical worktree paths (macOS /tmp -> /private/tmp)
-  local wt
+  local wt branch push_err
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
   if [[ -z "${wt:-}" ]]; then
     echo "No worktree found for issue $issue" >&2
     exit 1
   fi
+  branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+
+  echo "WARNING: This will permanently discard all uncommitted and unpushed work for issue #${issue}." >&2
+  echo "         Worktree:      $wt" >&2
+  [[ -n "${branch:-}" ]] && echo "         Branch:        $branch (local + remote will be deleted)" >&2
+  echo "         This action is NOT recoverable." >&2
+  printf 'Type YES to confirm: '
+  local confirm
+  read -r confirm
+  if [[ "$confirm" != "YES" ]]; then
+    echo "Aborted." >&2
+    exit 1
+  fi
+
   if [[ -f "$wt/.dev.pid" ]]; then
     kill "$(cat "$wt/.dev.pid")" 2>/dev/null || true
   fi
@@ -136,6 +150,26 @@ remove_worktree() {
   fi
   git -C "$REPO_ROOT" worktree remove --force "$wt"
   echo "Removed $wt"
+
+  if [[ -n "${branch:-}" && "$branch" != "HEAD" ]]; then
+    if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$branch"; then
+      git -C "$REPO_ROOT" branch -D "$branch"
+    else
+      echo "Local branch $branch already removed"
+    fi
+
+    if push_err="$(git -C "$REPO_ROOT" push origin --delete "$branch" 2>&1)"; then
+      echo "Deleted remote branch origin/$branch"
+    elif grep -q "remote ref does not exist" <<<"$push_err"; then
+      echo "Remote branch $branch already removed"
+    else
+      echo "WARNING: could not delete remote branch $branch" >&2
+      echo "$push_err" >&2
+      echo "Delete the remote manually with:" >&2
+      echo "  git push origin --delete $branch" >&2
+    fi
+  fi
+
   print_stranded_shell_notice_if_needed "$wt" "$caller_cwd" "$REPO_ROOT"
 }
 
@@ -190,12 +224,12 @@ cleanup_merged() {
   if ! pr_state="$(cd "$REPO_ROOT" && gh pr view "$branch" --json state -q .state 2>/dev/null)"; then
     echo "Could not determine PR state for $branch." >&2
     echo "Is gh installed and authenticated? If this branch has no PR, use:" >&2
-    echo "  scripts/claude-worktree.sh --remove $issue" >&2
+    echo "  scripts/claude-worktree.sh --discard $issue" >&2
     exit 1
   fi
   if [[ "$pr_state" != "MERGED" ]]; then
     echo "PR for $branch is $pr_state, not MERGED." >&2
-    echo "Use: scripts/claude-worktree.sh --remove $issue" >&2
+    echo "Use: scripts/claude-worktree.sh --discard $issue" >&2
     exit 1
   fi
 
@@ -476,7 +510,7 @@ release_paused_session() {
 # Uses a global rather than stdout because `exit` inside $() only exits the
 # subshell, which would let the caller proceed with an empty issue value.
 resolve_cleanup_issue() {
-  local flag="$1"      # "--cleanup-merged" or "--remove"
+  local flag="$1"      # "--cleanup-merged" or "--discard"
   local explicit="$2"  # the positional arg from the CLI, possibly empty
   RESOLVED_CLEANUP_ISSUE=""
   if [[ -n "$explicit" ]]; then
@@ -499,8 +533,8 @@ resolve_cleanup_issue() {
   RESOLVED_CLEANUP_ISSUE="$CTX_INFERRED_ISSUE"
 }
 
-if [[ "${1:-}" == "--remove" ]]; then
-  resolve_cleanup_issue --remove "${2:-}"
+if [[ "${1:-}" == "--discard" ]]; then
+  resolve_cleanup_issue --discard "${2:-}"
   remove_worktree "$RESOLVED_CLEANUP_ISSUE"
   exit 0
 fi
