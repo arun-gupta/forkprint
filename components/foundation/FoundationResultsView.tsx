@@ -16,6 +16,45 @@ interface FoundationResultsViewProps {
   result: FoundationResult | null
   error: string | null
   onReanalyze?: () => void
+  shareableUrl?: string
+}
+
+function CopyLinkButton({ url }: { url: string }) {
+  const [state, setState] = useState<'idle' | 'copied' | 'fallback'>('idle')
+  const [fallbackUrl, setFallbackUrl] = useState('')
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setState('copied')
+      setTimeout(() => setState('idle'), 2000)
+    } catch {
+      setFallbackUrl(url)
+      setState('fallback')
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => { void handleCopy() }}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+      >
+        {state === 'copied' ? 'Copied!' : 'Copy link'}
+      </button>
+      {state === 'fallback' && fallbackUrl ? (
+        <input
+          type="text"
+          readOnly
+          value={fallbackUrl}
+          aria-label="Shareable URL"
+          className="rounded border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+          onFocus={(e) => e.currentTarget.select()}
+        />
+      ) : null}
+    </>
+  )
 }
 
 function ReanalyzeButton({ onClick }: { onClick: () => void }) {
@@ -131,7 +170,7 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
   )
 }
 
-export function FoundationResultsView({ result, error, onReanalyze }: FoundationResultsViewProps) {
+export function FoundationResultsView({ result, error, onReanalyze, shareableUrl }: FoundationResultsViewProps) {
 
   if (error) {
     return (
@@ -146,9 +185,10 @@ export function FoundationResultsView({ result, error, onReanalyze }: Foundation
   if (result.kind === 'repos') {
     return (
       <div className="space-y-4">
-        {onReanalyze ? (
-          <div className="flex justify-end">
-            <ReanalyzeButton onClick={onReanalyze} />
+        {(onReanalyze || shareableUrl) ? (
+          <div className="flex justify-end gap-2">
+            {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
+            {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
           </div>
         ) : null}
         {result.results.failures.length > 0 ? (
@@ -171,9 +211,10 @@ export function FoundationResultsView({ result, error, onReanalyze }: Foundation
   if (result.kind === 'org') {
     return (
       <div className="space-y-4">
-        {onReanalyze ? (
-          <div className="flex justify-end">
-            <ReanalyzeButton onClick={onReanalyze} />
+        {(onReanalyze || shareableUrl) ? (
+          <div className="flex justify-end gap-2">
+            {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
+            {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
           </div>
         ) : null}
         <CNCFCandidacyPanel
