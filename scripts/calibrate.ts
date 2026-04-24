@@ -18,6 +18,7 @@
 
 import { loadEnvConfig } from '@next/env'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { computePercentiles, type PercentileSet } from './percentile-utils'
 
 loadEnvConfig(process.cwd())
 
@@ -268,13 +269,6 @@ function isGenuineSoftwareProject(repo: SearchRepoItem, starsMin: number, starsM
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface PercentileSet {
-  p25: number
-  p50: number
-  p75: number
-  p90: number
-}
-
 interface RepoMetrics {
   repo: string
   stars: number
@@ -348,22 +342,6 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function percentile(values: number[], p: number): number {
-  if (values.length === 0) return 0
-  const sorted = [...values].sort((a, b) => a - b)
-  const index = Math.ceil((p / 100) * sorted.length) - 1
-  return Math.round(sorted[Math.max(0, index)]! * 1000) / 1000
-}
-
-function percentiles(values: number[]): PercentileSet {
-  return {
-    p25: percentile(values, 25),
-    p50: percentile(values, 50),
-    p75: percentile(values, 75),
-    p90: percentile(values, 90),
-  }
-}
-
 async function fetchWithRetry(url: string, init: RequestInit, maxRetries = 3): Promise<Response> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -399,7 +377,7 @@ function median(values: number[]): number | null {
 
 function p90Value(values: number[]): number | null {
   if (values.length === 0) return null
-  return percentile(values, 90)
+  return computePercentiles(values).p90
 }
 
 function hoursBetween(a: string, b: string): number {
@@ -884,32 +862,32 @@ function collect(results: RepoMetrics[], key: keyof RepoMetrics): number[] {
 function computeBracketCalibration(results: RepoMetrics[]) {
   return {
     sampleSize: results.length,
-    stars:                           percentiles(collect(results, 'stars')),
-    forks:                           percentiles(collect(results, 'forks')),
-    watchers:                        percentiles(collect(results, 'watchers')),
-    forkRate:                        percentiles(collect(results, 'forkRate')),
-    watcherRate:                     percentiles(collect(results, 'watcherRate')),
-    prMergeRate:                     percentiles(collect(results, 'prMergeRate')),
-    issueClosureRate:                percentiles(collect(results, 'issueClosureRate')),
-    staleIssueRatio:                 percentiles(collect(results, 'staleIssueRatio')),
-    stalePrRatio:                    percentiles(collect(results, 'stalePrRatio')),
-    medianTimeToMergeHours:          percentiles(collect(results, 'medianTimeToMergeHours')),
-    medianTimeToCloseHours:          percentiles(collect(results, 'medianTimeToCloseHours')),
-    issueFirstResponseMedianHours:   percentiles(collect(results, 'issueFirstResponseMedianHours')),
-    issueFirstResponseP90Hours:      percentiles(collect(results, 'issueFirstResponseP90Hours')),
-    prFirstReviewMedianHours:        percentiles(collect(results, 'prFirstReviewMedianHours')),
-    prFirstReviewP90Hours:           percentiles(collect(results, 'prFirstReviewP90Hours')),
-    issueResolutionMedianHours:      percentiles(collect(results, 'issueResolutionMedianHours')),
-    issueResolutionP90Hours:         percentiles(collect(results, 'issueResolutionP90Hours')),
-    prMergeMedianHours:              percentiles(collect(results, 'prMergeMedianHours')),
-    prMergeP90Hours:                 percentiles(collect(results, 'prMergeP90Hours')),
-    issueResolutionRate:             percentiles(collect(results, 'issueResolutionRate')),
-    contributorResponseRate:         percentiles(collect(results, 'contributorResponseRate')),
-    humanResponseRatio:              percentiles(collect(results, 'humanResponseRatio')),
-    botResponseRatio:                percentiles(collect(results, 'botResponseRatio')),
-    prReviewDepth:                   percentiles(collect(results, 'prReviewDepth')),
-    issuesClosedWithoutCommentRatio: percentiles(collect(results, 'issuesClosedWithoutCommentRatio')),
-    topContributorShare:             percentiles(collect(results, 'topContributorShare')),
+    stars:                           computePercentiles(collect(results, 'stars')),
+    forks:                           computePercentiles(collect(results, 'forks')),
+    watchers:                        computePercentiles(collect(results, 'watchers')),
+    forkRate:                        computePercentiles(collect(results, 'forkRate')),
+    watcherRate:                     computePercentiles(collect(results, 'watcherRate')),
+    prMergeRate:                     computePercentiles(collect(results, 'prMergeRate')),
+    issueClosureRate:                computePercentiles(collect(results, 'issueClosureRate')),
+    staleIssueRatio:                 computePercentiles(collect(results, 'staleIssueRatio')),
+    stalePrRatio:                    computePercentiles(collect(results, 'stalePrRatio')),
+    medianTimeToMergeHours:          computePercentiles(collect(results, 'medianTimeToMergeHours')),
+    medianTimeToCloseHours:          computePercentiles(collect(results, 'medianTimeToCloseHours')),
+    issueFirstResponseMedianHours:   computePercentiles(collect(results, 'issueFirstResponseMedianHours')),
+    issueFirstResponseP90Hours:      computePercentiles(collect(results, 'issueFirstResponseP90Hours')),
+    prFirstReviewMedianHours:        computePercentiles(collect(results, 'prFirstReviewMedianHours')),
+    prFirstReviewP90Hours:           computePercentiles(collect(results, 'prFirstReviewP90Hours')),
+    issueResolutionMedianHours:      computePercentiles(collect(results, 'issueResolutionMedianHours')),
+    issueResolutionP90Hours:         computePercentiles(collect(results, 'issueResolutionP90Hours')),
+    prMergeMedianHours:              computePercentiles(collect(results, 'prMergeMedianHours')),
+    prMergeP90Hours:                 computePercentiles(collect(results, 'prMergeP90Hours')),
+    issueResolutionRate:             computePercentiles(collect(results, 'issueResolutionRate')),
+    contributorResponseRate:         computePercentiles(collect(results, 'contributorResponseRate')),
+    humanResponseRatio:              computePercentiles(collect(results, 'humanResponseRatio')),
+    botResponseRatio:                computePercentiles(collect(results, 'botResponseRatio')),
+    prReviewDepth:                   computePercentiles(collect(results, 'prReviewDepth')),
+    issuesClosedWithoutCommentRatio: computePercentiles(collect(results, 'issuesClosedWithoutCommentRatio')),
+    topContributorShare:             computePercentiles(collect(results, 'topContributorShare')),
   }
 }
 
