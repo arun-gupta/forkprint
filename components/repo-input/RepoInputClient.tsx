@@ -601,7 +601,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
   const overviewContent = (
     <div className="space-y-4">
-      {inputMode === 'foundation' && !foundationResult && !foundationError && !loadingFoundation ? (
+      {inputMode === 'foundation' && !foundationResult && !foundationError && !loadingFoundation && !pendingBoardScan ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Enter one or more repos or an org slug above and click <span className="font-medium text-slate-700 dark:text-slate-200">Analyze</span> to check foundation readiness.
