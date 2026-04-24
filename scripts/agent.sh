@@ -715,7 +715,12 @@ echo "PORT=$port" >> "$WT_PATH/.env.local"
 ( cd "$WT_PATH" && npm install --silent )
 
 # 4. Start dev server; capture PID for the .agent state file
-DEV_PID="$( cd "$WT_PATH" && nohup npm run dev -- -p "$port" > dev.log 2>&1 & echo $! )"
+# Write PID to a temp file instead of using $() command substitution — $() creates a
+# pipe that Next.js child processes can inherit, causing bash to wait for them before
+# the substitution completes (indefinite hang). cd runs in the subshell foreground (;
+# not &&) so that .dev.pid and dev.log resolve relative to $WT_PATH.
+( cd "$WT_PATH"; nohup npm run dev -- -p "$port" > dev.log 2>&1 & echo $! > .dev.pid )
+DEV_PID="$(cat "$WT_PATH/.dev.pid")"
 echo "Dev server: http://localhost:$port (log: $WT_PATH/dev.log)"
 
 # 5. Generate session UUID and write the .agent state file
