@@ -124,15 +124,18 @@ remove_worktree() {
   local wt branch push_err
   wt="$(git -C "$REPO_ROOT" worktree list --porcelain \
     | awk -v i="-${issue}-" '/^worktree/ && $2 ~ i {print $2; exit}')"
-  if [[ -z "${wt:-}" ]]; then
-    echo "note: no registered worktree found for issue $issue — will still clean up branches."
-  fi
-
   if [[ -n "${wt:-}" ]]; then
     branch="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
   else
     branch="$(git -C "$REPO_ROOT" for-each-ref --format='%(refname:short)' "refs/heads/${issue}-*" | head -1)"
   fi
+
+  if [[ -z "${wt:-}" && -z "${branch:-}" ]]; then
+    echo "Nothing to remove: no worktree or branch found for issue $issue."
+    exit 0
+  fi
+
+  [[ -z "${wt:-}" ]] && echo "note: no registered worktree found for issue $issue — will still clean up branches."
 
   echo "WARNING: This will permanently discard all uncommitted and unpushed work for issue #${issue}." >&2
   [[ -n "${wt:-}" ]]     && echo "         Worktree:      $wt" >&2
