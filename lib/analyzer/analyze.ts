@@ -688,8 +688,26 @@ interface ResponseSignal {
   firstHumanResponseAt: string | null
 }
 
+interface AnalyzerError {
+  message?: string
+  status?: number
+  retryAfter?: number | Unavailable
+}
+
+export function toAnalyzerError(error: unknown): AnalyzerError {
+  if (error === null || typeof error !== 'object') return {}
+  const e = error as Record<string, unknown>
+  return {
+    message: typeof e.message === 'string' ? e.message : undefined,
+    status: typeof e.status === 'number' ? e.status : undefined,
+    retryAfter: typeof e.retryAfter === 'number' || e.retryAfter === 'unavailable'
+      ? e.retryAfter as number | Unavailable
+      : undefined,
+  }
+}
+
 function extractRateLimitFromError(error: unknown): RateLimitState | null {
-  const maybeError = error as Error & { status?: number; retryAfter?: number | Unavailable }
+  const maybeError = toAnalyzerError(error)
 
   if (maybeError.status !== 403 && maybeError.retryAfter == null) {
     return null
@@ -2534,8 +2552,8 @@ function getCommitActorKey(node: CommitNode): string | null {
 }
 
 function buildFailure(repo: string, error: unknown): RepositoryFetchFailure {
-  const maybeError = error as Error & { status?: number; retryAfter?: number | Unavailable }
-  const message = maybeError?.message?.toLowerCase() ?? ''
+  const maybeError = toAnalyzerError(error)
+  const message = maybeError.message?.toLowerCase() ?? ''
 
   if (message.includes('not found')) {
     return { repo, reason: 'Repository could not be analyzed.', code: 'NOT_FOUND' }
@@ -2575,13 +2593,13 @@ function buildDiagnostic(
   error: unknown,
   level: AnalysisDiagnostic['level'] = 'warn',
 ): AnalysisDiagnostic {
-  const maybeError = error as Error & { status?: number; retryAfter?: number | Unavailable }
+  const maybeError = toAnalyzerError(error)
 
   return {
     level,
     repo,
     source,
-    message: maybeError?.message ?? 'Unknown analysis error',
+    message: maybeError.message ?? 'Unknown analysis error',
     status: maybeError.status,
     retryAfter: maybeError.retryAfter,
   }
