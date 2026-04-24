@@ -33,7 +33,7 @@ import { resultTabs } from '@/lib/results-shell/tabs'
 import { decodeRepos, decodeFoundationUrl } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
-import { fetchBoardRepos } from '@/lib/foundation/fetch-board-repos'
+import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
 import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 import { FoundationResultsView, type FoundationResult } from '@/components/foundation/FoundationResultsView'
@@ -74,6 +74,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingFoundation, setLoadingFoundation] = useState(false)
   const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
   const [foundationError, setFoundationError] = useState<string | null>(null)
+  const [pendingBoardScan, setPendingBoardScan] = useState<{
+    repos: string[]
+    skipped: SkippedIssue[]
+    method: 'graphql' | 'labels'
+    url: string
+  } | null>(null)
   const cncfBadges: CNCFFieldBadge[] = aspirantResult
     ? aspirantResult.autoFields.map((field) => ({ fieldId: field.id, label: field.label, status: field.status }))
     : []
@@ -282,6 +288,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setFoundationResult(null)
     setFoundationError(null)
     setFoundationLoadingItems([])
+    setPendingBoardScan(null)
     previousFoundationResultRef.current = null
   }
 
@@ -302,10 +309,12 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     previousFoundationResultRef.current = foundationResult
     setFoundationError(null)
     setFoundationResult(null)
+    setPendingBoardScan(null)
     setLoadingFoundation(true)
 
     if (parsed.kind === 'projects-board') {
-      setFoundationLoadingItems(['Resolving repositories from CNCF sandbox board…'])
+      // Phase 1: resolve repos (fast) — then pause for user review
+      setFoundationLoadingItems(['Resolving repositories from board…'])
       try {
         const { repos, skipped, method } = await fetchBoardRepos(session.token, parsed.url)
 
@@ -313,25 +322,19 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
 
         if (repos.length === 0) {
           setFoundationError(
-            'No repositories could be resolved from the CNCF sandbox board. The New and Upcoming columns may be empty, or issue bodies may not contain parseable repository URLs.',
+            'No repositories could be resolved from the CNCF sandbox board. The New and review/tech columns may be empty, or issue bodies may not contain parseable repository URLs.',
           )
           return
         }
 
-        setFoundationLoadingItems(repos)
-
-        const response = onAnalyze
-          ? await onAnalyze(repos, session.token)
-          : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal)
-
-        if (response && !controller.signal.aborted) {
-          setFoundationResult({ kind: 'projects-board', url: parsed.url, results: response, skipped, method })
-        }
+        // Pause here — show review panel so user can confirm before analysis
+        setPendingBoardScan({ repos, skipped, method, url: parsed.url })
       } catch (error) {
         if (controller.signal.aborted) return
         setFoundationError(error instanceof Error ? error.message : 'Board scan failed.')
       } finally {
         setLoadingFoundation(false)
+        setFoundationLoadingItems([])
         foundationFetchAbortRef.current = null
       }
       return
@@ -459,8 +462,46 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     foundationFetchAbortRef.current = null
     setLoadingFoundation(false)
     setFoundationLoadingItems([])
-    setFoundationResult(previousFoundationResultRef.current)
+    // If analysis was aborted for a board scan, keep pendingBoardScan so the
+    // review panel reappears; otherwise restore the previous result.
+    if (!pendingBoardScan) {
+      setFoundationResult(previousFoundationResultRef.current)
+    }
     previousFoundationResultRef.current = null
+  }
+
+  async function handleStartBoardAnalysis() {
+    if (!session?.token || !pendingBoardScan) return
+
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
+    previousFoundationResultRef.current = foundationResult
+    setFoundationError(null)
+    setFoundationResult(null)
+    setLoadingFoundation(true)
+    setFoundationLoadingItems(pendingBoardScan.repos)
+
+    const { repos, skipped, method, url } = pendingBoardScan
+
+    try {
+      const response = onAnalyze
+        ? await onAnalyze(repos, session.token)
+        : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal)
+
+      if (response && !controller.signal.aborted) {
+        setFoundationResult({ kind: 'projects-board', url, results: response, skipped, method })
+        setPendingBoardScan(null)
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return
+      setFoundationError(error instanceof Error ? error.message : 'Board scan failed.')
+    } finally {
+      setLoadingFoundation(false)
+      setFoundationLoadingItems([])
+      foundationFetchAbortRef.current = null
+    }
   }
 
   async function handleOrgSubmit(org: string) {
@@ -804,7 +845,81 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           )}
         </section>
       ) : null}
-      {inputMode === 'foundation' ? (
+      {inputMode === 'foundation' && pendingBoardScan && !loadingFoundation ? (
+        <section className="space-y-4">
+          <div className="rounded border border-sky-200 bg-sky-50 p-4 dark:border-sky-800/60 dark:bg-sky-900/20">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-sky-900 dark:text-sky-200">
+                  {pendingBoardScan.repos.length} {pendingBoardScan.repos.length === 1 ? 'repository' : 'repositories'} found
+                </p>
+                <p className="mt-1 text-sm text-sky-800 dark:text-sky-300">
+                  Review the list below, then click <strong>Analyze</strong> to run the CNCF Sandbox readiness scan.
+                </p>
+                {pendingBoardScan.method === 'labels' ? (
+                  <p className="mt-2 text-xs text-sky-600 dark:text-sky-400">
+                    <span className="font-medium">Note:</span> Results are based on issue labels and may include repos no longer in those columns.{' '}
+                    <a href="/api/auth/login?scope_tier=read-project" className="underline hover:no-underline">
+                      Re-authenticate with board read access
+                    </a>{' '}
+                    for exact results.
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleStartBoardAnalysis()}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500"
+                >
+                  Analyze
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingBoardScan(null)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+            <ul className="mt-3 grid grid-cols-1 gap-1 sm:grid-cols-2">
+              {pendingBoardScan.repos.map((repo) => (
+                <li key={repo} className="truncate text-sm text-sky-900 dark:text-sky-200">
+                  <a
+                    href={`https://github.com/${repo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:no-underline"
+                  >
+                    {repo}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {pendingBoardScan.skipped.length > 0 ? (
+            <section className="rounded border border-amber-200 bg-amber-50 p-4 dark:bg-amber-900/20 dark:border-amber-800/60">
+              <h2 className="font-semibold text-amber-900 dark:text-amber-200">
+                Skipped issues ({pendingBoardScan.skipped.length})
+              </h2>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                These issues could not be resolved to a repository URL and will be excluded from the scan.
+              </p>
+              <ul className="mt-2 list-disc pl-5 text-sm text-amber-900 dark:text-amber-200">
+                {pendingBoardScan.skipped.map((s) => (
+                  <li key={s.issueNumber}>
+                    <a href={s.issueUrl} target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">
+                      #{s.issueNumber} {s.title}
+                    </a>: {s.reason}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </section>
+      ) : null}
+      {inputMode === 'foundation' && !pendingBoardScan ? (
         <FoundationResultsView
           result={foundationResult}
           error={foundationError}
