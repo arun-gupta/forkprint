@@ -11,7 +11,7 @@ interface Props {
 export function ActivityRollupPanel({ panel }: Props) {
   return (
     <PanelShell label="Activity rollup" panel={panel} noDataMessage="No activity data available across this run.">
-      <Body value={panel.value!} />
+      {panel.value ? <Body value={panel.value} /> : null}
     </PanelShell>
   )
 }

@@ -12,16 +12,18 @@ interface Props {
 export function ProjectFootprintPanel({ panel }: Props) {
   return (
     <PanelShell label="Project footprint" panel={panel} noDataMessage="No footprint data available across this run.">
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Total stars" value={panel.value!.totalStars} />
-        <Stat label="Total forks" value={panel.value!.totalForks} />
-        <Stat label="Total watchers" value={panel.value!.totalWatchers} />
-        <Stat
-          label="Unique contributors (365d)"
-          value={panel.value!.totalContributors}
-          tooltip="Unique contributors across all analyzed repos in the last 365 days"
-        />
-      </dl>
+      {panel.value ? (
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Total stars" value={panel.value.totalStars} />
+          <Stat label="Total forks" value={panel.value.totalForks} />
+          <Stat label="Total watchers" value={panel.value.totalWatchers} />
+          <Stat
+            label="Unique contributors (365d)"
+            value={panel.value.totalContributors}
+            tooltip="Unique contributors across all analyzed repos in the last 365 days"
+          />
+        </dl>
+      ) : null}
     </PanelShell>
   )
 }

@@ -11,7 +11,7 @@ interface Props {
 export function ReleaseCadencePanel({ panel }: Props) {
   return (
     <PanelShell label="Release cadence" panel={panel} noDataMessage="No release data available across this run.">
-      <Body value={panel.value!} />
+      {panel.value ? <Body value={panel.value} /> : null}
     </PanelShell>
   )
 }

@@ -16,38 +16,40 @@ const TIER_TOOLTIPS = {
 export function InclusiveNamingRollupPanel({ panel }: Props) {
   return (
     <PanelShell label="Inclusive naming" panel={panel} noDataMessage="No inclusive naming data available.">
-      <>
-        <dl className="mb-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat
-            label="Tier 1 violations"
-            tooltip={TIER_TOOLTIPS.tier1}
-            value={panel.value!.tier1}
-            tone={panel.value!.tier1 > 0 ? 'bad' : 'good'}
-          />
-          <Stat
-            label="Tier 2 violations"
-            tooltip={TIER_TOOLTIPS.tier2}
-            value={panel.value!.tier2}
-            tone={panel.value!.tier2 > 0 ? 'warn' : 'good'}
-          />
-          <Stat
-            label="Tier 3 violations"
-            tooltip={TIER_TOOLTIPS.tier3}
-            value={panel.value!.tier3}
-            tone="neutral"
-          />
-          <Stat
-            label="Repos with violations"
-            tooltip={`${panel.value!.reposWithAnyViolation} of ${panel.contributingReposCount} scanned ${panel.contributingReposCount === 1 ? 'repo' : 'repos'} have at least one Tier 1–3 violation.`}
-            value={panel.value!.reposWithAnyViolation}
-            denominator={panel.contributingReposCount}
-            tone={panel.value!.reposWithAnyViolation > 0 ? 'warn' : 'good'}
-          />
-        </dl>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Tier counts are violation occurrences (one repo can contribute multiple). Hover each label for the tier definition.
-        </p>
-      </>
+      {panel.value ? (
+        <>
+          <dl className="mb-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat
+              label="Tier 1 violations"
+              tooltip={TIER_TOOLTIPS.tier1}
+              value={panel.value.tier1}
+              tone={panel.value.tier1 > 0 ? 'bad' : 'good'}
+            />
+            <Stat
+              label="Tier 2 violations"
+              tooltip={TIER_TOOLTIPS.tier2}
+              value={panel.value.tier2}
+              tone={panel.value.tier2 > 0 ? 'warn' : 'good'}
+            />
+            <Stat
+              label="Tier 3 violations"
+              tooltip={TIER_TOOLTIPS.tier3}
+              value={panel.value.tier3}
+              tone="neutral"
+            />
+            <Stat
+              label="Repos with violations"
+              tooltip={`${panel.value.reposWithAnyViolation} of ${panel.contributingReposCount} scanned ${panel.contributingReposCount === 1 ? 'repo' : 'repos'} have at least one Tier 1–3 violation.`}
+              value={panel.value.reposWithAnyViolation}
+              denominator={panel.contributingReposCount}
+              tone={panel.value.reposWithAnyViolation > 0 ? 'warn' : 'good'}
+            />
+          </dl>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Tier counts are violation occurrences (one repo can contribute multiple). Hover each label for the tier definition.
+          </p>
+        </>
+      ) : null}
     </PanelShell>
   )
 }

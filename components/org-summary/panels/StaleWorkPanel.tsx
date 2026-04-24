@@ -9,11 +9,13 @@ interface Props { panel: AggregatePanel<StaleWorkValue> }
 export function StaleWorkPanel({ panel }: Props) {
   return (
     <PanelShell label="Stale work" panel={panel} noDataMessage="No stale work data available.">
-      <dl className="grid grid-cols-3 gap-3">
-        <Stat label="Open issues" value={panel.value!.totalOpenIssues.toLocaleString()} />
-        <Stat label="Open PRs (90d)" value={panel.value!.totalOpenPullRequests.toLocaleString()} />
-        <Stat label="Stale issue ratio" value={panel.value!.weightedStaleIssueRatio !== null ? `${(panel.value!.weightedStaleIssueRatio * 100).toFixed(1)}%` : '—'} />
-      </dl>
+      {panel.value ? (
+        <dl className="grid grid-cols-3 gap-3">
+          <Stat label="Open issues" value={panel.value.totalOpenIssues.toLocaleString()} />
+          <Stat label="Open PRs (90d)" value={panel.value.totalOpenPullRequests.toLocaleString()} />
+          <Stat label="Stale issue ratio" value={panel.value.weightedStaleIssueRatio !== null ? `${(panel.value.weightedStaleIssueRatio * 100).toFixed(1)}%` : '—'} />
+        </dl>
+      ) : null}
     </PanelShell>
   )
 }

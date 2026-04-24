@@ -28,7 +28,7 @@ export function SecurityRollupPanel({ panel }: Props) {
       panel={panel}
       noDataMessage="No security data available across this run."
     >
-      <Body value={panel.value!} />
+      {panel.value ? <Body value={panel.value} /> : null}
     </PanelShell>
   )
 }
