@@ -1,48 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { getDefaultScoreBadges, getScoreBadges, scoreToneClass } from './score-config'
-
-describe('score-config', () => {
-  it('returns one default badge per CHAOSS category', () => {
-    const badges = getDefaultScoreBadges()
-
-    expect(badges).toHaveLength(5)
-    expect(badges.map((badge) => badge.category)).toEqual([
-      'Contributors',
-      'Activity',
-      'Responsiveness',
-      'Documentation',
-      'Security',
-    ])
-    expect(badges.every((badge) => badge.value === 'Not scored yet')).toBe(true)
-  })
-
-  it('maps tones to consistent classes', () => {
-    expect(scoreToneClass('success')).toContain('emerald')
-    expect(scoreToneClass('warning')).toContain('amber')
-    expect(scoreToneClass('danger')).toContain('red')
-    expect(scoreToneClass('neutral')).toContain('slate')
-  })
-
-  it('replaces the activity, contributors, and responsiveness placeholders when real scores are available', () => {
-    const badges = getScoreBadges(buildResult())
-
-    expect(typeof badges.find((badge) => badge.category === 'Activity')?.value).toBe('number')
-    expect(typeof badges.find((badge) => badge.category === 'Contributors')?.value).toBe('number')
-    expect(typeof badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('number')
-  })
-})
+import { buildResult as _buildResult, INCLUSIVE_NAMING_CLEAN } from '@/lib/testing/fixtures'
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
+  return _buildResult({
     repo: 'facebook/react',
-    name: 'react',
-    description: 'The library for web and native user interfaces.',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 25,
-    watchers: 10,
     commits30d: 7,
     commits90d: 18,
     releases12mo: 6,
@@ -81,31 +44,44 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
       openPullRequestCount: 11,
     },
     uniqueCommitAuthors90d: 4,
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
     commitCountsByAuthor: {
       'login:alice': 5,
       'login:bob': 2,
       'login:carol': 1,
       'login:dave': 1,
     },
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: {
-      defaultBranchName: 'main',
-      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
-      metadataChecks: [],
-    },
-    securityResult: 'unavailable',
-    missingFields: [],
+    inclusiveNamingResult: INCLUSIVE_NAMING_CLEAN,
     ...overrides,
-  }
+  })
 }
+
+describe('score-config', () => {
+  it('returns one default badge per CHAOSS category', () => {
+    const badges = getDefaultScoreBadges()
+
+    expect(badges).toHaveLength(5)
+    expect(badges.map((badge) => badge.category)).toEqual([
+      'Contributors',
+      'Activity',
+      'Responsiveness',
+      'Documentation',
+      'Security',
+    ])
+    expect(badges.every((badge) => badge.value === 'Not scored yet')).toBe(true)
+  })
+
+  it('maps tones to consistent classes', () => {
+    expect(scoreToneClass('success')).toContain('emerald')
+    expect(scoreToneClass('warning')).toContain('amber')
+    expect(scoreToneClass('danger')).toContain('red')
+    expect(scoreToneClass('neutral')).toContain('slate')
+  })
+
+  it('replaces the activity, contributors, and responsiveness placeholders when real scores are available', () => {
+    const badges = getScoreBadges(buildResult())
+
+    expect(typeof badges.find((badge) => badge.category === 'Activity')?.value).toBe('number')
+    expect(typeof badges.find((badge) => badge.category === 'Contributors')?.value).toBe('number')
+    expect(typeof badges.find((badge) => badge.category === 'Responsiveness')?.value).toBe('number')
+  })
+})

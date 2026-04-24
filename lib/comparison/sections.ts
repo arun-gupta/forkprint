@@ -293,7 +293,7 @@ export const COMPARISON_SECTIONS: ComparisonSectionDefinition[] = [
         direction: 'lower-is-better',
         valueType: 'percentage',
         getValue: (result) => computeContributionConcentration(result.commitCountsByAuthor),
-        formatValue: formatContributorPercentage,
+        formatValue: (value) => formatContributorPercentage(value),
       },
       {
         id: 'contributors-score',

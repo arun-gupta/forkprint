@@ -20,6 +20,7 @@
       "Bash(printf:*)",
       "Bash(lsof:*)",
       "Bash(uuidgen:*)",
+      "Bash(cd /Users/arungupta/workspaces/repo-pulse *)",
       "Read",
       "Edit",
       "Write",
@@ -29,5 +30,5 @@
       "WebFetch(domain:api.github.com)"
     ]
   },
-  "enabledMcpjsonServers": ["github", "playwright", "vercel", "context7"]
+  "enabledMcpjsonServers": ["github", "playwright", "context7"]
 }

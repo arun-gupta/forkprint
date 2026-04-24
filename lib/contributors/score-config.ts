@@ -1,6 +1,9 @@
 import type { AnalysisResult, ContributorWindowDays, Unavailable } from '@/lib/analyzer/analysis-result'
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { MATURITY_CONFIG, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
+import { formatPercentage } from '@/lib/scoring/formatters'
+
+export { formatPercentage }
 
 export interface ContributorsScoreDefinition {
   value: ScoreValue
@@ -341,10 +344,3 @@ function getContributionConcentrationDetails(
   }
 }
 
-export function formatPercentage(value: number | Unavailable) {
-  if (value === 'unavailable') {
-    return '—'
-  }
-
-  return `${(value * 100).toFixed(1)}%`
-}

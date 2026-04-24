@@ -20,6 +20,7 @@ import {
   LICENSING_WEIGHTS,
   COMPOSITE_WEIGHTS,
 } from '../lib/documentation/score-config'
+import { computePercentiles } from './percentile-utils'
 
 loadEnvConfig(process.cwd())
 
@@ -341,25 +342,6 @@ function computeDocScore(repo: DocRepoData): number {
     licensingScore * COMPOSITE_WEIGHTS.licensing +
     inclusiveNamingScore * COMPOSITE_WEIGHTS.inclusiveNaming
   )
-}
-
-// ─── Percentile computation ──────────────────────────────────────────────────
-
-function computePercentiles(values: number[]): { p25: number; p50: number; p75: number; p90: number } {
-  const sorted = [...values].sort((a, b) => a - b)
-  const at = (p: number) => {
-    const idx = (p / 100) * (sorted.length - 1)
-    const lo = Math.floor(idx)
-    const hi = Math.ceil(idx)
-    if (lo === hi) return sorted[lo]!
-    return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (idx - lo)
-  }
-  return {
-    p25: Math.round(at(25) * 1000) / 1000,
-    p50: Math.round(at(50) * 1000) / 1000,
-    p75: Math.round(at(75) * 1000) / 1000,
-    p90: Math.round(at(90) * 1000) / 1000,
-  }
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────

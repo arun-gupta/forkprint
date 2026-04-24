@@ -5,6 +5,17 @@ import { evaluateAspirant } from '@/lib/cncf-sandbox/evaluate'
 import { parseApplicationIssue } from '@/lib/cncf-sandbox/parse-application'
 import { buildApprovedCorpusSummary } from '@/lib/cncf-sandbox/approved-corpus'
 
+export const MAX_REPOS_PER_REQUEST = 25
+
+/** Returns true for a well-formed "owner/name" GitHub slug (no leading slash, exactly one slash, both parts non-empty). */
+function isValidRepoSlug(slug: string): boolean {
+  const slash = slug.indexOf('/')
+  if (slash <= 0) return false
+  const owner = slug.slice(0, slash)
+  const name = slug.slice(slash + 1)
+  return owner.length > 0 && name.length > 0 && !name.includes('/')
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -15,13 +26,22 @@ export async function POST(request: Request) {
     }
 
     if (!Array.isArray(body.repos) || body.repos.length === 0) {
-      return Response.json({ error: 'At least one repository is required.' }, { status: 400 })
+      return Response.json({ error: { message: 'At least one repository is required.', code: 'INVALID_INPUT' } }, { status: 400 })
+    }
+
+    if (body.repos.length > MAX_REPOS_PER_REQUEST) {
+      return Response.json({ error: { message: `Too many repositories. Maximum allowed is ${MAX_REPOS_PER_REQUEST}.`, code: 'TOO_MANY_REPOS' } }, { status: 400 })
+    }
+
+    const invalidSlugs = body.repos.filter((r) => !isValidRepoSlug(r))
+    if (invalidSlugs.length > 0) {
+      return Response.json({ error: { message: `Invalid repository slug(s): ${invalidSlugs.join(', ')}. Expected format: owner/name.`, code: 'INVALID_SLUG' } }, { status: 400 })
     }
 
     const token = body.token
 
     if (!token) {
-      return Response.json({ error: 'Authentication required.' }, { status: 401 })
+      return Response.json({ error: { message: 'Authentication required.', code: 'UNAUTHENTICATED' } }, { status: 401 })
     }
 
     const foundationTarget: FoundationTarget = body.foundationTarget ?? 'none'
@@ -113,6 +133,6 @@ export async function POST(request: Request) {
     return Response.json(response)
   } catch (error) {
     console.error(`[analyze] Request failed:`, error)
-    return Response.json({ error: 'Analysis request failed.' }, { status: 500 })
+    return Response.json({ error: { message: 'Analysis request failed.', code: 'INTERNAL_ERROR' } }, { status: 500 })
   }
 }

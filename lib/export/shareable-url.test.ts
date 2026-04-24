@@ -1,5 +1,29 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { encodeRepos, decodeRepos, encodeFoundationUrl, decodeFoundationUrl } from './shareable-url'
+import { encodeRepos, decodeRepos, encodeFoundationUrl, decodeFoundationUrl, isValidRepoSlug } from './shareable-url'
+
+describe('isValidRepoSlug', () => {
+  it.each([
+    'facebook/react',
+    'vercel/next.js',
+    'owner/repo',
+    'a/b',
+    'my-org/my-repo_v2',
+  ])('accepts valid slug %s', (slug) => {
+    expect(isValidRepoSlug(slug)).toBe(true)
+  })
+
+  it.each([
+    ['/react', 'leading slash'],
+    ['react', 'bare name with no slash'],
+    ['owner/', 'empty repo segment'],
+    ['/owner/repo', 'leading slash with nested path'],
+    ['owner/repo/extra', 'too many slashes'],
+    ['/', 'slash only'],
+    ['', 'empty string'],
+  ])('rejects invalid slug: %s (%s)', (slug) => {
+    expect(isValidRepoSlug(slug)).toBe(false)
+  })
+})
 
 describe('encodeRepos', () => {
   beforeEach(() => {
@@ -61,6 +85,28 @@ describe('decodeRepos', () => {
     const search = '?' + url.split('?')[1]
     expect(decodeRepos(search)).toEqual(repos)
     vi.unstubAllGlobals()
+  })
+
+  it('silently drops a leading-slash slug (/react)', () => {
+    expect(decodeRepos('?repos=%2Freact')).toEqual([])
+  })
+
+  it('silently drops a bare name with no slash', () => {
+    expect(decodeRepos('?repos=react')).toEqual([])
+  })
+
+  it('silently drops a slug with empty repo segment (owner/)', () => {
+    expect(decodeRepos('?repos=owner%2F')).toEqual([])
+  })
+
+  it('silently drops a deeply-nested path (owner/repo/extra)', () => {
+    expect(decodeRepos('?repos=owner%2Frepo%2Fextra')).toEqual([])
+  })
+
+  it('keeps valid slugs and drops invalid ones in a mixed list', () => {
+    expect(
+      decodeRepos('?repos=facebook%2Freact,%2Fbad,bare,vercel%2Fnext.js,owner%2F')
+    ).toEqual(['facebook/react', 'vercel/next.js'])
   })
 })
 

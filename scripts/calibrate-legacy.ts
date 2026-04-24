@@ -18,6 +18,7 @@ import { loadEnvConfig } from '@next/env'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { analyze } from '../lib/analyzer/analyze'
 import type { AnalysisResult } from '../lib/analyzer/analysis-result'
+import { computePercentiles, type PercentileSet } from './percentile-utils'
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -51,13 +52,6 @@ interface Checkpoint {
   sampledRepos: Record<BracketKey, string[]>
 }
 
-interface PercentileSet {
-  p25: number
-  p50: number
-  p75: number
-  p90: number
-}
-
 interface BracketCalibration {
   sampleSize: number
   stars: PercentileSet
@@ -84,22 +78,6 @@ interface CalibrationData {
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
-
-function percentile(values: number[], p: number): number {
-  if (values.length === 0) return 0
-  const sorted = [...values].sort((a, b) => a - b)
-  const index = Math.ceil((p / 100) * sorted.length) - 1
-  return Math.round(sorted[Math.max(0, index)] * 1000) / 1000
-}
-
-function percentiles(values: number[]): PercentileSet {
-  return {
-    p25: percentile(values, 25),
-    p50: percentile(values, 50),
-    p75: percentile(values, 75),
-    p90: percentile(values, 90),
-  }
-}
 
 function defined(v: number | 'unavailable' | undefined): v is number {
   return typeof v === 'number' && isFinite(v)
@@ -269,20 +247,20 @@ function computeBracketCalibration(results: AnalysisResult[]): BracketCalibratio
 
   return {
     sampleSize: results.length,
-    stars: percentiles(collect('stars')),
-    forks: percentiles(collect('forks')),
-    watchers: percentiles(collect('watchers')),
-    forkRate: percentiles(collect('forkRate')),
-    watcherRate: percentiles(collect('watcherRate')),
-    prMergeRate: percentiles(collect('prMergeRate')),
-    issueClosureRate: percentiles(collect('issueClosureRate')),
-    staleIssueRatio: percentiles(collect('staleIssueRatio')),
-    medianTimeToMergeHours: percentiles(collect('medianTimeToMergeHours')),
-    medianTimeToCloseHours: percentiles(collect('medianTimeToCloseHours')),
-    issueFirstResponseMedianHours: percentiles(collect('issueFirstResponseMedianHours')),
-    issueFirstResponseP90Hours: percentiles(collect('issueFirstResponseP90Hours')),
-    prFirstReviewMedianHours: percentiles(collect('prFirstReviewMedianHours')),
-    topContributorShare: percentiles(collect('topContributorShare')),
+    stars: computePercentiles(collect('stars')),
+    forks: computePercentiles(collect('forks')),
+    watchers: computePercentiles(collect('watchers')),
+    forkRate: computePercentiles(collect('forkRate')),
+    watcherRate: computePercentiles(collect('watcherRate')),
+    prMergeRate: computePercentiles(collect('prMergeRate')),
+    issueClosureRate: computePercentiles(collect('issueClosureRate')),
+    staleIssueRatio: computePercentiles(collect('staleIssueRatio')),
+    medianTimeToMergeHours: computePercentiles(collect('medianTimeToMergeHours')),
+    medianTimeToCloseHours: computePercentiles(collect('medianTimeToCloseHours')),
+    issueFirstResponseMedianHours: computePercentiles(collect('issueFirstResponseMedianHours')),
+    issueFirstResponseP90Hours: computePercentiles(collect('issueFirstResponseP90Hours')),
+    prFirstReviewMedianHours: computePercentiles(collect('prFirstReviewMedianHours')),
+    topContributorShare: computePercentiles(collect('topContributorShare')),
   }
 }
 

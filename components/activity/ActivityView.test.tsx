@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { ActivityView } from './ActivityView'
 import type { AnalysisResult, TrendComparisonMetrics } from '@/lib/analyzer/analysis-result'
+import { buildResult as _buildResult, INCLUSIVE_NAMING_CLEAN } from '@/lib/testing/fixtures'
 
 function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'day', Partial<TrendComparisonMetrics>>> = {}): Record<'month' | 'week' | 'day', TrendComparisonMetrics> {
   return {
@@ -13,15 +14,8 @@ function createTrendComparisons(overrides: Partial<Record<'month' | 'week' | 'da
 }
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
+  return _buildResult({
     repo: 'facebook/react',
-    name: 'react',
-    description: 'A UI library',
-    createdAt: '2013-05-24T16:15:54Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 25,
-    watchers: 10,
     commits30d: 7,
     commits90d: 18,
     releases12mo: 6,
@@ -29,13 +23,6 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     prsMerged90d: 3,
     issuesOpen: 5,
     issuesClosed90d: 6,
-    uniqueCommitAuthors90d: 'unavailable',
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: 'unavailable',
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
     activityMetricsByWindow: {
       30: { commits: 3, prsOpened: 5, prsMerged: 1, issuesOpened: 4, issuesClosed: 1, releases: 0, staleIssueRatio: 0.75, medianTimeToMergeHours: 240, medianTimeToCloseHours: 480 },
       60: { commits: 12, prsOpened: 3, prsMerged: 2, issuesOpened: 6, issuesClosed: 5, releases: 2, staleIssueRatio: 0.15, medianTimeToMergeHours: 18, medianTimeToCloseHours: 30 },
@@ -46,87 +33,16 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
     staleIssueRatio: 0.2,
     medianTimeToMergeHours: 24,
     medianTimeToCloseHours: 36,
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: {
-      defaultBranchName: 'main',
-      branchCheck: { checkType: 'branch', term: 'main', passed: true, tier: null, severity: null, replacements: [], context: null },
-      metadataChecks: [],
-    },
-    securityResult: 'unavailable',
     activityCadenceByWindow: {
-      30: {
-        totalWeeks: 5,
-        weeklyCommitCounts: [1, 0, 1, 0, 1],
-        activeWeeksRatio: 0.6,
-        commitRegularity: 0.4,
-        longestGapDays: 12,
-        weekendToWeekdayRatio: 0.5,
-        weekendCommitCount: 2,
-        weekdayCommitCount: 4,
-        trendComparisons: createTrendComparisons(),
-      },
-      60: {
-        totalWeeks: 9,
-        weeklyCommitCounts: [1, 1, 0, 1, 0, 1, 2, 0, 1],
-        activeWeeksRatio: 0.67,
-        commitRegularity: 0.5,
-        longestGapDays: 18,
-        weekendToWeekdayRatio: 0.5,
-        weekendCommitCount: 3,
-        weekdayCommitCount: 6,
-        trendComparisons: createTrendComparisons({
-          month: { currentPeriodCommitCount: 3, previousPeriodCommitCount: 4, delta: -0.25, direction: 'decelerating' },
-        }),
-      },
-      90: {
-        totalWeeks: 13,
-        weeklyCommitCounts: [1, 0, 1, 0, 1, 1, 0, 2, 0, 2, 1, 0, 1],
-        activeWeeksRatio: 0.62,
-        commitRegularity: 0.58,
-        longestGapDays: 21,
-        weekendToWeekdayRatio: 0.6,
-        weekendCommitCount: 6,
-        weekdayCommitCount: 10,
-        trendComparisons: createTrendComparisons({
-          month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' },
-        }),
-      },
-      180: {
-        totalWeeks: 26,
-        weeklyCommitCounts: Array.from({ length: 26 }, (_, index) => (index % 4 === 0 ? 2 : index % 3 === 0 ? 1 : 0)),
-        activeWeeksRatio: 0.5,
-        commitRegularity: 0.75,
-        longestGapDays: 34,
-        weekendToWeekdayRatio: 0.7,
-        weekendCommitCount: 9,
-        weekdayCommitCount: 13,
-        trendComparisons: createTrendComparisons({
-          month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' },
-        }),
-      },
-      365: {
-        totalWeeks: 53,
-        weeklyCommitCounts: Array.from({ length: 53 }, (_, index) => (index % 5 === 0 ? 2 : index % 3 === 0 ? 1 : 0)),
-        activeWeeksRatio: 0.55,
-        commitRegularity: 0.82,
-        longestGapDays: 41,
-        weekendToWeekdayRatio: 0.8,
-        weekendCommitCount: 16,
-        weekdayCommitCount: 20,
-        trendComparisons: createTrendComparisons({
-          month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' },
-        }),
-      },
+      30: { totalWeeks: 5, weeklyCommitCounts: [1, 0, 1, 0, 1], activeWeeksRatio: 0.6, commitRegularity: 0.4, longestGapDays: 12, weekendToWeekdayRatio: 0.5, weekendCommitCount: 2, weekdayCommitCount: 4, trendComparisons: createTrendComparisons() },
+      60: { totalWeeks: 9, weeklyCommitCounts: [1, 1, 0, 1, 0, 1, 2, 0, 1], activeWeeksRatio: 0.67, commitRegularity: 0.5, longestGapDays: 18, weekendToWeekdayRatio: 0.5, weekendCommitCount: 3, weekdayCommitCount: 6, trendComparisons: createTrendComparisons({ month: { currentPeriodCommitCount: 3, previousPeriodCommitCount: 4, delta: -0.25, direction: 'decelerating' } }) },
+      90: { totalWeeks: 13, weeklyCommitCounts: [1, 0, 1, 0, 1, 1, 0, 2, 0, 2, 1, 0, 1], activeWeeksRatio: 0.62, commitRegularity: 0.58, longestGapDays: 21, weekendToWeekdayRatio: 0.6, weekendCommitCount: 6, weekdayCommitCount: 10, trendComparisons: createTrendComparisons({ month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' } }) },
+      180: { totalWeeks: 26, weeklyCommitCounts: Array.from({ length: 26 }, (_, i) => (i % 4 === 0 ? 2 : i % 3 === 0 ? 1 : 0)), activeWeeksRatio: 0.5, commitRegularity: 0.75, longestGapDays: 34, weekendToWeekdayRatio: 0.7, weekendCommitCount: 9, weekdayCommitCount: 13, trendComparisons: createTrendComparisons({ month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' } }) },
+      365: { totalWeeks: 53, weeklyCommitCounts: Array.from({ length: 53 }, (_, i) => (i % 5 === 0 ? 2 : i % 3 === 0 ? 1 : 0)), activeWeeksRatio: 0.55, commitRegularity: 0.82, longestGapDays: 41, weekendToWeekdayRatio: 0.8, weekendCommitCount: 16, weekdayCommitCount: 20, trendComparisons: createTrendComparisons({ month: { currentPeriodCommitCount: 6, previousPeriodCommitCount: 4, delta: 0.5, direction: 'accelerating' } }) },
     },
-    licensingResult: 'unavailable',
-    missingFields: [],
+    inclusiveNamingResult: INCLUSIVE_NAMING_CLEAN,
     ...overrides,
-  }
+  })
 }
 
 describe('ActivityView', () => {

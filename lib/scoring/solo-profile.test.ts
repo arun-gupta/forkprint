@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult, DocumentationResult } from '@/lib/analyzer/analysis-result'
 import { SOLO_WEIGHTS, detectSoloProjectProfile } from './solo-profile'
+import { buildResult as _buildResult } from '@/lib/testing/fixtures'
 
 function docWithGovernance(found: boolean): DocumentationResult {
   return {
@@ -14,41 +15,13 @@ function docWithGovernance(found: boolean): DocumentationResult {
 }
 
 function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo: 'foo/bar',
-    name: 'bar',
-    description: '—',
-    createdAt: '2024-01-01T00:00:00Z',
-    primaryLanguage: 'TypeScript',
-    stars: 100,
-    forks: 10,
-    watchers: 5,
-    commits30d: 5,
-    commits90d: 15,
-    releases12mo: 2,
-    prsOpened90d: 3,
-    prsMerged90d: 2,
-    issuesOpen: 4,
-    issuesClosed90d: 3,
+  return _buildResult({
     uniqueCommitAuthors90d: 1,
     totalContributors: 1,
-    maintainerCount: 'unavailable',
     commitCountsByAuthor: { 'login:alice': 5 },
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
     documentationResult: docWithGovernance(false),
-    licensingResult: 'unavailable',
-    defaultBranchName: 'main',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
     ...overrides,
-  }
+  })
 }
 
 describe('SOLO_WEIGHTS', () => {

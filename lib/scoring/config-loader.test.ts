@@ -14,6 +14,7 @@ import {
   getBracket,
   getBracketLabel,
   getCalibrationForStars,
+  interpolatePercentile,
   isSoloFallback,
 } from './config-loader'
 
@@ -138,5 +139,79 @@ describe('Release Health config constants (P2-F09 / #69)', () => {
     expect(DOCUMENTATION_NOTES_BONUS).toBeLessThanOrEqual(0.05)
     expect(DOCUMENTATION_TAG_PROMOTION_BONUS).toBeGreaterThan(0)
     expect(DOCUMENTATION_TAG_PROMOTION_BONUS).toBeLessThanOrEqual(0.05)
+  })
+})
+
+describe('interpolatePercentile', () => {
+  const ps = { p25: 25, p50: 50, p75: 75, p90: 90 }
+
+  describe('normal mode (higher value = higher percentile)', () => {
+    it('returns 0 for value of 0 (below floor)', () => {
+      expect(interpolatePercentile(0, ps)).toBe(0)
+    })
+
+    it('returns 24 for a value exactly at p25', () => {
+      expect(interpolatePercentile(25, ps)).toBe(24)
+    })
+
+    it('returns a value between 24 and 50 for a value just above p25', () => {
+      const result = interpolatePercentile(26, ps)
+      expect(result).toBeGreaterThan(24)
+      expect(result).toBeLessThan(50)
+    })
+
+    it('returns 50 for a value exactly at p50', () => {
+      expect(interpolatePercentile(50, ps)).toBe(50)
+    })
+
+    it('returns 75 for a value exactly at p75', () => {
+      expect(interpolatePercentile(75, ps)).toBe(75)
+    })
+
+    it('returns 90 for a value exactly at p90', () => {
+      expect(interpolatePercentile(90, ps)).toBe(90)
+    })
+
+    it('returns a value above 90 for a value above p90 (ceiling overshoot)', () => {
+      expect(interpolatePercentile(180, ps)).toBeGreaterThan(90)
+      expect(interpolatePercentile(180, ps)).toBeLessThanOrEqual(99)
+    })
+
+    it('caps at 99 for extreme overshoot above p90', () => {
+      expect(interpolatePercentile(1e9, ps)).toBe(99)
+    })
+
+    it('interpolates linearly between p25 and p50', () => {
+      const midpoint = interpolatePercentile(37.5, ps)
+      expect(midpoint).toBeGreaterThanOrEqual(37)
+      expect(midpoint).toBeLessThanOrEqual(38)
+    })
+  })
+
+  describe('inverted mode (lower value = higher percentile)', () => {
+    it('returns 99 for value of 0 (best possible)', () => {
+      expect(interpolatePercentile(0, ps, true)).toBe(99)
+    })
+
+    it('returns 75 for a value exactly at p25 (best calibrated anchor)', () => {
+      expect(interpolatePercentile(25, ps, true)).toBe(75)
+    })
+
+    it('returns 50 for a value exactly at p50', () => {
+      expect(interpolatePercentile(50, ps, true)).toBe(50)
+    })
+
+    it('returns 25 for a value exactly at p75', () => {
+      expect(interpolatePercentile(75, ps, true)).toBe(25)
+    })
+
+    it('returns 10 for a value exactly at p90 (worst calibrated anchor)', () => {
+      expect(interpolatePercentile(90, ps, true)).toBe(10)
+    })
+
+    it('returns a value below 10 for a value above p90 (worst overshoot)', () => {
+      expect(interpolatePercentile(180, ps, true)).toBeLessThan(10)
+      expect(interpolatePercentile(180, ps, true)).toBeGreaterThanOrEqual(0)
+    })
   })
 })

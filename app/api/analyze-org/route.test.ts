@@ -59,6 +59,24 @@ describe('POST /api/analyze-org', () => {
     })
 
     const response = await POST(request)
+    const body = await response.json()
+
     expect(response.status).toBe(400)
+    expect(body.error).toEqual({ message: 'A GitHub organization is required.', code: 'INVALID_INPUT' })
+  })
+
+  // CON-06: structured error shape for 401
+  it('returns structured error shape for missing token (401)', async () => {
+    const request = new Request('http://localhost/api/analyze-org', {
+      method: 'POST',
+      body: JSON.stringify({ org: 'facebook' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(401)
+    expect(body.error).toEqual({ message: 'Authentication required.', code: 'UNAUTHENTICATED' })
   })
 })

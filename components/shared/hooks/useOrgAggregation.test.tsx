@@ -2,26 +2,17 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { DispatchResult } from '@/lib/org-aggregation/queue'
+import { buildResult } from '@/lib/testing/fixtures'
 import { useOrgAggregation } from './useOrgAggregation'
 
 function stub(repo: string, commits: Record<string, number> = { alice: 10 }): AnalysisResult {
   // Minimum `unavailable` sentinels that getHealthScore + detectSoloProjectProfile
   // touch — keeps the view-model pipeline from NPE'ing on the shallow fixture.
-  return {
+  return buildResult({
     repo,
     commitCountsByAuthor: commits,
-    contributorMetricsByWindow: {
-      90: { commitCountsByAuthor: commits },
-    },
-    documentationResult: 'unavailable',
-    securityResult: 'unavailable',
-    licensingResult: 'unavailable',
-    inclusiveNamingResult: 'unavailable',
-    totalContributors: 'unavailable',
-    uniqueCommitAuthors90d: 'unavailable',
-    maintainerCount: 'unavailable',
-    stars: 'unavailable',
-  } as unknown as AnalysisResult
+    contributorMetricsByWindow: { 90: { commitCountsByAuthor: commits } } as AnalysisResult['contributorMetricsByWindow'],
+  })
 }
 
 describe('useOrgAggregation — start flow (US1)', () => {

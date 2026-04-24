@@ -10,7 +10,19 @@ export function encodeRepos(repos: string[]): string {
 }
 
 /**
+ * Returns true for valid `owner/repo` slugs — exactly one `/` with non-empty
+ * owner and repo segments. Silently rejects leading slashes, bare names, and
+ * deeply-nested paths that would otherwise reach the analysis flow.
+ */
+export function isValidRepoSlug(slug: string): boolean {
+  const slash = slug.indexOf('/')
+  if (slash === -1 || slash !== slug.lastIndexOf('/')) return false
+  return slash > 0 && slash < slug.length - 1
+}
+
+/**
  * Decodes the `?repos=` query parameter from a URL search string into a repos array.
+ * Silently drops any token that does not match the `owner/repo` slug format.
  * Returns an empty array if the parameter is absent or empty.
  */
 export function decodeRepos(search: string): string[] {
@@ -20,7 +32,7 @@ export function decodeRepos(search: string): string[] {
   return raw
     .split(',')
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter(isValidRepoSlug)
 }
 
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'

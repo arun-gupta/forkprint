@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult, ContributorWindowMetrics } from '@/lib/analyzer/analysis-result'
+import { buildResult } from '@/lib/testing/fixtures'
 import type { AggregationContext } from './types'
 import { contributorDiversityAggregator } from './contributor-diversity'
 
@@ -10,11 +11,11 @@ function stub(
   windows: Partial<Record<30 | 60 | 90 | 180 | 365, WindowStub>> = {},
   totalContributors?: number,
 ): AnalysisResult {
-  return {
+  return buildResult({
     repo,
-    contributorMetricsByWindow: windows,
+    contributorMetricsByWindow: windows as AnalysisResult['contributorMetricsByWindow'],
     totalContributors,
-  } as unknown as AnalysisResult
+  })
 }
 
 function ctx(totalReposInRun = 3): AggregationContext {

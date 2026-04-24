@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult, ResponsivenessMetrics } from '@/lib/analyzer/analysis-result'
 import { responsivenessRollupAggregator, weightedMedian } from './responsiveness-rollup'
+import { buildResult } from '@/lib/testing/fixtures'
+
+function partialResult(repo: string, override: Partial<AnalysisResult> = {}): AnalysisResult {
+  return buildResult({ repo, name: repo, ...override })
+}
 
 function stubMetrics(partial: Partial<ResponsivenessMetrics>): ResponsivenessMetrics {
   return {
@@ -24,44 +29,6 @@ function stubMetrics(partial: Partial<ResponsivenessMetrics>): ResponsivenessMet
     openPullRequestCount: 'unavailable',
     ...partial,
   }
-}
-
-function partialResult(repo: string, override: Partial<AnalysisResult> = {}): AnalysisResult {
-  return {
-    repo,
-    name: repo,
-    description: 'unavailable',
-    createdAt: 'unavailable',
-    primaryLanguage: 'unavailable',
-    stars: 'unavailable',
-    forks: 'unavailable',
-    watchers: 'unavailable',
-    commits30d: 'unavailable',
-    commits90d: 'unavailable',
-    releases12mo: 'unavailable',
-    prsOpened90d: 'unavailable',
-    prsMerged90d: 'unavailable',
-    issuesOpen: 'unavailable',
-    issuesClosed90d: 'unavailable',
-    uniqueCommitAuthors90d: 'unavailable',
-    totalContributors: 'unavailable',
-    maintainerCount: 'unavailable',
-    commitCountsByAuthor: 'unavailable',
-    commitCountsByExperimentalOrg: 'unavailable',
-    experimentalAttributedAuthors90d: 'unavailable',
-    experimentalUnattributedAuthors90d: 'unavailable',
-    issueFirstResponseTimestamps: 'unavailable',
-    issueCloseTimestamps: 'unavailable',
-    prMergeTimestamps: 'unavailable',
-    documentationResult: 'unavailable',
-    licensingResult: 'unavailable',
-    defaultBranchName: 'unavailable',
-    topics: [],
-    inclusiveNamingResult: 'unavailable',
-    securityResult: 'unavailable',
-    missingFields: [],
-    ...override,
-  } as AnalysisResult
 }
 
 const CONTEXT = { totalReposInRun: 3, flagshipRepos: [], inactiveRepoWindowMonths: 12 }

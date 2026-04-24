@@ -12,6 +12,9 @@ import {
   interpolatePercentile,
   percentileToTone,
 } from '@/lib/scoring/config-loader'
+import { formatHours, formatPercentage } from '@/lib/scoring/formatters'
+
+export { formatHours, formatPercentage }
 
 export interface ActivityScoreDefinition {
   value: ScoreValue
@@ -337,14 +340,4 @@ function isVerifiedNumber(value: number | Unavailable | undefined): value is num
   return typeof value === 'number' && !Number.isNaN(value)
 }
 
-export function formatPercentage(value: number | Unavailable) {
-  if (value === 'unavailable') return '—'
-  return `${(value * 100).toFixed(1)}%`
-}
-
-export function formatHours(value: number | Unavailable) {
-  if (value === 'unavailable') return '—'
-  if (value < 24) return `${value.toFixed(1)}h`
-  return `${(value / 24).toFixed(1)}d`
-}
 

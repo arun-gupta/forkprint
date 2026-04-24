@@ -4,7 +4,7 @@ import { getResponsivenessScore, type ResponsivenessScoreDefinition } from '@/li
 import { getContributorsScore, type ContributorsScoreDefinition } from '@/lib/contributors/score-config'
 import { getDocumentationScore } from '@/lib/documentation/score-config'
 import { getSecurityScore } from '@/lib/security/score-config'
-import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, formatPercentileOrdinal, percentileToTone } from '@/lib/scoring/config-loader'
+import { RECOMMENDATION_PERCENTILE_GATE, formatPercentileLabel, percentileToTone } from '@/lib/scoring/config-loader'
 import { SOLO_WEIGHTS, detectSoloProjectProfile, type SoloProjectDetection } from '@/lib/scoring/solo-profile'
 import { generateReleaseHealthRecommendations } from '@/lib/release-health/recommendations'
 import type { ScoreTone } from '@/specs/008-metric-cards/contracts/metric-card-props'
@@ -192,7 +192,7 @@ export function getHealthScore(result: AnalysisResult, options: HealthScoreOptio
 
   return {
     percentile: compositePercentile,
-    label: compositePercentile !== null ? formatPercentileOrdinal(compositePercentile) : 'Insufficient data',
+    label: compositePercentile !== null ? formatPercentileLabel(compositePercentile) : 'Insufficient data',
     tone: compositePercentile !== null ? percentileToTone(compositePercentile) : 'neutral',
     bracketLabel,
     buckets,
