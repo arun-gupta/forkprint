@@ -505,6 +505,49 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     }
   }
 
+  async function handleReanalyzeBoard(url: string) {
+    if (!session?.token) return
+
+    foundationFetchAbortRef.current?.abort()
+    const controller = new AbortController()
+    foundationFetchAbortRef.current = controller
+
+    previousFoundationResultRef.current = foundationResult
+    setFoundationError(null)
+    setFoundationResult(null)
+    setPendingBoardScan(null)
+    setLoadingFoundation(true)
+    setFoundationLoadingItems(['Resolving repositories from board…'])
+
+    try {
+      const { repos, skipped, method, issueMap } = await fetchBoardRepos(session.token, url)
+      if (controller.signal.aborted) return
+
+      if (repos.length === 0) {
+        setFoundationError(
+          'No repositories could be resolved from the CNCF sandbox board. The New and review/tech columns may be empty, or issue bodies may not contain parseable repository URLs.',
+        )
+        return
+      }
+
+      setFoundationLoadingItems(repos)
+      const response = onAnalyze
+        ? await onAnalyze(repos, session.token)
+        : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal, issueMap)
+
+      if (response && !controller.signal.aborted) {
+        setFoundationResult({ kind: 'projects-board', url, results: response, skipped, method })
+      }
+    } catch (error) {
+      if (controller.signal.aborted) return
+      setFoundationError(error instanceof Error ? error.message : 'Board re-analysis failed.')
+    } finally {
+      setLoadingFoundation(false)
+      setFoundationLoadingItems([])
+      foundationFetchAbortRef.current = null
+    }
+  }
+
   async function handleOrgSubmit(org: string) {
     if (!session?.token) return
 
@@ -925,7 +968,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         <FoundationResultsView
           result={foundationResult}
           error={foundationError}
-          onRerun={foundationResult && !loadingFoundation ? () => void handleFoundationSubmit(foundationInput) : undefined}
+          onReanalyze={
+            foundationResult && !loadingFoundation
+              ? foundationResult.kind === 'projects-board'
+                ? () => void handleReanalyzeBoard(foundationResult.url)
+                : () => void handleFoundationSubmit(foundationInput)
+              : undefined
+          }
         />
       ) : null}
       {showOrgWorkspace && !loadingOrg && !orgInventoryResponse && !submissionError ? (

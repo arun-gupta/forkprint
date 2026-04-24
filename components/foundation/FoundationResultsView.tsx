@@ -15,10 +15,10 @@ export type FoundationResult =
 interface FoundationResultsViewProps {
   result: FoundationResult | null
   error: string | null
-  onRerun?: () => void
+  onReanalyze?: () => void
 }
 
-function RerunButton({ onClick }: { onClick: () => void }) {
+function ReanalyzeButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
@@ -29,7 +29,7 @@ function RerunButton({ onClick }: { onClick: () => void }) {
         <path d="M13.5 8A5.5 5.5 0 1 1 10 3.07" strokeLinecap="round" />
         <path d="M10 2v3h3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      Re-run
+      Re-analyze
     </button>
   )
 }
@@ -131,7 +131,7 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
   )
 }
 
-export function FoundationResultsView({ result, error, onRerun }: FoundationResultsViewProps) {
+export function FoundationResultsView({ result, error, onReanalyze }: FoundationResultsViewProps) {
 
   if (error) {
     return (
@@ -146,9 +146,9 @@ export function FoundationResultsView({ result, error, onRerun }: FoundationResu
   if (result.kind === 'repos') {
     return (
       <div className="space-y-4">
-        {onRerun ? (
+        {onReanalyze ? (
           <div className="flex justify-end">
-            <RerunButton onClick={onRerun} />
+            <ReanalyzeButton onClick={onReanalyze} />
           </div>
         ) : null}
         {result.results.failures.length > 0 ? (
@@ -171,9 +171,9 @@ export function FoundationResultsView({ result, error, onRerun }: FoundationResu
   if (result.kind === 'org') {
     return (
       <div className="space-y-4">
-        {onRerun ? (
+        {onReanalyze ? (
           <div className="flex justify-end">
-            <RerunButton onClick={onRerun} />
+            <ReanalyzeButton onClick={onReanalyze} />
           </div>
         ) : null}
         <CNCFCandidacyPanel
@@ -218,7 +218,7 @@ export function FoundationResultsView({ result, error, onRerun }: FoundationResu
               </p>
             ) : null}
           </div>
-          {onRerun ? <RerunButton onClick={onRerun} /> : null}
+          {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
         </div>
       </section>
 
