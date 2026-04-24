@@ -55,12 +55,12 @@ export async function POST(request: Request) {
     }
 
     if (!Array.isArray(body.repos) || body.repos.length === 0) {
-      return Response.json({ error: 'At least one repository is required.' }, { status: 400 })
+      return Response.json({ error: { message: 'At least one repository is required.', code: 'INVALID_INPUT' } }, { status: 400 })
     }
 
     const token = body.token
     if (!token) {
-      return Response.json({ error: 'Authentication required.' }, { status: 401 })
+      return Response.json({ error: { message: 'Authentication required.', code: 'UNAUTHENTICATED' } }, { status: 401 })
     }
 
     const starsMap: Record<string, number> = body.stars ?? {}
@@ -162,6 +162,6 @@ export async function POST(request: Request) {
     return Response.json({ results, rateLimit: latestRateLimit })
   } catch (error) {
     console.error('[cncf-candidacy] Request failed:', error)
-    return Response.json({ error: 'Candidacy scan request failed.' }, { status: 500 })
+    return Response.json({ error: { message: 'Candidacy scan request failed.', code: 'INTERNAL_ERROR' } }, { status: 500 })
   }
 }
