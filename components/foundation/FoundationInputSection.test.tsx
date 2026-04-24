@@ -95,10 +95,10 @@ describe('FoundationInputSection — info tooltip', () => {
     expect(screen.getByTestId('format-tooltip')).toHaveTextContent(/org/i)
   })
 
-  it('does NOT mention Projects board in the tooltip', () => {
+  it('mentions Projects board in the tooltip', () => {
     render(<FoundationInputSection {...defaultProps} />)
     fireEvent.mouseEnter(screen.getByRole('button', { name: /accepted input formats/i }))
-    expect(screen.getByTestId('format-tooltip')).not.toHaveTextContent(/projects board/i)
+    expect(screen.getByTestId('format-tooltip')).toHaveTextContent(/projects board/i)
   })
 })
 

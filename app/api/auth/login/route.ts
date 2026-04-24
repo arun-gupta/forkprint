@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 
 const OAUTH_STATE_COOKIE = 'repo_pulse_oauth_state'
 
-export type ScopeTier = 'baseline' | 'read-org' | 'admin-org'
+export type ScopeTier = 'baseline' | 'read-org' | 'admin-org' | 'read-project'
 
 export function buildOAuthScope(tier: ScopeTier): string {
   switch (tier) {
@@ -13,6 +13,8 @@ export function buildOAuthScope(tier: ScopeTier): string {
       return 'admin:org'
     case 'read-org':
       return 'read:org'
+    case 'read-project':
+      return 'read:project'
     default:
       return ''
   }
@@ -22,6 +24,7 @@ export function resolveScopeTier(url: URL): ScopeTier {
   const explicit = url.searchParams.get('scope_tier')
   if (explicit === 'admin-org') return 'admin-org'
   if (explicit === 'read-org') return 'read-org'
+  if (explicit === 'read-project') return 'read-project'
   if (explicit === 'baseline') return 'baseline'
   // Legacy: ?elevated=1 maps to read-org
   if (url.searchParams.get('elevated') === '1') return 'read-org'

@@ -68,6 +68,40 @@ describe('T036 — findSandboxApplication', () => {
     const result = findSandboxApplication('org/nonexistent', issues)
     expect(result).toBeNull()
   })
+
+  it('T036-7a: short repo name (3 chars) matched via org name in title', () => {
+    const shortNameIssues: SandboxApplicationIssue[] = [
+      {
+        issueNumber: 479,
+        issueUrl: 'https://github.com/cncf/sandbox/issues/479',
+        title: '[Sandbox] Docker Secret Operator (DSO)',
+        state: 'OPEN',
+        createdAt: '2024-01-01T00:00:00Z',
+        labels: [],
+        approved: false,
+      },
+    ]
+    const result = findSandboxApplication('docker-secret-operator/dso', shortNameIssues)
+    expect(result).not.toBeNull()
+    expect(result?.issueNumber).toBe(479)
+  })
+
+  it('T036-7b: multi-word repo name matched via concatenated title substring', () => {
+    const multiWordIssues: SandboxApplicationIssue[] = [
+      {
+        issueNumber: 475,
+        issueUrl: 'https://github.com/cncf/sandbox/issues/475',
+        title: '[Sandbox] CNOE AI Platform Engineering',
+        state: 'OPEN',
+        createdAt: '2024-01-01T00:00:00Z',
+        labels: [],
+        approved: false,
+      },
+    ]
+    const result = findSandboxApplication('cnoe-io/ai-platform-engineering', multiWordIssues)
+    expect(result).not.toBeNull()
+    expect(result?.issueNumber).toBe(475)
+  })
 })
 
 // ---------------------------------------------------------------------------

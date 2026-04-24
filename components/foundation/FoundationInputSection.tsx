@@ -21,6 +21,14 @@ export function FoundationInputSection({
 }: FoundationInputSectionProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
   const tooltipRef = useRef<HTMLDivElement | null>(null)
+  const [boardCopied, setBoardCopied] = useState(false)
+
+  function handleCopyBoardUrl() {
+    void navigator.clipboard.writeText('https://github.com/orgs/cncf/projects/14').then(() => {
+      setBoardCopied(true)
+      setTimeout(() => setBoardCopied(false), 1500)
+    })
+  }
 
   useEffect(() => {
     if (!tooltipOpen) return
@@ -77,7 +85,35 @@ export function FoundationInputSection({
             <span className="font-mono">owner/repo</span>
             <span className="mx-2 text-slate-300 dark:text-slate-600">·</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">Org:</span>{' '}
-            <span className="font-mono">cncf</span> or <span className="font-mono">github.com/cncf</span>
+            <span className="font-mono">org-slug</span>
+            <span className="mx-2 text-slate-300 dark:text-slate-600">·</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">Board:</span>{' '}
+            <a
+              href="https://github.com/orgs/cncf/projects/14"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono underline decoration-dotted hover:decoration-solid"
+            >
+              github.com/orgs/cncf/projects/14
+            </a>
+            <button
+              type="button"
+              onClick={handleCopyBoardUrl}
+              aria-label="Copy board URL"
+              title="Copy board URL"
+              className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            >
+              {boardCopied ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-emerald-500" aria-hidden="true">
+                  <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3" aria-hidden="true">
+                  <path fillRule="evenodd" d="M11.013 2.513a1.75 1.75 0 0 0-2.475 0L6.226 4.837A1.75 1.75 0 0 0 6 5.89V9.75a.75.75 0 0 0 .75.75h3.86c.38 0 .745-.14 1.03-.392l2.323-2.132a1.75 1.75 0 0 0 .537-1.265V5.29a1.75 1.75 0 0 0-.513-1.24l-1.974-1.537ZM4.75 6.5A.25.25 0 0 1 5 6.25h.5a.75.75 0 0 0 0-1.5H5a1.75 1.75 0 0 0-1.75 1.75v5.75c0 .966.784 1.75 1.75 1.75h5A1.75 1.75 0 0 0 11.75 12.5v-.5a.75.75 0 0 0-1.5 0v.5a.25.25 0 0 1-.25.25h-5a.25.25 0 0 1-.25-.25V6.5Z" clipRule="evenodd" />
+                </svg>
+              )}
+              <span className="ml-0.5 text-xs">{boardCopied ? 'Copied' : ''}</span>
+            </button>
           </p>
           <div ref={tooltipRef} className="relative">
             <button
@@ -116,6 +152,13 @@ export function FoundationInputSection({
                       <li>https://github.com/org-slug</li>
                     </ul>
                   </div>
+                  <div>
+                    <p className="font-medium text-slate-700 dark:text-slate-300">Projects board:</p>
+                    <ul className="mt-1 space-y-0.5 font-mono text-slate-600 dark:text-slate-400">
+                      <li>https://github.com/orgs/org/projects/14</li>
+                    </ul>
+                    <p className="mt-1 not-italic text-slate-500 dark:text-slate-500">Scans repos from New &amp; Upcoming columns</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -124,7 +167,7 @@ export function FoundationInputSection({
         <textarea
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
-          placeholder={'owner/repo\nowner/another-repo\n— or — cncf'}
+          placeholder={'owner1/repo1 owner2/repo2\n— or — org-slug\n— or — https://github.com/orgs/org/projects/14'}
           rows={3}
           className="w-full resize-none overflow-hidden rounded border border-slate-300 bg-white p-2 font-mono text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           aria-label="Foundation input"

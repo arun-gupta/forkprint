@@ -67,6 +67,13 @@ describe('parseFoundationInput — projects-board path', () => {
       url: 'https://github.com/orgs/cncf/projects/14',
     })
   })
+
+  it('detects github.com/orgs/org/projects/N without protocol', () => {
+    expect(parseFoundationInput('github.com/orgs/cncf/projects/14')).toEqual({
+      kind: 'projects-board',
+      url: 'github.com/orgs/cncf/projects/14',
+    })
+  })
 })
 
 describe('parseFoundationInput — invalid path', () => {

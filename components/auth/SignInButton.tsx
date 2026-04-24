@@ -1,6 +1,6 @@
 'use client'
 
-export type ScopeTier = 'baseline' | 'read-org' | 'admin-org'
+export type ScopeTier = 'baseline' | 'read-org' | 'admin-org' | 'read-project'
 
 export function SignInButton({ tier = 'baseline' }: { tier?: ScopeTier }) {
   function handleClick() {

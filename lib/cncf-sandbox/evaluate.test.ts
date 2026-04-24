@@ -103,13 +103,13 @@ describe('T016 — contributor-diversity field', () => {
     return field
   }
 
-  it('T016-1: 3 orgs → status ready, evidence mentions "3 organizations"', () => {
+  it('T016-1: 3 orgs → status ready, evidence mentions "3 orgs"', () => {
     const result = makeResult({
       commitCountsByExperimentalOrg: { 'org-a': 50, 'org-b': 30, 'org-c': 20 },
     })
     const field = getField(result)
     expect(field.status).toBe('ready')
-    expect(field.evidence).toContain('3 organizations')
+    expect(field.evidence).toContain('3 orgs')
   })
 
   it('T016-2: single org → status partial, remediationHint mentions "single-vendor"', () => {
