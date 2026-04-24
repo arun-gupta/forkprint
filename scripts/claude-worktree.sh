@@ -143,7 +143,7 @@ remove_worktree() {
   printf 'Type YES to confirm: '
   local confirm
   read -r confirm
-  if [[ "${confirm,,}" != "yes" ]]; then
+  if [[ "$(tr '[:upper:]' '[:lower:]' <<<"$confirm")" != "yes" ]]; then
     echo "Aborted." >&2
     exit 1
   fi
