@@ -2,6 +2,7 @@ import { ACTIVITY_WINDOW_DAYS, type ActivityWindowDays, type AnalysisResult, typ
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { type BracketCalibration, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 import { formatCount, formatHours, formatPercentage } from '@/lib/scoring/formatters'
+import { makeInsufficientScore } from '@/lib/scoring/insufficient'
 
 export { formatCount, formatHours, formatPercentage }
 
@@ -61,20 +62,15 @@ const RESPONSIVENESS_CATEGORIES: WeightedCategoryDefinition[] = [
   },
 ]
 
-const INSUFFICIENT_SCORE: ResponsivenessScoreDefinition = {
-  value: 'Insufficient verified public data',
-  tone: 'neutral',
+const INSUFFICIENT_SCORE: ResponsivenessScoreDefinition = makeInsufficientScore({
   description: 'RepoPulse cannot verify enough public issue and pull-request event history to score this repository yet.',
   summary: 'Verified responsiveness inputs are incomplete.',
-  percentile: 0,
-  bracketLabel: '',
   weightedCategories: RESPONSIVENESS_CATEGORIES.map((category) => ({
     label: category.label,
     weightLabel: `${category.weight}%`,
     description: category.description,
   })),
-  missingInputs: [],
-}
+})
 
 export function getResponsivenessScore(
   result: AnalysisResult,

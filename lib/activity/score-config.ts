@@ -13,6 +13,7 @@ import {
   percentileToTone,
 } from '@/lib/scoring/config-loader'
 import { formatHours, formatPercentage } from '@/lib/scoring/formatters'
+import { makeInsufficientScore } from '@/lib/scoring/insufficient'
 
 export { formatHours, formatPercentage }
 
@@ -72,20 +73,15 @@ const ACTIVITY_FACTORS: ActivityFactorDefinition[] = [
   },
 ]
 
-const INSUFFICIENT_SCORE: ActivityScoreDefinition = {
-  value: 'Insufficient verified public data',
-  tone: 'neutral',
+const INSUFFICIENT_SCORE: ActivityScoreDefinition = makeInsufficientScore({
   description: 'RepoPulse cannot verify enough recent activity and delivery-flow data to score this repository yet.',
   summary: 'Verified recent-flow inputs are incomplete.',
-  percentile: 0,
-  bracketLabel: '',
   weightedFactors: ACTIVITY_FACTORS.map((factor) => ({
     label: factor.label,
     weightLabel: `${factor.weight}%`,
     description: factor.description,
   })),
-  missingInputs: [],
-}
+})
 
 export function getActivityScore(
   result: AnalysisResult,

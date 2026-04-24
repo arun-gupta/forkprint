@@ -2,6 +2,7 @@ import type { AnalysisResult, ContributorWindowDays, Unavailable } from '@/lib/a
 import type { ScoreTone, ScoreValue } from '@/specs/008-metric-cards/contracts/metric-card-props'
 import { MATURITY_CONFIG, type CalibrationProfile, formatPercentileLabel, getBracketLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 import { formatPercentage } from '@/lib/scoring/formatters'
+import { makeInsufficientScore } from '@/lib/scoring/insufficient'
 
 export { formatPercentage }
 
@@ -71,23 +72,18 @@ const CONTRIBUTORS_FACTORS: ContributorsFactorDefinition[] = [
   },
 ]
 
-const INSUFFICIENT_SCORE: ContributorsScoreDefinition = {
-  value: 'Insufficient verified public data',
-  tone: 'neutral',
+const INSUFFICIENT_SCORE: ContributorsScoreDefinition = makeInsufficientScore({
   description: 'RepoPulse cannot verify enough contributor-distribution data to score contributors yet.',
   summary: 'Verified contributor-distribution inputs are incomplete.',
-  percentile: 0,
-  bracketLabel: '',
-  concentration: 'unavailable',
-  topContributorCount: 'unavailable',
-  contributorCount: 'unavailable',
+  concentration: 'unavailable' as const,
+  topContributorCount: 'unavailable' as const,
+  contributorCount: 'unavailable' as const,
   weightedFactors: CONTRIBUTORS_FACTORS.map((factor) => ({
     label: factor.label,
     weightLabel: `${factor.weight}%`,
     description: factor.description,
   })),
-  missingInputs: [],
-}
+})
 
 export interface ContributorsScoreExtras {
   maintainerCount?: number | Unavailable
