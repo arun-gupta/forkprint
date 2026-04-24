@@ -1,5 +1,31 @@
 import type { AspirantField, AspirantReadinessResult, ParsedApplicationField } from '@/lib/cncf-sandbox/types'
 
+const URL_RE = /(https?:\/\/\S+|[a-z0-9.-]+\.[a-z]{2,}\/\S*)/g
+const URL_RE_TEST = /^(https?:\/\/\S+|[a-z0-9.-]+\.[a-z]{2,}\/\S*)$/
+
+function HintWithLinks({ text }: { text: string }) {
+  const parts = text.split(URL_RE)
+  return (
+    <>
+      {parts.map((part, i) =>
+        URL_RE_TEST.test(part) ? (
+          <a
+            key={i}
+            href={part.startsWith('http') ? part : `https://${part}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-900 dark:hover:text-slate-100"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  )
+}
+
 interface CNCFReadinessTabProps {
   aspirantResult: AspirantReadinessResult
   onNavigateToTab?: (tab: string) => void
@@ -43,7 +69,7 @@ function FieldRow({ field, onNavigateToTab }: { field: AspirantField; onNavigate
         <p className="text-xs text-slate-600 dark:text-slate-400">{field.evidence}</p>
       ) : null}
       {field.remediationHint && field.status !== 'ready' ? (
-        <p className="text-xs text-slate-700 dark:text-slate-300">{field.remediationHint}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300"><HintWithLinks text={field.remediationHint} /></p>
       ) : null}
     </li>
   )
