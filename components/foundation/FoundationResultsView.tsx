@@ -136,15 +136,9 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
                 <path d="M6 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="flex items-center gap-2 min-w-0">
-                <a
-                  href={`https://github.com/${repoResult.repo}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="truncate text-sm font-medium text-slate-800 underline hover:no-underline dark:text-slate-200"
-                >
+                <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">
                   {repoResult.repo}
-                </a>
+                </span>
                 {score !== undefined ? <ScoreBadge score={score} /> : null}
               </span>
             </button>
