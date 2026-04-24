@@ -8,7 +8,7 @@ import {
   type Unavailable,
 } from '@/lib/analyzer/analysis-result'
 import { getMergeRateGuidance } from './merge-rate-guidance'
-import { ACTIVITY_LONG_GAP_ALERT_DAYS, formatPercentileLabel, getCalibrationForStars, interpolatePercentile } from '@/lib/scoring/config-loader'
+import { ACTIVITY_LONG_GAP_ALERT_DAYS, formatPercentileLabel, getCalibrationForStars, interpolatePercentile, percentileToTone } from '@/lib/scoring/config-loader'
 
 export interface ActivityCardLine {
   label: string
@@ -214,8 +214,9 @@ function formatRegularityLabel(
   rawRegularity: number | Unavailable,
 ): DevelopmentCadenceCardViewModel['regularityLabel'] {
   if (percentile !== null) {
-    if (percentile >= 75) return 'High consistency'
-    if (percentile >= 40) return 'Moderate consistency'
+    const tone = percentileToTone(percentile)
+    if (tone === 'success') return 'High consistency'
+    if (tone === 'warning') return 'Moderate consistency'
     return 'Bursty'
   }
   if (typeof rawRegularity !== 'number') return 'Insufficient verified public data'
