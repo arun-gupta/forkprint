@@ -1,0 +1,165 @@
+name: Daily Tech Debt Audit
+
+on:
+  # 08:00 UTC = midnight PDT / 01:00 AM PST
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download previous fingerprint artifact
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: daily-tech-debt-audit.yml
+          name: tech-debt-fingerprint
+          path: .prev-artifact/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Run tech-debt analysis
+        env:
+          COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+          FINDINGS_OUTPUT: findings.json
+        run: npx tsx scripts/tech-debt-audit.ts
+
+      - name: Compute new findings
+        id: diff
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          echo "date=$TODAY" >> "$GITHUB_OUTPUT"
+
+          jq -r '.fingerprints[]' findings.json 2>/dev/null | sort > /tmp/today-fps.txt || touch /tmp/today-fps.txt
+
+          if [ -f .prev-artifact/fingerprint.json ]; then
+            jq -r '.[]' .prev-artifact/fingerprint.json 2>/dev/null | sort > /tmp/prev-fps.txt || touch /tmp/prev-fps.txt
+          else
+            touch /tmp/prev-fps.txt
+          fi
+
+          comm -23 /tmp/today-fps.txt /tmp/prev-fps.txt > /tmp/new-fps.txt
+          NEW_COUNT=$(wc -l < /tmp/new-fps.txt | tr -d ' ')
+          echo "new-count=$NEW_COUNT" >> "$GITHUB_OUTPUT"
+
+          PREV_ISSUE=""
+          if [ -f .prev-artifact/last-issue.txt ]; then
+            PREV_ISSUE=$(cat .prev-artifact/last-issue.txt)
+          fi
+          echo "prev-issue=$PREV_ISSUE" >> "$GITHUB_OUTPUT"
+
+          echo "New findings: $NEW_COUNT (previous issue: ${PREV_ISSUE:-none})"
+
+      - name: Format issue body
+        if: steps.diff.outputs.new-count != '0'
+        run: |
+          python3 - <<'PYEOF' > /tmp/issue-body.md
+          import json
+
+          with open('findings.json') as f:
+              data = json.load(f)
+
+          findings = data.get('findings', [])
+          date = data.get('date', '')
+          total = len(findings)
+
+          icons = {'fix-now': '🚨', 'fix-soon': '⚠️', 'low-priority': 'ℹ️'}
+          lines = [
+              f'Automated tech-debt audit — **{total} new finding{"s" if total != 1 else ""}** detected on {date}.',
+              '',
+              '_Grouped by severity, then category. New findings only (deduped via fingerprint)._',
+          ]
+
+          for sev in ['fix-now', 'fix-soon', 'low-priority']:
+              by_sev = [f for f in findings if f['severity'] == sev]
+              if not by_sev:
+                  continue
+              lines.append(f'\n## {icons.get(sev, "")} {sev} ({len(by_sev)})\n')
+              cats: dict[str, list] = {}
+              for item in by_sev:
+                  cats.setdefault(item['category'], []).append(item)
+              for cat, items in cats.items():
+                  lines.append(f'### {cat}\n')
+                  for item in items:
+                      lines.append(
+                          f'- **{item["id"]}** `{item["file"]}:{item["lineStart"]}` {item["description"]}'
+                      )
+                      lines.append(f'  > {item["recommendation"]}')
+                  lines.append('')
+
+          print('\n'.join(lines))
+          PYEOF
+
+      - name: Ensure labels exist
+        if: steps.diff.outputs.new-count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create "techdebt" --color "#e4e669" --description "Technical debt" 2>/dev/null || true
+          gh label create "automated" --color "#0075ca" --description "Created by automated workflow" 2>/dev/null || true
+
+      - name: Create issue for new findings
+        if: steps.diff.outputs.new-count != '0'
+        id: create-issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TODAY="${{ steps.diff.outputs.date }}"
+          COUNT="${{ steps.diff.outputs.new-count }}"
+          ISSUE_URL=$(gh issue create \
+            --title "[Tech Debt Audit] $TODAY — $COUNT new findings" \
+            --body-file /tmp/issue-body.md \
+            --label "techdebt" \
+            --label "automated")
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          echo "issue-number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Created issue #$ISSUE_NUMBER: $ISSUE_URL"
+
+      - name: Comment on previous issue (no new findings)
+        if: steps.diff.outputs.new-count == '0' && steps.diff.outputs.prev-issue != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TODAY="${{ steps.diff.outputs.date }}"
+          PREV_ISSUE="${{ steps.diff.outputs.prev-issue }}"
+          gh issue comment "$PREV_ISSUE" --body "No new debt detected on $TODAY."
+
+      - name: Save artifact state
+        run: |
+          mkdir -p .artifact
+          jq '.fingerprints' findings.json > .artifact/fingerprint.json
+          ISSUE="${{ steps.create-issue.outputs.issue-number }}"
+          if [ -z "$ISSUE" ]; then
+            ISSUE="${{ steps.diff.outputs.prev-issue }}"
+          fi
+          echo "$ISSUE" > .artifact/last-issue.txt
+
+      - name: Upload fingerprint artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tech-debt-fingerprint
+          path: .artifact/
+          retention-days: 7
