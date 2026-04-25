@@ -155,6 +155,10 @@ function RepoAccordion({ repoResults }: { repoResults: AnalysisResult[] }) {
                     aspirantResult={repoResult.aspirantResult}
                     repoSlug={repoResult.repo}
                   />
+                ) : repoResult.landscapeOverride ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    This project is already a CNCF{repoResult.landscapeStatus ? ` ${repoResult.landscapeStatus}` : ''} project and is not evaluated for sandbox readiness.
+                  </p>
                 ) : (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     No foundation readiness data available for {repoResult.repo}.
