@@ -77,23 +77,6 @@ function buildPayload(files: string[]): string {
   return parts.join('\n\n')
 }
 
-async function exchangeToken(pat: string): Promise<string> {
-  const res = await fetch('https://api.github.com/copilot_internal/v2/token', {
-    method: 'POST',
-    headers: {
-      Authorization: `token ${pat}`,
-      'Content-Type': 'application/json',
-      'Editor-Version': 'Neovim/0.9.0',
-      'Editor-Plugin-Version': 'copilot.vim/1.10.0',
-    },
-  })
-  if (!res.ok) {
-    throw new Error(`Token exchange failed: ${res.status} ${await res.text()}`)
-  }
-  const { token } = (await res.json()) as { token: string }
-  return token
-}
-
 const AUDIT_PROMPT = `You are a senior TypeScript/Next.js code quality auditor.
 Analyse the source files below and identify technical debt.
 
@@ -118,11 +101,11 @@ Output ONLY a JSON array — no prose, no markdown fences:
   }
 ]`
 
-async function callCopilot(sessionToken: string, payload: string): Promise<Finding[]> {
-  const res = await fetch('https://api.githubcopilot.com/chat/completions', {
+async function callCopilot(pat: string, payload: string): Promise<Finding[]> {
+  const res = await fetch('https://models.inference.ai.azure.com/chat/completions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${sessionToken}`,
+      Authorization: `Bearer ${pat}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -166,11 +149,8 @@ async function main(): Promise<void> {
   const payload = buildPayload(files)
   process.stderr.write(`  Payload: ${payload.length} bytes\n`)
 
-  process.stderr.write('Exchanging COPILOT_TOKEN for session token...\n')
-  const sessionToken = await exchangeToken(pat)
-
   process.stderr.write('Running Copilot analysis...\n')
-  const findings = await callCopilot(sessionToken, payload)
+  const findings = await callCopilot(pat, payload)
   process.stderr.write(`  ${findings.length} findings returned\n`)
 
   const output = {
