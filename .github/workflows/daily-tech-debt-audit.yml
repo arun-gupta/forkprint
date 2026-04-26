@@ -231,6 +231,7 @@ jobs:
     if: needs.audit.outputs.new-count != '0'
 
     permissions:
+      actions: read
       contents: write
       pull-requests: write
       issues: read
@@ -249,16 +250,13 @@ jobs:
         run: npm ci
 
       - name: Download findings artifact
-        uses: dawidd6/action-download-artifact@v9
+        uses: actions/download-artifact@v4
         with:
-          workflow: daily-tech-debt-audit.yml
           name: tech-debt-fingerprint
           path: .artifact/
-          if_no_artifact_found: warn
-        continue-on-error: true
 
       - name: Copy findings into working directory
-        run: cp .artifact/findings.json findings.json 2>/dev/null || echo "No findings.json in artifact"
+        run: cp .artifact/findings.json findings.json
 
       - name: Open auto-fix PRs for top high-confidence findings
         env:
