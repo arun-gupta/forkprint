@@ -17,7 +17,11 @@ env:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+
+    outputs:
+      new-count: ${{ steps.diff.outputs.new-count }}
+      issue-number: ${{ steps.create-issue.outputs.issue-number }}
 
     steps:
       - name: Check out repository
@@ -75,40 +79,96 @@ jobs:
 
       - name: Format issue body
         if: steps.diff.outputs.new-count != '0'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          python3 - <<'PYEOF' > /tmp/issue-body.md
-          import json
+          python3 - "$RUN_URL" /tmp/new-fps.txt <<'PYEOF' > /tmp/issue-body.md
+          import json, sys
+
+          run_url = sys.argv[1]
+          new_fps_path = sys.argv[2]
 
           with open('findings.json') as f:
               data = json.load(f)
 
-          findings = data.get('findings', [])
+          all_findings = data.get('findings', [])
+          all_fingerprints = data.get('fingerprints', [])
           date = data.get('date', '')
-          total = len(findings)
+          total_all = len(all_findings)
 
-          icons = {'fix-now': '🚨', 'fix-soon': '⚠️', 'low-priority': 'ℹ️'}
+          # Filter to new findings only
+          try:
+              with open(new_fps_path) as nf:
+                  new_fps = set(line.strip() for line in nf if line.strip())
+          except FileNotFoundError:
+              new_fps = set(all_fingerprints)
+
+          fp_map = {fp: f for fp, f in zip(all_fingerprints, all_findings)}
+          findings = [fp_map[fp] for fp in new_fps if fp in fp_map]
+          new_count = len(findings)
+
+          SEVERITIES = ['fix-now', 'fix-soon', 'low-priority']
+          CONFIDENCES = ['high', 'medium', 'low']
+          ICONS = {'fix-now': '🚨', 'fix-soon': '⚠️', 'low-priority': 'ℹ️'}
+          TOP_N = 5
+
+          def conf(f): return f.get('confidence', 'low')
+          def sev(f): return f.get('severity', 'low-priority')
+
+          # Severity × confidence counts
+          sev_counts = {s: len([f for f in findings if sev(f) == s]) for s in SEVERITIES}
+          high_fix_now = [f for f in findings if sev(f) == 'fix-now' and conf(f) == 'high']
+
+          total_note = f' ({total_all} total across all runs)' if total_all != new_count else ''
           lines = [
-              f'Automated tech-debt audit — **{total} new finding{"s" if total != 1 else ""}** detected on {date}.',
+              f'Automated tech-debt audit — **{new_count} new finding{"s" if new_count != 1 else ""}** on {date}{total_note}.',
+              f'**{len(high_fix_now)}** are high-confidence fix-now — auto-fix PRs will be opened for the top 3.',
               '',
-              '_Grouped by severity, then category. New findings only (deduped via fingerprint)._',
+              '## Summary',
+              '',
+              '| Severity | Total new | 🔴 high conf | 🟡 medium conf | 🟢 low conf |',
+              '|---|---|---|---|---|',
           ]
+          for s in SEVERITIES:
+              by_sev = [f for f in findings if sev(f) == s]
+              h = sum(1 for f in by_sev if conf(f) == 'high')
+              m = sum(1 for f in by_sev if conf(f) == 'medium')
+              lo = sum(1 for f in by_sev if conf(f) == 'low')
+              lines.append(f'| {ICONS[s]} {s} | {len(by_sev)} | {h} | {m} | {lo} |')
 
-          for sev in ['fix-now', 'fix-soon', 'low-priority']:
-              by_sev = [f for f in findings if f['severity'] == sev]
-              if not by_sev:
-                  continue
-              lines.append(f'\n## {icons.get(sev, "")} {sev} ({len(by_sev)})\n')
-              cats: dict[str, list] = {}
-              for item in by_sev:
-                  cats.setdefault(item['category'], []).append(item)
-              for cat, items in cats.items():
-                  lines.append(f'### {cat}\n')
-                  for item in items:
-                      lines.append(
-                          f'- **{item["id"]}** `{item["file"]}:{item["lineStart"]}` {item["description"]}'
-                      )
-                      lines.append(f'  > {item["recommendation"]}')
-                  lines.append('')
+          # Category breakdown (new, high-confidence only)
+          cats: dict[str, dict[str, int]] = {}
+          for f in [x for x in findings if conf(x) == 'high']:
+              cat = f.get('category', '?')
+              cats.setdefault(cat, {s: 0 for s in SEVERITIES})
+              cats[cat][sev(f)] = cats[cat].get(sev(f), 0) + 1
+
+          if cats:
+              lines += [
+                  '',
+                  '## High-confidence findings by category',
+                  '',
+                  '| Category | 🚨 fix-now | ⚠️ fix-soon | ℹ️ low-priority |',
+                  '|---|---|---|---|',
+              ]
+              for cat, sc in sorted(cats.items()):
+                  lines.append(f'| {cat} | {sc.get("fix-now",0)} | {sc.get("fix-soon",0)} | {sc.get("low-priority",0)} |')
+
+          # Top high-confidence fix-now items inline
+          if high_fix_now:
+              shown = high_fix_now[:TOP_N]
+              lines += ['', f'## 🚨 Top fix-now (high confidence — showing {len(shown)} of {len(high_fix_now)})', '']
+              for item in shown:
+                  lines.append(f'- **{item["id"]}** `{item["file"]}:{item["lineStart"]}` — {item["description"]}')
+                  lines.append(f'  > {item["recommendation"]}')
+              if len(high_fix_now) > TOP_N:
+                  lines.append(f'\n_...and {len(high_fix_now) - TOP_N} more in the artifact._')
+
+          lines += [
+              '',
+              '---',
+              f'📎 [Full findings.json]({run_url}) (workflow artifact, 7-day retention)',
+          ]
 
           print('\n'.join(lines))
           PYEOF
@@ -151,6 +211,7 @@ jobs:
         run: |
           mkdir -p .artifact
           jq '.fingerprints' findings.json > .artifact/fingerprint.json
+          cp findings.json .artifact/findings.json
           ISSUE="${{ steps.create-issue.outputs.issue-number }}"
           if [ -z "$ISSUE" ]; then
             ISSUE="${{ steps.diff.outputs.prev-issue }}"
@@ -163,3 +224,48 @@ jobs:
           name: tech-debt-fingerprint
           path: .artifact/
           retention-days: 7
+
+  auto-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: audit
+    if: needs.audit.outputs.new-count != '0'
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download findings artifact
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          workflow: daily-tech-debt-audit.yml
+          name: tech-debt-fingerprint
+          path: .artifact/
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Copy findings into working directory
+        run: cp .artifact/findings.json findings.json 2>/dev/null || echo "No findings.json in artifact"
+
+      - name: Open auto-fix PRs for top high-confidence findings
+        env:
+          COPILOT_TOKEN: ${{ secrets.COPILOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FINDINGS_OUTPUT: findings.json
+          TECH_DEBT_ISSUE: ${{ needs.audit.outputs.issue-number }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: npx tsx scripts/tech-debt-fix.ts
