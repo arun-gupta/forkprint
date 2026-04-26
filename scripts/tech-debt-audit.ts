@@ -9,6 +9,7 @@
 import { createHash } from 'crypto'
 import { readdirSync, readFileSync, writeFileSync } from 'fs'
 import { join, relative } from 'path'
+import { fileURLToPath } from 'url'
 
 const ROOT = process.cwd()
 // ~6 000 tokens of source text per chunk, leaving headroom for the prompt template and response
@@ -76,7 +77,7 @@ function loadFiles(files: string[]): FileData[] {
   return fileData
 }
 
-function buildChunks(fileData: FileData[]): Array<{ payload: string; fileCount: number; estimatedTokens: number }> {
+export function buildChunks(fileData: FileData[]): Array<{ payload: string; fileCount: number; estimatedTokens: number }> {
   const chunks: Array<{ payload: string; fileCount: number; estimatedTokens: number }> = []
   const maxBytes = MAX_CHUNK_TOKENS / TOKENS_PER_CHAR
 
@@ -155,7 +156,12 @@ async function callCopilot(pat: string, payload: string): Promise<Finding[]> {
     choices: Array<{ message: { content: string } }>
   }
   const raw = data.choices[0]?.message?.content?.trim() ?? '[]'
-  return JSON.parse(raw) as Finding[]
+  try {
+    return JSON.parse(raw) as Finding[]
+  } catch {
+    process.stderr.write(`  Warning: could not parse findings JSON from model response; skipping chunk\n`)
+    return []
+  }
 }
 
 function fingerprint(f: Finding): string {
@@ -220,7 +226,10 @@ async function main(): Promise<void> {
   process.stderr.write(`Wrote ${allFindings.length} findings to ${outputPath}\n`)
 }
 
-main().catch(err => {
-  process.stderr.write(`${String(err)}\n`)
-  process.exit(1)
-})
+// Only run main() when executed directly (not when imported by tests)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch(err => {
+    process.stderr.write(`${String(err)}\n`)
+    process.exit(1)
+  })
+}
