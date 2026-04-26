@@ -82,11 +82,10 @@ jobs:
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          python3 - "$RUN_URL" /tmp/new-fps.txt <<'PYEOF' > /tmp/issue-body.md
+          python3 - "$RUN_URL" <<'PYEOF' > /tmp/issue-body.md
           import json, sys
 
           run_url = sys.argv[1]
-          new_fps_path = sys.argv[2]
 
           with open('findings.json') as f:
               data = json.load(f)
@@ -96,9 +95,9 @@ jobs:
           date = data.get('date', '')
           total_all = len(all_findings)
 
-          # Filter to new findings only
+          # Filter to new findings only (fingerprints in /tmp/new-fps.txt)
           try:
-              with open(new_fps_path) as nf:
+              with open('/tmp/new-fps.txt') as nf:
                   new_fps = set(line.strip() for line in nf if line.strip())
           except FileNotFoundError:
               new_fps = set(all_fingerprints)
@@ -167,7 +166,7 @@ jobs:
           lines += [
               '',
               '---',
-              f'📎 [Full findings.json]({run_url}) (workflow artifact, 7-day retention)',
+              f'📎 [View workflow run & artifacts]({run_url}) (includes findings.json, 7-day retention)',
           ]
 
           print('\n'.join(lines))
