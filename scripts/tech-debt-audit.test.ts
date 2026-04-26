@@ -67,8 +67,7 @@ describe('buildChunks', () => {
   })
 
   it('places an oversized file alone when it is the first file', () => {
-    // If the oversized file is first, the parts.length > 0 guard skips the flush,
-    // so it begins a new chunk implicitly — it should still appear in its own chunk
+    // Oversized file gets truncated to maxBytes then placed alone; small file goes in its own chunk
     const hugeContent = 'y'.repeat(30_000)
     const smallContent = 'z'.repeat(100)
     const fileData = [
@@ -77,12 +76,20 @@ describe('buildChunks', () => {
     ]
     const chunks = buildChunks(fileData)
     expect(chunks.length).toBeGreaterThanOrEqual(2)
-    // huge.ts must appear in one chunk, small.ts in another
     const hugeChunk = chunks.find(c => c.payload.includes('// --- huge.ts ---'))
     const smallChunk = chunks.find(c => c.payload.includes('// --- small.ts ---'))
     expect(hugeChunk).toBeDefined()
     expect(smallChunk).toBeDefined()
     expect(hugeChunk).not.toBe(smallChunk)
+  })
+
+  it('truncates a single file that exceeds maxBytes and keeps estimatedTokens within budget', () => {
+    // A 100_000-char file (25_000 tokens) must be truncated to ≤24_000 chars before sending
+    const hugeContent = 'x'.repeat(100_000)
+    const chunks = buildChunks([{ relPath: 'big.ts', content: hugeContent, size: 100_000 }])
+    expect(chunks).toHaveLength(1)
+    expect(chunks[0].estimatedTokens).toBeLessThanOrEqual(6_000)
+    expect(chunks[0].payload).toContain('// [truncated')
   })
 
   it('fileCount matches the number of files in each chunk', () => {

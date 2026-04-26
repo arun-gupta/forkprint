@@ -85,8 +85,12 @@ export function buildChunks(fileData: FileData[]): Array<{ payload: string; file
   let chunkBytes = 0
 
   for (const { relPath, content } of fileData) {
-    const entry = `// --- ${relPath} ---\n${content}`
-    // If this single file already exceeds the budget, send it alone
+    let entry = `// --- ${relPath} ---\n${content}`
+    // Truncate files that would exceed the per-chunk budget even alone
+    if (entry.length > maxBytes) {
+      const note = '\n// [truncated — file exceeds per-chunk token budget]'
+      entry = entry.slice(0, maxBytes - note.length) + note
+    }
     if (parts.length > 0 && chunkBytes + entry.length > maxBytes) {
       const payload = parts.join('\n\n')
       chunks.push({ payload, fileCount: parts.length, estimatedTokens: Math.round(payload.length * TOKENS_PER_CHAR) })
