@@ -140,7 +140,7 @@ jobs:
           lines += [
               '',
               '---',
-              f'📎 [Full findings.json]({run_url}) (workflow artifact, 7-day retention)',
+              f'📎 [Workflow run artifacts]({run_url}) (includes findings.json, 7-day retention)',
           ]
 
           print('\n'.join(lines))
