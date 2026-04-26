@@ -36,7 +36,7 @@ export function weightedMedian(pairs: { value: number; weight: number }[]): numb
 
 function computeWindow(
   results: AnalysisResult[],
-  window: ContributorDiversityWindow,
+  window: ActivityWindowDays,
 ): ResponsivenessRollupWindowValue {
   const firstResponsePairs: { value: number; weight: number }[] = []
   const prMergePairs: { value: number; weight: number }[] = []
@@ -46,7 +46,7 @@ function computeWindow(
     const ar = r as AnalysisResult
     let contributes = false
 
-    const windowedMetrics = ar.responsivenessMetricsByWindow?.[window as ActivityWindowDays]
+    const windowedMetrics = ar.responsivenessMetricsByWindow?.[window]
 
     // First response hours from windowed metrics; fall back to legacy field at 90d.
     const firstResponse =
@@ -70,7 +70,7 @@ function computeWindow(
       (window === 90 ? ar.medianTimeToMergeHours : undefined)
 
     if (typeof mergeHours === 'number') {
-      const activityMetrics = ar.activityMetricsByWindow?.[window as ActivityWindowDays]
+      const activityMetrics = ar.activityMetricsByWindow?.[window]
       const prsMerged =
         typeof activityMetrics?.prsMerged === 'number' && activityMetrics.prsMerged > 0
           ? activityMetrics.prsMerged

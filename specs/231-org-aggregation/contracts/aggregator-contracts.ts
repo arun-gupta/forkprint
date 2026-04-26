@@ -75,9 +75,18 @@ export type ActivityRollupValue = {
   leastActiveRepo: { repo: string; commits: number } | null
 }
 
-export type ResponsivenessRollupValue = {
+export const CONTRIBUTOR_DIVERSITY_WINDOWS = [30, 60, 90, 180, 365] as const
+export type ContributorDiversityWindow = (typeof CONTRIBUTOR_DIVERSITY_WINDOWS)[number]
+
+export type ResponsivenessRollupWindowValue = {
   weightedMedianFirstResponseHours: number | null
   weightedMedianPrMergeHours: number | null
+  contributingReposCount: number
+}
+
+export type ResponsivenessRollupValue = {
+  defaultWindow: ContributorDiversityWindow
+  byWindow: Record<ContributorDiversityWindow, ResponsivenessRollupWindowValue>
 }
 
 export type LicenseConsistencyValue = {
