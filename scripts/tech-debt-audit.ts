@@ -160,8 +160,10 @@ async function callCopilot(pat: string, payload: string): Promise<Finding[]> {
     choices: Array<{ message: { content: string } }>
   }
   const raw = data.choices[0]?.message?.content?.trim() ?? '[]'
+  // Strip markdown code fences the model sometimes wraps around JSON
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
   try {
-    return JSON.parse(raw) as Finding[]
+    return JSON.parse(cleaned) as Finding[]
   } catch {
     process.stderr.write(`  Warning: could not parse findings JSON from model response; skipping chunk\n`)
     return []
@@ -201,8 +203,9 @@ async function main(): Promise<void> {
     process.stderr.write(`  Chunk ${i + 1}/${chunks.length}: ${fileCount} files, ~${estimatedTokens} tokens\n`)
 
     if (i > 0) {
-      // Small delay between requests to avoid 429 rate-limit errors
-      await sleep(500)
+      // GitHub Models free tier: 40 000 tokens/min. Each chunk is ~6 000 tokens in + prompt +
+      // response, so ~7 500 tokens/request → max ~5 requests/min → need ≥12 s between requests.
+      await sleep(12_000)
     }
 
     const findings = await callCopilot(pat, payload)
