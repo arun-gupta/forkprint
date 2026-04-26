@@ -24,6 +24,7 @@ interface Finding {
   lineEnd: number
   description: string
   severity: 'fix-now' | 'fix-soon' | 'low-priority'
+  confidence: 'high' | 'medium' | 'low'
   recommendation: string
 }
 
@@ -119,6 +120,13 @@ Detection categories:
 - OPTIMIZATIONS: synchronous chart imports, O(n²) patterns, unused GraphQL fields
 - MISSING_TESTS: API routes with zero unit tests, scoring modules with no boundary tests
 
+Confidence guidance — be conservative:
+- high: the issue is unambiguous AND the fix is fully mechanical (extract function, deduplicate constant, add missing null-check). A reviewer could approve the diff in under 2 minutes without reading surrounding code.
+- medium: the issue is likely real but the correct fix requires understanding broader context or business logic.
+- low: stylistic, speculative, or the evidence in the visible code is thin.
+
+Only emit a finding if you are at least medium confidence. Prefer fewer, higher-signal findings over an exhaustive list.
+
 Output ONLY a JSON array — no prose, no markdown fences:
 [
   {
@@ -129,6 +137,7 @@ Output ONLY a JSON array — no prose, no markdown fences:
     "lineEnd": 40,
     "description": "one sentence",
     "severity": "fix-now|fix-soon|low-priority",
+    "confidence": "high|medium|low",
     "recommendation": "one sentence"
   }
 ]`
