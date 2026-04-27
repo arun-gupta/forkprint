@@ -34,30 +34,32 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
 
   const handleCopyScore = () => {
     const lines: string[] = []
+    const stripPct = (label: string) => label.replace(' percentile', '')
 
     // Line 1: overall health score + health bucket breakdown
     const visibleBuckets = hs.buckets.filter((b) => !b.hidden && b.percentile !== null)
-    const bucketStr = visibleBuckets.map((b) => `${b.name}: ${b.label.replace(' percentile', '')}`).join(', ')
+    const bucketStr = visibleBuckets.map((b) => `${b.name}: ${stripPct(b.label)}`).join(', ')
     lines.push(`RepoPulse: ${card.repo} — ${hs.label}${bucketStr ? ` (${bucketStr})` : ''}`)
 
     // Line 2: ecosystem (Reach / Attention / Engagement) when available
     if (card.profile) {
       const eco = [
-        `Reach: ${card.profile.reachLabel.replace(' percentile', '')}`,
-        `Attention: ${card.profile.attentionLabel.replace(' percentile', '')}`,
-        `Engagement: ${card.profile.engagementLabel.replace(' percentile', '')}`,
+        `Reach: ${stripPct(card.profile.reachLabel)}`,
+        `Attention: ${stripPct(card.profile.attentionLabel)}`,
+        `Engagement: ${stripPct(card.profile.engagementLabel)}`,
       ]
       lines.push(`Ecosystem: ${eco.join(' · ')}`)
     }
 
-    // Line 3: lenses that have a numeric percentile
+    // Line 3: lenses with a numeric percentile (excludes '—' / 'Insufficient…' values)
     const scoredLenses = card.lenses.filter((l) => /^\d/.test(l.percentileLabel.trim()))
     if (scoredLenses.length > 0) {
-      const lensParts = scoredLenses.map((l) => `${l.label}: ${l.percentileLabel.replace(' percentile', '')}`)
+      const lensParts = scoredLenses.map((l) => `${l.label}: ${stripPct(l.percentileLabel)}`)
       lines.push(`Lenses: ${lensParts.join(' · ')}`)
     }
 
-    // Line 4: maturity / repo details — skip "Created" (shown in header) and unavailable values
+    // Line 4: maturity / repo details — skip 'Created' (shown in the card header) and
+    // values that are unavailable ('—') or unscored ('Insufficient…')
     const maturityDetails = card.details.filter(
       (d) => d.label !== 'Created' && d.value !== '—' && !d.value.includes('Insufficient'),
     )
