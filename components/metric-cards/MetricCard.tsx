@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CollapseChevron } from '@/components/shared/CollapseChevron'
 import type { LensReadout, MetricCardViewModel } from '@/lib/metric-cards/view-model'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
@@ -20,12 +20,65 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
   }
 
   const [paneCollapsed, setPaneCollapsed] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [])
   // Session-scoped override for the solo-project scoring surface. null =
   // use the auto-detected profile from the precomputed health score.
   const [profileOverride, setProfileOverride] = useState<HealthScoreProfile | null>(null)
   const hs = profileOverride === null
     ? card.healthScore
     : getHealthScore(card.analysisResult, { mode: profileOverride })
+
+  const handleCopyScore = () => {
+    const lines: string[] = []
+    const stripPct = (label: string) => label.replace(' percentile', '')
+
+    // Line 1: overall health score + health bucket breakdown
+    const visibleBuckets = hs.buckets.filter((b) => !b.hidden && b.percentile !== null)
+    const bucketStr = visibleBuckets.map((b) => `${b.name}: ${stripPct(b.label)}`).join(', ')
+    lines.push(`RepoPulse: ${card.repo} — ${hs.label}${bucketStr ? ` (${bucketStr})` : ''}`)
+
+    // Line 2: ecosystem (Reach / Attention / Engagement) when available
+    if (card.profile) {
+      const eco = [
+        `Reach: ${stripPct(card.profile.reachLabel)}`,
+        `Attention: ${stripPct(card.profile.attentionLabel)}`,
+        `Engagement: ${stripPct(card.profile.engagementLabel)}`,
+      ]
+      lines.push(`Ecosystem: ${eco.join(' · ')}`)
+    }
+
+    // Line 3: lenses with a numeric percentile (excludes '—' / 'Insufficient…' values)
+    const scoredLenses = card.lenses.filter((l) => /^\d/.test(l.percentileLabel.trim()))
+    if (scoredLenses.length > 0) {
+      const lensParts = scoredLenses.map((l) => `${l.label}: ${stripPct(l.percentileLabel)}`)
+      lines.push(`Lenses: ${lensParts.join(' · ')}`)
+    }
+
+    // Line 4: maturity / repo details — skip 'Created' (shown in the card header) and
+    // values that are unavailable ('—') or unscored ('Insufficient…')
+    const maturityDetails = card.details.filter(
+      (d) => d.label !== 'Created' && d.value !== '—' && !d.value.includes('Insufficient'),
+    )
+    if (maturityDetails.length > 0) {
+      lines.push(maturityDetails.map((d) => `${d.label}: ${d.value}`).join(' · '))
+    }
+
+    const text = lines.join('\n')
+    try {
+      if (!navigator.clipboard?.writeText) return
+      navigator.clipboard.writeText(text).then(() => {
+        setCopied(true)
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        timeoutRef.current = setTimeout(() => setCopied(false), 2000)
+      }).catch(() => {/* clipboard unavailable */})
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
   const isSolo = hs.profile === 'solo'
   const autoSolo = card.healthScore.soloDetection.isSolo
   const showOverrideToggle = autoSolo || profileOverride !== null
@@ -111,7 +164,26 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
           <p className="text-xs font-medium uppercase tracking-wide">OSS Health Score</p>
           {hs.bracketLabel ? <p className="text-[10px] opacity-60">{hs.bracketLabel}</p> : null}
         </div>
-        <p className="text-lg font-bold">{hs.label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg font-bold">{hs.label}</p>
+          <button
+            type="button"
+            onClick={handleCopyScore}
+            title="Copy score to clipboard"
+            aria-label="Copy score to clipboard"
+            data-testid={`copy-score-${card.repo}`}
+            className="rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+          >
+            {copied ? (
+              <span className="text-[10px] font-medium">Copied!</span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {(profileCells.length > 0 || scoreCells.length > 0) ? (

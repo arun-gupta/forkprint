@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { buildMetricCardViewModels } from '@/lib/metric-cards/view-model'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildResult as _buildResult, INCLUSIVE_NAMING_CLEAN } from '@/lib/testing/fixtures'
@@ -240,6 +240,108 @@ describe('MetricCard', () => {
     expect(screen.queryByText(/^Reach$/)).not.toBeInTheDocument()
     expect(screen.queryByText(/^Engagement$/)).not.toBeInTheDocument()
     expect(screen.queryByText(/^Attention$/)).not.toBeInTheDocument()
+  })
+
+  describe('copy score to clipboard (#90)', () => {
+    let writeText: ReturnType<typeof vi.fn>
+
+    beforeEach(() => {
+      writeText = vi.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText },
+        configurable: true,
+      })
+    })
+
+    it('renders a copy button on the OSS Health Score banner', () => {
+      const card = buildMetricCardViewModels([buildResult()])[0]!
+      render(<MetricCard card={card} />)
+      expect(screen.getByTestId(`copy-score-${card.repo}`)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /copy score to clipboard/i })).toBeInTheDocument()
+    })
+
+    it('copies a formatted score string to clipboard on click', async () => {
+      const card = buildMetricCardViewModels([buildResult()])[0]!
+      render(<MetricCard card={card} />)
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /copy score to clipboard/i }))
+      })
+
+      expect(writeText).toHaveBeenCalledOnce()
+      const [text] = writeText.mock.calls[0] as [string]
+      expect(text).toMatch(/^RepoPulse: facebook\/react — /)
+      expect(text).toMatch(/Activity:/)
+      expect(text).toMatch(/Responsiveness:/)
+      // ecosystem section is included since stars/forks/watchers are available
+      expect(text).toMatch(/Ecosystem:/)
+      expect(text).toMatch(/Reach:/)
+      expect(text).toMatch(/Attention:/)
+      expect(text).toMatch(/Engagement:/)
+    })
+
+    it('includes maturity details in the copy string when available', async () => {
+      const card = buildMetricCardViewModels([buildResult({
+        primaryLanguage: 'TypeScript',
+        ageInDays: 365 * 5,
+        starsPerYear: 1200,
+        contributorsPerYear: 42,
+        commitsPerMonthLifetime: 25,
+        growthTrajectory: 'accelerating',
+      })])[0]!
+      render(<MetricCard card={card} />)
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /copy score to clipboard/i }))
+      })
+
+      expect(writeText).toHaveBeenCalledOnce()
+      const [text] = writeText.mock.calls[0] as [string]
+      expect(text).toMatch(/Primary language: TypeScript/)
+      expect(text).toMatch(/Age:/)
+      expect(text).toMatch(/Stars \/ year:/)
+      expect(text).toMatch(/Contributors \/ year:/)
+      expect(text).toMatch(/Commits \/ month:/)
+      expect(text).toMatch(/Growth trajectory: Accelerating/)
+    })
+
+    it('shows "Copied!" feedback after click and resets after 2s', async () => {
+      vi.useFakeTimers()
+      try {
+        const card = buildMetricCardViewModels([buildResult()])[0]!
+        render(<MetricCard card={card} />)
+
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: /copy score to clipboard/i }))
+        })
+
+        expect(screen.getByText('Copied!')).toBeInTheDocument()
+
+        await act(async () => { vi.advanceTimersByTime(2000) })
+        expect(screen.queryByText('Copied!')).not.toBeInTheDocument()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('omits hidden buckets from the copy string for solo repos', async () => {
+      const card = buildMetricCardViewModels([buildResult({
+        totalContributors: 1,
+        uniqueCommitAuthors90d: 1,
+        maintainerCount: 'unavailable',
+        documentationResult: 'unavailable',
+      })])[0]!
+      render(<MetricCard card={card} />)
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /copy score to clipboard/i }))
+      })
+
+      expect(writeText).toHaveBeenCalledOnce()
+      const [text] = writeText.mock.calls[0] as [string]
+      expect(text).not.toMatch(/Responsiveness:/)
+      expect(text).not.toMatch(/Contributors:/)
+    })
   })
 })
 
