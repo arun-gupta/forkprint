@@ -9,7 +9,7 @@ Add progressive disclosure to the repo card: a default "primary tier" (health sc
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x / Next.js 14+ (App Router)  
+**Language/Version**: TypeScript 5.x / Next.js 16.x (App Router)  
 **Primary Dependencies**: React 19, Tailwind CSS, Vitest, Playwright  
 **Storage**: Browser localStorage (client-side only, no server state)  
 **Testing**: Vitest + React Testing Library (unit); Playwright (E2E)  
