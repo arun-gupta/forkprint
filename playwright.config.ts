@@ -1,4 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
+import { existsSync } from 'fs'
+
+// Load .env.local so PORT (set to 3010 locally) is available in this config.
+if (existsSync('.env.local')) process.loadEnvFile('.env.local')
+
+const port = process.env.PORT ?? '3000'
+const baseURL = process.env.BASE_URL ?? `http://localhost:${port}`
 
 export default defineConfig({
   testDir: './e2e',
@@ -7,7 +14,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -18,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: process.env.BASE_URL ?? 'http://localhost:3000',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
   },
 })

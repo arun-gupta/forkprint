@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { CollapseChevron } from '@/components/shared/CollapseChevron'
+import { CNCFReadinessPill } from '@/components/overview/CNCFReadinessPill'
 import type { LensReadout, MetricCardViewModel } from '@/lib/metric-cards/view-model'
 import { formatPercentileLabel } from '@/lib/scoring/config-loader'
 import { scoreToneClass } from '@/lib/metric-cards/score-config'
@@ -25,12 +26,30 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
   useEffect(() => {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
   }, [])
+
   // Session-scoped override for the solo-project scoring surface. null =
   // use the auto-detected profile from the precomputed health score.
   const [profileOverride, setProfileOverride] = useState<HealthScoreProfile | null>(null)
   const hs = profileOverride === null
     ? card.healthScore
     : getHealthScore(card.analysisResult, { mode: profileOverride })
+
+  // Per-repo expand/collapse state for the secondary details tier.
+  // Persisted in localStorage so it survives page reloads.
+  const localStorageKey = `repopulse:card-expanded:${card.repo}`
+  const [detailsExpanded, setDetailsExpanded] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(localStorageKey) === 'true'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try { localStorage.setItem(localStorageKey, String(detailsExpanded)) } catch { /* storage unavailable */ }
+  }, [detailsExpanded, localStorageKey])
+  const toggleDetails = () => {
+    setDetailsExpanded((prev) => !prev)
+  }
 
   const handleCopyScore = () => {
     const lines: string[] = []
@@ -79,9 +98,11 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
       /* clipboard unavailable */
     }
   }
+
   const isSolo = hs.profile === 'solo'
   const autoSolo = card.healthScore.soloDetection.isSolo
   const showOverrideToggle = autoSolo || profileOverride !== null
+
   const profileCells: ScorecardCellProps[] = card.profile
     ? [
         { label: 'Reach', percentileLabel: card.profile.reachLabel, detail: `${card.starsLabel} stars`, tooltip: 'Star count percentile. Measures visibility and adoption.', toneClass: percentileToneClass(card.profile.reachPercentile, 'emerald') },
@@ -113,18 +134,39 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
     ? `Solo-project scoring surface — composite health score from Activity (30%), Security (35%), and Documentation (35%). Contributors and Responsiveness are hidden because this project appears to be solo-maintained. Scored relative to ${hs.bracketLabel} repositories.`
     : `Composite health score from Contributors (23%), Activity (25%), Responsiveness (25%), Documentation (12%, includes licensing, compliance & inclusive naming), and Security (15%) — scored relative to ${hs.bracketLabel} repositories.`
 
+  const aspirantResult = card.analysisResult.aspirantResult ?? null
+
+  const hasSecondaryContent = scoreCells.length > 0 || card.lenses.length > 0 || card.details.length > 0 || hs.recommendations.length > 0
+
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900" data-testid={`metric-card-${card.repo}`}>
-      <button
-        type="button"
-        onClick={() => setPaneCollapsed((prev) => !prev)}
-        className="flex w-full items-center gap-2 text-left"
-        aria-expanded={!paneCollapsed}
-      >
-        <CollapseChevron expanded={!paneCollapsed} />
-        <h3 className="font-semibold text-slate-900 dark:text-slate-100">{card.repo}</h3>
-        <p className="ml-auto text-xs text-slate-400 dark:text-slate-500">Created: {card.createdAtLabel}</p>
-      </button>
+      <div className="flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setPaneCollapsed((prev) => !prev)}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          aria-expanded={!paneCollapsed}
+        >
+          <CollapseChevron expanded={!paneCollapsed} />
+          <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">{card.repo}</h3>
+        </button>
+        {aspirantResult ? (
+          <span
+            data-testid={`cncf-badge-${card.repo}`}
+            className="shrink-0"
+            aria-label={`CNCF Sandbox Readiness: ${aspirantResult.readinessScore} / 100`}
+          >
+            <CNCFReadinessPill
+              aspirantResult={aspirantResult}
+              onClick={() => {
+                const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-tab-id="cncf-readiness"]')
+                tab?.click()
+              }}
+            />
+          </span>
+        ) : null}
+        <p className="ml-auto shrink-0 text-xs text-slate-400 dark:text-slate-500">Created: {card.createdAtLabel}</p>
+      </div>
       {!paneCollapsed ? (
       <>
       <p className={`mt-1 line-clamp-2 text-xs italic text-slate-400 dark:text-slate-500 ${card.description === '—' ? '' : 'not-italic text-slate-500 dark:text-slate-400'}`}>{card.description === '—' ? 'No description found' : card.description}</p>
@@ -186,22 +228,43 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
         </div>
       </div>
 
-      {(profileCells.length > 0 || scoreCells.length > 0) ? (
+      {/* Primary tier: ecosystem profile tiles (Reach, Attention, Engagement) */}
+      {profileCells.length > 0 ? (
         <div className="mt-2">
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-[9px] text-slate-400 dark:text-slate-500">percentile rank</span>
           </div>
-          {profileCells.length > 0 ? (
-            <div
-              className={`grid grid-cols-1 gap-1.5 sm:grid-cols-3 ${isSolo ? 'opacity-50' : ''}`}
-              title={isSolo ? 'Popularity signals — not health. Dimmed for solo-maintained projects.' : undefined}
-              data-testid={isSolo ? `ecosystem-dimmed-${card.repo}` : undefined}
-            >
-              {profileCells.map((cell) => (
-                <ScorecardCell key={cell.label} {...cell} />
-              ))}
-            </div>
-          ) : null}
+          <div
+            className={`grid grid-cols-1 gap-1.5 sm:grid-cols-3 ${isSolo ? 'opacity-50' : ''}`}
+            title={isSolo ? 'Popularity signals — not health. Dimmed for solo-maintained projects.' : undefined}
+            data-testid={isSolo ? `ecosystem-dimmed-${card.repo}` : undefined}
+          >
+            {profileCells.map((cell) => (
+              <ScorecardCell key={cell.label} {...cell} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Show/Hide details affordance — boundary between primary and secondary tiers */}
+      {hasSecondaryContent ? (
+        <button
+          type="button"
+          data-testid={`details-toggle-${card.repo}`}
+          aria-expanded={detailsExpanded}
+          aria-controls={`secondary-${card.repo}`}
+          onClick={toggleDetails}
+          className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-1 rounded-lg border border-slate-200 py-1.5 text-xs text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200"
+        >
+          <span>{detailsExpanded ? 'Hide details' : 'Show details'}</span>
+          <CollapseChevron expanded={detailsExpanded} />
+        </button>
+      ) : null}
+
+      {/* Secondary tier: health-dimension tiles, lenses, raw stats, recommendations */}
+      <div id={`secondary-${card.repo}`}>
+        {detailsExpanded ? (
+        <>
           {scoreCells.length > 0 ? (
             <div className={`mt-1.5 grid grid-cols-2 gap-1.5 ${SCORECARD_GRID_COLS[scoreCells.length] ?? 'sm:grid-cols-5'}`}>
               {scoreCells.map((cell) => (
@@ -209,69 +272,70 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
               ))}
             </div>
           ) : null}
-        </div>
-      ) : null}
 
-      {card.lenses.length > 0 ? (
-        <div
-          className={`mt-2 ${isSolo ? 'opacity-50' : ''}`}
-          title={isSolo ? 'Community-shape lenses — structurally low for solo-maintained projects. Dimmed, not scored.' : undefined}
-        >
-          <div className="mb-1 flex items-baseline gap-2">
-            <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Lenses</span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500">percentile rank · signals present</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {card.lenses.map((lens) => (
-              <LensPill
-                key={lens.key}
-                lens={lens}
-                active={activeTag === lens.key}
-                onClick={onTagChange ? () => handleLensClick(lens.key) : undefined}
-              />
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {card.details.length > 0 ? (
-        <section
-          aria-label={`${card.repo} details`}
-          className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/60"
-        >
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-            {card.details.map((detail) => (
-              <div key={detail.label} className="min-w-0">
-                <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {detail.label}
-                </dt>
-                <dd className="mt-0.5 break-words text-sm text-slate-900 dark:text-slate-100">
-                  {detail.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      ) : null}
-
-      {hs.recommendations.length > 0 ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/60">
-          <p className="text-xs text-slate-600 dark:text-slate-300">
-            <span className="font-medium text-slate-800 dark:text-slate-100">{hs.recommendations.length} recommendation{hs.recommendations.length !== 1 ? 's' : ''}</span>
-            {' — '}
-            <button
-              type="button"
-              className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              onClick={() => {
-                const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-tab-id="recommendations"]')
-                tab?.click()
-              }}
+          {card.lenses.length > 0 ? (
+            <div
+              className={`mt-2 ${isSolo ? 'opacity-50' : ''}`}
+              title={isSolo ? 'Community-shape lenses — structurally low for solo-maintained projects. Dimmed, not scored.' : undefined}
             >
-              see Recommendations tab
-            </button>
-          </p>
-        </div>
-      ) : null}
+              <div className="mb-1 flex items-baseline gap-2">
+                <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Lenses</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500">percentile rank · signals present</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {card.lenses.map((lens) => (
+                  <LensPill
+                    key={lens.key}
+                    lens={lens}
+                    active={activeTag === lens.key}
+                    onClick={onTagChange ? () => handleLensClick(lens.key) : undefined}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {card.details.length > 0 ? (
+            <section
+              aria-label={`${card.repo} details`}
+              className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/60"
+            >
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+                {card.details.map((detail) => (
+                  <div key={detail.label} className="min-w-0">
+                    <dt className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {detail.label}
+                    </dt>
+                    <dd className="mt-0.5 break-words text-sm text-slate-900 dark:text-slate-100">
+                      {detail.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+
+          {hs.recommendations.length > 0 ? (
+            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center dark:border-slate-700 dark:bg-slate-800/60">
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                <span className="font-medium text-slate-800 dark:text-slate-100">{hs.recommendations.length} recommendation{hs.recommendations.length !== 1 ? 's' : ''}</span>
+                {' — '}
+                <button
+                  type="button"
+                  className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  onClick={() => {
+                    const tab = document.querySelector<HTMLButtonElement>('[role="tab"][data-tab-id="recommendations"]')
+                    tab?.click()
+                  }}
+                >
+                  see Recommendations tab
+                </button>
+              </p>
+            </div>
+          ) : null}
+        </>
+        ) : null}
+      </div>
       </>
       ) : null}
     </article>
@@ -340,7 +404,7 @@ function ScorecardCell({ label, percentileLabel, detail, tooltip, toneClass, onC
         <span className="text-[10px] font-medium uppercase tracking-wide">{label}</span>
         <span className="text-xs font-semibold">{percentileLabel.replace(' percentile', '')}</span>
       </div>
-      <p className="mt-0.5 text-[10px] opacity-60">{detail ?? '\u00A0'}</p>
+      <p className="mt-0.5 text-[10px] opacity-60">{detail ?? ' '}</p>
     </>
   )
 

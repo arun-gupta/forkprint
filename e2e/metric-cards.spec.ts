@@ -28,15 +28,58 @@ test.describe('P1-F07 Metric Cards', () => {
     const overview = page.getByRole('region', { name: /metric cards overview/i })
     await expect(overview).toContainText('facebook/react')
     await expect(overview).toContainText('kubernetes/kubernetes')
+    // Primary tier: ecosystem tiles
     await expect(overview).toContainText('Reach')
     await expect(overview).toContainText('Attention')
     await expect(overview).toContainText('Engagement')
+    // Secondary tier hidden until expanded
+    await expect(overview).not.toContainText('Activity')
+    await expect(overview).not.toContainText('Lenses')
+  })
+
+  test('progressive disclosure: expand/collapse reveals secondary content', async ({ page }) => {
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          results: [
+            buildResult({ repo: 'facebook/react', stars: 244295, forks: 50872, watchers: 6660, hasDiscussionsEnabled: true }),
+          ],
+          failures: [],
+          rateLimit: null,
+        }),
+      })
+    })
+
+    await page.getByRole('textbox', { name: /repository list/i }).fill('facebook/react')
+    await page.getByRole('button', { name: /analyze/i }).click()
+
+    const overview = page.getByRole('region', { name: /metric cards overview/i })
+    await expect(overview).toContainText('facebook/react')
+
+    // Secondary tier hidden by default
+    await expect(overview).not.toContainText('Activity')
+    await expect(overview).not.toContainText('Responsiveness')
+
+    // Expand the card
+    const toggle = page.getByTestId('details-toggle-facebook/react')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toContainText(/show details/i)
+    await toggle.click()
+
+    // Secondary tier now visible
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await expect(toggle).toContainText(/hide details/i)
     await expect(overview).toContainText('Activity')
-    await expect(overview).toContainText('Contributors')
     await expect(overview).toContainText('Responsiveness')
+    await expect(overview).toContainText('Contributors')
     await expect(overview).toContainText('Security')
-    // Lenses row presence guard (#196).
-    await expect(overview).toContainText('Lenses')
+
+    // Collapse again
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(overview).not.toContainText('Activity')
   })
 
   test('keeps overview cards summary-only', async ({ page }) => {

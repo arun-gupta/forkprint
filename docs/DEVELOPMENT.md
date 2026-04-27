@@ -324,6 +324,7 @@ Phase 2 adds new scoring buckets to the health score. Requirements specs live in
 | 16 | P2-F14 | Org governance audit — member permission distribution | #288 | ✅ Done |
 | 17 | P2-F15 | Foundation input mode — top-level tab (repos + org) | #413 | ✅ Done |
 | 18 | P2-F16 | Foundation input mode — Projects board sub-mode | #411 | |
+| 19 | P2-F17 | Repo card progressive disclosure (UX density) | #483 | ✅ Done |
 
 ## Phase 3 feature order
 

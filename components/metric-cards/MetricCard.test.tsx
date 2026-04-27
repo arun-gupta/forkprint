@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { buildMetricCardViewModels } from '@/lib/metric-cards/view-model'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import { buildResult as _buildResult, INCLUSIVE_NAMING_CLEAN } from '@/lib/testing/fixtures'
@@ -39,6 +39,10 @@ function buildResult(overrides: Partial<AnalysisResult> = {}): AnalysisResult {
 }
 
 describe('MetricCard', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
   it('renders unified scorecard with all 6 dimensions', () => {
     const card = buildMetricCardViewModels([buildResult()])[0]!
 
@@ -47,23 +51,27 @@ describe('MetricCard', () => {
     expect(screen.getByText('facebook/react')).toBeInTheDocument()
     expect(screen.getByText(/oss health score/i)).toBeInTheDocument()
 
-    // All 6 dimensions present
+    // Ecosystem tiles (primary tier)
     expect(screen.getByText(/^Reach$/)).toBeInTheDocument()
     expect(screen.getByText(/^Attention$/)).toBeInTheDocument()
     expect(screen.getByText(/^Engagement$/)).toBeInTheDocument()
+
+    // Supporting details inline (primary tier)
+    expect(screen.getByText(/244,295 stars/)).toBeInTheDocument()
+    expect(screen.getByText(/20.8% fork rate/i)).toBeInTheDocument()
+    expect(screen.getByText(/2.7% watcher rate/i)).toBeInTheDocument()
+
+    // Percentile rank header shown in primary tier
+    expect(screen.getAllByText('percentile rank').length).toBeGreaterThanOrEqual(1)
+
+    // Expand to see health-dimension tiles (secondary tier)
+    fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
+
     expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
     expect(screen.getByText(/^Responsiveness$/)).toBeInTheDocument()
     expect(screen.getByText(/^Contributors$/)).toBeInTheDocument()
     expect(screen.getByText(/^Documentation$/)).toBeInTheDocument()
     expect(screen.getByText(/^Security$/)).toBeInTheDocument()
-
-    // Supporting details inline
-    expect(screen.getByText(/244,295 stars/)).toBeInTheDocument()
-    expect(screen.getByText(/20.8% fork rate/i)).toBeInTheDocument()
-    expect(screen.getByText(/2.7% watcher rate/i)).toBeInTheDocument()
-
-    // Percentile rank header shown once; cells show ordinals only
-    expect(screen.getAllByText('percentile rank').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/^\d+\w{2}$/).length).toBeGreaterThanOrEqual(3)
   })
 
@@ -71,6 +79,8 @@ describe('MetricCard', () => {
     const card = buildMetricCardViewModels([buildResult()])[0]!
 
     render(<MetricCard card={card} />)
+    // Expand to reveal secondary tier where insufficient labels appear
+    fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
 
     // Both Contributors (no commit data) and Community (no known signals)
     // can surface as insufficient; assert at least one is rendered.
@@ -97,6 +107,8 @@ describe('MetricCard', () => {
     ])[0]!
 
     render(<MetricCard card={card} />)
+    // Details panel is in secondary tier — expand first
+    fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
 
     expect(screen.getByText(/^Age$/)).toBeInTheDocument()
     expect(screen.getByText('5.0 yr')).toBeInTheDocument()
@@ -124,6 +136,8 @@ describe('MetricCard', () => {
   it('renders lens pills as non-clickable spans when no onTagChange is provided', () => {
     const card = buildMetricCardViewModels([buildResult(sparseCommunityOverrides())])[0]!
     render(<MetricCard card={card} />)
+    // Lenses are in secondary tier — expand first
+    fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
     const communityLabel = screen.getByText(/^Community$/i)
     expect(communityLabel.closest('button')).toBeNull()
   })
@@ -133,6 +147,8 @@ describe('MetricCard', () => {
     const onTagChange = vi.fn()
 
     const { rerender } = render(<MetricCard card={card} activeTag={null} onTagChange={onTagChange} />)
+    // Lenses are in secondary tier — expand first
+    fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
     const communityButton = screen.getByRole('button', { name: /community/i })
     expect(communityButton).toHaveAttribute('aria-pressed', 'false')
 
@@ -166,6 +182,8 @@ describe('MetricCard', () => {
 
     try {
       render(<MetricCard card={card} />)
+      // Score cells are in secondary tier — expand first
+      fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
 
       for (const dim of ['Activity', 'Responsiveness', 'Documentation', 'Security', 'Contributors'] as const) {
         const btn = screen.getByRole('button', { name: `Open ${dim} tab` })
@@ -194,9 +212,13 @@ describe('MetricCard', () => {
 
       expect(screen.getByTestId(`solo-profile-banner-${card.repo}`)).toBeInTheDocument()
       expect(screen.getByText(/solo-maintained project/i)).toBeInTheDocument()
+
+      // Expand to check score cells (secondary tier)
+      fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
+
       expect(screen.queryByRole('button', { name: 'Open Contributors tab' })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Open Responsiveness tab' })).not.toBeInTheDocument()
-      // Remaining scored dimensions still visible
+      // Remaining scored dimensions still visible in secondary tier
       expect(screen.getByRole('button', { name: 'Open Activity tab' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Open Documentation tab' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Open Security tab' })).toBeInTheDocument()
@@ -211,6 +233,9 @@ describe('MetricCard', () => {
       expect(toggle).toHaveTextContent(/use community scoring/i)
 
       fireEvent.click(toggle)
+
+      // Expand secondary tier to see the score cells
+      fireEvent.click(screen.getByTestId(`details-toggle-${card.repo}`))
 
       // Contributors + Responsiveness cells return
       expect(screen.getByRole('button', { name: 'Open Contributors tab' })).toBeInTheDocument()
@@ -342,6 +367,157 @@ describe('MetricCard', () => {
       expect(text).not.toMatch(/Responsiveness:/)
       expect(text).not.toMatch(/Contributors:/)
     })
+  })
+})
+
+describe('progressive disclosure', () => {
+  let mockStore: Record<string, string>
+
+  beforeEach(() => {
+    mockStore = {}
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => mockStore[key] ?? null,
+      setItem: (key: string, value: string) => { mockStore[key] = value },
+      removeItem: (key: string) => { delete mockStore[key] },
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('T003: health score and ecosystem tiles visible by default', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.getByText(/oss health score/i)).toBeInTheDocument()
+    expect(screen.getByText(/^Reach$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Attention$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Engagement$/)).toBeInTheDocument()
+  })
+
+  it('T004: secondary content hidden by default', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.queryByText(/^Activity$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Responsiveness$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Contributors$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Security$/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Lenses$/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: /facebook\/react details/i })).not.toBeInTheDocument()
+  })
+
+  it('T005: Show details affordance present with aria-expanded=false', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    const toggle = screen.getByTestId('details-toggle-facebook/react')
+    expect(toggle).toBeInTheDocument()
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveTextContent(/show details/i)
+  })
+
+  it('T011: click Show details reveals secondary content', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    const toggle = screen.getByTestId('details-toggle-facebook/react')
+    fireEvent.click(toggle)
+    expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
+    expect(screen.getByText(/^Responsiveness$/)).toBeInTheDocument()
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(toggle).toHaveTextContent(/hide details/i)
+  })
+
+  it('T012: expand then collapse hides secondary content again', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    const toggle = screen.getByTestId('details-toggle-facebook/react')
+    fireEvent.click(toggle)
+    fireEvent.click(toggle)
+    expect(screen.queryByText(/^Activity$/)).not.toBeInTheDocument()
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveTextContent(/show details/i)
+  })
+
+  it('T013: expanded state: lens pill click triggers onTagChange', () => {
+    const card = buildMetricCardViewModels([buildResult(sparseCommunityOverrides())])[0]!
+    const onTagChange = vi.fn()
+    render(<MetricCard card={card} activeTag={null} onTagChange={onTagChange} />)
+    fireEvent.click(screen.getByTestId('details-toggle-facebook/react'))
+    const communityButton = screen.getByRole('button', { name: /community/i })
+    fireEvent.click(communityButton)
+    expect(onTagChange).toHaveBeenCalledWith('community')
+  })
+
+  it('T018: card starts expanded when localStorage has true', () => {
+    mockStore['repopulse:card-expanded:facebook/react'] = 'true'
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.getByText(/^Activity$/)).toBeInTheDocument()
+    const toggle = screen.getByTestId('details-toggle-facebook/react')
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(toggle).toHaveTextContent(/hide details/i)
+  })
+
+  it('T019: card starts collapsed when localStorage has false', () => {
+    mockStore['repopulse:card-expanded:facebook/react'] = 'false'
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.queryByText(/^Activity$/)).not.toBeInTheDocument()
+  })
+
+  it('T020: toggle writes new state to localStorage', () => {
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    const toggle = screen.getByTestId('details-toggle-facebook/react')
+    fireEvent.click(toggle)
+    expect(mockStore['repopulse:card-expanded:facebook/react']).toBe('true')
+    fireEvent.click(toggle)
+    expect(mockStore['repopulse:card-expanded:facebook/react']).toBe('false')
+  })
+
+  it('T021: localStorage throws on read → defaults to collapsed', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => { throw new DOMException('QuotaExceededError') },
+      setItem: () => { throw new DOMException('QuotaExceededError') },
+    })
+    const card = buildMetricCardViewModels([buildResult()])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.queryByText(/^Activity$/)).not.toBeInTheDocument()
+  })
+})
+
+describe('CNCF header badge (US4)', () => {
+  const mockAspirantResult = {
+    foundationTarget: 'cncf-sandbox' as const,
+    readinessScore: 75,
+    autoFields: [],
+    humanOnlyFields: [],
+    readyCount: 5,
+    totalAutoCheckable: 8,
+    alreadyInLandscape: false,
+    tagRecommendation: { primaryTag: null, matchedSignals: [], fallbackNote: null },
+    sandboxApplication: null,
+  }
+
+  it('T025: CNCF badge visible in header when aspirantResult is set', () => {
+    const card = buildMetricCardViewModels([buildResult({ aspirantResult: mockAspirantResult })])[0]!
+    render(<MetricCard card={card} />)
+    const badge = screen.getByTestId('cncf-badge-facebook/react')
+    expect(badge).toBeInTheDocument()
+    expect(badge).toHaveTextContent('75')
+  })
+
+  it('T026: CNCF badge absent when aspirantResult is null', () => {
+    const card = buildMetricCardViewModels([buildResult({ aspirantResult: null })])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.queryByTestId('cncf-badge-facebook/react')).not.toBeInTheDocument()
+  })
+
+  it('T027: CNCF badge visible without expanding details (primary tier)', () => {
+    const card = buildMetricCardViewModels([buildResult({ aspirantResult: mockAspirantResult })])[0]!
+    render(<MetricCard card={card} />)
+    expect(screen.getByTestId('cncf-badge-facebook/react')).toBeInTheDocument()
+    // Confirm secondary tier is closed (badge is not behind the gate)
+    expect(screen.queryByText(/^Activity$/)).not.toBeInTheDocument()
   })
 })
 
