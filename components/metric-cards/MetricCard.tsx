@@ -33,9 +33,39 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
     : getHealthScore(card.analysisResult, { mode: profileOverride })
 
   const handleCopyScore = () => {
+    const lines: string[] = []
+
+    // Line 1: overall health score + health bucket breakdown
     const visibleBuckets = hs.buckets.filter((b) => !b.hidden && b.percentile !== null)
     const bucketStr = visibleBuckets.map((b) => `${b.name}: ${b.label.replace(' percentile', '')}`).join(', ')
-    const text = `RepoPulse: ${card.repo} — ${hs.label}${bucketStr ? ` (${bucketStr})` : ''}`
+    lines.push(`RepoPulse: ${card.repo} — ${hs.label}${bucketStr ? ` (${bucketStr})` : ''}`)
+
+    // Line 2: ecosystem (Reach / Attention / Engagement) when available
+    if (card.profile) {
+      const eco = [
+        `Reach: ${card.profile.reachLabel.replace(' percentile', '')}`,
+        `Attention: ${card.profile.attentionLabel.replace(' percentile', '')}`,
+        `Engagement: ${card.profile.engagementLabel.replace(' percentile', '')}`,
+      ]
+      lines.push(`Ecosystem: ${eco.join(' · ')}`)
+    }
+
+    // Line 3: lenses that have a numeric percentile
+    const scoredLenses = card.lenses.filter((l) => /^\d/.test(l.percentileLabel.trim()))
+    if (scoredLenses.length > 0) {
+      const lensParts = scoredLenses.map((l) => `${l.label}: ${l.percentileLabel.replace(' percentile', '')}`)
+      lines.push(`Lenses: ${lensParts.join(' · ')}`)
+    }
+
+    // Line 4: maturity / repo details — skip "Created" (shown in header) and unavailable values
+    const maturityDetails = card.details.filter(
+      (d) => d.label !== 'Created' && d.value !== '—' && !d.value.includes('Insufficient'),
+    )
+    if (maturityDetails.length > 0) {
+      lines.push(maturityDetails.map((d) => `${d.label}: ${d.value}`).join(' · '))
+    }
+
+    const text = lines.join('\n')
     try {
       if (!navigator.clipboard?.writeText) return
       navigator.clipboard.writeText(text).then(() => {

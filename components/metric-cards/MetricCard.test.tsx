@@ -273,6 +273,36 @@ describe('MetricCard', () => {
       expect(text).toMatch(/^RepoPulse: facebook\/react — /)
       expect(text).toMatch(/Activity:/)
       expect(text).toMatch(/Responsiveness:/)
+      // ecosystem section is included since stars/forks/watchers are available
+      expect(text).toMatch(/Ecosystem:/)
+      expect(text).toMatch(/Reach:/)
+      expect(text).toMatch(/Attention:/)
+      expect(text).toMatch(/Engagement:/)
+    })
+
+    it('includes maturity details in the copy string when available', async () => {
+      const card = buildMetricCardViewModels([buildResult({
+        primaryLanguage: 'TypeScript',
+        ageInDays: 365 * 5,
+        starsPerYear: 1200,
+        contributorsPerYear: 42,
+        commitsPerMonthLifetime: 25,
+        growthTrajectory: 'accelerating',
+      })])[0]!
+      render(<MetricCard card={card} />)
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /copy score to clipboard/i }))
+      })
+
+      expect(writeText).toHaveBeenCalledOnce()
+      const [text] = writeText.mock.calls[0] as [string]
+      expect(text).toMatch(/Primary language: TypeScript/)
+      expect(text).toMatch(/Age:/)
+      expect(text).toMatch(/Stars \/ year:/)
+      expect(text).toMatch(/Contributors \/ year:/)
+      expect(text).toMatch(/Commits \/ month:/)
+      expect(text).toMatch(/Growth trajectory: Accelerating/)
     })
 
     it('shows "Copied!" feedback after click and resets after 2s', async () => {
