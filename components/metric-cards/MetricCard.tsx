@@ -20,12 +20,23 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
   }
 
   const [paneCollapsed, setPaneCollapsed] = useState(false)
+  const [copied, setCopied] = useState(false)
   // Session-scoped override for the solo-project scoring surface. null =
   // use the auto-detected profile from the precomputed health score.
   const [profileOverride, setProfileOverride] = useState<HealthScoreProfile | null>(null)
   const hs = profileOverride === null
     ? card.healthScore
     : getHealthScore(card.analysisResult, { mode: profileOverride })
+
+  const handleCopyScore = () => {
+    const visibleBuckets = hs.buckets.filter((b) => !b.hidden && b.percentile !== null)
+    const bucketStr = visibleBuckets.map((b) => `${b.name}: ${b.label.replace(' percentile', '')}`).join(', ')
+    const text = `RepoPulse: ${card.repo} — ${hs.label}${bucketStr ? ` (${bucketStr})` : ''}`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {/* clipboard unavailable */})
+  }
   const isSolo = hs.profile === 'solo'
   const autoSolo = card.healthScore.soloDetection.isSolo
   const showOverrideToggle = autoSolo || profileOverride !== null
@@ -111,7 +122,26 @@ export function MetricCard({ card, activeTag, onTagChange }: MetricCardProps) {
           <p className="text-xs font-medium uppercase tracking-wide">OSS Health Score</p>
           {hs.bracketLabel ? <p className="text-[10px] opacity-60">{hs.bracketLabel}</p> : null}
         </div>
-        <p className="text-lg font-bold">{hs.label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg font-bold">{hs.label}</p>
+          <button
+            type="button"
+            onClick={handleCopyScore}
+            title="Copy score to clipboard"
+            aria-label="Copy score to clipboard"
+            data-testid={`copy-score-${card.repo}`}
+            className="rounded p-0.5 opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+          >
+            {copied ? (
+              <span className="text-[10px] font-medium">Copied!</span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {(profileCells.length > 0 || scoreCells.length > 0) ? (
