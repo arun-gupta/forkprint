@@ -143,6 +143,14 @@ Output ONLY a JSON array — no prose, no markdown fences:
 ]`
 
 const MAX_RETRIES = 3
+// If Retry-After exceeds this, the daily token budget is exhausted — no point waiting.
+const MAX_RETRY_WAIT_S = 120
+
+class DailyBudgetExhaustedError extends Error {
+  constructor(waitSeconds: number) {
+    super(`Daily token budget exhausted (Retry-After: ${waitSeconds}s) — writing partial results`)
+  }
+}
 
 function parseRetryAfter(value: string | null): number {
   if (!value) return 60
@@ -179,7 +187,7 @@ async function callCopilot(pat: string, payload: string, attempt = 0): Promise<F
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'user',
@@ -193,6 +201,9 @@ async function callCopilot(pat: string, payload: string, attempt = 0): Promise<F
   if (!res.ok) {
     if ((res.status === 429 || res.status === 503) && attempt < MAX_RETRIES) {
       const wait = parseRetryAfter(res.headers.get('Retry-After'))
+      if (wait > MAX_RETRY_WAIT_S) {
+        throw new DailyBudgetExhaustedError(wait)
+      }
       process.stderr.write(
         `  Rate limited (${res.status}). Waiting ${wait}s before retrying (attempt ${attempt + 1} of ${MAX_RETRIES})...\n`,
       )
@@ -248,7 +259,16 @@ async function main(): Promise<void> {
     process.stderr.write(`  Chunk ${i + 1}/${chunks.length}: ${fileCount} files, ~${estimatedTokens} tokens\n`)
 
     const callStart = Date.now()
-    const findings = await callCopilot(pat, payload)
+    let findings: Finding[]
+    try {
+      findings = await callCopilot(pat, payload)
+    } catch (err) {
+      if (err instanceof DailyBudgetExhaustedError) {
+        process.stderr.write(`  ${err.message}\n`)
+        break
+      }
+      throw err
+    }
     process.stderr.write(`    ${findings.length} findings returned\n`)
 
     for (const f of findings) {
