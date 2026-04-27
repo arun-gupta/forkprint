@@ -144,11 +144,11 @@ Output ONLY a JSON array — no prose, no markdown fences:
 
 const MAX_RETRIES = 3
 // If Retry-After exceeds this, the daily token budget is exhausted — no point waiting.
-const MAX_RETRY_WAIT_S = 120
+export const MAX_RETRY_WAIT_S = 120
 
-class DailyBudgetExhaustedError extends Error {
+export class DailyBudgetExhaustedError extends Error {
   constructor(waitSeconds: number) {
-    super(`Daily token budget exhausted (Retry-After: ${waitSeconds}s) — writing partial results`)
+    super(`Daily token budget exhausted (Retry-After: ${waitSeconds}s) — will write partial results`)
   }
 }
 
@@ -179,7 +179,7 @@ export function parseFindings(raw: string): Finding[] {
   }
 }
 
-async function callCopilot(pat: string, payload: string, attempt = 0): Promise<Finding[]> {
+export async function callCopilot(pat: string, payload: string, attempt = 0): Promise<Finding[]> {
   const res = await fetch('https://models.inference.ai.azure.com/chat/completions', {
     method: 'POST',
     headers: {
