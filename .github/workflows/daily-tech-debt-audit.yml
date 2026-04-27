@@ -25,10 +25,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -37,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Download previous fingerprint artifact
-        uses: dawidd6/action-download-artifact@v9
+        uses: dawidd6/action-download-artifact@v20
         with:
           workflow: daily-tech-debt-audit.yml
           name: tech-debt-fingerprint
@@ -52,7 +52,7 @@ jobs:
         run: npx tsx scripts/tech-debt-audit.ts
 
       - name: Upload findings for auto-fix job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tech-debt-findings
           path: findings.json
@@ -215,20 +215,20 @@ jobs:
 
       - name: Save artifact state
         run: |
-          mkdir -p .artifact
-          jq '.fingerprints' findings.json > .artifact/fingerprint.json
-          cp findings.json .artifact/findings.json
+          mkdir -p artifact
+          jq '.fingerprints' findings.json > artifact/fingerprint.json
+          cp findings.json artifact/findings.json
           ISSUE="${{ steps.create-issue.outputs.issue-number }}"
           if [ -z "$ISSUE" ]; then
             ISSUE="${{ steps.diff.outputs.prev-issue }}"
           fi
-          echo "$ISSUE" > .artifact/last-issue.txt
+          echo "$ISSUE" > artifact/last-issue.txt
 
       - name: Upload fingerprint artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tech-debt-fingerprint
-          path: .artifact/
+          path: artifact/
           retention-days: 7
 
   auto-fix:
@@ -244,10 +244,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -256,7 +256,7 @@ jobs:
         run: npm ci
 
       - name: Download findings artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: tech-debt-findings
 

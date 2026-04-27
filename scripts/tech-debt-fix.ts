@@ -115,11 +115,16 @@ async function main(): Promise<void> {
     findings: Finding[]
   }
 
+  // MISSING_TESTS and OPTIMIZATIONS require creating new files or understanding
+  // runtime behaviour — not safe to auto-patch source. Restrict to categories
+  // where an in-place source edit is the correct fix.
+  const AUTO_FIX_CATEGORIES = new Set(['DRY', 'CONSISTENCY', 'PATTERNS'])
+
   const candidates = (data.findings ?? []).filter(
-    f => f.confidence === 'high' && f.severity === 'fix-now',
+    f => f.confidence === 'high' && f.severity === 'fix-now' && AUTO_FIX_CATEGORIES.has(f.category),
   )
 
-  process.stderr.write(`  ${candidates.length} high-confidence fix-now candidates\n`)
+  process.stderr.write(`  ${candidates.length} high-confidence fix-now candidates (DRY/CONSISTENCY/PATTERNS only)\n`)
 
   if (candidates.length === 0) {
     process.stderr.write('  Nothing to auto-fix.\n')
