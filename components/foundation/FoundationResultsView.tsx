@@ -6,6 +6,7 @@ import { CNCFCandidacyPanel } from '@/components/cncf-candidacy/CNCFCandidacyPan
 import type { AnalyzeResponse, AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { SkippedIssue } from '@/lib/foundation/fetch-board-repos'
+import { downloadFoundationMarkdown } from '@/lib/export/foundation-markdown-export'
 
 export type FoundationResult =
   | { kind: 'repos'; results: AnalyzeResponse }
@@ -69,6 +70,21 @@ function ReanalyzeButton({ onClick }: { onClick: () => void }) {
         <path d="M10 2v3h3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       Re-analyze
+    </button>
+  )
+}
+
+function ExportMarkdownButton({ result }: { result: FoundationResult }) {
+  return (
+    <button
+      type="button"
+      onClick={() => downloadFoundationMarkdown(result)}
+      className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+    >
+      <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 2h10M3 14h10M8 2v12M5 5l3-3 3 3M5 11l3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      Export to Markdown
     </button>
   )
 }
@@ -183,12 +199,11 @@ export function FoundationResultsView({ result, error, onReanalyze, shareableUrl
   if (result.kind === 'repos') {
     return (
       <div className="space-y-4">
-        {(onReanalyze || shareableUrl) ? (
-          <div className="flex justify-end gap-2">
-            {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
-            {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
-          </div>
-        ) : null}
+        <div className="flex justify-end gap-2">
+          {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
+          <ExportMarkdownButton result={result} />
+          {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
+        </div>
         {result.results.failures.length > 0 ? (
           <section className="rounded border border-amber-200 bg-amber-50 p-4 dark:bg-amber-900/20 dark:border-amber-800/60">
             <h2 className="font-semibold text-amber-900 dark:text-amber-200">Failed repositories</h2>
@@ -209,12 +224,11 @@ export function FoundationResultsView({ result, error, onReanalyze, shareableUrl
   if (result.kind === 'org') {
     return (
       <div className="space-y-4">
-        {(onReanalyze || shareableUrl) ? (
-          <div className="flex justify-end gap-2">
-            {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
-            {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
-          </div>
-        ) : null}
+        <div className="flex justify-end gap-2">
+          {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
+          <ExportMarkdownButton result={result} />
+          {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
+        </div>
         <CNCFCandidacyPanel
           org={result.inventory.org}
           repos={result.inventory.results}
@@ -259,6 +273,7 @@ export function FoundationResultsView({ result, error, onReanalyze, shareableUrl
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
             {shareableUrl ? <CopyLinkButton url={shareableUrl} /> : null}
+            <ExportMarkdownButton result={result} />
             {onReanalyze ? <ReanalyzeButton onClick={onReanalyze} /> : null}
           </div>
         </div>
