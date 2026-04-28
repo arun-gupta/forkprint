@@ -182,8 +182,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Merge landscape-override stubs into results.
+    // Merge landscape-override stubs into results, then restore original input order.
     response.results.push(...landscapeOverrideResults)
+    const inputOrder = new Map(body.repos.map((repo, i) => [repo.toLowerCase(), i]))
+    response.results.sort((a, b) => (inputOrder.get(a.repo.toLowerCase()) ?? Infinity) - (inputOrder.get(b.repo.toLowerCase()) ?? Infinity))
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(1)
     console.log(`[analyze] Completed in ${elapsed}s — ${response.results.length} succeeded, ${response.failures.length} failed`)
