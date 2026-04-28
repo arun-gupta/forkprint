@@ -25,11 +25,6 @@ export const LOADING_QUOTES: LoadingQuote[] = [
     context: 'Author of The Cathedral and the Bazaar',
   },
   {
-    text: 'In open source, we feel strongly that to really do something well, you have to get a lot of people involved.',
-    author: 'Linus Torvalds',
-    context: 'Creator of Linux and Git',
-  },
-  {
     text: 'Open source is not about free software, it\'s about freedom.',
     author: 'Richard Stallman',
     context: 'Founder, Free Software Foundation; creator of GNU',
@@ -118,11 +113,6 @@ export const LOADING_QUOTES: LoadingQuote[] = [
   },
   {
     text: 'Remember that open source has room for everyone. It can be daunting, but in my experience, people want to help.',
-    author: 'Megan Byrd-Sanicki',
-    context: 'Open source strategist, former Google OSPO',
-  },
-  {
-    text: 'Be the leader you need. Every contributor to open source is a leader, whether they\'re leading others, leading the community, or just leading themselves.',
     author: 'Megan Byrd-Sanicki',
     context: 'Open source strategist, former Google OSPO',
   },
