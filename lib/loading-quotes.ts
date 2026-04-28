@@ -230,6 +230,11 @@ export const LOADING_QUOTES: LoadingQuote[] = [
 
   // AI & open source
   {
+    text: 'Researchers need open source. Developers need open source. Companies around the world — we need open source.',
+    author: 'Jensen Huang',
+    context: 'CEO, NVIDIA; GTC keynote',
+  },
+  {
     text: 'I think open source AI is going to be incredibly important for the world.',
     author: 'Dario Amodei',
     context: 'CEO, Anthropic',
