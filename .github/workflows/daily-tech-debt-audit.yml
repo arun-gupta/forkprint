@@ -1,9 +1,9 @@
-name: Daily Tech Debt Audit
+name: Weekly Tech Debt Audit
 
 on:
   # 08:00 UTC = midnight PDT / 01:00 AM PST
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 8 * * 1'  # 08:00 UTC every Monday
   workflow_dispatch: {}
 
 permissions:
