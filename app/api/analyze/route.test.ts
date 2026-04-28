@@ -1,12 +1,44 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { POST, MAX_REPOS_PER_REQUEST } from './route'
 import { analyze } from '@/lib/analyzer/analyze'
+import {
+  fetchCNCFLandscape,
+  fetchCNCFSandboxIssues,
+  getLandscapeProjectStatus,
+} from '@/lib/cncf-sandbox/landscape'
+import { evaluateAspirant } from '@/lib/cncf-sandbox/evaluate'
+import { buildApprovedCorpusSummary } from '@/lib/cncf-sandbox/approved-corpus'
 
 vi.mock('@/lib/analyzer/analyze', () => ({
   analyze: vi.fn(),
 }))
 
+vi.mock('@/lib/cncf-sandbox/landscape', () => ({
+  fetchCNCFLandscape: vi.fn(),
+  fetchCNCFSandboxIssues: vi.fn(),
+  fetchSandboxIssueBody: vi.fn(),
+  findSandboxApplication: vi.fn(),
+  getLandscapeProjectStatus: vi.fn(),
+}))
+
+vi.mock('@/lib/cncf-sandbox/evaluate', () => ({
+  evaluateAspirant: vi.fn(),
+}))
+
+vi.mock('@/lib/cncf-sandbox/approved-corpus', () => ({
+  buildApprovedCorpusSummary: vi.fn(),
+}))
+
+vi.mock('@/lib/cncf-sandbox/parse-application', () => ({
+  parseApplicationIssue: vi.fn(),
+}))
+
 const analyzeMock = vi.mocked(analyze)
+const fetchCNCFLandscapeMock = vi.mocked(fetchCNCFLandscape)
+const fetchCNCFSandboxIssuesMock = vi.mocked(fetchCNCFSandboxIssues)
+const getLandscapeProjectStatusMock = vi.mocked(getLandscapeProjectStatus)
+const evaluateAspirantMock = vi.mocked(evaluateAspirant)
+const buildApprovedCorpusSummaryMock = vi.mocked(buildApprovedCorpusSummary)
 
 describe('POST /api/analyze', () => {
   beforeEach(() => {
@@ -223,5 +255,55 @@ describe('POST /api/analyze', () => {
 
     expect(response.status).toBe(401)
     expect(body.error).toEqual({ message: 'Authentication required.', code: 'UNAUTHENTICATED' })
+  })
+
+  // Regression: landscape-override stubs must not be pushed to the tail
+  it('preserves original input order when the first repo is already in the CNCF landscape', async () => {
+    const fakeData = {} as never
+    fetchCNCFLandscapeMock.mockResolvedValue(fakeData)
+    fetchCNCFSandboxIssuesMock.mockResolvedValue([])
+    buildApprovedCorpusSummaryMock.mockResolvedValue(undefined as never)
+
+    // First repo is already in the landscape (sandbox); second needs analysis.
+    getLandscapeProjectStatusMock.mockImplementation((repo: string) => {
+      if (repo === 'cncf-org/existing-project') return 'sandbox'
+      return null
+    })
+
+    analyzeMock.mockResolvedValue({
+      results: [{ repo: 'my-org/new-repo', name: 'new-repo' } as never],
+      failures: [],
+      rateLimit: null,
+    })
+
+    evaluateAspirantMock.mockReturnValue({
+      foundationTarget: 'cncf-sandbox',
+      readinessScore: 0,
+      autoFields: [],
+      humanOnlyFields: [],
+      readyCount: 0,
+      totalAutoCheckable: 0,
+      alreadyInLandscape: false,
+      tagRecommendation: null,
+      sandboxApplication: null,
+    } as never)
+
+    const request = new Request('http://localhost/api/analyze', {
+      method: 'POST',
+      body: JSON.stringify({
+        repos: ['cncf-org/existing-project', 'my-org/new-repo'],
+        token: 'ghp_test',
+        foundationTarget: 'cncf-sandbox',
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.results).toHaveLength(2)
+    expect(body.results[0].repo).toBe('cncf-org/existing-project')
+    expect(body.results[1].repo).toBe('my-org/new-repo')
   })
 })
