@@ -56,7 +56,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   })()
   const initialRepoValue = initialRawRepos.join('\n')
   const initialFoundationState = decodeFoundationUrl(searchParams.toString())
-  const initialFoundationTarget = (initialFoundationState?.foundation ?? 'cncf-sandbox') as FoundationTarget
+  const initialFoundationTarget = (initialFoundationState?.foundation ?? 'none') as FoundationTarget
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
   const autoTriggeredRef = useRef(false)
   const foundationAutoTriggeredRef = useRef(false)
