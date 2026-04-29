@@ -861,6 +861,9 @@ function buildAnalysisResult(
           commitCountsByExperimentalOrg: experimentalMetricsByWindow[windowDays].commitCountsByExperimentalOrg,
           experimentalAttributedAuthors: experimentalMetricsByWindow[windowDays].experimentalAttributedAuthors,
           experimentalUnattributedAuthors: experimentalMetricsByWindow[windowDays].experimentalUnattributedAuthors,
+          commitAuthorsByExperimentalOrg: experimentalMetricsByWindow[windowDays].commitAuthorsByExperimentalOrg,
+          commitCountsByEmailDomain: experimentalMetricsByWindow[windowDays].commitCountsByEmailDomain,
+          commitAuthorsByEmailDomain: experimentalMetricsByWindow[windowDays].commitAuthorsByEmailDomain,
         },
       ]),
     ) as Record<ContributorWindowDays, ContributorWindowMetrics>,
@@ -2402,6 +2405,9 @@ function createUnavailableContributorWindowMetrics(): Record<ContributorWindowDa
         commitCountsByExperimentalOrg: 'unavailable',
         experimentalAttributedAuthors: 'unavailable',
         experimentalUnattributedAuthors: 'unavailable',
+        commitAuthorsByExperimentalOrg: 'unavailable',
+        commitCountsByEmailDomain: 'unavailable',
+        commitAuthorsByEmailDomain: 'unavailable',
       },
     ]),
   ) as Record<ContributorWindowDays, ContributorWindowMetrics>
@@ -2426,11 +2432,17 @@ function buildExperimentalMetricsByWindow(
             commitCountsByExperimentalOrg: 'unavailable',
             experimentalAttributedAuthors: 'unavailable',
             experimentalUnattributedAuthors: 'unavailable',
+            commitAuthorsByExperimentalOrg: 'unavailable',
+            commitCountsByEmailDomain: 'unavailable',
+            commitAuthorsByEmailDomain: 'unavailable',
           },
         ]
       }
 
       const commitCountsByExperimentalOrg = new Map<string, number>()
+      const commitAuthorsByExperimentalOrg = new Map<string, Set<string>>()
+      const commitCountsByEmailDomain = new Map<string, number>()
+      const commitAuthorsByEmailDomain = new Map<string, Set<string>>()
       const attributedAuthors = new Set<string>()
       const unattributedAuthors = new Set<string>()
       let sawResolvableAuthor = false
@@ -2444,6 +2456,17 @@ function buildExperimentalMetricsByWindow(
 
         const login = node.author?.user?.login?.trim()
         if (!login) {
+          // Email-based actor: track by email domain
+          const email = node.author?.email?.toLowerCase().trim()
+          if (email) {
+            const domain = email.split('@')[1]
+            if (domain) {
+              commitCountsByEmailDomain.set(domain, (commitCountsByEmailDomain.get(domain) ?? 0) + 1)
+              const dSet = commitAuthorsByEmailDomain.get(domain) ?? new Set<string>()
+              if (dSet.size < 500) dSet.add(`email:${email}`)
+              commitAuthorsByEmailDomain.set(domain, dSet)
+            }
+          }
           unattributedAuthors.add(actorKey)
           continue
         }
@@ -2458,6 +2481,9 @@ function buildExperimentalMetricsByWindow(
         // Attribute commit to all public organizations the contributor belongs to
         for (const org of orgs) {
           commitCountsByExperimentalOrg.set(org, (commitCountsByExperimentalOrg.get(org) ?? 0) + 1)
+          const aSet = commitAuthorsByExperimentalOrg.get(org) ?? new Set<string>()
+          if (aSet.size < 500) aSet.add(actorKey)
+          commitAuthorsByExperimentalOrg.set(org, aSet)
         }
       }
 
@@ -2488,6 +2514,19 @@ function buildExperimentalMetricsByWindow(
               : 'unavailable',
           experimentalAttributedAuthors: sawResolvableAuthor ? attributedAuthors.size : 'unavailable',
           experimentalUnattributedAuthors: sawResolvableAuthor ? unattributedAuthors.size : 'unavailable',
+          commitAuthorsByExperimentalOrg: sawResolvableAuthor
+            ? Object.fromEntries(
+                Array.from(commitAuthorsByExperimentalOrg.entries()).map(([org, set]) => [org, Array.from(set)]),
+              )
+            : 'unavailable',
+          commitCountsByEmailDomain: sawResolvableAuthor
+            ? Object.fromEntries(commitCountsByEmailDomain.entries())
+            : 'unavailable',
+          commitAuthorsByEmailDomain: sawResolvableAuthor
+            ? Object.fromEntries(
+                Array.from(commitAuthorsByEmailDomain.entries()).map(([domain, set]) => [domain, Array.from(set)]),
+              )
+            : 'unavailable',
         },
       ]
     }),

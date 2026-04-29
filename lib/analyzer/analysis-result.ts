@@ -15,6 +15,9 @@ export interface ContributorWindowMetrics {
   commitCountsByExperimentalOrg: Record<string, number> | Unavailable
   experimentalAttributedAuthors: number | Unavailable
   experimentalUnattributedAuthors: number | Unavailable
+  commitAuthorsByExperimentalOrg?: Record<string, string[]> | Unavailable
+  commitCountsByEmailDomain?: Record<string, number> | Unavailable
+  commitAuthorsByEmailDomain?: Record<string, string[]> | Unavailable
 }
 
 export interface ActivityWindowMetrics {
