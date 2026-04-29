@@ -1,1 +1,1 @@
-dev_server: "npm run dev -- --port {port}"
+dev_server: "npx next dev --port {port}"
