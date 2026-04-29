@@ -5,6 +5,8 @@
 **Status**: Draft  
 **Input**: User description: "493"
 
+> **Scope note (email-domain signal)**: The original GitHub issue #493 listed email-domain matching as out of scope. During implementation it became clear that email-domain attribution is a necessary complement to org-membership attribution — many corporate contributors use a work email without publicly listing their org membership. The two signals together give the best practical coverage, so both were included. This spec reflects the implemented scope.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### Background: how does company attribution work?

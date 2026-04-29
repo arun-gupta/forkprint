@@ -226,6 +226,62 @@ describe('computeCorporateMetrics — per-repo', () => {
     expect(output.perRepo[0]?.corporatePct).toBe(33.3)
   })
 
+  it('treats undefined org signal fields as unavailable (pre-feature results)', () => {
+    // Simulate a result produced before the new fields were added — optional fields absent
+    const contributorWindow: ContributorWindowMetrics = {
+      uniqueCommitAuthors: 'unavailable',
+      commitCountsByAuthor: 'unavailable',
+      repeatContributors: 'unavailable',
+      newContributors: 'unavailable',
+      commitCountsByExperimentalOrg: 'unavailable',
+      experimentalAttributedAuthors: 'unavailable',
+      experimentalUnattributedAuthors: 'unavailable',
+      // commitAuthorsByExperimentalOrg, commitCountsByEmailDomain, commitAuthorsByEmailDomain intentionally absent
+    }
+    const result = buildResult({
+      repo: 'owner/repo',
+      activityMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, makeActivityWindow(10)]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ActivityWindowMetrics>,
+      contributorMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, contributorWindow]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ContributorWindowMetrics>,
+    })
+    const output = computeCorporateMetrics([result], 'microsoft', 30)
+
+    expect(output.perRepo[0]).toMatchObject({
+      corporateCommits: 'unavailable',
+      corporateAuthors: 'unavailable',
+      corporatePct: 'unavailable',
+    })
+  })
+
+  it('returns 0/0/0 when both signals are unavailable but total commits is 0', () => {
+    const contributorWindow = makeContributorWindow({
+      commitCountsByExperimentalOrg: 'unavailable',
+      commitAuthorsByExperimentalOrg: 'unavailable',
+      commitCountsByEmailDomain: 'unavailable',
+      commitAuthorsByEmailDomain: 'unavailable',
+    })
+    const result = buildResult({
+      repo: 'owner/repo',
+      activityMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, makeActivityWindow(0)]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ActivityWindowMetrics>,
+      contributorMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, contributorWindow]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ContributorWindowMetrics>,
+    })
+    const output = computeCorporateMetrics([result], 'microsoft', 30)
+
+    expect(output.perRepo[0]).toMatchObject({
+      corporateCommits: 0,
+      corporateAuthors: 0,
+      corporatePct: 0,
+    })
+  })
+
+
   it('handles a domain-style company name input (strips TLD for orgHandle)', () => {
     const result = makeResult('owner/repo', 'microsoft', 5, ['login:alice'], 'microsoft.com', 0, [], 10)
     const output = computeCorporateMetrics([result], 'microsoft.com', 30)
@@ -284,6 +340,29 @@ describe('computeCorporateMetrics — summary', () => {
 
     expect(output.summary.overallCorporatePct).toBe('unavailable')
   })
+
+  it('returns unavailable for summary when all repos have unavailable attribution', () => {
+    const contributorWindow = makeContributorWindow({
+      commitCountsByExperimentalOrg: 'unavailable',
+      commitAuthorsByExperimentalOrg: 'unavailable',
+      commitCountsByEmailDomain: 'unavailable',
+      commitAuthorsByEmailDomain: 'unavailable',
+    })
+    const result = buildResult({
+      repo: 'org/a',
+      activityMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, makeActivityWindow(10)]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ActivityWindowMetrics>,
+      contributorMetricsByWindow: Object.fromEntries(
+        WINDOW_DAYS_LIST.map((w) => [w, contributorWindow]),
+      ) as Record<(typeof WINDOW_DAYS_LIST)[number], ContributorWindowMetrics>,
+    })
+    const output = computeCorporateMetrics([result], 'microsoft', 30)
+
+    expect(output.summary.totalCorporateCommits).toBe('unavailable')
+    expect(output.summary.totalCorporateAuthors).toBe('unavailable')
+  })
+
 
   it('returns zeros for summary when no repo matches the company', () => {
     const result = makeResult('org/a', 'google', 0, [], 'google.com', 0, [], 100)

@@ -31,28 +31,43 @@ export function computeCorporateMetrics(
     const orgCountsField = cwm?.commitCountsByExperimentalOrg
     const orgAuthorsField = cwm?.commitAuthorsByExperimentalOrg
 
-    const orgSignalUnavailable = orgCountsField === 'unavailable' || orgAuthorsField === 'unavailable'
+    // Treat undefined (pre-feature or old serialised results) as unavailable,
+    // distinct from an explicitly empty {} which means "known zero"
+    const orgSignalUnavailable =
+      orgCountsField === undefined ||
+      orgAuthorsField === undefined ||
+      orgCountsField === 'unavailable' ||
+      orgAuthorsField === 'unavailable'
     const orgCommits = orgSignalUnavailable
       ? 0
-      : ((orgCountsField as Record<string, number> | undefined)?.[orgHandle] ?? 0)
+      : ((orgCountsField as Record<string, number>)[orgHandle] ?? 0)
     const orgAuthors: string[] = orgSignalUnavailable
       ? []
-      : ((orgAuthorsField as Record<string, string[]> | undefined)?.[orgHandle] ?? [])
+      : ((orgAuthorsField as Record<string, string[]>)[orgHandle] ?? [])
 
     // --- Email signal ---
     const emailCountsField = cwm?.commitCountsByEmailDomain
     const emailAuthorsField = cwm?.commitAuthorsByEmailDomain
 
-    const emailSignalUnavailable = emailCountsField === 'unavailable' || emailAuthorsField === 'unavailable'
+    // Treat undefined (pre-feature or old serialised results) as unavailable,
+    // distinct from an explicitly empty {} which means "known zero"
+    const emailSignalMissing = emailCountsField === undefined || emailAuthorsField === undefined
+    const emailSignalUnavailable =
+      emailSignalMissing || emailCountsField === 'unavailable' || emailAuthorsField === 'unavailable'
     const emailCommits = emailSignalUnavailable
       ? 0
-      : ((emailCountsField as Record<string, number> | undefined)?.[emailDomain] ?? 0)
+      : ((emailCountsField as Record<string, number>)[emailDomain] ?? 0)
     const emailAuthors: string[] = emailSignalUnavailable
       ? []
-      : ((emailAuthorsField as Record<string, string[]> | undefined)?.[emailDomain] ?? [])
+      : ((emailAuthorsField as Record<string, string[]>)[emailDomain] ?? [])
 
-    // Both signals unavailable → 'unavailable' in all columns
+    // Both signals unavailable → check totalCommits before returning 'unavailable':
+    // if the window had zero commits the corporate values are deterministically 0
     if (orgSignalUnavailable && emailSignalUnavailable) {
+      const totalCommits = awm?.commits
+      if (totalCommits === 0) {
+        return { repo: result.repo, corporateCommits: 0, corporateAuthors: 0, corporatePct: 0 }
+      }
       return {
         repo: result.repo,
         corporateCommits: 'unavailable',
@@ -81,15 +96,20 @@ export function computeCorporateMetrics(
 
   // --- Summary ---
   const availableRepos = perRepo.filter((r) => r.corporateCommits !== 'unavailable')
-  const totalCorporateCommits = availableRepos.reduce(
-    (sum, r) => sum + (r.corporateCommits as number),
-    0,
-  )
+  // If no repo has available attribution data the total is unknown — not zero
+  const totalCorporateCommits: number | 'unavailable' =
+    availableRepos.length === 0
+      ? 'unavailable'
+      : availableRepos.reduce((sum, r) => sum + (r.corporateCommits as number), 0)
 
   const allActorKeys = new Set<string>()
   for (const arr of allOrgAuthorArrays) for (const k of arr) allActorKeys.add(k)
   for (const arr of allEmailAuthorArrays) for (const k of arr) allActorKeys.add(k)
-  const totalCorporateAuthors = allActorKeys.size
+  // If no repo has available author data the count is unknown — not zero
+  const anyAuthorDataAvailable = perRepo.some((r) => r.corporateAuthors !== 'unavailable')
+  const totalCorporateAuthors: number | 'unavailable' = anyAuthorDataAvailable
+    ? allActorKeys.size
+    : 'unavailable'
 
   let overallCorporatePct: number | 'unavailable' = 'unavailable'
   let totalCommitsAcrossRepos = 0
@@ -101,7 +121,7 @@ export function computeCorporateMetrics(
       anyTotalAvailable = true
     }
   }
-  if (anyTotalAvailable) {
+  if (anyTotalAvailable && totalCorporateCommits !== 'unavailable') {
     overallCorporatePct =
       totalCommitsAcrossRepos === 0 ? 0 : round1dp((totalCorporateCommits / totalCommitsAcrossRepos) * 100)
   }

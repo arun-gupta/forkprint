@@ -2457,13 +2457,13 @@ function buildExperimentalMetricsByWindow(
         const login = node.author?.user?.login?.trim()
         if (!login) {
           // Email-based actor: track by email domain
-          const email = node.author?.email?.toLowerCase().trim()
+          const email = node.author?.email?.toLowerCase()?.trim()
           if (email) {
             const domain = email.split('@')[1]
             if (domain) {
               commitCountsByEmailDomain.set(domain, (commitCountsByEmailDomain.get(domain) ?? 0) + 1)
               const dSet = commitAuthorsByEmailDomain.get(domain) ?? new Set<string>()
-              if (dSet.size < 500) dSet.add(`email:${email}`)
+              dSet.add(`email:${email}`)
               commitAuthorsByEmailDomain.set(domain, dSet)
             }
           }
@@ -2482,7 +2482,7 @@ function buildExperimentalMetricsByWindow(
         for (const org of orgs) {
           commitCountsByExperimentalOrg.set(org, (commitCountsByExperimentalOrg.get(org) ?? 0) + 1)
           const aSet = commitAuthorsByExperimentalOrg.get(org) ?? new Set<string>()
-          if (aSet.size < 500) aSet.add(actorKey)
+          aSet.add(actorKey)
           commitAuthorsByExperimentalOrg.set(org, aSet)
         }
       }

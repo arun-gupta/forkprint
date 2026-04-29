@@ -72,10 +72,10 @@ export function CorporateContributionPanel({ results, windowDays }: CorporateCon
                 <tr className="border-t-2 border-amber-300 font-semibold dark:border-amber-700">
                   <td className="py-1.5 pr-4 text-slate-700 dark:text-slate-300">Total</td>
                   <td className="py-1.5 pr-4 text-right text-slate-700 dark:text-slate-300">
-                    {lens.summary.totalCorporateCommits}
+                    {fmt(lens.summary.totalCorporateCommits)}
                   </td>
                   <td className="py-1.5 pr-4 text-right text-slate-700 dark:text-slate-300">
-                    {lens.summary.totalCorporateAuthors}
+                    {fmt(lens.summary.totalCorporateAuthors)}
                   </td>
                   <td className="py-1.5 text-right text-slate-700 dark:text-slate-300">
                     {fmt(lens.summary.overallCorporatePct, true)}

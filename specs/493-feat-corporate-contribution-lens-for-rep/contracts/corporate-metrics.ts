@@ -44,10 +44,10 @@ export interface CorporateLensResult {
   windowDays: ContributorWindowDays
   perRepo: CorporateRepoMetrics[]
   summary: {
-    /** Sum of per-repo corporate commits (only repos with available data). */
-    totalCorporateCommits: number
-    /** Unique committer identities de-duplicated across all repos. */
-    totalCorporateAuthors: number
+    /** Sum of per-repo corporate commits (only repos with available data). 'unavailable' when no repo has available attribution. */
+    totalCorporateCommits: number | 'unavailable'
+    /** Unique committer identities de-duplicated across all repos. 'unavailable' when no repo has available author data. */
+    totalCorporateAuthors: number | 'unavailable'
     /**
      * totalCorporateCommits / totalCommitsAcrossRepos × 100.
      * 'unavailable' when no repo has available total-commit data.
