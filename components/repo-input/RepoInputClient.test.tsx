@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { RepoInputClient } from './RepoInputClient'
+import { fetchBoardRepos } from '@/lib/foundation/fetch-board-repos'
 
 const mockUseSearchParams = vi.fn(() => new URLSearchParams())
 
@@ -629,7 +630,6 @@ describe('RepoInputClient — Foundation board verify-before-analyze', () => {
   }
 
   it('goes straight to analysis (skips review panel) when verifyRepos is unchecked', async () => {
-    const { fetchBoardRepos } = await import('@/lib/foundation/fetch-board-repos')
     vi.mocked(fetchBoardRepos).mockResolvedValue({
       repos: MOCK_REPOS,
       skipped: [],
@@ -652,7 +652,6 @@ describe('RepoInputClient — Foundation board verify-before-analyze', () => {
   })
 
   it('shows the repo review panel when verifyRepos is checked', async () => {
-    const { fetchBoardRepos } = await import('@/lib/foundation/fetch-board-repos')
     vi.mocked(fetchBoardRepos).mockResolvedValue({
       repos: MOCK_REPOS,
       skipped: [],

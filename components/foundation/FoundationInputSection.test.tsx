@@ -161,15 +161,17 @@ describe('FoundationInputSection — board URL button', () => {
   it('resets the timer when the button is clicked multiple times in quick succession', () => {
     render(<FoundationInputSection {...defaultProps} />)
     const btn = screen.getByRole('button', { name: /use this board url/i })
+
+    // t=0: first click
     fireEvent.click(btn)
+    // t=800ms: halfway through the 1500ms timeout — click again to reset
     act(() => { vi.advanceTimersByTime(800) })
-    // Click again before the first timeout fires
     fireEvent.click(btn)
+    // t=1600ms (800ms after second click): original timeout would have fired but second click cancelled it
     act(() => { vi.advanceTimersByTime(800) })
-    // Should still show "Used" because the second click reset the timer
     expect(screen.getByText('Used')).toBeInTheDocument()
+    // t=2300ms (1500ms after second click): new timeout fires and resets the label
     act(() => { vi.advanceTimersByTime(700) })
-    // Now 1500ms after the second click, it should reset
     expect(screen.queryByText('Used')).not.toBeInTheDocument()
   })
 })
