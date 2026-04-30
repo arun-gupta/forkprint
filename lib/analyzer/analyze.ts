@@ -2471,19 +2471,23 @@ function buildExperimentalMetricsByWindow(
           continue
         }
 
+        // Always track commit email domain as a secondary corporate-attribution signal.
+        // This is necessary because contributors to cross-company projects (e.g. kubernetes)
+        // are typically members of the project org, not their employer's org, so the org
+        // signal alone misses them. Email and org signals are combined in compute-corporate-metrics.
+        const commitEmail = node.author?.email?.toLowerCase()?.trim()
+        if (commitEmail) {
+          const domain = commitEmail.split('@')[1]
+          if (domain && !domain.endsWith('noreply.github.com') && domain !== 'users.noreply.github.com') {
+            commitCountsByEmailDomain.set(domain, (commitCountsByEmailDomain.get(domain) ?? 0) + 1)
+            const dSet = commitAuthorsByEmailDomain.get(domain) ?? new Set<string>()
+            dSet.add(`login:${login}`)
+            commitAuthorsByEmailDomain.set(domain, dSet)
+          }
+        }
+
         const orgs = organizationsByLogin.get(login) ?? []
         if (orgs.length === 0) {
-          // No public org membership — fall back to email domain as a secondary signal
-          const email = node.author?.email?.toLowerCase()?.trim()
-          if (email) {
-            const domain = email.split('@')[1]
-            if (domain && !domain.endsWith('noreply.github.com')) {
-              commitCountsByEmailDomain.set(domain, (commitCountsByEmailDomain.get(domain) ?? 0) + 1)
-              const dSet = commitAuthorsByEmailDomain.get(domain) ?? new Set<string>()
-              dSet.add(`login:${login}`)
-              commitAuthorsByEmailDomain.set(domain, dSet)
-            }
-          }
           unattributedAuthors.add(actorKey)
           continue
         }

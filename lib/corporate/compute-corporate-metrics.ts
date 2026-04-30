@@ -76,8 +76,13 @@ export function computeCorporateMetrics(
       }
     }
 
-    const corporateCommits = orgCommits + emailCommits
-    const corporateAuthors = orgAuthors.length + emailAuthors.length
+    // Use max(org, email) for commits: both signals may count the same commit (an author
+    // who is in the company's GitHub org AND uses a corporate email), so summing would
+    // double-count. Taking the max gives a conservative lower bound with no inflation.
+    const corporateCommits = Math.max(orgCommits, emailCommits)
+    // Deduplicate authors across both signals per repo
+    const corporateAuthorSet = new Set([...orgAuthors, ...emailAuthors])
+    const corporateAuthors = corporateAuthorSet.size
 
     if (orgAuthors.length > 0) allOrgAuthorArrays.push(orgAuthors)
     if (emailAuthors.length > 0) allEmailAuthorArrays.push(emailAuthors)
