@@ -315,6 +315,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       const target = foundationTarget === 'none' ? 'cncf-sandbox' : foundationTarget
       setFoundationTarget(target)
       params.set('foundation', target)
+      if (foundationInput) params.set('input', foundationInput)
     }
     // repos is the default — no mode param needed
     const qs = params.toString()
@@ -326,6 +327,17 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     const params = new URLSearchParams()
     params.set('mode', 'foundation')
     params.set('foundation', target)
+    if (foundationInput) params.set('input', foundationInput)
+    window.history.replaceState(null, '', `/?${params.toString()}`)
+  }
+
+  function handleFoundationInputChange(value: string) {
+    setFoundationInput(value)
+    const params = new URLSearchParams()
+    params.set('mode', 'foundation')
+    const target = foundationTarget === 'none' ? 'cncf-sandbox' : foundationTarget
+    params.set('foundation', target)
+    if (value) params.set('input', value)
     window.history.replaceState(null, '', `/?${params.toString()}`)
   }
 
@@ -662,7 +674,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       foundationTarget={foundationTarget}
       onFoundationTargetChange={handleFoundationTargetChange}
       foundationInputValue={foundationInput}
-      onFoundationInputChange={setFoundationInput}
+      onFoundationInputChange={handleFoundationInputChange}
       foundationError={foundationError}
       verifyRepos={verifyRepos}
       onVerifyReposChange={setVerifyRepos}
