@@ -315,6 +315,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     } else if (mode === 'foundation') {
       params.set('mode', 'foundation')
       const target = foundationTarget === 'none' ? 'cncf-sandbox' : foundationTarget
+      setFoundationTarget(target)
       params.set('foundation', target)
     }
     // repos is the default — no mode param needed
