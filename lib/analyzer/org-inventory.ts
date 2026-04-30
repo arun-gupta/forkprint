@@ -5,6 +5,9 @@ export interface OrgRepoNode {
   name: string
   description: string | null
   primaryLanguage: { name: string } | null
+  repositoryTopics: {
+    nodes: Array<{ topic: { name: string } | null } | null>
+  }
   stargazerCount: number
   forkCount: number
   isFork: boolean
@@ -13,6 +16,13 @@ export interface OrgRepoNode {
   issues: { totalCount: number }
   pushedAt: string | null
   isArchived: boolean
+  diskUsage: number | null
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'INTERNAL' | null
+  isPrivate?: boolean
+  licenseInfo: {
+    spdxId: string | null
+    name: string | null
+  } | null
   url: string
 }
 
@@ -28,6 +38,11 @@ export interface OrgRepoSummary {
   pushedAt: string | 'unavailable'
   archived: boolean
   isFork: boolean
+  topics?: string[]
+  sizeKb?: number | 'unavailable'
+  visibility?: 'public' | 'private' | 'internal' | 'unavailable'
+  licenseSpdxId?: string | 'unavailable'
+  licenseName?: string | 'unavailable'
   parentRepo?: string
   url: string
 }
@@ -102,6 +117,13 @@ export function buildOrgRepoSummary(owner: string, node: OrgRepoNode): OrgRepoSu
     pushedAt: node.pushedAt ?? 'unavailable',
     archived: node.isArchived,
     isFork: node.isFork,
+    topics: (node.repositoryTopics?.nodes ?? [])
+      .map((entry) => entry?.topic?.name ?? null)
+      .filter((value): value is string => Boolean(value)),
+    sizeKb: typeof node.diskUsage === 'number' ? node.diskUsage : 'unavailable',
+    visibility: normalizeVisibility(node.visibility, node.isPrivate),
+    licenseSpdxId: node.licenseInfo?.spdxId ?? 'unavailable',
+    licenseName: node.licenseInfo?.name ?? 'unavailable',
     parentRepo: node.parent?.nameWithOwner,
     url: node.url,
   }
@@ -205,6 +227,13 @@ const ORG_INVENTORY_QUERY = `
           primaryLanguage {
             name
           }
+          repositoryTopics(first: 20) {
+            nodes {
+              topic {
+                name
+              }
+            }
+          }
           stargazerCount
           forkCount
           isFork
@@ -219,6 +248,13 @@ const ORG_INVENTORY_QUERY = `
           }
           pushedAt
           isArchived
+          diskUsage
+          visibility
+          isPrivate
+          licenseInfo {
+            spdxId
+            name
+          }
           url
         }
       }
@@ -230,3 +266,15 @@ const ORG_INVENTORY_QUERY = `
     }
   }
 `
+
+function normalizeVisibility(
+  visibility: OrgRepoNode['visibility'],
+  isPrivate: boolean | undefined,
+): OrgRepoSummary['visibility'] {
+  if (visibility === 'PUBLIC') return 'public'
+  if (visibility === 'PRIVATE') return 'private'
+  if (visibility === 'INTERNAL') return 'internal'
+  if (isPrivate === true) return 'private'
+  if (isPrivate === false) return 'public'
+  return 'unavailable'
+}

@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
 import { OrgInventoryView } from './OrgInventoryView'
 
 describe('OrgInventoryView', () => {
@@ -124,7 +125,7 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'missing')
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 'missing')
 
     expect(screen.getByText('No matching repositories')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -238,11 +239,29 @@ describe('OrgInventoryView', () => {
 
     expect(screen.getByText('No public repositories found')).toBeInTheDocument()
     expect(screen.queryByText('Total public repos')).not.toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Repo name')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('repo name lang:go stars:>500 archived:false')).not.toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  it('shows archived and fork pre-filters checked by default and analyzes only active non-fork repos', async () => {
+  it('removes the language, archived, and fork controls in favor of structured search', () => {
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary([buildRepo('facebook/react')])}
+        results={[buildRepo('facebook/react')]}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByRole('combobox')).toHaveLength(1)
+    expect(screen.queryByLabelText('Exclude archived repos')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Exclude forks')).not.toBeInTheDocument()
+    expect(screen.getByText(/Prefixes:/)).toBeInTheDocument()
+  })
+
+  it('defaults Analyze all to active non-forks and lets the query override that behavior', async () => {
     const onAnalyzeAllActive = vi.fn()
 
     render(
@@ -270,13 +289,14 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    expect(screen.getByLabelText('Exclude archived repos')).toBeChecked()
-    expect(screen.getByLabelText('Exclude forks')).toBeChecked()
-    // Note: checkbox aria-labels preserved even though visible text shortened
-
     await userEvent.click(screen.getByRole('button', { name: /analyze all/i }))
 
     expect(onAnalyzeAllActive).toHaveBeenCalledWith(['facebook/react', 'facebook/rocksdb'])
+
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), ' archived:true')
+    await userEvent.click(screen.getByRole('button', { name: /analyze all/i }))
+
+    expect(onAnalyzeAllActive).toHaveBeenLastCalledWith(['facebook/jest'])
   })
 
   it('US1 — Selected only collapses the table to exactly the selected repos', async () => {
@@ -585,7 +605,7 @@ describe('OrgInventoryView', () => {
     await userEvent.click(screen.getByLabelText('Select facebook/jest'))
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
 
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'zzznomatch')
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 'zzznomatch')
 
     expect(screen.getByText(/filters hide every selected repository/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /turn off selected only/i })).toBeInTheDocument()
@@ -615,12 +635,7 @@ describe('OrgInventoryView', () => {
 
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
 
-    const selects = screen.getAllByRole('combobox')
-    const archivedSelect = selects.find((el) => {
-      const option = Array.from((el as HTMLSelectElement).options).map((o) => o.value)
-      return option.includes('active') && option.includes('archived')
-    })!
-    await userEvent.selectOptions(archivedSelect, 'active')
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 'archived:false')
 
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(2)
@@ -654,7 +669,7 @@ describe('OrgInventoryView', () => {
     await userEvent.click(screen.getByLabelText('Select facebook/rocksdb'))
 
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 're')
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 're')
 
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(2)
@@ -683,12 +698,12 @@ describe('OrgInventoryView', () => {
 
     await userEvent.click(screen.getByLabelText('Select facebook/jest'))
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'jest')
+    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 'jest')
 
     const toggle = screen.getByLabelText('Show only selected repositories')
     await userEvent.click(toggle)
 
-    expect(screen.getByPlaceholderText('Repo name')).toHaveValue('jest')
+    expect(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false')).toHaveValue('jest')
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(1)
     expect(rows[0].textContent).toContain('facebook/jest')
@@ -743,9 +758,59 @@ describe('OrgInventoryView', () => {
     expect(screen.queryByText(/you can select up to/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Bulk selection limit')).not.toBeInTheDocument()
   })
+
+  it('filters repos with structured prefixes and shows invalid token feedback', async () => {
+    const results = [
+      buildRepo('facebook/react', {
+        primaryLanguage: 'TypeScript',
+        stars: 230,
+        archived: false,
+        isFork: false,
+        topics: ['ui'],
+        sizeKb: 800,
+        visibility: 'public',
+        licenseSpdxId: 'MIT',
+        pushedAt: '2026-04-02T00:00:00Z',
+      }),
+      buildRepo('facebook/jest', {
+        primaryLanguage: 'JavaScript',
+        stars: 80,
+        archived: true,
+        isFork: true,
+        topics: ['testing'],
+        sizeKb: 200,
+        visibility: 'public',
+        licenseSpdxId: 'Apache-2.0',
+        pushedAt: '2025-01-01T00:00:00Z',
+      }),
+    ]
+
+    render(
+      <OrgInventoryView
+        org="facebook"
+        summary={makeSummary(results)}
+        results={results}
+        rateLimit={null}
+        onAnalyzeRepo={vi.fn()}
+        onAnalyzeSelected={vi.fn()}
+      />,
+    )
+
+    const input = screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false')
+    await userEvent.type(input, 'lang:typescript stars:>100 archived:false fork:false topic:ui size:>=500 visibility:public license:mit pushed:>=2026-04-01')
+
+    const rows = screen.getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toHaveTextContent('facebook/react')
+
+    await userEvent.clear(input)
+    await userEvent.type(input, 'stars:abc')
+
+    expect(screen.getByText(/Ignored invalid token/i)).toBeInTheDocument()
+  })
 })
 
-function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
+function buildRepo(repo: string, overrides: Record<string, unknown> = {}): OrgRepoSummary {
   return {
     repo,
     name: repo.split('/')[1] ?? repo,
@@ -758,6 +823,11 @@ function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
     pushedAt: '2026-03-31T00:00:00Z',
     archived: false,
     isFork: false,
+    topics: [],
+    sizeKb: 100,
+    visibility: 'public',
+    licenseSpdxId: 'unavailable',
+    licenseName: 'unavailable',
     url: `https://github.com/${repo}`,
     ...overrides,
   }

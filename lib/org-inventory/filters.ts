@@ -1,4 +1,5 @@
 import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
+import { matchesStructuredSearch, parseStructuredSearchQuery } from './structured-search'
 
 export type OrgInventorySortColumn =
   | 'repo'
@@ -26,8 +27,6 @@ export type OrgInventoryVisibleColumn =
 
 export interface OrgInventoryFilters {
   repoQuery: string
-  language: string | 'all'
-  archived: 'all' | 'active' | 'archived'
 }
 
 export interface SelectedOnlyOptions {
@@ -69,23 +68,11 @@ export function filterOrgInventoryRows(
   filters: OrgInventoryFilters,
   options?: SelectedOnlyOptions,
 ) {
-  const repoQuery = filters.repoQuery.trim().toLowerCase()
+  const parsedQuery = parseStructuredSearchQuery(filters.repoQuery)
   const selectedSet = options?.selectedOnly ? new Set(options.selectedRepos) : null
 
   return rows.filter((row) => {
-    if (repoQuery && !row.repo.toLowerCase().includes(repoQuery) && !row.name.toLowerCase().includes(repoQuery)) {
-      return false
-    }
-
-    if (filters.language !== 'all' && row.primaryLanguage !== filters.language) {
-      return false
-    }
-
-    if (filters.archived === 'active' && row.archived) {
-      return false
-    }
-
-    if (filters.archived === 'archived' && !row.archived) {
+    if (!matchesStructuredSearch(row, parsedQuery)) {
       return false
     }
 

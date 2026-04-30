@@ -15,6 +15,7 @@ import {
   type OrgInventoryFilters,
   type OrgInventorySortState,
 } from '@/lib/org-inventory/filters'
+import { parseStructuredSearchQuery } from '@/lib/org-inventory/structured-search'
 import { OrgInventorySummary } from './OrgInventorySummary'
 import { OrgInventoryTable } from './OrgInventoryTable'
 
@@ -41,8 +42,6 @@ export function OrgInventoryView({
 }: OrgInventoryViewProps) {
   const [filters, setFilters] = useState<OrgInventoryFilters>({
     repoQuery: '',
-    language: 'all',
-    archived: 'all',
   })
   const visibleColumns = DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS
   const [sortState, setSortState] = useState<OrgInventorySortState>({
@@ -52,14 +51,9 @@ export function OrgInventoryView({
   const [pageSize, setPageSize] = useState<number>(ORG_INVENTORY_CONFIG.defaultPageSize)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedRepos, setSelectedRepos] = useState<string[]>([])
-  const [excludeArchivedRepos, setExcludeArchivedRepos] = useState<boolean>(
-    ORG_AGGREGATION_CONFIG.preFilters.excludeArchivedByDefault,
-  )
-  const [excludeForks, setExcludeForks] = useState<boolean>(
-    ORG_AGGREGATION_CONFIG.preFilters.excludeForksByDefault,
-  )
   const [selectedOnly, setSelectedOnly] = useState<boolean>(false)
   const [repoTableExpanded, setRepoTableExpanded] = useState(true)
+  const parsedQuery = useMemo(() => parseStructuredSearchQuery(filters.repoQuery), [filters.repoQuery])
 
   const filteredRows = useMemo(
     () => filterOrgInventoryRows(results, filters, { selectedOnly, selectedRepos }),
@@ -81,15 +75,12 @@ export function OrgInventoryView({
   }, [pageSize, safeCurrentPage, sortedRows])
   const visibleRangeStart = sortedRows.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1
   const visibleRangeEnd = sortedRows.length === 0 ? 0 : Math.min(safeCurrentPage * pageSize, sortedRows.length)
-  const languageOptions = useMemo(() => {
-    return [...new Set(results.map((result) => result.primaryLanguage).filter((value): value is string => value !== 'unavailable'))].sort()
-  }, [results])
   const activeRunRepos = useMemo(() => {
     return sortedRows
-      .filter((row) => (excludeArchivedRepos ? !row.archived : true))
-      .filter((row) => (excludeForks ? !row.isFork : true))
+      .filter((row) => (parsedQuery.hasArchivedToken ? true : !row.archived || !ORG_AGGREGATION_CONFIG.preFilters.excludeArchivedByDefault))
+      .filter((row) => (parsedQuery.hasForkToken ? true : !row.isFork || !ORG_AGGREGATION_CONFIG.preFilters.excludeForksByDefault))
       .map((row) => row.repo)
-  }, [excludeArchivedRepos, excludeForks, sortedRows])
+  }, [parsedQuery.hasArchivedToken, parsedQuery.hasForkToken, sortedRows])
 
   return (
     <section aria-label="Org inventory view" className="space-y-4">
@@ -137,7 +128,7 @@ export function OrgInventoryView({
                 <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900">
                 <div className="flex flex-wrap items-end gap-2">
                   <label className="flex-1 min-w-[140px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Structured search</span>
                     <input
                       value={filters.repoQuery}
                       onChange={(event) => {
@@ -145,49 +136,10 @@ export function OrgInventoryView({
                         setFilters((current) => ({ ...current, repoQuery: event.target.value }))
                       }}
                       className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      placeholder="Repo name"
+                      placeholder="repo name lang:go stars:>500 archived:false"
                     />
                   </label>
-                  <label className="min-w-[120px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Language</span>
-                    <select
-                      value={filters.language}
-                      onChange={(event) => {
-                        setCurrentPage(1)
-                        setFilters((current) => ({ ...current, language: event.target.value }))
-                      }}
-                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                      <option value="all">All</option>
-                      {languageOptions.map((language) => (
-                        <option key={language} value={language}>{language}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="min-w-[100px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Archived</span>
-                    <select
-                      value={filters.archived}
-                      onChange={(event) => {
-                        setCurrentPage(1)
-                        setFilters((current) => ({ ...current, archived: event.target.value as OrgInventoryFilters['archived'] }))
-                      }}
-                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                      <option value="all">All</option>
-                      <option value="active">Active</option>
-                      <option value="archived">Archived</option>
-                    </select>
-                  </label>
                   <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 dark:text-slate-200">
-                    <label className="inline-flex items-center gap-1">
-                      <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />
-                      No archived
-                    </label>
-                    <label className="inline-flex items-center gap-1">
-                      <input type="checkbox" checked={excludeForks} onChange={(e) => setExcludeForks(e.target.checked)} aria-label="Exclude forks" />
-                      No forks
-                    </label>
                     <label className="inline-flex items-center gap-1">
                       <input
                         type="checkbox"
@@ -202,10 +154,23 @@ export function OrgInventoryView({
                     </label>
                   </div>
                 </div>
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Prefixes: <code>lang:</code>, <code>archived:</code>, <code>stars:</code>, <code>forks:</code>, <code>watchers:</code>, <code>issues:</code>, <code>pushed:</code>, <code>fork:</code>, <code>topic:</code>, <code>size:</code>, <code>visibility:</code>, <code>license:</code>.
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Analyze all defaults to active non-forks unless your query includes <code>archived:</code> or <code>fork:</code>.
+                  </p>
+                  {parsedQuery.invalidTokens.length > 0 ? (
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      Ignored invalid token{parsedQuery.invalidTokens.length === 1 ? '' : 's'}: {parsedQuery.invalidTokens.join(', ')}
+                    </p>
+                  ) : null}
+                </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{selectedRepos.length} selected · {activeRunRepos.length} after filters</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{selectedRepos.length} selected · {activeRunRepos.length} ready for Analyze all</span>
                     <button
                       type="button"
                       onClick={() => setSelectedRepos(sortedRows.map((r) => r.repo))}
@@ -308,7 +273,7 @@ export function OrgInventoryView({
                     <div>
                       <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">No matching repositories</h3>
                       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        Try widening the repo, language, or archived filters to see more repositories.
+                        Try widening the search query to see more repositories.
                       </p>
                     </div>
                   )

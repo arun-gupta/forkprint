@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
 import {
   getEffectiveSortState,
   filterOrgInventoryRows,
@@ -21,18 +22,47 @@ describe('org-inventory/filters', () => {
     expect(
       filterOrgInventoryRows(rows, {
         repoQuery: 'jest',
-        language: 'all',
-        archived: 'all',
       }).map((row) => row.repo),
     ).toEqual(['facebook/jest'])
 
     expect(
       filterOrgInventoryRows(rows, {
-        repoQuery: '',
-        language: 'JavaScript',
-        archived: 'archived',
+        repoQuery: 'lang:javascript archived:true',
       }).map((row) => row.repo),
     ).toEqual(['facebookarchive/old'])
+  })
+
+  it('filters rows by numeric, boolean, and metadata prefixes', () => {
+    const rows = [
+      buildRepo('facebook/react', {
+        primaryLanguage: 'TypeScript',
+        stars: 230,
+        archived: false,
+        isFork: false,
+        topics: ['ui', 'frontend'],
+        sizeKb: 800,
+        visibility: 'public',
+        licenseSpdxId: 'MIT',
+        pushedAt: '2026-04-02T00:00:00Z',
+      }),
+      buildRepo('facebook/react-old', {
+        primaryLanguage: 'JavaScript',
+        stars: 90,
+        archived: true,
+        isFork: true,
+        topics: ['legacy'],
+        sizeKb: 200,
+        visibility: 'public',
+        licenseSpdxId: 'Apache-2.0',
+        pushedAt: '2025-01-01T00:00:00Z',
+      }),
+    ]
+
+    expect(
+      filterOrgInventoryRows(rows, {
+        repoQuery: 'lang:typescript stars:>100 archived:false fork:false topic:ui size:>=500 visibility:public license:mit pushed:>=2026-04-01',
+      }).map((row) => row.repo),
+    ).toEqual(['facebook/react'])
   })
 
   it('sorts every visible column in ascending and descending order', () => {
@@ -99,7 +129,7 @@ describe('org-inventory/filters', () => {
   })
 
   describe('selectedOnly option', () => {
-    const baseFilters = { repoQuery: '', language: 'all', archived: 'all' } as const
+    const baseFilters = { repoQuery: '' } as const
 
     it('returns the same rows as before when options are undefined', () => {
       const rows = [
@@ -155,7 +185,7 @@ describe('org-inventory/filters', () => {
       expect(
         filterOrgInventoryRows(
           rows,
-          { repoQuery: 'jest', language: 'all', archived: 'all' },
+          { repoQuery: 'jest' },
           { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebook/react'] },
         ).map((row) => row.repo),
       ).toEqual(['facebook/jest'])
@@ -163,7 +193,7 @@ describe('org-inventory/filters', () => {
       expect(
         filterOrgInventoryRows(
           rows,
-          { repoQuery: '', language: 'JavaScript', archived: 'all' },
+          { repoQuery: 'lang:javascript' },
           { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebookarchive/old', 'facebook/react'] },
         ).map((row) => row.repo),
       ).toEqual(['facebook/jest', 'facebookarchive/old'])
@@ -181,7 +211,7 @@ describe('org-inventory/filters', () => {
   })
 })
 
-function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
+function buildRepo(repo: string, overrides: Record<string, unknown> = {}): OrgRepoSummary {
   return {
     repo,
     name: repo.split('/')[1] ?? repo,
@@ -194,6 +224,11 @@ function buildRepo(repo: string, overrides: Record<string, unknown> = {}) {
     pushedAt: '2026-03-31T00:00:00Z',
     archived: false,
     isFork: false,
+    topics: [],
+    sizeKb: 100,
+    visibility: 'public',
+    licenseSpdxId: 'unavailable',
+    licenseName: 'unavailable',
     url: `https://github.com/${repo}`,
     ...overrides,
   }

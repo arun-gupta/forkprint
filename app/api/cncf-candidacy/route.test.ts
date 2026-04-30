@@ -143,7 +143,6 @@ describe('POST /api/cncf-candidacy', () => {
     queryMock.mockResolvedValue(MINIMAL_CRITERIA_RESP)
 
     const response = await POST(makeRequest({ repos: ['facebook/react'], token: 'ghp_test' }))
-    const body = await response.json()
 
     expect(response.status).toBe(200)
     expect(scoreMock).toHaveBeenCalledWith('facebook/react', 0, expect.anything(), null)
