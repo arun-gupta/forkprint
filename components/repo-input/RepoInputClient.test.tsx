@@ -894,4 +894,14 @@ describe('RepoInputClient — tab deep-links', () => {
       null, '', '/?mode=foundation&foundation=cncf-sandbox&input=kubernetes%2Fkubernetes',
     )
   })
+
+  it('preserves ?input= in the URL when switching Foundation sub-tabs while input is non-empty', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=foundation&foundation=cncf-sandbox'))
+    renderWithAuth(<RepoInputClient />)
+    await userEvent.type(screen.getByRole('textbox', { name: /foundation input/i }), 'kubernetes/kubernetes')
+    await userEvent.click(screen.getByRole('button', { name: /^cncf sandbox$/i }))
+    expect(replaceState).toHaveBeenLastCalledWith(
+      null, '', '/?mode=foundation&foundation=cncf-sandbox&input=kubernetes%2Fkubernetes',
+    )
+  })
 })

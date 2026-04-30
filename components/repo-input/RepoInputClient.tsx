@@ -333,6 +333,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     const params = new URLSearchParams()
     params.set('mode', 'foundation')
     const target = foundationTarget === 'none' ? 'cncf-sandbox' : foundationTarget
+    if (target !== foundationTarget) setFoundationTarget(target)
     params.set('foundation', target)
     if (value) params.set('input', value)
     window.history.replaceState(null, '', `/?${params.toString()}`)
