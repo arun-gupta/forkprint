@@ -5,6 +5,7 @@ import { normalizeOrgInput } from '@/lib/analyzer/org-inventory'
 import { parseRepos } from '@/lib/parse-repos'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
 import { FoundationInputSection } from '@/components/foundation/FoundationInputSection'
+import { CopyLinkButton } from '@/components/shared/CopyLinkButton'
 
 interface RepoInputFormProps {
   onSubmitRepos: (repos: string[]) => void
@@ -104,7 +105,7 @@ export function RepoInputForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         {(['repos', 'org', 'foundation'] as const).map((m) => (
           <button
             key={m}
@@ -118,6 +119,7 @@ export function RepoInputForm({
             {m === 'repos' ? 'Repositories' : m === 'org' ? 'Organization' : 'Foundation'}
           </button>
         ))}
+        <CopyLinkButton />
       </div>
       {mode === 'foundation' ? (
         <FoundationInputSection
