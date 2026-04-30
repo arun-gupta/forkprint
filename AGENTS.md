@@ -1,25 +1,6 @@
 ## Codex's Role
 Read `.specify/memory/constitution.md` first. It is the authoritative source of truth for this project. Everything in it is non-negotiable.
 
-## Feature Selection Order
-When starting new feature work, follow this order exactly:
-
-1. Read `docs/DEVELOPMENT.md` first to identify the next feature to implement from the current implementation order.
-2. Read `docs/PRODUCT.md` next to find the canonical product definition, acceptance criteria, and out-of-scope boundaries for that feature.
-3. Then run the SpecKit lifecycle in order:
-   - `/speckit.specify`
-   - **Pause for spec review (mandatory).** After `/speckit.specify` completes, report the generated spec file path and stop. Do not proceed to `/speckit.plan` until the user replies with an explicit approval phrase: `"proceed"`, `"approved"`, or `"go to plan"`. If the user replies with revisions instead, apply them, re-report the spec path, and re-enter the paused state. Rationale: human-in-the-loop at the highest-leverage artifact — the spec encodes intent, scope, and acceptance, and must be validated before autonomous downstream work compounds on top of it.
-   - `/speckit.plan`
-   - `/speckit.tasks`
-   - `/speckit.implement`
-
-## SpecKit Commands
-Command definitions are available in `.Codex/commands/`.
-
-- `/speckit.specify` — generate spec
-- `/speckit.plan` — generate plan
-- `/speckit.tasks` — generate task list
-- `/speckit.implement` — execute plan
 
 ## Technology Stack & Development Workflow
 See `docs/DEVELOPMENT.md` for the full technology stack, testing commands, and development workflow.
