@@ -125,7 +125,7 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    await userEvent.type(screen.getByPlaceholderText('repo name lang:go stars:>500 archived:false'), 'missing')
+    await userEvent.type(screen.getByRole('textbox', { name: /structured search/i }), 'missing')
 
     expect(screen.getByText('No matching repositories')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()

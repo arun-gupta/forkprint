@@ -12,7 +12,7 @@ import {
 } from './filters'
 
 describe('org-inventory/filters', () => {
-  it('filters rows by repo query, language, and archived status', () => {
+  it('filters rows by free-text query and structured prefixes (lang:, archived:)', () => {
     const rows = [
       buildRepo('facebook/react', { primaryLanguage: 'TypeScript', archived: false }),
       buildRepo('facebook/jest', { primaryLanguage: 'JavaScript', archived: false }),

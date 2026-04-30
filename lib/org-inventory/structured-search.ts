@@ -77,14 +77,9 @@ export function parseStructuredSearchQuery(query: string): StructuredSearchParse
       continue
     }
 
-    if (TEXT_KEYS.has(key) || NUMERIC_KEYS.has(key) || BOOLEAN_KEYS.has(key) || key === 'pushed') {
-      tokens.push({ key, raw: value })
-      if (key === 'archived') hasArchivedToken = true
-      if (key === 'fork') hasForkToken = true
-      continue
-    }
-
-    invalidTokens.push(part)
+    tokens.push({ key, raw: value })
+    if (key === 'archived') hasArchivedToken = true
+    if (key === 'fork') hasForkToken = true
   }
 
   return { freeTextTerms, tokens, invalidTokens, hasArchivedToken, hasForkToken }
