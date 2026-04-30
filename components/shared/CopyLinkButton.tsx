@@ -48,8 +48,8 @@ export function CopyLinkButton() {
         </svg>
       ) : (
         <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
-          <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" strokeLinecap="round" />
+          <path d="M6.5 9.5a3.535 3.535 0 0 0 5 0l2-2a3.535 3.535 0 0 0-5-5L7 4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9.5 6.5a3.535 3.535 0 0 0-5 0l-2 2a3.535 3.535 0 0 0 5 5L9 12" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
     </button>
