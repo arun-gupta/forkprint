@@ -57,7 +57,13 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   })()
   const initialRepoValue = initialRawRepos.join('\n')
   const initialFoundationState = decodeFoundationUrl(searchParams.toString())
-  const initialFoundationTarget = (initialFoundationState?.foundation ?? 'none') as FoundationTarget
+  const urlMode = searchParams.get('mode') as 'repos' | 'org' | 'foundation' | null
+  const urlFoundation = searchParams.get('foundation') as FoundationTarget | null
+  const initialFoundationTarget = (
+    initialFoundationState?.foundation ?? urlFoundation ?? (urlMode === 'foundation' ? 'cncf-sandbox' : 'none')
+  ) as FoundationTarget
+  const initialInputMode: 'repos' | 'org' | 'foundation' =
+    initialFoundationState ? 'foundation' : urlMode === 'org' || urlMode === 'foundation' ? urlMode : 'repos'
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
   const autoTriggeredRef = useRef(false)
   const foundationAutoTriggeredRef = useRef(false)
@@ -68,7 +74,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingRepos, setLoadingRepos] = useState<string[]>([])
   const [loadingOrg, setLoadingOrg] = useState<string | null>(null)
   const [resultsResetKey, setResultsResetKey] = useState(0)
-  const [inputMode, setInputMode] = useState<'repos' | 'org' | 'foundation'>('repos')
+  const [inputMode, setInputMode] = useState<'repos' | 'org' | 'foundation'>(initialInputMode)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [emptyQuoteIndex, setEmptyQuoteIndex] = useState(() => getRandomQuoteIndex(null))
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null)
@@ -296,6 +302,25 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     if (mode === 'org') {
       setAspirantResult(null)
     }
+    const params = new URLSearchParams()
+    if (mode === 'org') {
+      params.set('mode', 'org')
+    } else if (mode === 'foundation') {
+      params.set('mode', 'foundation')
+      const target = foundationTarget === 'none' ? 'cncf-sandbox' : foundationTarget
+      params.set('foundation', target)
+    }
+    // repos is the default — no mode param needed
+    const qs = params.toString()
+    window.history.replaceState(null, '', qs ? `/?${qs}` : '/')
+  }
+
+  function handleFoundationTargetChange(target: FoundationTarget) {
+    setFoundationTarget(target)
+    const params = new URLSearchParams()
+    params.set('mode', 'foundation')
+    params.set('foundation', target)
+    window.history.replaceState(null, '', `/?${params.toString()}`)
   }
 
   function handleReset() {
@@ -629,7 +654,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       onSubmitFoundation={handleFoundationSubmit}
       initialRepoValue={initialRepoValue}
       foundationTarget={foundationTarget}
-      onFoundationTargetChange={setFoundationTarget}
+      onFoundationTargetChange={handleFoundationTargetChange}
       foundationInputValue={foundationInput}
       onFoundationInputChange={setFoundationInput}
       foundationError={foundationError}
