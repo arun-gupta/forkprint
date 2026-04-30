@@ -18,6 +18,8 @@ interface RepoInputFormProps {
   foundationInputValue?: string
   onFoundationInputChange?: (value: string) => void
   foundationError?: string | null
+  verifyRepos?: boolean
+  onVerifyReposChange?: (v: boolean) => void
 }
 
 export function RepoInputForm({
@@ -32,6 +34,8 @@ export function RepoInputForm({
   foundationInputValue = '',
   onFoundationInputChange,
   foundationError = null,
+  verifyRepos = false,
+  onVerifyReposChange,
 }: RepoInputFormProps) {
   const [uncontrolledMode, setUncontrolledMode] = useState<'repos' | 'org' | 'foundation'>('repos')
   const [repoValue, setRepoValue] = useState(initialRepoValue)
@@ -122,6 +126,8 @@ export function RepoInputForm({
           inputValue={foundationInputValue}
           onInputChange={(v) => onFoundationInputChange?.(v)}
           error={foundationError}
+          verifyRepos={verifyRepos}
+          onVerifyReposChange={onVerifyReposChange}
         />
       ) : mode === 'repos' ? (
         <div className="relative">

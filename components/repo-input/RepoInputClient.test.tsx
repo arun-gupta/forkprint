@@ -3,12 +3,21 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { RepoInputClient } from './RepoInputClient'
+import { fetchBoardRepos } from '@/lib/foundation/fetch-board-repos'
 
 const mockUseSearchParams = vi.fn(() => new URLSearchParams())
 
 vi.mock('next/navigation', () => ({
   useSearchParams: () => mockUseSearchParams(),
 }))
+
+vi.mock('@/lib/foundation/fetch-board-repos', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/lib/foundation/fetch-board-repos')>()
+  return {
+    ...original,
+    fetchBoardRepos: vi.fn(),
+  }
+})
 
 const TEST_SESSION = { token: 'gho_test_token', username: 'test-user' }
 
@@ -609,6 +618,62 @@ describe('RepoInputClient', () => {
 
     await userEvent.clear(searchInput)
     expect(screen.queryByText(/Corporate contributions for/i)).not.toBeInTheDocument()
+  })
+})
+
+describe('RepoInputClient — Foundation board verify-before-analyze', () => {
+  const BOARD_URL = 'https://github.com/orgs/cncf/projects/14'
+  const MOCK_REPOS = ['org/repo-alpha', 'org/repo-beta']
+
+  async function switchToFoundationMode() {
+    await userEvent.click(screen.getByRole('button', { name: /foundation/i }))
+  }
+
+  it('goes straight to analysis (skips review panel) when verifyRepos is unchecked', async () => {
+    vi.mocked(fetchBoardRepos).mockResolvedValue({
+      repos: MOCK_REPOS,
+      skipped: [],
+      method: 'graphql',
+      issueMap: {},
+    })
+
+    const onAnalyze = vi.fn().mockResolvedValue({ results: [], failures: [], rateLimit: null })
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await switchToFoundationMode()
+    await userEvent.type(screen.getByRole('textbox', { name: /foundation input/i }), BOARD_URL)
+    // Checkbox is unchecked by default — go straight to analysis
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+
+    await vi.waitFor(() => {
+      expect(onAnalyze).toHaveBeenCalledWith(MOCK_REPOS, TEST_SESSION.token)
+    })
+    expect(screen.queryByText(/repositories found/i)).not.toBeInTheDocument()
+  })
+
+  it('shows the repo review panel when verifyRepos is checked', async () => {
+    vi.mocked(fetchBoardRepos).mockResolvedValue({
+      repos: MOCK_REPOS,
+      skipped: [],
+      method: 'graphql',
+      issueMap: {},
+    })
+
+    const onAnalyze = vi.fn()
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await switchToFoundationMode()
+
+    // Check the "Verify repos before analyzing" checkbox to enable review panel
+    const verifyCheckbox = screen.getByRole('checkbox', { name: /verify repos before analyzing/i })
+    await userEvent.click(verifyCheckbox)
+
+    await userEvent.type(screen.getByRole('textbox', { name: /foundation input/i }), BOARD_URL)
+    await userEvent.click(screen.getByRole('button', { name: /^analyze$/i }))
+
+    // Review panel should be visible — onAnalyze should NOT have been called yet
+    expect(await screen.findByText(/2 repositories found/i)).toBeInTheDocument()
+    expect(onAnalyze).not.toHaveBeenCalled()
   })
 })
 

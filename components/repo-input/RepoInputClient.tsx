@@ -81,6 +81,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [loadingFoundation, setLoadingFoundation] = useState(false)
   const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
   const [foundationError, setFoundationError] = useState<string | null>(null)
+  const [verifyRepos, setVerifyRepos] = useState(false)
   const [pendingBoardScan, setPendingBoardScan] = useState<{
     repos: string[]
     skipped: SkippedIssue[]
@@ -334,7 +335,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setLoadingFoundation(true)
 
     if (parsed.kind === 'projects-board') {
-      // Phase 1: resolve repos (fast) — then pause for user review
       setFoundationLoadingItems(['Resolving repositories from board…'])
       try {
         const { repos, skipped, method, issueMap } = await fetchBoardRepos(session.token, parsed.url)
@@ -348,8 +348,20 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
           return
         }
 
-        // Pause here — show review panel so user can confirm before analysis
-        setPendingBoardScan({ repos, skipped, method, url: parsed.url, issueMap })
+        if (verifyRepos) {
+          // Pause here — show review panel so user can confirm before analysis
+          setPendingBoardScan({ repos, skipped, method, url: parsed.url, issueMap })
+          return
+        }
+
+        // Go straight into analysis without review
+        setFoundationLoadingItems(repos)
+        const response = onAnalyze
+          ? await onAnalyze(repos, session.token)
+          : await submitAnalysisRequest(repos, session.token, 'cncf-sandbox', controller.signal, issueMap)
+        if (response && !controller.signal.aborted) {
+          setFoundationResult({ kind: 'projects-board', url: parsed.url, results: response, skipped, method })
+        }
       } catch (error) {
         if (controller.signal.aborted) return
         setFoundationError(error instanceof Error ? error.message : 'Board scan failed.')
@@ -621,6 +633,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       foundationInputValue={foundationInput}
       onFoundationInputChange={setFoundationInput}
       foundationError={foundationError}
+      verifyRepos={verifyRepos}
+      onVerifyReposChange={setVerifyRepos}
     />
   )
 

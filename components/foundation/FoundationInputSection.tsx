@@ -4,12 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import { FOUNDATION_REGISTRY } from '@/lib/foundation/types'
 import type { FoundationTarget } from '@/lib/cncf-sandbox/types'
 
+const CNCF_BOARD_URL = 'https://github.com/orgs/cncf/projects/14'
+
 interface FoundationInputSectionProps {
   foundationTarget: FoundationTarget
   onFoundationTargetChange: (target: FoundationTarget) => void
   inputValue: string
   onInputChange: (value: string) => void
   error: string | null
+  verifyRepos?: boolean
+  onVerifyReposChange?: (v: boolean) => void
 }
 
 export function FoundationInputSection({
@@ -18,17 +22,33 @@ export function FoundationInputSection({
   inputValue,
   onInputChange,
   error,
+  verifyRepos = false,
+  onVerifyReposChange,
 }: FoundationInputSectionProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false)
   const tooltipRef = useRef<HTMLDivElement | null>(null)
-  const [boardCopied, setBoardCopied] = useState(false)
+  const [boardFilled, setBoardFilled] = useState(false)
+  const boardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function handleCopyBoardUrl() {
-    void navigator.clipboard.writeText('https://github.com/orgs/cncf/projects/14').then(() => {
-      setBoardCopied(true)
-      setTimeout(() => setBoardCopied(false), 1500)
-    })
+  function handleUseBoardUrl() {
+    onInputChange(CNCF_BOARD_URL)
+    setBoardFilled(true)
+    if (boardTimeoutRef.current !== null) {
+      clearTimeout(boardTimeoutRef.current)
+    }
+    boardTimeoutRef.current = setTimeout(() => {
+      setBoardFilled(false)
+      boardTimeoutRef.current = null
+    }, 1500)
   }
+
+  useEffect(() => {
+    return () => {
+      if (boardTimeoutRef.current !== null) {
+        clearTimeout(boardTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!tooltipOpen) return
@@ -89,7 +109,7 @@ export function FoundationInputSection({
             <span className="mx-2 text-slate-300 dark:text-slate-600">·</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">Board:</span>{' '}
             <a
-              href="https://github.com/orgs/cncf/projects/14"
+              href={CNCF_BOARD_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono underline decoration-dotted hover:decoration-solid"
@@ -98,21 +118,21 @@ export function FoundationInputSection({
             </a>
             <button
               type="button"
-              onClick={handleCopyBoardUrl}
-              aria-label="Copy board URL"
-              title="Copy board URL"
-              className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+              onClick={handleUseBoardUrl}
+              aria-label="Use this board URL"
+              title="Use this board URL"
+              className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white dark:text-slate-500 dark:hover:text-slate-300 dark:focus-visible:ring-offset-slate-900"
             >
-              {boardCopied ? (
+              {boardFilled ? (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 text-emerald-500" aria-hidden="true">
                   <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
                 </svg>
               ) : (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3" aria-hidden="true">
-                  <path fillRule="evenodd" d="M11.013 2.513a1.75 1.75 0 0 0-2.475 0L6.226 4.837A1.75 1.75 0 0 0 6 5.89V9.75a.75.75 0 0 0 .75.75h3.86c.38 0 .745-.14 1.03-.392l2.323-2.132a1.75 1.75 0 0 0 .537-1.265V5.29a1.75 1.75 0 0 0-.513-1.24l-1.974-1.537ZM4.75 6.5A.25.25 0 0 1 5 6.25h.5a.75.75 0 0 0 0-1.5H5a1.75 1.75 0 0 0-1.75 1.75v5.75c0 .966.784 1.75 1.75 1.75h5A1.75 1.75 0 0 0 11.75 12.5v-.5a.75.75 0 0 0-1.5 0v.5a.25.25 0 0 1-.25.25h-5a.25.25 0 0 1-.25-.25V6.5Z" clipRule="evenodd" />
+                  <path d="M7.25 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8v4.25a.75.75 0 0 1-1.5 0V8.5H2.25a.75.75 0 0 1 0-1.5H6.5V2.75A.75.75 0 0 1 7.25 2Z" />
                 </svg>
               )}
-              <span className="ml-0.5 text-xs">{boardCopied ? 'Copied' : ''}</span>
+              <span className="ml-0.5 text-xs">{boardFilled ? 'Used' : ''}</span>
             </button>
           </p>
           <div ref={tooltipRef} className="relative">
@@ -174,6 +194,17 @@ export function FoundationInputSection({
           aria-describedby={error ? 'foundation-input-error' : undefined}
         />
       </div>
+
+      <label className={`flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 ${onVerifyReposChange ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+        <input
+          type="checkbox"
+          checked={verifyRepos}
+          onChange={(e) => onVerifyReposChange?.(e.target.checked)}
+          disabled={!onVerifyReposChange}
+          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
+        />
+        Verify repos before analyzing
+      </label>
 
       {error ? (
         <p id="foundation-input-error" role="alert" data-testid="foundation-error" className="mt-1 text-sm text-red-600 dark:text-red-300">
