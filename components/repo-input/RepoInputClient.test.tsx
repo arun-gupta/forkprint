@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthProvider } from '@/components/auth/AuthContext'
@@ -807,5 +807,57 @@ describe('RepoInputClient — shareable URL pre-population', () => {
 
     await new Promise((r) => setTimeout(r, 0))
     expect(onAnalyze).not.toHaveBeenCalled()
+  })
+})
+
+describe('RepoInputClient — tab deep-links', () => {
+  let replaceState: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    replaceState = vi.spyOn(window.history, 'replaceState').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    replaceState.mockRestore()
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+  })
+
+  it('opens Organization tab when ?mode=org is in the URL', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=org'))
+    renderWithAuth(<RepoInputClient />)
+    expect(screen.getByRole('textbox', { name: /organization input/i })).toBeInTheDocument()
+  })
+
+  it('opens Foundation tab when ?mode=foundation is in the URL', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=foundation'))
+    renderWithAuth(<RepoInputClient />)
+    expect(screen.getByRole('button', { name: /^cncf sandbox$/i })).toBeInTheDocument()
+  })
+
+  it('marks the correct Foundation sub-tab active from ?foundation=cncf-sandbox', () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=foundation&foundation=cncf-sandbox'))
+    renderWithAuth(<RepoInputClient />)
+    expect(screen.getByRole('button', { name: /^cncf sandbox$/i })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('writes ?mode=org to the URL when the Organization tab is clicked', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+    renderWithAuth(<RepoInputClient />)
+    await userEvent.click(screen.getByRole('button', { name: /^organization$/i }))
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/?mode=org')
+  })
+
+  it('writes ?mode=foundation&foundation=cncf-sandbox to the URL when the Foundation tab is clicked', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+    renderWithAuth(<RepoInputClient />)
+    await userEvent.click(screen.getByRole('button', { name: /^foundation$/i }))
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/?mode=foundation&foundation=cncf-sandbox')
+  })
+
+  it('writes / to the URL when the Repositories tab is clicked from another mode', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=org'))
+    renderWithAuth(<RepoInputClient />)
+    await userEvent.click(screen.getByRole('button', { name: /^repositories$/i }))
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/')
   })
 })
