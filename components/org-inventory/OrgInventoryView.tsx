@@ -41,8 +41,6 @@ export function OrgInventoryView({
 }: OrgInventoryViewProps) {
   const [filters, setFilters] = useState<OrgInventoryFilters>({
     repoQuery: '',
-    language: 'all',
-    archived: 'all',
   })
   const visibleColumns = DEFAULT_ORG_INVENTORY_VISIBLE_COLUMNS
   const [sortState, setSortState] = useState<OrgInventorySortState>({
@@ -81,9 +79,6 @@ export function OrgInventoryView({
   }, [pageSize, safeCurrentPage, sortedRows])
   const visibleRangeStart = sortedRows.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1
   const visibleRangeEnd = sortedRows.length === 0 ? 0 : Math.min(safeCurrentPage * pageSize, sortedRows.length)
-  const languageOptions = useMemo(() => {
-    return [...new Set(results.map((result) => result.primaryLanguage).filter((value): value is string => value !== 'unavailable'))].sort()
-  }, [results])
   const activeRunRepos = useMemo(() => {
     return sortedRows
       .filter((row) => (excludeArchivedRepos ? !row.archived : true))
@@ -136,49 +131,77 @@ export function OrgInventoryView({
               <div className="space-y-4 px-3 pb-3">
                 <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800 dark:bg-slate-900">
                 <div className="flex flex-wrap items-end gap-2">
-                  <label className="flex-1 min-w-[140px]">
+                  <div className="flex-1 min-w-[200px]">
                     <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Filter</span>
-                    <input
-                      value={filters.repoQuery}
-                      onChange={(event) => {
-                        setCurrentPage(1)
-                        setFilters((current) => ({ ...current, repoQuery: event.target.value }))
-                      }}
-                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                      placeholder="Repo name"
-                    />
-                  </label>
-                  <label className="min-w-[120px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Language</span>
-                    <select
-                      value={filters.language}
-                      onChange={(event) => {
-                        setCurrentPage(1)
-                        setFilters((current) => ({ ...current, language: event.target.value }))
-                      }}
-                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                      <option value="all">All</option>
-                      {languageOptions.map((language) => (
-                        <option key={language} value={language}>{language}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="min-w-[100px]">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Archived</span>
-                    <select
-                      value={filters.archived}
-                      onChange={(event) => {
-                        setCurrentPage(1)
-                        setFilters((current) => ({ ...current, archived: event.target.value as OrgInventoryFilters['archived'] }))
-                      }}
-                      className="mt-0.5 w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                      <option value="all">All</option>
-                      <option value="active">Active</option>
-                      <option value="archived">Archived</option>
-                    </select>
-                  </label>
+                    <div className="relative mt-0.5 flex items-center gap-1">
+                      <div className="relative group/help">
+                        <button
+                          type="button"
+                          aria-label="Filter syntax help"
+                          className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border border-slate-300 text-xs font-medium text-slate-400 hover:border-slate-400 hover:text-slate-600 focus-visible:border-slate-400 focus-visible:text-slate-600 focus-visible:outline-none dark:border-slate-600 dark:text-slate-500 dark:hover:border-slate-400 dark:hover:text-slate-300 dark:focus-visible:border-slate-400 dark:focus-visible:text-slate-300"
+                        >
+                          ?
+                        </button>
+                        <div className="pointer-events-none absolute left-0 top-7 z-50 w-72 rounded-lg border border-slate-200 bg-white p-3 shadow-lg opacity-0 transition-opacity group-hover/help:pointer-events-auto group-hover/help:opacity-100 group-focus-within/help:pointer-events-auto group-focus-within/help:opacity-100 dark:border-slate-700 dark:bg-slate-900">
+                          <p className="mb-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Filter syntax</p>
+                          <dl className="space-y-1.5 text-xs">
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">lang:go</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Filter by primary language</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">archived:false</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Show only active (non-archived) repos</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">fork:false</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Exclude forks</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">stars:&gt;1000</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Stars with &gt;, &lt;, &gt;=, &lt;=</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">forks:&gt;50 · watchers:&gt;100 · issues:&gt;20</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Forks, watchers, open issues</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-sky-700 dark:text-sky-400">pushed:&gt;2024-01-01</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Last push date (ISO date)</dd>
+                            </div>
+                            <div>
+                              <dt className="font-mono text-slate-600 dark:text-slate-300">lang:go stars:&gt;500 kubernetes</dt>
+                              <dd className="text-slate-500 dark:text-slate-400">Combine any prefixes + free text</dd>
+                            </div>
+                          </dl>
+                        </div>
+                      </div>
+                      <div className="relative flex-1">
+                        <input
+                          value={filters.repoQuery}
+                          onChange={(event) => {
+                            setCurrentPage(1)
+                            setFilters({ repoQuery: event.target.value })
+                          }}
+                          className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                          placeholder="Filter repos…"
+                          aria-label="Filter repositories"
+                        />
+                        {filters.repoQuery ? (
+                          <button
+                            type="button"
+                            onClick={() => { setCurrentPage(1); setFilters({ repoQuery: '' }) }}
+                            aria-label="Clear filter"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200"
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 dark:text-slate-200">
                     <label className="inline-flex items-center gap-1">
                       <input type="checkbox" checked={excludeArchivedRepos} onChange={(e) => setExcludeArchivedRepos(e.target.checked)} aria-label="Exclude archived repos" />

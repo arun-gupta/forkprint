@@ -1,4 +1,5 @@
 import type { OrgRepoSummary } from '@/lib/analyzer/org-inventory'
+import { applyDateFilter, applyNumericFilter, parseOrgInventorySearchQuery } from './search-parser'
 
 export type OrgInventorySortColumn =
   | 'repo'
@@ -25,9 +26,8 @@ export type OrgInventoryVisibleColumn =
   | 'url'
 
 export interface OrgInventoryFilters {
+  /** Raw query string. Supports structured prefixes: lang:, archived:, fork:, stars:, forks:, watchers:, issues:, pushed: */
   repoQuery: string
-  language: string | 'all'
-  archived: 'all' | 'active' | 'archived'
 }
 
 export interface SelectedOnlyOptions {
@@ -69,23 +69,44 @@ export function filterOrgInventoryRows(
   filters: OrgInventoryFilters,
   options?: SelectedOnlyOptions,
 ) {
-  const repoQuery = filters.repoQuery.trim().toLowerCase()
+  const parsed = parseOrgInventorySearchQuery(filters.repoQuery)
+  const freeText = parsed.freeText.toLowerCase()
   const selectedSet = options?.selectedOnly ? new Set(options.selectedRepos) : null
 
   return rows.filter((row) => {
-    if (repoQuery && !row.repo.toLowerCase().includes(repoQuery) && !row.name.toLowerCase().includes(repoQuery)) {
+    if (freeText && !row.repo.toLowerCase().includes(freeText) && !row.name.toLowerCase().includes(freeText)) {
       return false
     }
 
-    if (filters.language !== 'all' && row.primaryLanguage !== filters.language) {
+    if (parsed.lang !== null && row.primaryLanguage.toLowerCase() !== parsed.lang.toLowerCase()) {
       return false
     }
 
-    if (filters.archived === 'active' && row.archived) {
+    if (parsed.archived !== null && row.archived !== parsed.archived) {
       return false
     }
 
-    if (filters.archived === 'archived' && !row.archived) {
+    if (parsed.fork !== null && row.isFork !== parsed.fork) {
+      return false
+    }
+
+    if (parsed.stars !== null && !applyNumericFilter(row.stars, parsed.stars)) {
+      return false
+    }
+
+    if (parsed.forks !== null && !applyNumericFilter(row.forks, parsed.forks)) {
+      return false
+    }
+
+    if (parsed.watchers !== null && !applyNumericFilter(row.watchers, parsed.watchers)) {
+      return false
+    }
+
+    if (parsed.issues !== null && !applyNumericFilter(row.openIssues, parsed.issues)) {
+      return false
+    }
+
+    if (parsed.pushed !== null && !applyDateFilter(row.pushedAt, parsed.pushed)) {
       return false
     }
 

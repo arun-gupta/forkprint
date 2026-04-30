@@ -124,7 +124,7 @@ describe('OrgInventoryView', () => {
       />,
     )
 
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'missing')
+    await userEvent.type(screen.getByPlaceholderText('Filter repos…'), 'missing')
 
     expect(screen.getByText('No matching repositories')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -238,7 +238,7 @@ describe('OrgInventoryView', () => {
 
     expect(screen.getByText('No public repositories found')).toBeInTheDocument()
     expect(screen.queryByText('Total public repos')).not.toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Repo name')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Filter repos…')).not.toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
@@ -585,13 +585,13 @@ describe('OrgInventoryView', () => {
     await userEvent.click(screen.getByLabelText('Select facebook/jest'))
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
 
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'zzznomatch')
+    await userEvent.type(screen.getByPlaceholderText('Filter repos…'), 'zzznomatch')
 
     expect(screen.getByText(/filters hide every selected repository/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /turn off selected only/i })).toBeInTheDocument()
   })
 
-  it('US3 — Selected only composes with the archived filter (intersection)', async () => {
+  it('US3 — Selected only composes with the archived: prefix (intersection)', async () => {
     const results = [
       buildRepo('facebook/react', { archived: false }),
       buildRepo('facebook/jest', { archived: false }),
@@ -615,12 +615,7 @@ describe('OrgInventoryView', () => {
 
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
 
-    const selects = screen.getAllByRole('combobox')
-    const archivedSelect = selects.find((el) => {
-      const option = Array.from((el as HTMLSelectElement).options).map((o) => o.value)
-      return option.includes('active') && option.includes('archived')
-    })!
-    await userEvent.selectOptions(archivedSelect, 'active')
+    await userEvent.type(screen.getByPlaceholderText('Filter repos…'), 'archived:false')
 
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(2)
@@ -654,7 +649,7 @@ describe('OrgInventoryView', () => {
     await userEvent.click(screen.getByLabelText('Select facebook/rocksdb'))
 
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 're')
+    await userEvent.type(screen.getByPlaceholderText('Filter repos…'), 're')
 
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(2)
@@ -683,12 +678,12 @@ describe('OrgInventoryView', () => {
 
     await userEvent.click(screen.getByLabelText('Select facebook/jest'))
     await userEvent.click(screen.getByLabelText('Show only selected repositories'))
-    await userEvent.type(screen.getByPlaceholderText('Repo name'), 'jest')
+    await userEvent.type(screen.getByPlaceholderText('Filter repos…'), 'jest')
 
     const toggle = screen.getByLabelText('Show only selected repositories')
     await userEvent.click(toggle)
 
-    expect(screen.getByPlaceholderText('Repo name')).toHaveValue('jest')
+    expect(screen.getByPlaceholderText('Filter repos…')).toHaveValue('jest')
     const rows = screen.getAllByRole('row').slice(1)
     expect(rows).toHaveLength(1)
     expect(rows[0].textContent).toContain('facebook/jest')

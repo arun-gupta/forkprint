@@ -11,7 +11,7 @@ import {
 } from './filters'
 
 describe('org-inventory/filters', () => {
-  it('filters rows by repo query, language, and archived status', () => {
+  it('filters rows by free-text query', () => {
     const rows = [
       buildRepo('facebook/react', { primaryLanguage: 'TypeScript', archived: false }),
       buildRepo('facebook/jest', { primaryLanguage: 'JavaScript', archived: false }),
@@ -19,20 +19,36 @@ describe('org-inventory/filters', () => {
     ]
 
     expect(
-      filterOrgInventoryRows(rows, {
-        repoQuery: 'jest',
-        language: 'all',
-        archived: 'all',
-      }).map((row) => row.repo),
+      filterOrgInventoryRows(rows, { repoQuery: 'jest' }).map((row) => row.repo),
     ).toEqual(['facebook/jest'])
+  })
+
+  it('filters rows by lang: prefix', () => {
+    const rows = [
+      buildRepo('facebook/react', { primaryLanguage: 'TypeScript' }),
+      buildRepo('facebook/jest', { primaryLanguage: 'JavaScript' }),
+      buildRepo('facebookarchive/old', { primaryLanguage: 'JavaScript', archived: true }),
+    ]
 
     expect(
-      filterOrgInventoryRows(rows, {
-        repoQuery: '',
-        language: 'JavaScript',
-        archived: 'archived',
-      }).map((row) => row.repo),
+      filterOrgInventoryRows(rows, { repoQuery: 'lang:JavaScript' }).map((row) => row.repo),
+    ).toEqual(['facebook/jest', 'facebookarchive/old'])
+  })
+
+  it('filters rows by archived: prefix', () => {
+    const rows = [
+      buildRepo('facebook/react', { archived: false }),
+      buildRepo('facebook/jest', { archived: false }),
+      buildRepo('facebookarchive/old', { archived: true }),
+    ]
+
+    expect(
+      filterOrgInventoryRows(rows, { repoQuery: 'archived:true' }).map((row) => row.repo),
     ).toEqual(['facebookarchive/old'])
+
+    expect(
+      filterOrgInventoryRows(rows, { repoQuery: 'archived:false' }).map((row) => row.repo),
+    ).toEqual(['facebook/react', 'facebook/jest'])
   })
 
   it('sorts every visible column in ascending and descending order', () => {
@@ -99,7 +115,7 @@ describe('org-inventory/filters', () => {
   })
 
   describe('selectedOnly option', () => {
-    const baseFilters = { repoQuery: '', language: 'all', archived: 'all' } as const
+    const baseFilters = { repoQuery: '' } as const
 
     it('returns the same rows as before when options are undefined', () => {
       const rows = [
@@ -155,7 +171,7 @@ describe('org-inventory/filters', () => {
       expect(
         filterOrgInventoryRows(
           rows,
-          { repoQuery: 'jest', language: 'all', archived: 'all' },
+          { repoQuery: 'jest' },
           { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebook/react'] },
         ).map((row) => row.repo),
       ).toEqual(['facebook/jest'])
@@ -163,7 +179,7 @@ describe('org-inventory/filters', () => {
       expect(
         filterOrgInventoryRows(
           rows,
-          { repoQuery: '', language: 'JavaScript', archived: 'all' },
+          { repoQuery: 'lang:JavaScript' },
           { selectedOnly: true, selectedRepos: ['facebook/jest', 'facebookarchive/old', 'facebook/react'] },
         ).map((row) => row.repo),
       ).toEqual(['facebook/jest', 'facebookarchive/old'])
