@@ -38,7 +38,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       const savedSearch = sessionStorage.getItem('oauth_return_search') ?? ''
       sessionStorage.removeItem('oauth_return_search')
       if (savedSearch) {
-        // Hard reload so useState initialisers in RepoInputClient run with the
+        // Hard reload so useState initializers in RepoInputClient run with the
         // restored params — client-side router.replace doesn't re-run them.
         window.location.replace(`/${savedSearch}`)
       } else {
