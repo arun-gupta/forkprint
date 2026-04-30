@@ -31,7 +31,7 @@ import type { AspirantReadinessResult, CNCFFieldBadge, FoundationTarget } from '
 import type { OrgInventoryResponse } from '@/lib/analyzer/org-inventory'
 import type { ResultTabDefinition, ResultTabId } from '@/specs/006-results-shell/contracts/results-shell-props'
 import { resultTabs } from '@/lib/results-shell/tabs'
-import { decodeFoundationUrl, encodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
+import { decodeFoundationUrl, isValidRepoSlug } from '@/lib/export/shareable-url'
 import { parseRepos } from '@/lib/parse-repos'
 import { parseFoundationInput } from '@/lib/foundation/parse-foundation-input'
 import { fetchBoardRepos, type SkippedIssue } from '@/lib/foundation/fetch-board-repos'
@@ -1038,11 +1038,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
         <FoundationResultsView
           result={foundationResult}
           error={foundationError}
-          shareableUrl={
-            foundationResult && foundationInput
-              ? encodeFoundationUrl({ foundation: foundationTarget, input: foundationInput })
-              : undefined
-          }
           onReanalyze={
             foundationResult && !loadingFoundation
               ? foundationResult.kind === 'projects-board'

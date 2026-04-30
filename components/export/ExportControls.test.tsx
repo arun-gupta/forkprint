@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ExportControls } from './ExportControls'
@@ -10,9 +10,6 @@ vi.mock('@/lib/export/json-export', () => ({
 }))
 vi.mock('@/lib/export/markdown-export', () => ({
   buildMarkdownExport: vi.fn(() => ({ blob: new Blob(['# md'], { type: 'text/markdown' }), filename: 'test.md' })),
-}))
-vi.mock('@/lib/export/shareable-url', () => ({
-  encodeRepos: vi.fn(() => 'http://localhost:3000/?repos=facebook%2Freact'),
 }))
 
 const MINIMAL_RESPONSE: AnalyzeResponse = {
@@ -71,10 +68,6 @@ describe('ExportControls — disabled state (no results)', () => {
     expect(screen.getByRole('button', { name: /download markdown/i })).toBeDisabled()
   })
 
-  it('renders Copy link button', () => {
-    render(<ExportControls analysisResponse={null} analyzedRepos={[]} />)
-    expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument()
-  })
 })
 
 describe('ExportControls — enabled state (with results)', () => {
@@ -106,25 +99,3 @@ describe('ExportControls — enabled state (with results)', () => {
   })
 })
 
-describe('ExportControls — Copy Link', () => {
-  beforeEach(() => {
-    Object.assign(navigator, {
-      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-    })
-  })
-
-  it('shows "Copied!" after successful clipboard write', async () => {
-    render(<ExportControls analysisResponse={MINIMAL_RESPONSE} analyzedRepos={['facebook/react']} />)
-    await userEvent.click(screen.getByRole('button', { name: /copy link/i }))
-    expect(screen.getByRole('button', { name: /copied/i })).toBeInTheDocument()
-  })
-
-  it('shows fallback input when clipboard API fails', async () => {
-    Object.assign(navigator, {
-      clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
-    })
-    render(<ExportControls analysisResponse={MINIMAL_RESPONSE} analyzedRepos={['facebook/react']} />)
-    await userEvent.click(screen.getByRole('button', { name: /copy link/i }))
-    expect(screen.getByRole('textbox', { name: /shareable url/i })).toBeInTheDocument()
-  })
-})
