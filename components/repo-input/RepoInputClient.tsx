@@ -65,7 +65,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     ? rawUrlMode
     : null
   const urlFoundation = allowedFoundations.includes(rawUrlFoundation as (typeof allowedFoundations)[number])
-    ? rawUrlFoundation
+    ? (rawUrlFoundation as FoundationTarget)
     : null
   const initialFoundationTarget: FoundationTarget =
     initialFoundationState?.foundation ?? urlFoundation ?? (urlMode === 'foundation' ? 'cncf-sandbox' : 'none')

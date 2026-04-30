@@ -854,6 +854,13 @@ describe('RepoInputClient — tab deep-links', () => {
     expect(replaceState).toHaveBeenCalledWith(null, '', '/?mode=foundation&foundation=cncf-sandbox')
   })
 
+  it('selects CNCF Sandbox sub-tab (aria-pressed=true) when the Foundation tab is clicked from Repositories mode', async () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams())
+    renderWithAuth(<RepoInputClient />)
+    await userEvent.click(screen.getByRole('button', { name: /^foundation$/i }))
+    expect(screen.getByRole('button', { name: /^cncf sandbox$/i })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('writes / to the URL when the Repositories tab is clicked from another mode', async () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('mode=org'))
     renderWithAuth(<RepoInputClient />)
