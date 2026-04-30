@@ -17,7 +17,7 @@
 
 ## What is RepoPulse?
 
-RepoPulse analyzes any public GitHub repository and produces a composite **OSS Health Score** — a percentile-based rating computed from five dimensions, each weighted by importance. You get a clear picture of where a project stands and **actionable recommendations** to improve it.
+RepoPulse analyzes GitHub repositories and produces a composite **OSS Health Score** — a percentile-based rating computed from five dimensions, each weighted by importance. You get a clear picture of where a project stands and **actionable recommendations** to improve it.
 
 > **Try it now** — paste any GitHub repo URL into [repopulse-arun-gupta.vercel.app](https://repopulse-arun-gupta.vercel.app) and get a health report in seconds.
 
@@ -33,18 +33,30 @@ RepoPulse is built for open source projects across the full maturity spectrum. T
 
 **Solo and early-stage projects are supported.** RepoPulse auto-detects solo projects (≤2 contributors or maintainers) and switches to a re-weighted scoring profile that emphasizes Activity, Security, and Documentation — dropping Contributors and Responsiveness, which aren't meaningful signals at that scale.
 
+## Input Modes
+
+The app is organized around three modes, each accessible from the top tab bar and directly deep-linkable:
+
+| Mode | URL | What it does |
+|------|-----|-------------|
+| **Repos** | `/?mode=repos` | Analyze one repo or compare up to 4 side-by-side |
+| **Org** | `/?mode=org` | Browse all repos in a GitHub org with an org-level health summary |
+| **Foundation** | `/?mode=foundation` | Run foundation-track readiness scans (CNCF, Apache) |
+
+Every view is shareable — the selected tab, org, foundation track, and input are all encoded in the URL. Use the **Copy Link** button in the tab bar to grab the current URL at any point.
+
 ## Key Features
 
 | | Feature | Description |
 |---|---------|-------------|
 | :bar_chart: | **OSS Health Score** | Composite percentile across 5 scored dimensions, auto-adapted for solo or community projects |
 | :chart_with_upwards_trend: | **Percentile Scoring** | Every metric shows where the repo ranks vs. 2,400+ calibrated repos |
-| :busts_in_silhouette: | **Multi-Repo Comparison** | Side-by-side analysis of up to 4 repositories |
-| :office: | **Org Inventory** | Browse and analyze all repos within a GitHub organization, with an org-summary view that surfaces Overview, Contributors, Activity, Responsiveness, Documentation, Governance (2FA enforcement, stale admin detection, member permission distribution), Security, and Recommendations (top systemic issues) across the analyzed repo set. The repo table supports structured search prefixes such as `lang:go`, `stars:>500`, `archived:false`, `topic:kubernetes`, and `license:apache-2.0`. |
-| :bulb: | **Unified Recommendations** | Actionable improvement suggestions across all scoring dimensions |
-| :seedling: | **Foundation Mode** | A dedicated top-level input mode for foundation-track work. Switch to "Foundation" to run CNCF Sandbox readiness scans against one or more repos (0–100 score, ranked remediation hints, TAG recommendation, landscape detection) or an org-wide candidacy scan that ranks every repo by readiness. Additional foundation tracks (CNCF Incubating, Graduation, Apache Incubator) are coming soon. |
-| :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds |
-| :outbox_tray: | **Export** | JSON, Markdown, and shareable URL — Foundation mode URLs encode the selected track and input for direct deep-linking |
+| :busts_in_silhouette: | **Repo Comparison** | Side-by-side analysis of up to 4 repositories |
+| :office: | **Org Inventory** | Org-level health summary across all scored dimensions plus Governance; repo table supports structured search prefixes (`lang:go`, `stars:>500`, `archived:false`, `topic:kubernetes`) |
+| :seedling: | **Foundation Track** | CNCF Sandbox readiness scan (0–100 score, TAG recommendation, landscape detection); org-wide candidacy scan ranks every repo by readiness |
+| :bulb: | **Recommendations** | Actionable improvement suggestions across all scoring dimensions |
+| :outbox_tray: | **Export** | JSON, Markdown, and Copy Link from any view |
+| :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds at [`/baseline`](https://repopulse-arun-gupta.vercel.app/baseline) |
 
 ## How Scoring Works
 
