@@ -71,7 +71,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     initialFoundationState ? 'foundation' : urlMode ?? 'repos'
   const initialTab = (searchParams.get('tab') ?? 'overview') as ResultTabId
   const autoTriggeredRef = useRef(false)
-  const foundationAutoTriggeredRef = useRef(false)
   const [analysisResponse, setAnalysisResponse] = useState<AnalyzeResponse | null>(null)
   const [analyzedRepos, setAnalyzedRepos] = useState<string[]>([])
   const [orgInventoryResponse, setOrgInventoryResponse] = useState<OrgInventoryResponse | null>(null)
@@ -87,7 +86,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   const [foundationTarget, setFoundationTarget] = useState<FoundationTarget>(initialFoundationTarget)
   const [aspirantResult, setAspirantResult] = useState<AspirantReadinessResult | null>(null)
   // Foundation mode state
-  const [foundationInput, setFoundationInput] = useState('')
+  const [foundationInput, setFoundationInput] = useState(searchParams.get('input') ?? '')
   const [foundationResult, setFoundationResult] = useState<FoundationResult | null>(null)
   const [loadingFoundation, setLoadingFoundation] = useState(false)
   const [foundationLoadingItems, setFoundationLoadingItems] = useState<string[]>([])
@@ -121,8 +120,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   // without taking it as a dep (which would cause the effects to re-run on every render).
   const handleSubmitRef = useRef(handleSubmit)
   handleSubmitRef.current = handleSubmit
-  const handleFoundationSubmitRef = useRef(handleFoundationSubmit)
-  handleFoundationSubmitRef.current = handleFoundationSubmit
 
   const isLoading = loadingRepos.length > 0 || !!loadingOrg || loadingFoundation
 
@@ -472,18 +469,6 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     void handleSubmitRef.current(parsed.repos)
   }, [session?.token, initialRawRepos, initialRepoValue])
 
-  // Auto-trigger Foundation scan when URL has mode=foundation params
-  useEffect(() => {
-    if (foundationAutoTriggeredRef.current) return
-    if (!session?.token) return
-    if (!initialFoundationState) return
-
-    foundationAutoTriggeredRef.current = true
-    setInputMode('foundation')
-    setFoundationTarget(initialFoundationState.foundation)
-    setFoundationInput(initialFoundationState.input)
-    void handleFoundationSubmitRef.current(initialFoundationState.input)
-  }, [session?.token, initialFoundationState, setInputMode, setFoundationTarget, setFoundationInput])
 
   async function handleSubmit(repos: string[]) {
     if (!session?.token) return
