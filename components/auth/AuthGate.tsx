@@ -37,7 +37,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       // Restore any query params saved before the OAuth redirect (e.g. ?repos=...)
       const savedSearch = sessionStorage.getItem('oauth_return_search') ?? ''
       sessionStorage.removeItem('oauth_return_search')
-      router.replace(`/${savedSearch}`, { scroll: false })
+      if (savedSearch) {
+        // Hard reload so useState initializers in RepoInputClient run with the
+        // restored params — client-side router.replace doesn't re-run them.
+        window.location.replace(`/${savedSearch}`)
+      } else {
+        router.replace('/', { scroll: false })
+      }
     }
   }, [router, signIn])
 
