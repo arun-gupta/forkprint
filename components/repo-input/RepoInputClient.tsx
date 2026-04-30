@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { ResultsShell } from '@/components/app-shell/ResultsShell'
 import { ActivityView } from '@/components/activity/ActivityView'
 import { ContributorsView } from '@/components/contributors/ContributorsView'
+import { CorporateContributionPanel } from '@/components/contributors/CorporateContributionPanel'
 import { ComparisonView } from '@/components/comparison/ComparisonView'
 import { DocumentationView } from '@/components/documentation/DocumentationView'
 import { SecurityView } from '@/components/security/SecurityView'
@@ -268,7 +269,15 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
     setDomMatchedTabCount(counts.domMatchedTabCount)
   }).current
 
-  // Search: debounce query
+  // Parse company: prefix from raw search query
+  function parseSearchQuery(query: string): { companyName: string; freeText: string } {
+    const match = query.match(/(^|\s)company:\s*(\S+)/i)
+    if (!match) return { companyName: '', freeText: query.trim() }
+    return { companyName: match[2], freeText: query.replace(match[0], '').trim() }
+  }
+  const { companyName, freeText: searchFreeText } = parseSearchQuery(searchQuery)
+
+  // Search: debounce free-text portion (company: prefix is handled separately)
   useEffect(() => {
     if (!searchQuery) {
       setDebouncedQuery('')
@@ -276,7 +285,8 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       setDomMatchedTabCount(0)
       return
     }
-    const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 300)
+    const { freeText } = parseSearchQuery(searchQuery)
+    const timeout = setTimeout(() => setDebouncedQuery(freeText), 300)
     return () => clearTimeout(timeout)
   }, [searchQuery])
 
@@ -615,14 +625,20 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
   )
 
   const exportToolbar = analysisResponse && inputMode === 'repos' ? (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-      <ReportSearchBar
-        query={searchQuery}
-        onQueryChange={setSearchQuery}
-        totalMatches={domTotalMatches}
-        matchedTabCount={domMatchedTabCount}
-      />
-      <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <ReportSearchBar
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          totalMatches={domTotalMatches}
+          matchedTabCount={domMatchedTabCount}
+          freeText={searchFreeText}
+        />
+        <ExportControls analysisResponse={analysisResponse} analyzedRepos={analyzedRepos} />
+      </div>
+      {companyName && (
+        <CorporateContributionPanel results={analysisResponse.results} companyName={companyName} />
+      )}
     </div>
   ) : null
 

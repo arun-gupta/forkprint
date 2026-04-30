@@ -849,4 +849,169 @@ describe('analyze', () => {
       experimentalUnattributedAuthors90d: 1,
     })
   })
+
+  it('populates commitAuthorsByExperimentalOrg for login-based authors in the active window', async () => {
+    fetchPublicUserOrganizationsMock.mockResolvedValue({
+      data: ['microsoft'],
+      rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+    })
+
+    queryGitHubGraphQLMock
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            name: 'typescript',
+            description: 'TypeScript',
+            createdAt: '2012-10-01T00:00:00Z',
+            primaryLanguage: { name: 'TypeScript' },
+            stargazerCount: 100000,
+            forkCount: 12000,
+            watchers: { totalCount: 1000 },
+            issues: { totalCount: 5000 },
+          },
+        },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            defaultBranchRef: {
+              target: {
+                recent30: { totalCount: 1 },
+                recent90: { totalCount: 1 },
+                recent365Commits: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [
+                    {
+                      authoredDate: '2026-04-20T12:00:00Z',
+                      author: { name: 'Alice', email: 'alice@microsoft.com', user: { login: 'alice' } },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          prsOpened: { issueCount: 0 },
+          prsMerged: { issueCount: 0 },
+          issuesClosed: { issueCount: 0 },
+        },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+
+    const result = await analyze({ repos: ['microsoft/typescript'], token: 'ghp_test' })
+
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByExperimentalOrg).toEqual({
+      microsoft: ['login:alice'],
+    })
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitCountsByEmailDomain).toEqual({ 'microsoft.com': 1 })
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByEmailDomain).toEqual({ 'microsoft.com': ['login:alice'] })
+  })
+
+  it('populates commitCountsByEmailDomain and commitAuthorsByEmailDomain for email-based authors', async () => {
+    fetchPublicUserOrganizationsMock.mockResolvedValue({
+      data: [],
+      rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+    })
+
+    queryGitHubGraphQLMock
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            name: 'sample',
+            description: 'Sample repo',
+            createdAt: '2020-01-01T00:00:00Z',
+            primaryLanguage: { name: 'Go' },
+            stargazerCount: 50,
+            forkCount: 5,
+            watchers: { totalCount: 2 },
+            issues: { totalCount: 10 },
+          },
+        },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            defaultBranchRef: {
+              target: {
+                recent30: { totalCount: 2 },
+                recent90: { totalCount: 2 },
+                recent365Commits: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [
+                    {
+                      authoredDate: '2026-04-20T12:00:00Z',
+                      author: { name: 'Bob', email: 'bob@microsoft.com', user: null },
+                    },
+                    {
+                      authoredDate: '2026-04-19T12:00:00Z',
+                      author: { name: 'Bob', email: 'bob@microsoft.com', user: null },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          prsOpened: { issueCount: 0 },
+          prsMerged: { issueCount: 0 },
+          issuesClosed: { issueCount: 0 },
+        },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+
+    const result = await analyze({ repos: ['example/sample'], token: 'ghp_test' })
+
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitCountsByEmailDomain).toEqual({
+      'microsoft.com': 2,
+    })
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByEmailDomain).toEqual({
+      'microsoft.com': ['email:bob@microsoft.com'],
+    })
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByExperimentalOrg).toEqual({})
+  })
+
+  it('sets new corporate fields to unavailable when no commit nodes exist in the window', async () => {
+    queryGitHubGraphQLMock
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            name: 'empty',
+            description: 'Empty repo',
+            createdAt: '2020-01-01T00:00:00Z',
+            primaryLanguage: { name: 'Go' },
+            stargazerCount: 0,
+            forkCount: 0,
+            watchers: { totalCount: 0 },
+            issues: { totalCount: 0 },
+          },
+        },
+        rateLimit: { limit: 5000, remaining: 4999, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          repository: {
+            defaultBranchRef: {
+              target: {
+                recent30: { totalCount: 0 },
+                recent90: { totalCount: 0 },
+                recent365Commits: {
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                  nodes: [],
+                },
+              },
+            },
+          },
+          prsOpened: { issueCount: 0 },
+          prsMerged: { issueCount: 0 },
+          issuesClosed: { issueCount: 0 },
+        },
+        rateLimit: { limit: 5000, remaining: 4998, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
+      })
+
+    const result = await analyze({ repos: ['example/empty'], token: 'ghp_test' })
+
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByExperimentalOrg).toBe('unavailable')
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitCountsByEmailDomain).toBe('unavailable')
+    expect(result.results[0]?.contributorMetricsByWindow?.[30]?.commitAuthorsByEmailDomain).toBe('unavailable')
+  })
 })

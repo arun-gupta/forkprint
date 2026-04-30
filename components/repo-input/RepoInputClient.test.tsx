@@ -548,6 +548,68 @@ describe('RepoInputClient', () => {
     expect(screen.queryByRole('button', { name: /missing data/i })).not.toBeInTheDocument()
     expect(onAnalyze).toHaveBeenCalledTimes(1)
   })
+
+  it('shows corporate panel when company: prefix is typed in the search bar', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [buildAnalysisResult('facebook/react')],
+      failures: [],
+      rateLimit: null,
+    })
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByRole('region', { name: /analysis results/i })
+
+    const searchInput = screen.getByPlaceholderText('Search report...')
+    await userEvent.type(searchInput, 'company:microsoft')
+
+    expect(screen.getByText(/Corporate contributions for/i)).toBeInTheDocument()
+  })
+
+  it('shows corporate panel when company: prefix has an optional space after the colon', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [buildAnalysisResult('facebook/react')],
+      failures: [],
+      rateLimit: null,
+    })
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByRole('region', { name: /analysis results/i })
+
+    const searchInput = screen.getByPlaceholderText('Search report...')
+    await userEvent.type(searchInput, 'company: google')
+
+    expect(screen.getByText(/Corporate contributions for/i)).toBeInTheDocument()
+  })
+
+  it('hides corporate panel when company: prefix is removed from the search bar', async () => {
+    const onAnalyze = vi.fn().mockResolvedValue({
+      results: [buildAnalysisResult('facebook/react')],
+      failures: [],
+      rateLimit: null,
+    })
+
+    renderWithAuth(<RepoInputClient onAnalyze={onAnalyze} />)
+
+    await userEvent.type(screen.getByRole('textbox', { name: /repository list/i }), 'facebook/react')
+    await userEvent.click(screen.getByRole('button', { name: /analyze/i }))
+
+    await screen.findByRole('region', { name: /analysis results/i })
+
+    const searchInput = screen.getByPlaceholderText('Search report...')
+    await userEvent.type(searchInput, 'company:microsoft')
+    expect(screen.getByText(/Corporate contributions for/i)).toBeInTheDocument()
+
+    await userEvent.clear(searchInput)
+    expect(screen.queryByText(/Corporate contributions for/i)).not.toBeInTheDocument()
+  })
 })
 
 function buildAnalysisResult(repo: string, overrides: Record<string, unknown> = {}) {
