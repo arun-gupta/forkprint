@@ -31,6 +31,7 @@ describe('analyzer/org-inventory', () => {
       name: 'react',
       description: 'A UI library',
       primaryLanguage: { name: 'TypeScript' },
+      repositoryTopics: { nodes: [{ topic: { name: 'ui' } }, { topic: { name: 'frontend' } }] },
       stargazerCount: 100,
       forkCount: 25,
       watchers: { totalCount: 10 },
@@ -38,6 +39,10 @@ describe('analyzer/org-inventory', () => {
       pushedAt: '2026-04-02T00:00:00Z',
       isArchived: false,
       isFork: false,
+      diskUsage: 2048,
+      visibility: 'PUBLIC',
+      isPrivate: false,
+      licenseInfo: { spdxId: 'MIT', name: 'MIT License' },
       parent: null,
       url: 'https://github.com/facebook/react',
     })
@@ -54,6 +59,11 @@ describe('analyzer/org-inventory', () => {
       pushedAt: '2026-04-02T00:00:00Z',
       archived: false,
       isFork: false,
+      topics: ['ui', 'frontend'],
+      sizeKb: 2048,
+      visibility: 'public',
+      licenseSpdxId: 'MIT',
+      licenseName: 'MIT License',
       url: 'https://github.com/facebook/react',
     })
   })
@@ -95,6 +105,7 @@ function buildNode(name: string) {
     name,
     description: `${name} description`,
     primaryLanguage: { name: 'TypeScript' },
+    repositoryTopics: { nodes: [] },
     stargazerCount: 100,
     forkCount: 25,
     watchers: { totalCount: 10 },
@@ -102,6 +113,10 @@ function buildNode(name: string) {
     pushedAt: '2026-04-02T00:00:00Z',
     isArchived: false,
     isFork: false,
+    diskUsage: 512,
+    visibility: 'PUBLIC',
+    isPrivate: false,
+    licenseInfo: null,
     url: `https://github.com/facebook/${name}`,
   }
 }

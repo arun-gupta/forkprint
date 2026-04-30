@@ -18,7 +18,7 @@
 
 import { loadEnvConfig } from '@next/env'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { computePercentiles, type PercentileSet } from './percentile-utils'
+import { computePercentiles } from './percentile-utils'
 
 loadEnvConfig(process.cwd())
 

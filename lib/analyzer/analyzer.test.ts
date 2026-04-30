@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { analyze } from './analyze'
 import { queryGitHubGraphQL } from './github-graphql'
 import { fetchContributorCount, fetchMaintainerCount, fetchPublicUserOrganizations } from './github-rest'
@@ -29,6 +29,8 @@ const fetchPublicUserOrganizationsMock = vi.mocked(fetchPublicUserOrganizations)
 describe('analyze', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-31T12:00:00Z'))
     fetchContributorCountMock.mockResolvedValue({
       data: 1742,
       rateLimit: { limit: 5000, remaining: 4997, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
@@ -49,6 +51,10 @@ describe('analyze', () => {
       data: ['meta'],
       rateLimit: { limit: 5000, remaining: 4995, resetAt: '2026-03-31T23:59:59Z', retryAfter: 'unavailable' },
     })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('returns a successful flat analysis result with unavailable placeholders where data is not verified', async () => {
