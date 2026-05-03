@@ -419,6 +419,12 @@ const UNAVAILABLE_FIELDS: Array<keyof AnalysisResult> = [
   'newContributorPRAcceptanceRate',
 ]
 
+function daysAgo(from: Date, n: number): Date {
+  const d = new Date(from)
+  d.setDate(from.getDate() - n)
+  return d
+}
+
 export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
   const results: AnalysisResult[] = []
   const failures: RepositoryFetchFailure[] = []
@@ -448,26 +454,11 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
       }
 
       const now = new Date()
-      const since30 = new Date(now)
-      since30.setDate(now.getDate() - 30)
-      const since90 = new Date(now)
-      since90.setDate(now.getDate() - 90)
-      const since60 = new Date(now)
-      since60.setDate(now.getDate() - 60)
-      const since180 = new Date(now)
-      since180.setDate(now.getDate() - 180)
-      const since365 = new Date(now)
-      since365.setDate(now.getDate() - 365)
-      const staleBefore30 = new Date(now)
-      staleBefore30.setDate(now.getDate() - 30)
-      const staleBefore60 = new Date(now)
-      staleBefore60.setDate(now.getDate() - 60)
-      const staleBefore90 = new Date(now)
-      staleBefore90.setDate(now.getDate() - 90)
-      const staleBefore180 = new Date(now)
-      staleBefore180.setDate(now.getDate() - 180)
-      const staleBefore365 = new Date(now)
-      staleBefore365.setDate(now.getDate() - 365)
+      const since30 = daysAgo(now, 30)
+      const since60 = daysAgo(now, 60)
+      const since90 = daysAgo(now, 90)
+      const since180 = daysAgo(now, 180)
+      const since365 = daysAgo(now, 365)
       const repoSearch = `${owner}/${name}`
 
       // Fetch OpenSSF Scorecard data and branch protection in parallel
@@ -512,11 +503,11 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
         issuesClosed90Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since90),
         issuesClosed180Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since180),
         issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
-        staleIssues30Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore30),
-        staleIssues60Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore60),
-        staleIssues90Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore90),
-        staleIssues180Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore180),
-        staleIssues365Query: buildOpenIssuesOlderThanQuery(repoSearch, staleBefore365),
+        staleIssues30Query: buildOpenIssuesOlderThanQuery(repoSearch, since30),
+        staleIssues60Query: buildOpenIssuesOlderThanQuery(repoSearch, since60),
+        staleIssues90Query: buildOpenIssuesOlderThanQuery(repoSearch, since90),
+        staleIssues180Query: buildOpenIssuesOlderThanQuery(repoSearch, since180),
+        staleIssues365Query: buildOpenIssuesOlderThanQuery(repoSearch, since365),
         ...buildGoodFirstIssueQueries(repoSearch),
       }
 
@@ -545,11 +536,11 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeResponse> {
           issuesClosed365Query: buildSearchQuery(repoSearch, 'is:issue', 'closed', since365),
           prsCreated365Query: buildSearchQuery(repoSearch, 'is:pr', 'created', since365),
           prsMerged365Query: buildSearchQuery(repoSearch, 'is:pr is:merged', 'merged', since365),
-          stalePrs30Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore30),
-          stalePrs60Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore60),
-          stalePrs90Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore90),
-          stalePrs180Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore180),
-          stalePrs365Query: buildOpenPullRequestsOlderThanQuery(repoSearch, staleBefore365),
+          stalePrs30Query: buildOpenPullRequestsOlderThanQuery(repoSearch, since30),
+          stalePrs60Query: buildOpenPullRequestsOlderThanQuery(repoSearch, since60),
+          stalePrs90Query: buildOpenPullRequestsOlderThanQuery(repoSearch, since90),
+          stalePrs180Query: buildOpenPullRequestsOlderThanQuery(repoSearch, since180),
+          stalePrs365Query: buildOpenPullRequestsOlderThanQuery(repoSearch, since365),
         },
         diagnostics,
         repo,
