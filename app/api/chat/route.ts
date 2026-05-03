@@ -5,7 +5,26 @@ export const runtime = 'nodejs'
 const SUPPORTED_MODELS = ['claude-haiku-4-5', 'claude-sonnet-4-6'] as const
 type SupportedModel = (typeof SUPPORTED_MODELS)[number]
 
+const VALID_CONTEXT_TYPES = ['repos', 'org'] as const
+const VALID_ROLES = ['user', 'assistant'] as const
+
 const MAX_HISTORY_TURNS = 10
+
+async function validateGitHubToken(token: string): Promise<boolean> {
+  try {
+    const res = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: {
+        Authorization: `bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: '{ viewer { login } }' }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -73,10 +92,32 @@ export async function POST(request: Request) {
     )
   }
 
+  if (!(VALID_CONTEXT_TYPES as readonly string[]).includes(contextType)) {
+    return Response.json(
+      { error: { code: 'INVALID_INPUT', message: `contextType must be one of: ${VALID_CONTEXT_TYPES.join(', ')}.` } },
+      { status: 400 },
+    )
+  }
+
   if (!Array.isArray(messages) || messages.length === 0) {
     return Response.json(
       { error: { code: 'INVALID_INPUT', message: 'At least one message is required.' } },
       { status: 400 },
+    )
+  }
+
+  if (messages.some((m) => !(VALID_ROLES as readonly string[]).includes(m.role))) {
+    return Response.json(
+      { error: { code: 'INVALID_INPUT', message: `Message roles must be one of: ${VALID_ROLES.join(', ')}.` } },
+      { status: 400 },
+    )
+  }
+
+  const isValidToken = await validateGitHubToken(githubToken)
+  if (!isValidToken) {
+    return Response.json(
+      { error: { code: 'UNAUTHENTICATED', message: 'Invalid GitHub token.' } },
+      { status: 401 },
     )
   }
 
@@ -85,8 +126,8 @@ export async function POST(request: Request) {
       ? (requestedModel as SupportedModel)
       : 'claude-haiku-4-5'
 
-  // Keep last MAX_HISTORY_TURNS messages (alternating user/assistant)
-  const trimmedMessages = messages.slice(-MAX_HISTORY_TURNS)
+  // Keep last MAX_HISTORY_TURNS conversation turns (each turn = 1 user + 1 assistant message)
+  const trimmedMessages = messages.slice(-(MAX_HISTORY_TURNS * 2))
 
   const systemPrompt = buildSystemPrompt(contextType, context)
 

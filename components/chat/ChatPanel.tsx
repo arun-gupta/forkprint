@@ -17,8 +17,6 @@ interface ChatMessage {
   retryContent?: string
 }
 
-export type OrgSortCriterion = 'stars' | 'health' | 'activity'
-
 export interface ChatPanelProps {
   contextType: 'repos' | 'org'
   /** Repos-tab context */
@@ -119,7 +117,6 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [orgRepoCount, setOrgRepoCount] = useState(500)
-  const [orgSort, setOrgSort] = useState<OrgSortCriterion>('stars')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -167,19 +164,12 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
     }
   }
 
-  function handleOrgSortChange(sort: OrgSortCriterion) {
-    if (sort !== orgSort) {
-      setOrgSort(sort)
-      setMessages([])
-    }
-  }
-
   function buildContext(): string {
     if (contextType === 'repos' && repoResults) {
       return serializeReposContext(repoResults).text
     }
     if (contextType === 'org' && orgView && org) {
-      return serializeOrgContext(org, orgView, { maxRepos: orgRepoCount, sortBy: orgSort }).text
+      return serializeOrgContext(org, orgView, { maxRepos: orgRepoCount }).text
     }
     return ''
   }
@@ -196,17 +186,6 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
 
     const controller = new AbortController()
     abortRef.current = controller
-
-    const history: Array<{ role: 'user' | 'assistant'; content: string }> = []
-    setMessages((prev) => {
-      const all = [...prev]
-      for (const m of all) {
-        if (m.role === 'user' || m.role === 'assistant') {
-          history.push({ role: m.role, content: m.content })
-        }
-      }
-      return all
-    })
 
     // Build the message list to send: all prior turns + new user message
     const apiMessages = [
@@ -248,7 +227,16 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
       }
 
       const reader = response.body?.getReader()
-      if (!reader) return
+      if (!reader) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, role: 'error', content: 'Streaming is not supported in this environment — please try again.', retryContent: text }
+              : m,
+          ),
+        )
+        return
+      }
 
       const decoder = new TextDecoder()
       let buffer = ''
@@ -303,7 +291,7 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
       abortRef.current = null
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStreaming, messages, contextType, githubToken, model, orgRepoCount, orgSort, repoResults, orgView, org])
+  }, [isStreaming, messages, contextType, githubToken, model, orgRepoCount, repoResults, orgView, org])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -336,7 +324,7 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
 
   const starterChips = contextType === 'repos' ? REPOS_STARTER_CHIPS : ORG_STARTER_CHIPS
   const showChips = messages.length === 0 && !isStreaming
-  const isOrgAndLarge = contextType === 'org'
+  const isOrgAndLarge = contextType === 'org' && (orgView?.status.total ?? 0) > 500
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-5xl px-4">
@@ -397,16 +385,6 @@ export function ChatPanel({ contextType, repoResults, orgView, org, githubToken,
                     <span className="w-8 text-right font-medium">{orgRepoCount}</span>
                     <span>repos</span>
                   </div>
-                  <select
-                    value={orgSort}
-                    onChange={(e) => handleOrgSortChange(e.target.value as OrgSortCriterion)}
-                    className="rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    aria-label="Sort repos by"
-                  >
-                    <option value="stars">⭐ Top by stars</option>
-                    <option value="health">🔴 Lowest health first</option>
-                    <option value="activity">⚡ Most recently active</option>
-                  </select>
                 </>
               ) : null}
 

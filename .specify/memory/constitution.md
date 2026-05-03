@@ -1,6 +1,8 @@
 # RepoPulse Constitution
 
-**Version**: 1.4 — Amended 2026-04-21
+**Version**: 1.5 — Amended 2026-05-03
+**Amendment (v1.5, 2026-05-03)**: Section I updated to add `@anthropic-ai/sdk` (Anthropic Claude SDK) to the approved technology stack for Phase 1, gated behind the `ANTHROPIC_API_KEY` server-side environment variable. The LLM-powered Q&A chat panel (issue #271) requires this SDK to stream responses from Anthropic Claude models. The SDK is never bundled into client code and the API key is never sent to the client. The feature degrades gracefully (503) when the key is absent. Signed off by: arun-gupta.
+
 **Amendment (v1.4, 2026-04-21)**: Section III rule 4 updated to reflect no-scope baseline OAuth (issue #401). Rationale: RepoPulse only reads public data; the previous `public_repo` baseline granted unnecessary write access. A no-scope token provides the same read access and full 5,000 req/hr rate limit without write permission. Signed off by: arun-gupta.
 
 **Amendment (v1.3)**: Sections XII and XIII updated to drop the per-feature `specs/NNN-feature-name/checklists/manual-testing.md` file. The PR body's `## Test plan` section is now the single source of truth for manual testing signoff. Rationale: under the one-Claude-per-issue ephemeral-worktree workflow, the in-repo checklist file duplicated the PR Test Plan, drifted from it, and added ceremony without adding coverage. GitHub preserves PR bodies indefinitely and they are queryable via `gh pr view --json body`, so the test record remains durable. Signed off by: arun-gupta.
@@ -21,6 +23,7 @@ Every spec, plan, task, and line of code must comply. No exceptions.
 - **Deployment**: Vercel — zero-config
 - **Styling**: Tailwind CSS
 - **Charts**: Chart.js (via npm)
+- **LLM**: `@anthropic-ai/sdk` (server-side only, gated by `ANTHROPIC_API_KEY`) — used for the Q&A chat panel (issue #271)
 - **Stateless**: no database, no auth system, all analysis is on-demand
 
 ### Phase 2 — GitHub Action

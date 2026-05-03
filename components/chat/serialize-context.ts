@@ -62,7 +62,7 @@ function extractPanelValue(panel: { value: unknown; status: string; contributing
 export function serializeOrgContext(
   org: string,
   view: OrgSummaryViewModel,
-  opts: { maxRepos?: number; sortBy?: 'stars' | 'health' | 'activity' } = {},
+  opts: { maxRepos?: number } = {},
 ): SerializedChatContext {
   const { maxRepos = 500 } = opts
 
