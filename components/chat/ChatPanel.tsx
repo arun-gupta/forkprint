@@ -81,6 +81,17 @@ const SORT_OPTIONS: { value: OrgSortBy; label: string }[] = [
   { value: 'activity', label: '⚡ Most recently active' },
 ]
 
+const SEARCH_PREFIX_HINTS: { key: string; description: string; example: string }[] = [
+  { key: 'lang',     description: 'Programming language',  example: 'lang:go' },
+  { key: 'archived', description: 'Archived status',       example: 'archived:false' },
+  { key: 'stars',    description: 'Star count',            example: 'stars:>500' },
+  { key: 'forks',    description: 'Fork count',            example: 'forks:>10' },
+  { key: 'issues',   description: 'Open issues count',     example: 'issues:<50' },
+  { key: 'pushed',   description: 'Last push date',        example: 'pushed:>2024-01-01' },
+  { key: 'topic',    description: 'Repository topic',      example: 'topic:kubernetes' },
+  { key: 'license',  description: 'License type',          example: 'license:apache-2.0' },
+]
+
 const SS_KEY_ANTHROPIC = 'repopulse:chat:anthropicKey'
 const LS_KEY_MODEL = 'repopulse:chat:model'
 const SS_KEY_EXPANDED = 'repopulse:chat:expanded'
@@ -598,9 +609,20 @@ export function ChatPanel({
                       Ignored: {parsed.invalidTokens.join(', ')}
                     </p>
                   )}
-                  <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
-                    Prefixes: lang: archived: stars: forks: issues: pushed: topic: license:
-                  </p>
+                  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
+                    {SEARCH_PREFIX_HINTS.map(({ key, description, example }) => (
+                      <span key={key} className="group relative cursor-help">
+                        <span className="text-[10px] text-slate-400 underline decoration-dotted underline-offset-2 dark:text-slate-500">
+                          {key}:
+                        </span>
+                        <span className="pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2.5 py-1.5 opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 dark:bg-slate-700">
+                          <span className="block text-[11px] font-medium text-white">{description}</span>
+                          <span className="block text-[10px] text-slate-300 font-mono">{example}</span>
+                          <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700" />
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )
             })()}
