@@ -25,6 +25,7 @@ interface ResultsShellProps {
   searchQuery?: string
   onDomMatchCounts?: (counts: { domMatchCounts: TabMatchCounts; domTotalMatches: number; domMatchedTabCount: number }) => void
   tagMatchCounts?: TabMatchCounts
+  chatPanel?: React.ReactNode
 }
 
 export function ResultsShell({
@@ -39,6 +40,7 @@ export function ResultsShell({
   searchQuery = '',
   onDomMatchCounts,
   tagMatchCounts,
+  chatPanel,
 }: ResultsShellProps) {
   const [activeTab, setActiveTab] = useState<ResultTabId>(initialActiveTab)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -206,7 +208,7 @@ export function ResultsShell({
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className={`mx-auto max-w-5xl px-4 py-6${chatPanel ? ' pb-16' : ''}`}>
         {isStale ? (
           <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200 dark:border-amber-800/60" role="alert">
             Scores calibrated against GitHub data from {calibrationMeta.generated}. A more recent calibration is recommended.
@@ -241,6 +243,7 @@ export function ResultsShell({
           </section>
         </section>
       </div>
+      {chatPanel}
     </main>
   )
 }

@@ -39,6 +39,7 @@ import { LOADING_QUOTES, getRandomQuoteIndex } from '@/lib/loading-quotes'
 import { RepoInputForm } from './RepoInputForm'
 import { FoundationResultsView, type FoundationResult } from '@/components/foundation/FoundationResultsView'
 import { FoundationNudge } from '@/components/foundation/FoundationNudge'
+import { ChatPanel } from '@/components/chat/ChatPanel'
 
 interface RepoInputClientProps {
   onAnalyze?: (repos: string[], token: string) => Promise<AnalyzeResponse> | AnalyzeResponse | void
@@ -1086,6 +1087,29 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
       searchQuery={debouncedQuery}
       onDomMatchCounts={handleDomMatchCounts}
       tagMatchCounts={analysisResponse ? computeTabTagCounts(analysisResponse.results, activeTag) : undefined}
+      chatPanel={
+        session?.token && inputMode !== 'foundation' && (
+          (inputMode === 'repos' && analysisResponse) ||
+          (inputMode === 'org' && orgAnalysisComplete && orgAggregation.view)
+        ) ? (
+          inputMode === 'repos' && analysisResponse ? (
+            <ChatPanel
+              contextType="repos"
+              repoResults={analysisResponse.results}
+              githubToken={session.token}
+              resetKey={resultsResetKey}
+            />
+          ) : inputMode === 'org' && orgAnalysisComplete && orgAggregation.view && orgInventoryResponse ? (
+            <ChatPanel
+              contextType="org"
+              orgView={orgAggregation.view}
+              org={orgInventoryResponse.org}
+              githubToken={session.token}
+              resetKey={resultsResetKey}
+            />
+          ) : null
+        ) : null
+      }
       slots={{
         overview: overviewContent,
         contributors: inputMode === 'org' && orgAnalysisComplete && orgAggregation.view ? (
