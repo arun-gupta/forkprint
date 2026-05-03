@@ -5,6 +5,16 @@ export interface GitHubRestSuccess<T> {
   rateLimit: RateLimitState | null
 }
 
+type GitHubRestError = Error & { status?: number; retryAfter?: number | 'unavailable' }
+
+function throwHttpError(response: Response): never {
+  const retryAfterHeader = response.headers.get('Retry-After')
+  const error = new Error(`GitHub REST request failed with status ${response.status}`) as GitHubRestError
+  error.status = response.status
+  error.retryAfter = retryAfterHeader ? Number(retryAfterHeader) : 'unavailable'
+  throw error
+}
+
 export async function fetchContributorCount(
   token: string,
   owner: string,
@@ -19,15 +29,7 @@ export async function fetchContributorCount(
     },
   })
 
-  if (!response.ok) {
-    const retryAfterHeader = response.headers.get('Retry-After')
-    const error = new Error(`GitHub REST request failed with status ${response.status}`)
-    ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).status = response.status
-    ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).retryAfter = retryAfterHeader
-      ? Number(retryAfterHeader)
-      : 'unavailable'
-    throw error
-  }
+  if (!response.ok) throwHttpError(response)
 
   const contributors = (await response.json()) as unknown[]
   const linkHeader = response.headers.get('Link')
@@ -83,15 +85,7 @@ export async function fetchMaintainerCount(
       continue
     }
 
-    if (!response.ok) {
-      const retryAfterHeader = response.headers.get('Retry-After')
-      const error = new Error(`GitHub REST request failed with status ${response.status}`)
-      ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).status = response.status
-      ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).retryAfter = retryAfterHeader
-        ? Number(retryAfterHeader)
-        : 'unavailable'
-      throw error
-    }
+    if (!response.ok) throwHttpError(response)
 
     const payload = (await response.json()) as { content?: string; encoding?: string }
     rateLimit = extractRateLimit(response) ?? rateLimit
@@ -126,15 +120,7 @@ export async function fetchPublicUserOrganizations(
     },
   })
 
-  if (!response.ok) {
-    const retryAfterHeader = response.headers.get('Retry-After')
-    const error = new Error(`GitHub REST request failed with status ${response.status}`)
-    ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).status = response.status
-    ;(error as Error & { status?: number; retryAfter?: number | 'unavailable' }).retryAfter = retryAfterHeader
-      ? Number(retryAfterHeader)
-      : 'unavailable'
-    throw error
-  }
+  if (!response.ok) throwHttpError(response)
 
   const payload = (await response.json()) as Array<{ login?: string }>
   const rateLimit = extractRateLimit(response)
@@ -631,7 +617,7 @@ function parseMaintainerTokens(
     return parseOwnersMaintainers(decoded)
   }
 
-  return parseGenericMaintainers(decoded)
+  return parseOwnersMaintainers(decoded)
 }
 
 function collectAtHandles(line: string, into: Map<string, MaintainerToken>) {
@@ -675,22 +661,6 @@ function parseOwnersMaintainers(decoded: string): MaintainerToken[] {
   return Array.from(out.values())
 }
 
-function parseGenericMaintainers(decoded: string): MaintainerToken[] {
-  const out = new Map<string, MaintainerToken>()
-  for (const rawLine of decoded.split('\n')) {
-    const line = rawLine.trim()
-    if (!line || line.startsWith('#') || /^---+$/.test(line)) continue
-    collectAtHandles(line, out)
-
-    const candidate = line.replace(/\[[^\]]+\]/g, ' ').replace(/[:,]/g, ' ').trim()
-    for (const token of candidate.split(/\s+/)) {
-      const normalized = token.replace(/^@/, '').trim().toLowerCase()
-      if (!isLikelyMaintainerToken(normalized)) continue
-      if (!out.has(normalized)) out.set(normalized, { token: normalized, kind: 'user' })
-    }
-  }
-  return Array.from(out.values())
-}
 
 function isLikelyMaintainerToken(token: string) {
   if (!token || token.length < 2) {
