@@ -36,6 +36,7 @@ interface ChatRequest {
   context: string
   contextType: 'repos' | 'org'
   githubToken?: string
+  anthropicKey?: string
   model?: string
 }
 
@@ -58,14 +59,6 @@ function buildSystemPrompt(contextType: 'repos' | 'org', context: string): strin
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    return Response.json(
-      { error: { code: 'NOT_CONFIGURED', message: "AI chat isn't available in this deployment." } },
-      { status: 503 },
-    )
-  }
-
   let body: ChatRequest
   try {
     body = (await request.json()) as ChatRequest
@@ -76,7 +69,16 @@ export async function POST(request: Request) {
     )
   }
 
-  const { messages, context, contextType, githubToken, model: requestedModel } = body
+  const { messages, context, contextType, githubToken, anthropicKey, model: requestedModel } = body
+
+  // Resolve API key: user-provided key takes precedence over server env var
+  const apiKey = anthropicKey?.trim() || process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return Response.json(
+      { error: { code: 'NOT_CONFIGURED', message: "AI chat isn't available — please provide an Anthropic API key." } },
+      { status: 503 },
+    )
+  }
 
   if (!githubToken) {
     return Response.json(
@@ -158,16 +160,30 @@ export async function POST(request: Request) {
           })),
         })
 
+        let inputTokens = 0
+        let cacheReadTokens = 0
+        let outputTokens = 0
+
         for await (const event of response) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          if (event.type === 'message_start') {
+            inputTokens = event.message.usage.input_tokens
+            cacheReadTokens = (event.message.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0
+          } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             emit(`data: ${JSON.stringify({ type: 'delta', text: event.delta.text })}\n\n`)
+          } else if (event.type === 'message_delta') {
+            outputTokens = event.usage.output_tokens
           }
         }
 
+        emit(`data: ${JSON.stringify({ type: 'usage', inputTokens, outputTokens, cacheReadTokens })}\n\n`)
         emit(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
       } catch (error: unknown) {
         const status = (error as { status?: number }).status
-        if (status === 429) {
+        if (status === 401) {
+          emit(
+            `data: ${JSON.stringify({ type: 'error', code: 'INVALID_KEY', message: 'Invalid API key — check it and try again.' })}\n\n`,
+          )
+        } else if (status === 429) {
           emit(
             `data: ${JSON.stringify({ type: 'error', code: 'RATE_LIMITED', message: 'Too many requests — please wait a moment and try again.' })}\n\n`,
           )

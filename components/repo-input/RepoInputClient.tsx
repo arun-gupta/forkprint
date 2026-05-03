@@ -1104,6 +1104,7 @@ export function RepoInputClient({ onAnalyze, onAnalyzeOrg }: RepoInputClientProp
               contextType="org"
               orgView={orgAggregation.view}
               org={orgInventoryResponse.org}
+              orgRepos={orgInventoryResponse.results}
               githubToken={session.token}
               resetKey={resultsResetKey}
             />
