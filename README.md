@@ -55,6 +55,7 @@ Every view is shareable — the selected tab, org, foundation track, and input a
 | :office: | **Org Inventory** | Org-level health summary across all scored dimensions plus Governance; repo table supports structured search prefixes (`lang:go`, `stars:>500`, `archived:false`, `topic:kubernetes`) |
 | :seedling: | **Foundation Track** | CNCF Sandbox readiness scan (0–100 score, TAG recommendation, landscape detection); org-wide candidacy scan ranks every repo by readiness |
 | :bulb: | **Recommendations** | Actionable improvement suggestions across all scoring dimensions |
+| :speech_balloon: | **AI Chat** | Ask natural-language questions about any analysis; 5 free chats/day per GitHub login, or bring your own API key |
 | :outbox_tray: | **Export** | JSON, Markdown, and Copy Link from any view |
 | :book: | **Scoring Methodology** | Full transparency into calibration data and thresholds at [`/baseline`](https://repopulse-arun-gupta.vercel.app/baseline) |
 
@@ -95,6 +96,10 @@ npm install
 echo "GITHUB_CLIENT_ID=your_id" >> .env.local
 echo "GITHUB_CLIENT_SECRET=your_secret" >> .env.local
 
+# Optional: enable server-side AI Chat (any one key enables 5 free chats/day per GitHub login)
+# echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env.local
+# echo "OPENAI_API_KEY=sk-..."       >> .env.local
+
 # 3. Run
 npm run dev
 ```
@@ -124,6 +129,7 @@ We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup ins
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) — Development workflow, implementation order, verification commands
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Vercel deployment guide
 - [`docs/scoring-and-calibration.md`](docs/scoring-and-calibration.md) — Scoring methodology, calibration pipeline, statistical approach
+- [`docs/ai-chat.md`](docs/ai-chat.md) — AI Chat feature: providers, free tier, bring-your-own-key setup
 
 ---
 

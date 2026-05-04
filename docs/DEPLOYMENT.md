@@ -71,6 +71,23 @@ The workflow only refreshes **data**. Frontend and analyzer changes deploy conti
 
 **Operational tip** — merge the refresh PR promptly. If it sits open while frontend/analyzer PRs continue to land, the deployed `/demo` data can drift out of sync with the deployed UI/logic.
 
+## AI Chat (Optional)
+
+The chat panel appears on every analysis view once a user is signed in. Without a server key it operates in "bring your own key" mode only.
+
+To enable **5 free chats per GitHub login per day**, add exactly one of the following to your Vercel environment variables (the first key found wins):
+
+| Variable | Provider |
+|----------|----------|
+| `ANTHROPIC_API_KEY` | Anthropic Claude (default preference) |
+| `OPENAI_API_KEY` | OpenAI GPT |
+| `GOOGLE_API_KEY` | Google Gemini |
+| `GROQ_API_KEY` | Groq |
+
+Users who exceed the daily free limit — or who want to choose a different provider/model — can enter their own API key directly in the chat panel. That key is transmitted to the API route and forwarded to the provider; it is never logged or persisted.
+
+See [`docs/ai-chat.md`](ai-chat.md) for full feature details.
+
 ## Notes
 
 - No `GITHUB_TOKEN` server-side environment variable is used — each user authenticates via their own GitHub OAuth session
