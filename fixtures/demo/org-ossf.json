@@ -1,35 +1,35 @@
 {
-  "generatedAt": "2026-04-27T09:43:24.672Z",
+  "generatedAt": "2026-05-04T09:42:21.800Z",
   "org": "ossf",
   "summary": {
     "totalPublicRepos": 79,
-    "totalStars": 17544,
+    "totalStars": 17583,
     "mostStarredRepos": [
       {
         "repo": "ossf/scorecard",
-        "stars": 5407
+        "stars": 5418
       },
       {
         "repo": "ossf/cve-bin-tool",
-        "stars": 1670
+        "stars": 1675
       },
       {
         "repo": "ossf/criticality_score",
-        "stars": 1428
+        "stars": 1429
       }
     ],
     "mostRecentlyActiveRepos": [
       {
         "repo": "ossf/scorecard",
-        "pushedAt": "2026-04-27T09:21:30Z"
+        "pushedAt": "2026-05-04T09:41:05Z"
       },
       {
-        "repo": "ossf/scorecard-visualizer",
-        "pushedAt": "2026-04-27T07:53:46Z"
+        "repo": "ossf/cve-bin-tool",
+        "pushedAt": "2026-05-04T06:15:16Z"
       },
       {
-        "repo": "ossf/security-baseline",
-        "pushedAt": "2026-04-27T07:01:47Z"
+        "repo": "ossf/malicious-packages",
+        "pushedAt": "2026-05-04T03:25:51Z"
       }
     ],
     "languageDistribution": [
@@ -87,9 +87,14 @@
       "forks": 7,
       "watchers": 12,
       "openIssues": 0,
-      "pushedAt": "2025-08-14T18:31:52Z",
+      "pushedAt": "2026-04-27T20:19:16Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 389,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/.github"
     },
     {
@@ -97,13 +102,18 @@
       "name": "ai-ml-security",
       "description": "Working Group on Artificial Intelligence and Machine Learning (AI/ML) Security",
       "primaryLanguage": "unavailable",
-      "stars": 165,
-      "forks": 24,
-      "watchers": 23,
-      "openIssues": 11,
-      "pushedAt": "2025-12-19T23:19:22Z",
+      "stars": 167,
+      "forks": 25,
+      "watchers": 24,
+      "openIssues": 12,
+      "pushedAt": "2026-05-01T13:56:52Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 130,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/ai-ml-security"
     },
     {
@@ -111,13 +121,18 @@
       "name": "allstar",
       "description": "GitHub App to set and enforce security policies",
       "primaryLanguage": "Go",
-      "stars": 1414,
+      "stars": 1416,
       "forks": 145,
       "watchers": 33,
       "openIssues": 58,
-      "pushedAt": "2026-04-24T15:40:42Z",
+      "pushedAt": "2026-04-28T05:41:48Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 2497,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/allstar"
     },
     {
@@ -129,9 +144,18 @@
       "forks": 63,
       "watchers": 17,
       "openIssues": 0,
-      "pushedAt": "2026-04-10T19:33:43Z",
+      "pushedAt": "2026-05-01T19:30:54Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "open-source-security",
+        "opensource",
+        "security"
+      ],
+      "sizeKb": 14056,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/alpha-omega"
     },
     {
@@ -146,6 +170,11 @@
       "pushedAt": "2023-06-14T18:02:38Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 0,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/alpha-omega-security-research"
     },
     {
@@ -160,6 +189,11 @@
       "pushedAt": "2026-03-17T18:37:53Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 51858,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/artwork"
     },
     {
@@ -174,6 +208,17 @@
       "pushedAt": "2024-12-06T19:29:08Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "oss",
+        "analysis",
+        "metrics",
+        "statistics",
+        "census"
+      ],
+      "sizeKb": 32640,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/census"
     },
     {
@@ -188,6 +233,11 @@
       "pushedAt": "2025-02-05T19:06:01Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 5050,
+      "visibility": "public",
+      "licenseSpdxId": "CC-BY-4.0",
+      "licenseName": "Creative Commons Attribution 4.0 International",
       "url": "https://github.com/ossf/community"
     },
     {
@@ -195,13 +245,18 @@
       "name": "criticality_score",
       "description": "Gives criticality score for an open source project",
       "primaryLanguage": "Go",
-      "stars": 1428,
-      "forks": 131,
+      "stars": 1429,
+      "forks": 132,
       "watchers": 33,
       "openIssues": 45,
       "pushedAt": "2025-12-02T00:04:34Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1667,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/criticality_score"
     },
     {
@@ -209,13 +264,33 @@
       "name": "cve-bin-tool",
       "description": "The CVE Binary Tool helps you determine if your system includes known vulnerabilities. You can scan binaries for over 350 common, vulnerable components (openssl, libpng, libxml2, expat and others), or if you know the components used, you can get a list of known vulnerabilities associated with an SBOM or a list of components and versions.",
       "primaryLanguage": "Python",
-      "stars": 1670,
+      "stars": 1675,
       "forks": 619,
       "watchers": 31,
       "openIssues": 147,
-      "pushedAt": "2026-04-27T06:02:58Z",
+      "pushedAt": "2026-05-04T06:15:16Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "cve",
+        "security",
+        "hacktoberfest",
+        "vulnerabilities",
+        "cvss",
+        "swrepo",
+        "system-tools",
+        "devsecops",
+        "security-automation",
+        "security-tools",
+        "python",
+        "sbom",
+        "vulnerability",
+        "sbom-tool"
+      ],
+      "sizeKb": 705449,
+      "visibility": "public",
+      "licenseSpdxId": "GPL-3.0",
+      "licenseName": "GNU General Public License v3.0",
       "url": "https://github.com/ossf/cve-bin-tool"
     },
     {
@@ -230,6 +305,11 @@
       "pushedAt": "2024-05-02T16:20:04Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 79,
+      "visibility": "public",
+      "licenseSpdxId": "CC0-1.0",
+      "licenseName": "Creative Commons Zero v1.0 Universal",
       "url": "https://github.com/ossf/DevRel-community"
     },
     {
@@ -244,6 +324,11 @@
       "pushedAt": "2024-01-15T20:13:40Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 9577,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/Diagrammers-Society"
     },
     {
@@ -258,6 +343,11 @@
       "pushedAt": "2024-06-24T18:55:48Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 257,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/disclosure-check"
     },
     {
@@ -272,6 +362,11 @@
       "pushedAt": "2024-01-23T18:25:48Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/dot-allstar-quickstart"
     },
     {
@@ -282,10 +377,15 @@
       "stars": 18,
       "forks": 17,
       "watchers": 26,
-      "openIssues": 5,
+      "openIssues": 4,
       "pushedAt": "2025-11-15T12:07:35Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 4069,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/education"
     },
     {
@@ -300,6 +400,11 @@
       "pushedAt": "2025-09-09T15:00:48Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 7711,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/foundation"
     },
     {
@@ -307,13 +412,25 @@
       "name": "fuzz-introspector",
       "description": "Fuzz Introspector -- introspect, extend and optimise fuzzers",
       "primaryLanguage": "Python",
-      "stars": 453,
+      "stars": 454,
       "forks": 85,
       "watchers": 18,
       "openIssues": 109,
       "pushedAt": "2026-04-21T22:27:41Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "fuzzing",
+        "security",
+        "testing",
+        "vulnerability-analysis",
+        "fuzz-testing",
+        "security-research"
+      ],
+      "sizeKb": 9135,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/fuzz-introspector"
     },
     {
@@ -328,6 +445,11 @@
       "pushedAt": "2022-01-21T00:11:24Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 24,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/gb-planning-committee"
     },
     {
@@ -342,6 +464,11 @@
       "pushedAt": "2023-05-30T16:45:29Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 17,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/github-org-access-scraper"
     },
     {
@@ -356,6 +483,11 @@
       "pushedAt": "2025-08-13T18:08:15Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 56,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/global-cybersecurity-skills-framework"
     },
     {
@@ -370,6 +502,11 @@
       "pushedAt": "2026-04-14T14:12:47Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 81122,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/glossary"
     },
     {
@@ -384,6 +521,11 @@
       "pushedAt": "2023-05-26T15:06:51Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 5014,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/Governance-Committee"
     },
     {
@@ -398,6 +540,11 @@
       "pushedAt": "2026-02-13T16:21:31Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 6,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/gpu-hashlib"
     },
     {
@@ -412,6 +559,11 @@
       "pushedAt": "2021-12-28T18:06:04Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 3839,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/great-mfa-project"
     },
     {
@@ -419,13 +571,18 @@
       "name": "malicious-packages",
       "description": "A repository of reports of malicious packages identified in Open Source package repositories, consumable via the Open Source Vulnerability (OSV) format.",
       "primaryLanguage": "Go",
-      "stars": 496,
-      "forks": 86,
+      "stars": 499,
+      "forks": 88,
       "watchers": 19,
-      "openIssues": 21,
-      "pushedAt": "2026-04-27T06:06:15Z",
+      "openIssues": 22,
+      "pushedAt": "2026-05-04T03:25:51Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 234547,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/malicious-packages"
     },
     {
@@ -434,12 +591,17 @@
       "description": "unavailable",
       "primaryLanguage": "unavailable",
       "stars": 33,
-      "forks": 17,
+      "forks": 18,
       "watchers": 23,
       "openIssues": 14,
       "pushedAt": "2025-08-14T17:17:23Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 2371,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/Memory-Safety"
     },
     {
@@ -454,6 +616,11 @@
       "pushedAt": "2025-06-24T18:16:23Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 172,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/model-signing-spec"
     },
     {
@@ -468,6 +635,11 @@
       "pushedAt": "2023-10-30T17:30:56Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 197,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/omega-moderne-client"
     },
     {
@@ -482,6 +654,11 @@
       "pushedAt": "2023-10-30T17:29:44Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1759,
+      "visibility": "public",
+      "licenseSpdxId": "MIT",
+      "licenseName": "MIT License",
       "url": "https://github.com/ossf/omega-triage-portal"
     },
     {
@@ -496,6 +673,11 @@
       "pushedAt": "2023-06-26T20:38:49Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 34,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/open-auto-vuln-disclose"
     },
     {
@@ -510,6 +692,11 @@
       "pushedAt": "2024-01-02T23:41:49Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 2612,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/OpenVEX"
     },
     {
@@ -517,13 +704,18 @@
       "name": "orbit-launchpad",
       "description": "unavailable",
       "primaryLanguage": "unavailable",
-      "stars": 2,
+      "stars": 4,
       "forks": 1,
-      "watchers": 1,
+      "watchers": 2,
       "openIssues": 2,
       "pushedAt": "2026-03-08T04:33:52Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 60,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/orbit-launchpad"
     },
     {
@@ -538,6 +730,11 @@
       "pushedAt": "2021-06-17T02:22:08Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 20,
+      "visibility": "public",
+      "licenseSpdxId": "MIT",
+      "licenseName": "MIT License",
       "url": "https://github.com/ossf/oss-analysis-census2-prototype"
     },
     {
@@ -552,6 +749,11 @@
       "pushedAt": "2022-12-15T18:30:53Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 940,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/oss-compromises"
     },
     {
@@ -559,13 +761,18 @@
       "name": "oss-crs",
       "description": "oss-crs",
       "primaryLanguage": "Python",
-      "stars": 57,
+      "stars": 60,
       "forks": 6,
-      "watchers": 5,
-      "openIssues": 26,
-      "pushedAt": "2026-04-26T01:27:20Z",
+      "watchers": 6,
+      "openIssues": 28,
+      "pushedAt": "2026-04-29T13:27:47Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 7099,
+      "visibility": "public",
+      "licenseSpdxId": "MIT",
+      "licenseName": "MIT License",
       "url": "https://github.com/ossf/oss-crs"
     },
     {
@@ -580,6 +787,11 @@
       "pushedAt": "2022-04-18T20:15:20Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 17,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/oss-researcher-vulnerability-guide"
     },
     {
@@ -588,12 +800,17 @@
       "description": "A guide on coordinated vulnerability disclosure for open source projects. Includes templates for security policies (security.md) and disclosure notifications.",
       "primaryLanguage": "unavailable",
       "stars": 137,
-      "forks": 25,
+      "forks": 26,
       "watchers": 8,
       "openIssues": 5,
       "pushedAt": "2026-04-20T19:38:11Z",
       "archived": false,
       "isFork": true,
+      "topics": [],
+      "sizeKb": 274,
+      "visibility": "public",
+      "licenseSpdxId": "CC-BY-4.0",
+      "licenseName": "Creative Commons Attribution 4.0 International",
       "parentRepo": "google/oss-vulnerability-guide",
       "url": "https://github.com/ossf/oss-vulnerability-guide"
     },
@@ -606,9 +823,14 @@
       "forks": 28,
       "watchers": 12,
       "openIssues": 0,
-      "pushedAt": "2026-04-26T13:27:05Z",
+      "pushedAt": "2026-05-03T13:27:56Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 4909,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/ossf-landscape"
     },
     {
@@ -616,13 +838,18 @@
       "name": "osv-schema",
       "description": "Open Source Vulnerability schema. ",
       "primaryLanguage": "Go",
-      "stars": 246,
+      "stars": 247,
       "forks": 115,
-      "watchers": 28,
+      "watchers": 27,
       "openIssues": 49,
-      "pushedAt": "2026-04-24T06:37:07Z",
+      "pushedAt": "2026-04-28T18:57:22Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1168,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/osv-schema"
     },
     {
@@ -630,13 +857,18 @@
       "name": "package-analysis",
       "description": "Open Source Package Analysis",
       "primaryLanguage": "Go",
-      "stars": 876,
-      "forks": 64,
+      "stars": 878,
+      "forks": 66,
       "watchers": 21,
       "openIssues": 66,
       "pushedAt": "2026-02-27T04:43:03Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 3476,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/package-analysis"
     },
     {
@@ -651,6 +883,11 @@
       "pushedAt": "2024-12-04T14:35:33Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 585,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/package-feeds"
     },
     {
@@ -665,6 +902,11 @@
       "pushedAt": "2022-09-26T06:00:48Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 92,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/package-manager-best-practices"
     },
     {
@@ -679,6 +921,11 @@
       "pushedAt": "2024-03-13T13:15:43Z",
       "archived": true,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1303,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/Project-Security-Metrics"
     },
     {
@@ -693,6 +940,11 @@
       "pushedAt": "2023-11-29T19:52:12Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 35,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/project-template"
     },
     {
@@ -704,9 +956,14 @@
       "forks": 12,
       "watchers": 3,
       "openIssues": 21,
-      "pushedAt": "2026-04-27T00:57:51Z",
+      "pushedAt": "2026-05-04T01:01:27Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 24997,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/pvtr-github-repo-scanner"
     },
     {
@@ -721,6 +978,11 @@
       "pushedAt": "2025-05-20T15:36:29Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 12,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/reliable-software-decomposition"
     },
     {
@@ -728,13 +990,18 @@
       "name": "s2c2f",
       "description": "The S2C2F Project is a group working within the OpenSSF's Supply Chain Integrity Working Group formed to further develop and continuously improve the S2C2F guide which outlines and defines how to securely consume Open Source Software (OSS) dependencies into the developer’s workflow. ",
       "primaryLanguage": "unavailable",
-      "stars": 229,
-      "forks": 31,
+      "stars": 230,
+      "forks": 32,
       "watchers": 23,
       "openIssues": 6,
       "pushedAt": "2025-05-26T18:06:05Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 3847,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/s2c2f"
     },
     {
@@ -749,6 +1016,15 @@
       "pushedAt": "2024-05-21T06:21:28Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "oscal",
+        "s2c2f",
+        "software-transparency"
+      ],
+      "sizeKb": 178,
+      "visibility": "public",
+      "licenseSpdxId": "MIT",
+      "licenseName": "MIT License",
       "url": "https://github.com/ossf/S2C2F-attestation-schema-and-tool"
     },
     {
@@ -757,12 +1033,17 @@
       "description": "Improve Software Bill of Materials (SBOM) tooling and training to encourage adoption",
       "primaryLanguage": "Vue",
       "stars": 113,
-      "forks": 41,
+      "forks": 42,
       "watchers": 32,
       "openIssues": 23,
       "pushedAt": "2026-02-28T17:00:35Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 12599,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/sbom-everywhere"
     },
     {
@@ -770,13 +1051,21 @@
       "name": "scorecard",
       "description": "OpenSSF Scorecard - Security health metrics for Open Source",
       "primaryLanguage": "Go",
-      "stars": 5407,
-      "forks": 641,
+      "stars": 5418,
+      "forks": 644,
       "watchers": 72,
-      "openIssues": 365,
-      "pushedAt": "2026-04-27T09:21:30Z",
+      "openIssues": 364,
+      "pushedAt": "2026-05-04T09:41:05Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "scorecard",
+        "openssf-scorecard"
+      ],
+      "sizeKb": 374852,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard"
     },
     {
@@ -784,13 +1073,24 @@
       "name": "scorecard-action",
       "description": "Official GitHub Action for OpenSSF Scorecard.",
       "primaryLanguage": "Go",
-      "stars": 374,
+      "stars": 376,
       "forks": 84,
-      "watchers": 17,
+      "watchers": 18,
       "openIssues": 30,
-      "pushedAt": "2026-04-26T05:31:19Z",
+      "pushedAt": "2026-04-29T12:01:10Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "github",
+        "github-actions",
+        "security",
+        "supply-chain",
+        "openssf-scorecard"
+      ],
+      "sizeKb": 7674,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard-action"
     },
     {
@@ -805,6 +1105,13 @@
       "pushedAt": "2024-06-10T19:53:12Z",
       "archived": true,
       "isFork": false,
+      "topics": [
+        "openssf-scorecard"
+      ],
+      "sizeKb": 36,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard-dependencyanalysis"
     },
     {
@@ -819,6 +1126,18 @@
       "pushedAt": "2026-04-25T19:39:43Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "github-actions",
+        "open-source-management",
+        "openssf-scorecard",
+        "security",
+        "security-audit",
+        "security-tools"
+      ],
+      "sizeKb": 3229,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard-monitor"
     },
     {
@@ -833,6 +1152,14 @@
       "pushedAt": "2026-04-27T07:53:46Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "openssf",
+        "openssf-scorecard"
+      ],
+      "sizeKb": 47344,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard-visualizer"
     },
     {
@@ -844,9 +1171,16 @@
       "forks": 30,
       "watchers": 14,
       "openIssues": 32,
-      "pushedAt": "2026-04-20T21:01:56Z",
+      "pushedAt": "2026-04-29T18:53:18Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "openssf-scorecard"
+      ],
+      "sizeKb": 21987,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/scorecard-webapp"
     },
     {
@@ -861,6 +1195,11 @@
       "pushedAt": "2026-04-10T18:41:06Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 32279,
+      "visibility": "public",
+      "licenseSpdxId": "CC-BY-4.0",
+      "licenseName": "Creative Commons Attribution 4.0 International",
       "url": "https://github.com/ossf/secure-sw-dev-fundamentals"
     },
     {
@@ -875,6 +1214,11 @@
       "pushedAt": "2023-08-15T21:58:47Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 193457,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/secure-sw-dev-videos"
     },
     {
@@ -886,9 +1230,14 @@
       "forks": 7,
       "watchers": 4,
       "openIssues": 7,
-      "pushedAt": "2026-02-26T14:11:28Z",
+      "pushedAt": "2026-05-03T21:11:05Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 104,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/security-assessments"
     },
     {
@@ -896,13 +1245,18 @@
       "name": "security-baseline",
       "description": "unavailable",
       "primaryLanguage": "Go",
-      "stars": 152,
-      "forks": 39,
+      "stars": 153,
+      "forks": 40,
       "watchers": 14,
-      "openIssues": 56,
-      "pushedAt": "2026-04-27T07:01:47Z",
+      "openIssues": 57,
+      "pushedAt": "2026-04-27T13:43:34Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 6912,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/security-baseline"
     },
     {
@@ -910,13 +1264,18 @@
       "name": "security-insights",
       "description": "Machine-readable specification for the attestation of security-relevant data.",
       "primaryLanguage": "Go",
-      "stars": 75,
-      "forks": 16,
+      "stars": 74,
+      "forks": 17,
       "watchers": 14,
       "openIssues": 8,
       "pushedAt": "2026-04-17T17:51:49Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 2612,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/security-insights"
     },
     {
@@ -931,6 +1290,11 @@
       "pushedAt": "2023-07-14T16:39:39Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 11,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/security-metrics-dashboard"
     },
     {
@@ -945,6 +1309,14 @@
       "pushedAt": "2024-02-29T14:23:47Z",
       "archived": false,
       "isFork": false,
+      "topics": [
+        "security-audit",
+        "security-reviews"
+      ],
+      "sizeKb": 1421,
+      "visibility": "public",
+      "licenseSpdxId": "unavailable",
+      "licenseName": "unavailable",
       "url": "https://github.com/ossf/security-reviews"
     },
     {
@@ -956,9 +1328,14 @@
       "forks": 4,
       "watchers": 7,
       "openIssues": 2,
-      "pushedAt": "2026-04-21T02:50:05Z",
+      "pushedAt": "2026-04-28T03:09:00Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 107,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/si-tooling"
     },
     {
@@ -973,6 +1350,11 @@
       "pushedAt": "2026-04-21T22:52:41Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 9713,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/sig-basejump"
     },
     {
@@ -987,6 +1369,11 @@
       "pushedAt": "2026-03-01T12:12:57Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 6022,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/SIRT"
     },
     {
@@ -1001,6 +1388,11 @@
       "pushedAt": "2024-07-31T18:58:40Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 944,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/staff"
     },
     {
@@ -1008,13 +1400,18 @@
       "name": "tac",
       "description": "Technical Advisory Council",
       "primaryLanguage": "unavailable",
-      "stars": 142,
-      "forks": 78,
-      "watchers": 40,
-      "openIssues": 40,
-      "pushedAt": "2026-04-26T18:57:40Z",
+      "stars": 143,
+      "forks": 80,
+      "watchers": 39,
+      "openIssues": 39,
+      "pushedAt": "2026-04-28T07:52:22Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 7808,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/tac"
     },
     {
@@ -1029,6 +1426,11 @@
       "pushedAt": "2026-03-17T17:37:05Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 2204,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/toolbelt"
     },
     {
@@ -1043,6 +1445,11 @@
       "pushedAt": "2026-01-26T20:24:00Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 51,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-bear"
     },
     {
@@ -1051,12 +1458,17 @@
       "description": "The Best Practices for OSS Developers working group is dedicated to raising awareness and education of secure code best practices for open source developers.",
       "primaryLanguage": "JavaScript",
       "stars": 1011,
-      "forks": 193,
+      "forks": 195,
       "watchers": 60,
-      "openIssues": 82,
+      "openIssues": 79,
       "pushedAt": "2026-04-24T14:26:40Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 33432,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-best-practices-os-developers"
     },
     {
@@ -1071,6 +1483,11 @@
       "pushedAt": "2024-03-21T13:51:39Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 99,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-endusers"
     },
     {
@@ -1085,6 +1502,11 @@
       "pushedAt": "2026-04-21T21:33:31Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 52852,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-globalcyberpolicy"
     },
     {
@@ -1099,6 +1521,11 @@
       "pushedAt": "2024-04-23T19:11:44Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 4159,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-metrics-and-metadata"
     },
     {
@@ -1113,6 +1540,11 @@
       "pushedAt": "2026-03-19T20:22:36Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 63,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-orbit"
     },
     {
@@ -1120,13 +1552,18 @@
       "name": "wg-securing-critical-projects",
       "description": "Helping allocate resources to secure the critical open source projects we all depend on.",
       "primaryLanguage": "unavailable",
-      "stars": 390,
-      "forks": 50,
+      "stars": 391,
+      "forks": 51,
       "watchers": 60,
       "openIssues": 23,
       "pushedAt": "2025-05-08T22:23:41Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 1191,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-securing-critical-projects"
     },
     {
@@ -1137,10 +1574,15 @@
       "stars": 127,
       "forks": 30,
       "watchers": 34,
-      "openIssues": 11,
+      "openIssues": 10,
       "pushedAt": "2026-04-06T21:47:10Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 218298,
+      "visibility": "public",
+      "licenseSpdxId": "NOASSERTION",
+      "licenseName": "Other",
       "url": "https://github.com/ossf/wg-securing-software-repos"
     },
     {
@@ -1155,6 +1597,11 @@
       "pushedAt": "2025-07-06T17:28:00Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 134,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-security-tooling"
     },
     {
@@ -1169,6 +1616,11 @@
       "pushedAt": "2026-01-15T15:29:55Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 230,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-supply-chain-integrity"
     },
     {
@@ -1176,20 +1628,25 @@
       "name": "wg-vulnerability-disclosures",
       "description": "The OpenSSF Vulnerability Disclosures Working Group seeks to help improve the overall security of the open source software ecosystem by helping mature and advocate well-managed vulnerability reporting and communication.",
       "primaryLanguage": "unavailable",
-      "stars": 217,
+      "stars": 218,
       "forks": 44,
-      "watchers": 61,
+      "watchers": 62,
       "openIssues": 44,
       "pushedAt": "2026-02-04T16:32:52Z",
       "archived": false,
       "isFork": false,
+      "topics": [],
+      "sizeKb": 65273,
+      "visibility": "public",
+      "licenseSpdxId": "Apache-2.0",
+      "licenseName": "Apache License 2.0",
       "url": "https://github.com/ossf/wg-vulnerability-disclosures"
     }
   ],
   "rateLimit": {
     "limit": 5000,
-    "remaining": 4941,
-    "resetAt": "2026-04-27T09:58:06Z",
+    "remaining": 4937,
+    "resetAt": "2026-05-04T10:03:43Z",
     "retryAfter": "unavailable"
   },
   "failure": null,
@@ -1198,7 +1655,7 @@
       "kind": "two-factor-enforcement",
       "applicability": "applicable",
       "status": "unknown",
-      "resolvedAt": "2026-04-27T09:45:26.718Z"
+      "resolvedAt": "2026-05-04T09:44:07.127Z"
     },
     "staleAdmins": {
       "kind": "stale-admins",
@@ -1208,16 +1665,16 @@
       "admins": [
         {
           "username": "adaluong",
-          "classification": "active",
-          "lastActivityAt": "2026-04-03T09:23:12Z",
-          "lastActivitySource": "public-events",
-          "unavailableReason": null,
+          "classification": "unavailable",
+          "lastActivityAt": null,
+          "lastActivitySource": null,
+          "unavailableReason": "commit-search-failed",
           "retryAvailableAt": null
         },
         {
           "username": "camaleon2016",
           "classification": "active",
-          "lastActivityAt": "2026-04-15T16:22:47Z",
+          "lastActivityAt": "2026-04-27T22:13:21Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1225,7 +1682,7 @@
         {
           "username": "ctcpip",
           "classification": "active",
-          "lastActivityAt": "2026-04-24T17:33:19Z",
+          "lastActivityAt": "2026-05-01T16:56:46Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1233,7 +1690,7 @@
         {
           "username": "di",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T00:22:44Z",
+          "lastActivityAt": "2026-05-01T13:53:41Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1241,7 +1698,15 @@
         {
           "username": "estesp",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T09:22:01Z",
+          "lastActivityAt": "2026-05-02T15:06:09Z",
+          "lastActivitySource": "public-events",
+          "unavailableReason": null,
+          "retryAvailableAt": null
+        },
+        {
+          "username": "JamieMagee",
+          "classification": "active",
+          "lastActivityAt": "2026-05-04T06:12:14Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1249,7 +1714,7 @@
         {
           "username": "jeffmendoza",
           "classification": "active",
-          "lastActivityAt": "2026-04-24T17:45:14Z",
+          "lastActivityAt": "2026-04-28T07:44:01Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1257,7 +1722,7 @@
         {
           "username": "jkjell",
           "classification": "active",
-          "lastActivityAt": "2026-04-23T22:07:36Z",
+          "lastActivityAt": "2026-04-29T20:57:26Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1265,7 +1730,7 @@
         {
           "username": "jmeridth",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T08:12:45Z",
+          "lastActivityAt": "2026-05-02T10:36:40Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1273,7 +1738,7 @@
         {
           "username": "joshuagl",
           "classification": "active",
-          "lastActivityAt": "2026-04-20T17:00:50Z",
+          "lastActivityAt": "2026-05-03T17:13:52Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1281,7 +1746,7 @@
         {
           "username": "justaugustus",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T05:53:09Z",
+          "lastActivityAt": "2026-04-29T22:01:06Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1289,7 +1754,7 @@
         {
           "username": "ljharb",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T06:28:27Z",
+          "lastActivityAt": "2026-05-04T06:38:41Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1305,7 +1770,7 @@
         {
           "username": "mihaimaruseac",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T05:48:35Z",
+          "lastActivityAt": "2026-05-04T02:12:38Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1313,7 +1778,7 @@
         {
           "username": "miketheman",
           "classification": "active",
-          "lastActivityAt": "2026-04-26T21:56:11Z",
+          "lastActivityAt": "2026-05-03T15:18:51Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1329,7 +1794,7 @@
         {
           "username": "puerco",
           "classification": "active",
-          "lastActivityAt": "2026-04-25T20:17:50Z",
+          "lastActivityAt": "2026-05-03T22:43:53Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1337,7 +1802,7 @@
         {
           "username": "RafaelGSS",
           "classification": "active",
-          "lastActivityAt": "2026-04-26T18:30:24Z",
+          "lastActivityAt": "2026-05-03T12:03:39Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1345,7 +1810,7 @@
         {
           "username": "roberthstrand",
           "classification": "active",
-          "lastActivityAt": "2026-04-21T21:01:47Z",
+          "lastActivityAt": "2026-05-02T13:55:13Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1353,7 +1818,7 @@
         {
           "username": "spencerschrock",
           "classification": "active",
-          "lastActivityAt": "2026-04-24T21:24:13Z",
+          "lastActivityAt": "2026-05-01T04:52:56Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1361,7 +1826,7 @@
         {
           "username": "steiza",
           "classification": "active",
-          "lastActivityAt": "2026-04-23T19:46:31Z",
+          "lastActivityAt": "2026-04-28T14:46:32Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
@@ -1369,21 +1834,21 @@
         {
           "username": "UlisesGascon",
           "classification": "active",
-          "lastActivityAt": "2026-04-27T07:48:19Z",
+          "lastActivityAt": "2026-05-04T08:57:04Z",
           "lastActivitySource": "public-events",
           "unavailableReason": null,
           "retryAvailableAt": null
         }
       ],
       "earliestRetryAvailableAt": null,
-      "resolvedAt": "2026-04-27T09:45:26.719Z"
+      "resolvedAt": "2026-05-04T09:44:07.128Z"
     },
     "memberPermission": {
       "kind": "member-permission-distribution",
       "applicability": "partial",
       "adminCount": null,
       "memberCount": null,
-      "publicMemberCount": 21,
+      "publicMemberCount": 22,
       "publicMembers": [
         {
           "login": "adaluong",
@@ -1404,6 +1869,10 @@
         {
           "login": "estesp",
           "avatarUrl": "https://avatars.githubusercontent.com/u/1397980?v=4"
+        },
+        {
+          "login": "JamieMagee",
+          "avatarUrl": "https://avatars.githubusercontent.com/u/1358764?v=4"
         },
         {
           "login": "jeffmendoza",
@@ -1475,7 +1944,7 @@
         "admin-list-possibly-oauth-restricted",
         "collaborator-list-scope-insufficient"
       ],
-      "resolvedAt": "2026-04-27T09:45:26.721Z"
+      "resolvedAt": "2026-05-04T09:44:07.130Z"
     }
   },
   "topReposAnalyzed": []
