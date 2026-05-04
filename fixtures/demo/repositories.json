@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T09:43:24.672Z",
+  "generatedAt": "2026-05-04T09:42:21.800Z",
   "results": [
     {
       "repo": "simonw/llm-echo",
@@ -10,7 +10,7 @@
       "stars": 8,
       "forks": 1,
       "watchers": 1,
-      "commits30d": 7,
+      "commits30d": 0,
       "commits90d": 7,
       "releases12mo": 7,
       "prsOpened90d": 0,
@@ -32,17 +32,16 @@
       "experimentalUnattributedAuthors90d": 1,
       "contributorMetricsByWindow": {
         "30": {
-          "uniqueCommitAuthors": 1,
-          "commitCountsByAuthor": {
-            "login:simonw": 7
-          },
-          "repeatContributors": 1,
+          "uniqueCommitAuthors": 0,
+          "commitCountsByAuthor": {},
+          "repeatContributors": 0,
           "newContributors": 0,
-          "commitCountsByExperimentalOrg": {
-            "Unaffiliated": 7
-          },
-          "experimentalAttributedAuthors": 0,
-          "experimentalUnattributedAuthors": 1
+          "commitCountsByExperimentalOrg": "unavailable",
+          "experimentalAttributedAuthors": "unavailable",
+          "experimentalUnattributedAuthors": "unavailable",
+          "commitAuthorsByExperimentalOrg": "unavailable",
+          "commitCountsByEmailDomain": "unavailable",
+          "commitAuthorsByEmailDomain": "unavailable"
         },
         "60": {
           "uniqueCommitAuthors": 1,
@@ -55,7 +54,16 @@
             "Unaffiliated": 7
           },
           "experimentalAttributedAuthors": 0,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {},
+          "commitCountsByEmailDomain": {
+            "gmail.com": 7
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:simonw"
+            ]
+          }
         },
         "90": {
           "uniqueCommitAuthors": 1,
@@ -68,7 +76,16 @@
             "Unaffiliated": 7
           },
           "experimentalAttributedAuthors": 0,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {},
+          "commitCountsByEmailDomain": {
+            "gmail.com": 7
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:simonw"
+            ]
+          }
         },
         "180": {
           "uniqueCommitAuthors": 1,
@@ -81,7 +98,16 @@
             "Unaffiliated": 7
           },
           "experimentalAttributedAuthors": 0,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {},
+          "commitCountsByEmailDomain": {
+            "gmail.com": 7
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:simonw"
+            ]
+          }
         },
         "365": {
           "uniqueCommitAuthors": 1,
@@ -94,17 +120,26 @@
             "Unaffiliated": 20
           },
           "experimentalAttributedAuthors": 0,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {},
+          "commitCountsByEmailDomain": {
+            "gmail.com": 20
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:simonw"
+            ]
+          }
         }
       },
       "activityMetricsByWindow": {
         "30": {
-          "commits": 7,
+          "commits": 0,
           "prsOpened": 0,
           "prsMerged": 0,
           "issuesOpened": 0,
           "issuesClosed": 0,
-          "releases": 2,
+          "releases": 0,
           "staleIssueRatio": 0,
           "medianTimeToMergeHours": "unavailable",
           "medianTimeToCloseHours": "unavailable"
@@ -156,40 +191,15 @@
       },
       "activityCadenceByWindow": {
         "30": {
-          "totalWeeks": 5,
-          "weeklyCommitCounts": [
-            7,
-            0,
-            0,
-            0,
-            0
-          ],
-          "activeWeeksRatio": 0.2,
-          "commitRegularity": 2,
-          "longestGapDays": 0,
-          "weekendToWeekdayRatio": 0,
-          "weekendCommitCount": 0,
-          "weekdayCommitCount": 7,
-          "trendComparisons": {
-            "month": {
-              "currentPeriodCommitCount": 7,
-              "previousPeriodCommitCount": 0,
-              "delta": 1,
-              "direction": "accelerating"
-            },
-            "week": {
-              "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 0,
-              "delta": "unavailable",
-              "direction": "unavailable"
-            },
-            "day": {
-              "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 0,
-              "delta": "unavailable",
-              "direction": "unavailable"
-            }
-          }
+          "totalWeeks": "unavailable",
+          "weeklyCommitCounts": "unavailable",
+          "activeWeeksRatio": "unavailable",
+          "commitRegularity": "unavailable",
+          "longestGapDays": "unavailable",
+          "weekendToWeekdayRatio": "unavailable",
+          "weekendCommitCount": "unavailable",
+          "weekdayCommitCount": "unavailable",
+          "trendComparisons": "unavailable"
         },
         "60": {
           "totalWeeks": 9,
@@ -197,8 +207,8 @@
             0,
             0,
             0,
-            0,
             7,
+            0,
             0,
             0,
             0,
@@ -212,10 +222,10 @@
           "weekdayCommitCount": 7,
           "trendComparisons": {
             "month": {
-              "currentPeriodCommitCount": 7,
-              "previousPeriodCommitCount": 0,
-              "delta": 1,
-              "direction": "accelerating"
+              "currentPeriodCommitCount": 0,
+              "previousPeriodCommitCount": 7,
+              "delta": -1,
+              "direction": "decelerating"
             },
             "week": {
               "currentPeriodCommitCount": 0,
@@ -242,8 +252,8 @@
             0,
             0,
             0,
-            0,
             7,
+            0,
             0,
             0,
             0
@@ -256,10 +266,10 @@
           "weekdayCommitCount": 7,
           "trendComparisons": {
             "month": {
-              "currentPeriodCommitCount": 7,
-              "previousPeriodCommitCount": 0,
-              "delta": 1,
-              "direction": "accelerating"
+              "currentPeriodCommitCount": 0,
+              "previousPeriodCommitCount": 7,
+              "delta": -1,
+              "direction": "decelerating"
             },
             "week": {
               "currentPeriodCommitCount": 0,
@@ -298,8 +308,8 @@
             0,
             0,
             0,
-            0,
             7,
+            0,
             0,
             0,
             0,
@@ -313,10 +323,10 @@
           "weekdayCommitCount": 7,
           "trendComparisons": {
             "month": {
-              "currentPeriodCommitCount": 7,
-              "previousPeriodCommitCount": 0,
-              "delta": 1,
-              "direction": "accelerating"
+              "currentPeriodCommitCount": 0,
+              "previousPeriodCommitCount": 7,
+              "delta": -1,
+              "direction": "decelerating"
             },
             "week": {
               "currentPeriodCommitCount": 0,
@@ -335,7 +345,6 @@
         "365": {
           "totalWeeks": 53,
           "weeklyCommitCounts": [
-            0,
             3,
             6,
             4,
@@ -387,6 +396,7 @@
             0,
             0,
             0,
+            0,
             0
           ],
           "activeWeeksRatio": 0.07547169811320754,
@@ -397,10 +407,10 @@
           "weekdayCommitCount": 17,
           "trendComparisons": {
             "month": {
-              "currentPeriodCommitCount": 7,
-              "previousPeriodCommitCount": 0,
-              "delta": 1,
-              "direction": "accelerating"
+              "currentPeriodCommitCount": 0,
+              "previousPeriodCommitCount": 7,
+              "delta": -1,
+              "direction": "decelerating"
             },
             "week": {
               "currentPeriodCommitCount": 0,
@@ -710,7 +720,7 @@
         "totalReleasesAnalyzed": 8,
         "totalTags": 8,
         "releaseFrequency": 7,
-        "daysSinceLastRelease": 26,
+        "daysSinceLastRelease": 33,
         "semverComplianceRatio": 0,
         "releaseNotesQualityRatio": 0.625,
         "tagToReleaseRatio": 0,
@@ -721,11 +731,11 @@
       "devEnvironmentSetup": false,
       "gitpodPresent": false,
       "newContributorPRAcceptanceRate": "unavailable",
-      "ageInDays": 372.2000475810185,
+      "ageInDays": 379.1993181018519,
       "lifetimeCommits": 21,
-      "starsPerYear": 7.8506169437389834,
-      "contributorsPerYear": 0.9813271179673729,
-      "commitsPerMonthLifetime": 1.7173224564429026,
+      "starsPerYear": 7.705710059360284,
+      "contributorsPerYear": 0.9632137574200355,
+      "commitsPerMonthLifetime": 1.685624075485062,
       "commitsPerMonthRecent12mo": 1.6678082191780823,
       "growthTrajectory": "unavailable",
       "missingFields": [
@@ -742,17 +752,17 @@
       "description": "Machine-readable specification for the attestation of security-relevant data.",
       "createdAt": "2022-01-16T23:19:12Z",
       "primaryLanguage": "Go",
-      "stars": 75,
-      "forks": 16,
+      "stars": 74,
+      "forks": 17,
       "watchers": 14,
       "commits30d": 2,
-      "commits90d": 9,
+      "commits90d": 5,
       "releases12mo": 2,
       "prsOpened90d": 0,
       "prsMerged90d": 0,
       "issuesOpen": 8,
       "issuesClosed90d": 0,
-      "uniqueCommitAuthors90d": 4,
+      "uniqueCommitAuthors90d": 3,
       "totalContributors": 13,
       "totalContributorsSource": "api",
       "maintainerCount": 1,
@@ -765,8 +775,7 @@
       "commitCountsByAuthor": {
         "login:jmeridth": 2,
         "login:dependabot[bot]": 2,
-        "login:eddie-knight": 4,
-        "login:scovetta": 1
+        "login:eddie-knight": 1
       },
       "commitCountsByExperimentalOrg": {
         "lostechies": 2,
@@ -783,12 +792,11 @@
         "revanite-io": 2,
         "cncf-maintainers": 2,
         "driftlessaf": 2,
-        "probr": 4,
-        "composr": 4,
-        "microsoft": 1,
+        "probr": 1,
+        "composr": 1,
         "Unaffiliated": 2
       },
-      "experimentalAttributedAuthors90d": 3,
+      "experimentalAttributedAuthors90d": 2,
       "experimentalUnattributedAuthors90d": 1,
       "contributorMetricsByWindow": {
         "30": {
@@ -817,7 +825,59 @@
             "Unaffiliated": 1
           },
           "experimentalAttributedAuthors": 1,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {
+            "lostechies": [
+              "login:jmeridth"
+            ],
+            "alamocoders": [
+              "login:jmeridth"
+            ],
+            "meridth": [
+              "login:jmeridth"
+            ],
+            "argoproj": [
+              "login:jmeridth"
+            ],
+            "ossf": [
+              "login:jmeridth"
+            ],
+            "chainguard-dev": [
+              "login:jmeridth"
+            ],
+            "wolfi-dev": [
+              "login:jmeridth"
+            ],
+            "chainguard-images": [
+              "login:jmeridth"
+            ],
+            "privateerproj": [
+              "login:jmeridth"
+            ],
+            "devsanantonio": [
+              "login:jmeridth"
+            ],
+            "octo-sts": [
+              "login:jmeridth"
+            ],
+            "revanite-io": [
+              "login:jmeridth"
+            ],
+            "cncf-maintainers": [
+              "login:jmeridth"
+            ],
+            "driftlessaf": [
+              "login:jmeridth"
+            ]
+          },
+          "commitCountsByEmailDomain": {
+            "gmail.com": 1
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:jmeridth"
+            ]
+          }
         },
         "60": {
           "uniqueCommitAuthors": 2,
@@ -845,18 +905,69 @@
             "Unaffiliated": 2
           },
           "experimentalAttributedAuthors": 1,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {
+            "lostechies": [
+              "login:jmeridth"
+            ],
+            "alamocoders": [
+              "login:jmeridth"
+            ],
+            "meridth": [
+              "login:jmeridth"
+            ],
+            "argoproj": [
+              "login:jmeridth"
+            ],
+            "ossf": [
+              "login:jmeridth"
+            ],
+            "chainguard-dev": [
+              "login:jmeridth"
+            ],
+            "wolfi-dev": [
+              "login:jmeridth"
+            ],
+            "chainguard-images": [
+              "login:jmeridth"
+            ],
+            "privateerproj": [
+              "login:jmeridth"
+            ],
+            "devsanantonio": [
+              "login:jmeridth"
+            ],
+            "octo-sts": [
+              "login:jmeridth"
+            ],
+            "revanite-io": [
+              "login:jmeridth"
+            ],
+            "cncf-maintainers": [
+              "login:jmeridth"
+            ],
+            "driftlessaf": [
+              "login:jmeridth"
+            ]
+          },
+          "commitCountsByEmailDomain": {
+            "gmail.com": 2
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:jmeridth"
+            ]
+          }
         },
         "90": {
-          "uniqueCommitAuthors": 4,
+          "uniqueCommitAuthors": 3,
           "commitCountsByAuthor": {
             "login:jmeridth": 2,
             "login:dependabot[bot]": 2,
-            "login:eddie-knight": 4,
-            "login:scovetta": 1
+            "login:eddie-knight": 1
           },
-          "repeatContributors": 3,
-          "newContributors": 1,
+          "repeatContributors": 2,
+          "newContributors": 0,
           "commitCountsByExperimentalOrg": {
             "lostechies": 2,
             "alamocoders": 2,
@@ -872,13 +983,74 @@
             "revanite-io": 2,
             "cncf-maintainers": 2,
             "driftlessaf": 2,
-            "probr": 4,
-            "composr": 4,
-            "microsoft": 1,
+            "probr": 1,
+            "composr": 1,
             "Unaffiliated": 2
           },
-          "experimentalAttributedAuthors": 3,
-          "experimentalUnattributedAuthors": 1
+          "experimentalAttributedAuthors": 2,
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {
+            "lostechies": [
+              "login:jmeridth"
+            ],
+            "alamocoders": [
+              "login:jmeridth"
+            ],
+            "meridth": [
+              "login:jmeridth"
+            ],
+            "argoproj": [
+              "login:jmeridth"
+            ],
+            "ossf": [
+              "login:jmeridth"
+            ],
+            "chainguard-dev": [
+              "login:jmeridth"
+            ],
+            "wolfi-dev": [
+              "login:jmeridth"
+            ],
+            "chainguard-images": [
+              "login:jmeridth"
+            ],
+            "privateerproj": [
+              "login:jmeridth"
+            ],
+            "devsanantonio": [
+              "login:jmeridth"
+            ],
+            "octo-sts": [
+              "login:jmeridth"
+            ],
+            "revanite-io": [
+              "login:jmeridth"
+            ],
+            "cncf-maintainers": [
+              "login:jmeridth"
+            ],
+            "driftlessaf": [
+              "login:jmeridth"
+            ],
+            "probr": [
+              "login:eddie-knight"
+            ],
+            "composr": [
+              "login:eddie-knight"
+            ]
+          },
+          "commitCountsByEmailDomain": {
+            "gmail.com": 2,
+            "linux.com": 1
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:jmeridth"
+            ],
+            "linux.com": [
+              "login:eddie-knight"
+            ]
+          }
         },
         "180": {
           "uniqueCommitAuthors": 4,
@@ -911,7 +1083,73 @@
             "Unaffiliated": 3
           },
           "experimentalAttributedAuthors": 3,
-          "experimentalUnattributedAuthors": 1
+          "experimentalUnattributedAuthors": 1,
+          "commitAuthorsByExperimentalOrg": {
+            "lostechies": [
+              "login:jmeridth"
+            ],
+            "alamocoders": [
+              "login:jmeridth"
+            ],
+            "meridth": [
+              "login:jmeridth"
+            ],
+            "argoproj": [
+              "login:jmeridth"
+            ],
+            "ossf": [
+              "login:jmeridth"
+            ],
+            "chainguard-dev": [
+              "login:jmeridth"
+            ],
+            "wolfi-dev": [
+              "login:jmeridth"
+            ],
+            "chainguard-images": [
+              "login:jmeridth"
+            ],
+            "privateerproj": [
+              "login:jmeridth"
+            ],
+            "devsanantonio": [
+              "login:jmeridth"
+            ],
+            "octo-sts": [
+              "login:jmeridth"
+            ],
+            "revanite-io": [
+              "login:jmeridth"
+            ],
+            "cncf-maintainers": [
+              "login:jmeridth"
+            ],
+            "driftlessaf": [
+              "login:jmeridth"
+            ],
+            "probr": [
+              "login:eddie-knight"
+            ],
+            "composr": [
+              "login:eddie-knight"
+            ],
+            "microsoft": [
+              "login:scovetta"
+            ]
+          },
+          "commitCountsByEmailDomain": {
+            "gmail.com": 3,
+            "linux.com": 13
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:jmeridth",
+              "login:scovetta"
+            ],
+            "linux.com": [
+              "login:eddie-knight"
+            ]
+          }
         },
         "365": {
           "uniqueCommitAuthors": 6,
@@ -920,7 +1158,7 @@
             "login:dependabot[bot]": 3,
             "login:eddie-knight": 15,
             "login:scovetta": 1,
-            "login:trumant": 8,
+            "login:trumant": 6,
             "login:myitcv": 1
           },
           "repeatContributors": 4,
@@ -954,10 +1192,114 @@
             "cue-labs": 1,
             "cue-exp": 1,
             "cue-mv": 1,
-            "Unaffiliated": 11
+            "Unaffiliated": 9
           },
           "experimentalAttributedAuthors": 4,
-          "experimentalUnattributedAuthors": 2
+          "experimentalUnattributedAuthors": 2,
+          "commitAuthorsByExperimentalOrg": {
+            "lostechies": [
+              "login:jmeridth"
+            ],
+            "alamocoders": [
+              "login:jmeridth"
+            ],
+            "meridth": [
+              "login:jmeridth"
+            ],
+            "argoproj": [
+              "login:jmeridth"
+            ],
+            "ossf": [
+              "login:jmeridth"
+            ],
+            "chainguard-dev": [
+              "login:jmeridth"
+            ],
+            "wolfi-dev": [
+              "login:jmeridth"
+            ],
+            "chainguard-images": [
+              "login:jmeridth"
+            ],
+            "privateerproj": [
+              "login:jmeridth"
+            ],
+            "devsanantonio": [
+              "login:jmeridth"
+            ],
+            "octo-sts": [
+              "login:jmeridth"
+            ],
+            "revanite-io": [
+              "login:jmeridth"
+            ],
+            "cncf-maintainers": [
+              "login:jmeridth"
+            ],
+            "driftlessaf": [
+              "login:jmeridth"
+            ],
+            "probr": [
+              "login:eddie-knight"
+            ],
+            "composr": [
+              "login:eddie-knight"
+            ],
+            "microsoft": [
+              "login:scovetta"
+            ],
+            "golang": [
+              "login:myitcv"
+            ],
+            "modelogiq": [
+              "login:myitcv"
+            ],
+            "gopherjs": [
+              "login:myitcv"
+            ],
+            "plan9-for-vimspace": [
+              "login:myitcv"
+            ],
+            "go-modules-by-example": [
+              "login:myitcv"
+            ],
+            "govim": [
+              "login:myitcv"
+            ],
+            "cue-sh": [
+              "login:myitcv"
+            ],
+            "cue-lang": [
+              "login:myitcv"
+            ],
+            "cue-labs": [
+              "login:myitcv"
+            ],
+            "cue-exp": [
+              "login:myitcv"
+            ],
+            "cue-mv": [
+              "login:myitcv"
+            ]
+          },
+          "commitCountsByEmailDomain": {
+            "gmail.com": 10,
+            "linux.com": 15,
+            "myitcv.org.uk": 1
+          },
+          "commitAuthorsByEmailDomain": {
+            "gmail.com": [
+              "login:jmeridth",
+              "login:scovetta",
+              "login:trumant"
+            ],
+            "linux.com": [
+              "login:eddie-knight"
+            ],
+            "myitcv.org.uk": [
+              "login:myitcv"
+            ]
+          }
         }
       },
       "activityMetricsByWindow": {
@@ -984,12 +1326,12 @@
           "medianTimeToCloseHours": "unavailable"
         },
         "90": {
-          "commits": 9,
+          "commits": 5,
           "prsOpened": 0,
           "prsMerged": 0,
           "issuesOpened": 0,
           "issuesClosed": 0,
-          "releases": 1,
+          "releases": 0,
           "staleIssueRatio": 0,
           "medianTimeToMergeHours": "unavailable",
           "medianTimeToCloseHours": "unavailable"
@@ -1006,7 +1348,7 @@
           "medianTimeToCloseHours": "unavailable"
         },
         "365": {
-          "commits": 31,
+          "commits": 29,
           "prsOpened": 0,
           "prsMerged": 0,
           "issuesOpened": 0,
@@ -1021,9 +1363,9 @@
         "30": {
           "totalWeeks": 5,
           "weeklyCommitCounts": [
+            1,
+            1,
             0,
-            1,
-            1,
             0,
             0
           ],
@@ -1042,9 +1384,9 @@
             },
             "week": {
               "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 1,
-              "delta": -1,
-              "direction": "decelerating"
+              "previousPeriodCommitCount": 0,
+              "delta": "unavailable",
+              "direction": "unavailable"
             },
             "day": {
               "currentPeriodCommitCount": 0,
@@ -1059,12 +1401,12 @@
           "weeklyCommitCounts": [
             0,
             0,
-            0,
             2,
             0,
             1,
             0,
             1,
+            0,
             0
           ],
           "activeWeeksRatio": 0.3333333333333333,
@@ -1082,9 +1424,9 @@
             },
             "week": {
               "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 1,
-              "delta": -1,
-              "direction": "decelerating"
+              "previousPeriodCommitCount": 0,
+              "delta": "unavailable",
+              "direction": "unavailable"
             },
             "day": {
               "currentPeriodCommitCount": 0,
@@ -1097,7 +1439,6 @@
         "90": {
           "totalWeeks": 13,
           "weeklyCommitCounts": [
-            4,
             0,
             0,
             0,
@@ -1109,14 +1450,15 @@
             0,
             1,
             1,
+            0,
             0
           ],
-          "activeWeeksRatio": 0.38461538461538464,
-          "commitRegularity": 1.6405358955814888,
+          "activeWeeksRatio": 0.3076923076923077,
+          "commitRegularity": 1.624807680927192,
           "longestGapDays": 23,
-          "weekendToWeekdayRatio": 0.5,
-          "weekendCommitCount": 3,
-          "weekdayCommitCount": 6,
+          "weekendToWeekdayRatio": 0,
+          "weekendCommitCount": 0,
+          "weekdayCommitCount": 5,
           "trendComparisons": {
             "month": {
               "currentPeriodCommitCount": 2,
@@ -1126,9 +1468,9 @@
             },
             "week": {
               "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 1,
-              "delta": -1,
-              "direction": "decelerating"
+              "previousPeriodCommitCount": 0,
+              "delta": "unavailable",
+              "direction": "unavailable"
             },
             "day": {
               "currentPeriodCommitCount": 0,
@@ -1141,7 +1483,6 @@
         "180": {
           "totalWeeks": 26,
           "weeklyCommitCounts": [
-            0,
             0,
             0,
             0,
@@ -1166,6 +1507,7 @@
             0,
             1,
             1,
+            0,
             0
           ],
           "activeWeeksRatio": 0.2692307692307692,
@@ -1183,9 +1525,9 @@
             },
             "week": {
               "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 1,
-              "delta": -1,
-              "direction": "decelerating"
+              "previousPeriodCommitCount": 0,
+              "delta": "unavailable",
+              "direction": "unavailable"
             },
             "day": {
               "currentPeriodCommitCount": 0,
@@ -1198,7 +1540,6 @@
         "365": {
           "totalWeeks": 53,
           "weeklyCommitCounts": [
-            2,
             3,
             0,
             0,
@@ -1250,14 +1591,15 @@
             1,
             1,
             0,
+            0,
             0
           ],
-          "activeWeeksRatio": 0.2830188679245283,
-          "commitRegularity": 1.9488783828378349,
+          "activeWeeksRatio": 0.2641509433962264,
+          "commitRegularity": 2.0568611437250675,
           "longestGapDays": 101,
-          "weekendToWeekdayRatio": 0.9375,
-          "weekendCommitCount": 15,
-          "weekdayCommitCount": 16,
+          "weekendToWeekdayRatio": 0.9333333333333333,
+          "weekendCommitCount": 14,
+          "weekdayCommitCount": 15,
           "trendComparisons": {
             "month": {
               "currentPeriodCommitCount": 2,
@@ -1267,9 +1609,9 @@
             },
             "week": {
               "currentPeriodCommitCount": 0,
-              "previousPeriodCommitCount": 1,
-              "delta": -1,
-              "direction": "decelerating"
+              "previousPeriodCommitCount": 0,
+              "delta": "unavailable",
+              "direction": "unavailable"
             },
             "day": {
               "currentPeriodCommitCount": 0,
@@ -1309,9 +1651,7 @@
         "2025-06-18T12:13:46Z",
         "2025-05-09T14:28:56Z",
         "2025-05-07T20:26:06Z",
-        "2025-05-07T03:31:24Z",
-        "2025-04-28T12:58:05Z",
-        "2025-04-27T13:31:52Z"
+        "2025-05-07T03:31:24Z"
       ],
       "responsivenessMetricsByWindow": {
         "30": {
@@ -1332,7 +1672,7 @@
           "prReviewDepth": "unavailable",
           "issuesClosedWithoutCommentRatio": "unavailable",
           "openIssueCount": 8,
-          "openPullRequestCount": 2
+          "openPullRequestCount": 3
         },
         "60": {
           "issueFirstResponseMedianHours": "unavailable",
@@ -1352,7 +1692,7 @@
           "prReviewDepth": "unavailable",
           "issuesClosedWithoutCommentRatio": "unavailable",
           "openIssueCount": 8,
-          "openPullRequestCount": 2
+          "openPullRequestCount": 3
         },
         "90": {
           "issueFirstResponseMedianHours": "unavailable",
@@ -1372,7 +1712,7 @@
           "prReviewDepth": "unavailable",
           "issuesClosedWithoutCommentRatio": "unavailable",
           "openIssueCount": 8,
-          "openPullRequestCount": 2
+          "openPullRequestCount": 3
         },
         "180": {
           "issueFirstResponseMedianHours": "unavailable",
@@ -1392,7 +1732,7 @@
           "prReviewDepth": "unavailable",
           "issuesClosedWithoutCommentRatio": "unavailable",
           "openIssueCount": 8,
-          "openPullRequestCount": 2
+          "openPullRequestCount": 3
         },
         "365": {
           "issueFirstResponseMedianHours": "unavailable",
@@ -1412,7 +1752,7 @@
           "prReviewDepth": "unavailable",
           "issuesClosedWithoutCommentRatio": "unavailable",
           "openIssueCount": 8,
-          "openPullRequestCount": 2
+          "openPullRequestCount": 3
         }
       },
       "responsivenessMetrics": {
@@ -1433,7 +1773,7 @@
         "prReviewDepth": "unavailable",
         "issuesClosedWithoutCommentRatio": "unavailable",
         "openIssueCount": 8,
-        "openPullRequestCount": 2
+        "openPullRequestCount": 3
       },
       "staleIssueRatio": 0,
       "medianTimeToMergeHours": "unavailable",
@@ -1530,7 +1870,7 @@
           }
         ],
         "contributorAgreement": {
-          "signedOffByRatio": 0.8387096774193549,
+          "signedOffByRatio": 0.8620689655172413,
           "dcoOrClaBot": false,
           "enforced": true
         }
@@ -1591,7 +1931,7 @@
         "totalReleasesAnalyzed": 4,
         "totalTags": 4,
         "releaseFrequency": 2,
-        "daysSinceLastRelease": 85,
+        "daysSinceLastRelease": 92,
         "semverComplianceRatio": 1,
         "releaseNotesQualityRatio": 1,
         "tagToReleaseRatio": 0,
@@ -1602,12 +1942,12 @@
       "devEnvironmentSetup": false,
       "gitpodPresent": false,
       "newContributorPRAcceptanceRate": "unavailable",
-      "ageInDays": 1561.4336496527778,
+      "ageInDays": 1568.4328912152778,
       "lifetimeCommits": 138,
-      "starsPerYear": 17.543973133979566,
-      "contributorsPerYear": 3.040955343223125,
-      "commitsPerMonthLifetime": 2.690075880543534,
-      "commitsPerMonthRecent12mo": 2.5851027397260276,
+      "starsPerYear": 17.232806166834052,
+      "contributorsPerYear": 3.0273848671465227,
+      "commitsPerMonthLifetime": 2.678071228629616,
+      "commitsPerMonthRecent12mo": 2.4183219178082194,
       "growthTrajectory": "stable",
       "missingFields": [
         "issueFirstResponseTimestamps",
@@ -1641,8 +1981,8 @@
   ],
   "rateLimit": {
     "limit": 5000,
-    "remaining": 4952,
-    "resetAt": "2026-04-27T09:58:06Z",
+    "remaining": 4947,
+    "resetAt": "2026-05-04T10:03:43Z",
     "retryAfter": "unavailable"
   },
   "diagnostics": [
