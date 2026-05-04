@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useMemo } from 'react'
 import { useChat } from 'ai/react'
 import type { Message } from 'ai'
 import type { AnalysisResult } from '@/lib/analyzer/analysis-result'
 import type { OrgInventoryResponse, OrgRepoSummary } from '@/lib/analyzer/org-inventory'
 import type { OrgSummaryViewModel } from '@/lib/org-aggregation/types'
-import { parseStructuredSearchQuery } from '@/lib/org-inventory/structured-search'
-import { serializeReposContext, serializeOrgContext, serializeOrgInventoryContext, type OrgSortBy } from './serialize-context'
-import { PROVIDERS, type ProviderId, type ModelTier } from './providers'
+import { parseStructuredSearchQuery, matchesStructuredSearch } from '@/lib/org-inventory/structured-search'
+import { serializeReposContext, serializeOrgContext, serializeOrgInventoryContext } from './serialize-context'
+import { PROVIDERS, type ProviderId } from './providers'
 
 // ---- Types ----------------------------------------------------------------
 
@@ -33,25 +33,30 @@ const REPOS_STARTER_CHIPS = [
   'Why is the security score low?',
   "What's the biggest gap between these repos?",
   'Which repo should I fix first?',
+  'Which repos are missing a CODE_OF_CONDUCT?',
+  "What's the most common issue across these repos?",
+  'Which repos have the best documentation?',
 ]
 
 const ORG_STARTER_CHIPS = [
   'Which repos need the most urgent attention?',
   "What's the overall security posture?",
   'Which repos are best positioned for CNCF Sandbox?',
+  'What are the biggest contributors to low health scores?',
+  'Which repos need contributors the most?',
+  'Compare the top 3 repos by health score',
 ]
 
 const ORG_INVENTORY_STARTER_CHIPS = [
   "Which repos haven't been active in over a year?",
   'What languages are most common across this org?',
   'Which repos have the most open issues?',
+  'Which repos have no license?',
+  'Which repos are forks?',
+  'Show repos with high stars but no recent activity',
 ]
 
-const SORT_OPTIONS: { value: OrgSortBy; label: string }[] = [
-  { value: 'stars',    label: '⭐ Top by stars' },
-  { value: 'health',   label: '🔴 Lowest health first' },
-  { value: 'activity', label: '⚡ Most recently active' },
-]
+const MAX_CONTEXT_REPOS = 300
 
 const COMPLETION_VALUES: Record<string, string[]> = {
   lang:     ['go', 'python', 'typescript', 'javascript', 'java', 'rust', 'c++', 'c', 'ruby', 'kotlin', 'swift', 'scala', 'shell'],
@@ -76,7 +81,6 @@ const SEARCH_PREFIX_HINTS: { key: string; description: string; example: string }
 ]
 
 const LS_KEY_PROVIDER  = 'repopulse:chat:provider'
-const LS_KEY_MODEL_TIER = 'repopulse:chat:modelTier'
 const SS_KEY_EXPANDED  = 'repopulse:chat:expanded'
 const SS_KEY_PROVIDER  = 'repopulse:chat:provider:session'
 const SS_KEY_API_KEY   = 'repopulse:chat:apiKey'
@@ -103,6 +107,16 @@ function applyCompletion(query: string, completion: string): string {
   return query.replace(/(\s*)(\S*)$/, (_, space) => `${space}${completion} `).trimStart()
 }
 
+function parseApiError(message: string): { code: string; userMessage: string } | null {
+  try {
+    const parsed = JSON.parse(message) as { error?: { code?: string; message?: string } }
+    if (parsed.error?.code) {
+      return { code: parsed.error.code, userMessage: parsed.error.message ?? message }
+    }
+  } catch {}
+  return null
+}
+
 function formatCost(usd: number): string {
   if (usd < 0.0001) return '<$0.0001'
   return `$${usd.toFixed(4)}`
@@ -112,8 +126,8 @@ function formatTokens(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
 }
 
-function calcCost(promptTokens: number, completionTokens: number, provider: ProviderId, modelTier: ModelTier): number {
-  const spec = PROVIDERS[provider].models[modelTier]
+function calcCost(promptTokens: number, completionTokens: number, provider: ProviderId): number {
+  const spec = PROVIDERS[provider].models['fast']
   return (promptTokens * spec.inputRate + completionTokens * spec.outputRate) / 1_000_000
 }
 
@@ -229,10 +243,14 @@ const DIRECT_PROVIDERS: ProviderId[] = ['anthropic', 'openai', 'google', 'groq']
 
 function KeyEntryForm({
   onSave,
+  onCancel,
   exhausted = false,
+  notConfigured = false,
 }: {
   onSave: (provider: ProviderId, key: string) => void
+  onCancel?: () => void
   exhausted?: boolean
+  notConfigured?: boolean
 }) {
   const [tab, setTab] = useState<'openrouter' | 'direct'>('openrouter')
   const [directProvider, setDirectProvider] = useState<ProviderId>('anthropic')
@@ -248,12 +266,21 @@ function KeyEntryForm({
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      {exhausted && (
+      {onCancel && (
+        <button type="button" onClick={onCancel}
+          className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path strokeLinecap="round" strokeLinejoin="round" d="M10 4L6 8l4 4" /></svg>
+          Back to free chat
+        </button>
+      )}
+      {(exhausted || notConfigured) && (
         <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0">
             <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
           </svg>
-          You&apos;ve used all {FREE_LIMIT} free chats. Add an API key for unlimited access.
+          {exhausted
+            ? `You've used all ${FREE_LIMIT} free chats. Add an API key for unlimited access.`
+            : 'No server API key configured — add your own key to start chatting.'}
         </div>
       )}
 
@@ -317,14 +344,18 @@ function KeyEntryForm({
           className="text-xs text-sky-700 hover:underline dark:text-sky-400">
           Get a key at {config.consoleLabel} →
         </a>
-        <button
-          type="button"
-          disabled={!keyValue.trim()}
-          onClick={handleSave}
-          className="rounded bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white"
-        >
-          Save key
-        </button>
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <button type="button" onClick={onCancel}
+              className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+              Cancel
+            </button>
+          )}
+          <button type="button" disabled={!keyValue.trim()} onClick={handleSave}
+            className="rounded bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-40 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white">
+            Save key
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -338,13 +369,14 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [expanded, setExpanded] = useState(false)
   const [provider, setProvider] = useState<ProviderId>('openrouter')
-  const [modelTier, setModelTier] = useState<ModelTier>('fast')
   const [userKey, setUserKey] = useState('')
-  const [orgRepoCount, setOrgRepoCount] = useState(500)
-  const [sortBy, setSortBy] = useState<OrgSortBy>('stars')
-  const [freeRemaining, setFreeRemaining] = useState(FREE_LIMIT)
+  const [freeRemaining, setFreeRemaining] = useState<number | null>(null)
+  const [needsKey, setNeedsKey] = useState(false)
+  const [keyFormOpen, setKeyFormOpen] = useState(false)
+  const [serverProvider, setServerProvider] = useState<ProviderId | null>(null)
   const [sessionCost, setSessionCost] = useState(0)
   const [sessionMsgCount, setSessionMsgCount] = useState(0)
+  const [contextNotices, setContextNotices] = useState<{ afterIndex: number; label: string }[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Hydrate from storage after mount
@@ -352,22 +384,53 @@ export function ChatPanel({
     try {
       const p = sessionStorage.getItem(SS_KEY_PROVIDER) ?? localStorage.getItem(LS_KEY_PROVIDER)
       if (p && p in PROVIDERS) setProvider(p as ProviderId)
-      const t = localStorage.getItem(LS_KEY_MODEL_TIER)
-      if (t === 'fast' || t === 'smart') setModelTier(t)
       const k = sessionStorage.getItem(SS_KEY_API_KEY) ?? ''
       setUserKey(k)
       setExpanded(sessionStorage.getItem(SS_KEY_EXPANDED) === 'true')
     } catch {}
   }, [])
 
+  // Check server key configuration on mount
+  useEffect(() => {
+    fetch('/api/chat')
+      .then((r) => r.json())
+      .then((data: { configured: boolean; provider?: ProviderId }) => {
+        if (data.configured) {
+          setFreeRemaining(FREE_LIMIT)
+          if (data.provider) setServerProvider(data.provider)
+        } else {
+          setNeedsKey(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Insert context notice when filter changes during an active conversation
+  const prevRepoQuery = useRef(repoQuery)
+  useEffect(() => {
+    const prev = prevRepoQuery.current
+    prevRepoQuery.current = repoQuery
+    if (prev === repoQuery || messages.length === 0) return
+    const label = repoQuery.trim()
+      ? `Context updated: scoped to filter "${repoQuery.trim()}"`
+      : 'Context updated: filter cleared — using full org'
+    setContextNotices((n) => [...n, { afterIndex: messages.length, label }])
+  }, [repoQuery])
+
+  const filteredInventory = useMemo(() => {
+    if (!orgInventory || !repoQuery.trim()) return orgInventory
+    const parsed = parseStructuredSearchQuery(repoQuery)
+    return { ...orgInventory, results: orgInventory.results.filter((r) => matchesStructuredSearch(r, parsed)) }
+  }, [orgInventory, repoQuery])
+
   const context = useMemo(() => {
     if (contextType === 'repos' && repoResults) return serializeReposContext(repoResults).text
-    if (contextType === 'org' && orgView && org) return serializeOrgContext(org, orgView, { maxRepos: orgRepoCount, sortBy, orgRepos }).text
-    if (contextType === 'org' && orgInventory) return serializeOrgInventoryContext(orgInventory, { maxRepos: orgRepoCount, sortBy }).text
+    if (contextType === 'org' && orgView && org) return serializeOrgContext(org, orgView, { maxRepos: MAX_CONTEXT_REPOS, sortBy: 'stars', orgRepos }).text
+    if (contextType === 'org' && filteredInventory) return serializeOrgInventoryContext(filteredInventory, { maxRepos: MAX_CONTEXT_REPOS, sortBy: 'stars' }).text
     return ''
-  }, [contextType, repoResults, orgView, org, orgRepos, orgInventory, orgRepoCount, sortBy])
+  }, [contextType, repoResults, orgView, org, orgRepos, filteredInventory])
 
-  const activeProvider = userKey ? provider : ('anthropic' as ProviderId)
+  const activeProvider = userKey ? provider : (serverProvider ?? 'anthropic')
 
   const { messages, input, setInput, handleSubmit, isLoading, stop, setMessages, data, append, error: chatError } = useChat({
     api: '/api/chat',
@@ -376,20 +439,25 @@ export function ChatPanel({
       contextType,
       githubToken,
       provider: activeProvider,
-      model: PROVIDERS[activeProvider].models[modelTier].id,
+      model: PROVIDERS[activeProvider].models['fast'].id,
       apiKey: userKey || undefined,
     },
     onFinish: (_message: Message, options: { usage?: { promptTokens: number; completionTokens: number } }) => {
       const usage = options?.usage
-      if (usage) {
-        const cost = calcCost(usage.promptTokens, usage.completionTokens, activeProvider, modelTier)
+      if (usage && Number.isFinite(usage.promptTokens) && Number.isFinite(usage.completionTokens)) {
+        const cost = calcCost(usage.promptTokens, usage.completionTokens, activeProvider)
         setSessionCost((prev) => prev + cost)
-        setSessionMsgCount((prev) => prev + 1)
       }
+      setSessionMsgCount((prev) => prev + 1)
     },
     onError: (error: Error) => {
-      if (error.message.includes('FREE_LIMIT_REACHED') || error.message.includes('free chats')) {
+      const parsed = parseApiError(error.message)
+      const code = parsed?.code ?? ''
+      if (code === 'FREE_LIMIT_REACHED' || error.message.includes('free chats')) {
         setFreeRemaining(0)
+      }
+      if (code === 'NOT_CONFIGURED') {
+        setNeedsKey(true)
       }
     },
   })
@@ -413,6 +481,7 @@ export function ChatPanel({
     setInput('')
     setSessionCost(0)
     setSessionMsgCount(0)
+    setContextNotices([])
     stop()
     try { sessionStorage.removeItem(SS_KEY_EXPANDED) } catch {}
     setExpanded(false)
@@ -428,6 +497,8 @@ export function ChatPanel({
   function handleSaveKey(p: ProviderId, key: string) {
     setProvider(p)
     setUserKey(key)
+    setNeedsKey(false)
+    setKeyFormOpen(false)
     try {
       sessionStorage.setItem(SS_KEY_PROVIDER, p)
       sessionStorage.setItem(SS_KEY_API_KEY, key)
@@ -449,31 +520,6 @@ export function ChatPanel({
     setSessionMsgCount(0)
   }
 
-  function handleModelTierChange(t: ModelTier) {
-    setModelTier(t)
-    try { localStorage.setItem(LS_KEY_MODEL_TIER, t) } catch {}
-    setMessages([])
-    setSessionCost(0)
-    setSessionMsgCount(0)
-  }
-
-  function handleOrgRepoCountChange(count: number) {
-    if (count !== orgRepoCount) {
-      setOrgRepoCount(count)
-      setMessages([])
-      setSessionCost(0)
-      setSessionMsgCount(0)
-    }
-  }
-
-  function handleSortByChange(s: OrgSortBy) {
-    if (s !== sortBy) {
-      setSortBy(s)
-      setMessages([])
-      setSessionCost(0)
-      setSessionMsgCount(0)
-    }
-  }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -483,13 +529,12 @@ export function ChatPanel({
   }
 
   const hasKey = !!userKey
-  const limitReached = !hasKey && freeRemaining === 0
+  const limitReached = !hasKey && freeRemaining !== null && freeRemaining === 0
+  const showKeyForm = limitReached || needsKey || keyFormOpen
   const isInventoryPhase = contextType === 'org' && !orgView && !!orgInventory
   const starterChips = contextType === 'repos' ? REPOS_STARTER_CHIPS : isInventoryPhase ? ORG_INVENTORY_STARTER_CHIPS : ORG_STARTER_CHIPS
   const showChips = messages.length === 0 && !isLoading
-  const orgTotal = orgView?.status.total ?? orgInventory?.results.length ?? 0
-  const isOrgAndLarge = contextType === 'org' && orgTotal > 500
-  const activeModelSpec = PROVIDERS[activeProvider].models[modelTier]
+  const activeModelSpec = PROVIDERS[activeProvider].models['fast']
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-5xl px-4">
@@ -516,78 +561,29 @@ export function ChatPanel({
           <>
             {/* Panel header */}
             <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-2 dark:border-slate-700">
-              <span className="mr-1 font-semibold text-slate-900 dark:text-slate-100">Ask Claude</span>
+              <span className="mr-1 font-semibold text-slate-900 dark:text-slate-100">Ask AI</span>
+              <span className="rounded border border-slate-200 px-2 py-0.5 text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                {PROVIDERS[activeProvider].name}
+              </span>
 
-              {/* Model tier switcher */}
-              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800">
-                {(['fast', 'smart'] as ModelTier[]).map((t) => {
-                  const spec = PROVIDERS[activeProvider].models[t]
-                  return (
-                    <button key={t} type="button"
-                      title={`${spec.label} · $${PROVIDERS[activeProvider].models[t].inputRate}/1M in · $${PROVIDERS[activeProvider].models[t].outputRate}/1M out`}
-                      onClick={() => handleModelTierChange(t)}
-                      className={modelTier === t
-                        ? 'rounded-full bg-white px-2.5 py-1 text-xs font-medium shadow-sm text-slate-900 dark:bg-slate-700 dark:text-slate-100'
-                        : 'rounded-full px-2.5 py-1 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}>
-                      {t === 'fast' ? '⚡' : '🧠'} {t === 'fast' ? 'Fast' : 'Smart'}
-                    </button>
-                  )
-                })}
-              </div>
 
-              {/* Provider badge (when key set) */}
-              {hasKey && (
-                <span className="rounded border border-slate-200 px-2 py-0.5 text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                  {PROVIDERS[provider].name} · {activeModelSpec.label}
-                </span>
-              )}
 
-              {/* Org controls */}
-              {isOrgAndLarge && (
-                <>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                    <label htmlFor="chat-repo-count" className="whitespace-nowrap">Top</label>
-                    <input id="chat-repo-count" type="range" min="50" max="500" step="50"
-                      value={orgRepoCount} onChange={(e) => handleOrgRepoCountChange(Number(e.target.value))}
-                      className="w-20 accent-sky-600" />
-                    <span className="w-8 text-right font-medium">{orgRepoCount}</span>
-                    <span>repos</span>
-                  </div>
-                  <select value={sortBy} onChange={(e) => handleSortByChange(e.target.value as OrgSortBy)}
-                    className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                    {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </>
-              )}
-
-              {/* Session cost */}
-              {sessionMsgCount > 0 && (
+              {/* Session cost — only shown when user has their own key */}
+              {hasKey && sessionMsgCount > 0 && (
                 <span className="text-xs text-slate-400 dark:text-slate-500">
-                  {sessionMsgCount} {sessionMsgCount === 1 ? 'msg' : 'msgs'} · {formatCost(sessionCost)}
+                  {sessionMsgCount} {sessionMsgCount === 1 ? 'msg' : 'msgs'}{sessionCost > 0 ? ` · ${formatCost(sessionCost)}` : ''}
                 </span>
               )}
 
-              {/* Free chat indicator */}
-              {!hasKey && (
-                <div className="flex items-center gap-1.5">
-                  {Array.from({ length: FREE_LIMIT }, (_, i) => (
-                    <span key={i} className={`inline-block h-1.5 w-1.5 rounded-full transition-colors ${i < freeRemaining ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                  ))}
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                    {freeRemaining > 0 ? `${freeRemaining} free ${freeRemaining === 1 ? 'chat' : 'chats'} left` : 'Free limit reached'}
-                  </span>
-                </div>
-              )}
 
               <div className="ml-auto flex items-center gap-2">
-                {hasKey && (
-                  <button type="button" onClick={handleClearKey}
-                    className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
-                    Change key
-                  </button>
-                )}
+                <button type="button"
+                  onClick={() => { if (hasKey) handleClearKey(); else setKeyFormOpen((v) => !v) }}
+                  className="text-xs text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+                  {hasKey ? 'Change key' : keyFormOpen ? 'Cancel' : 'Add key'}
+                </button>
                 {messages.length > 0 && (
-                  <button type="button" onClick={() => { setMessages([]); setSessionCost(0); setSessionMsgCount(0); stop() }}
+                  <button type="button" onClick={() => { setMessages([]); setSessionCost(0); setSessionMsgCount(0); setContextNotices([]); stop() }}
                     className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
                     New conversation
                   </button>
@@ -608,19 +604,152 @@ export function ChatPanel({
 
             {/* Chat section label */}
             <div className="flex items-center gap-2 px-4 pt-2 pb-0">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Chat with Claude</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">Chat with AI</span>
+              {repoQuery.trim() && filteredInventory && (
+                <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                  scoped to {filteredInventory.results.length} filtered repos
+                </span>
+              )}
+              {/* Show dots here only when the flow guide isn't visible */}
+              {!hasKey && !(isInventoryPhase && showChips) && (
+                <div className={`relative flex items-center gap-1 ${freeRemaining === null ? 'group/free cursor-help' : ''}`}>
+                  {Array.from({ length: FREE_LIMIT }, (_, i) => (
+                    <span key={i} className={`inline-block h-1.5 w-1.5 rounded-full transition-colors ${freeRemaining === null ? 'bg-slate-200 dark:bg-slate-700' : i < freeRemaining ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                  ))}
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {freeRemaining === null ? `${FREE_LIMIT} free` : freeRemaining > 0 ? `${freeRemaining} free` : 'limit reached'}
+                  </span>
+                  {freeRemaining === null && (
+                    <span className="pointer-events-none invisible absolute bottom-full left-0 z-50 mb-2 w-52 rounded bg-slate-800 px-2.5 py-2 opacity-0 shadow-lg transition-opacity group-hover/free:visible group-hover/free:opacity-100 dark:bg-slate-700">
+                      <span className="block text-[11px] leading-snug text-white">Free quota requires a server API key (<code className="rounded bg-slate-700 px-1 font-mono text-[10px]">ANTHROPIC_API_KEY</code>, <code className="rounded bg-slate-700 px-1 font-mono text-[10px]">OPENAI_API_KEY</code>, etc.). Add your own key below to chat without limits.</span>
+                      <span className="absolute left-3 top-full border-4 border-transparent border-t-slate-800 dark:border-t-slate-700" />
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex-1 border-t border-slate-200 dark:border-slate-700" />
             </div>
 
             {/* Key entry or chat */}
-            {limitReached ? (
-              <KeyEntryForm onSave={handleSaveKey} exhausted />
+            {showKeyForm ? (
+              <KeyEntryForm onSave={handleSaveKey} exhausted={limitReached} notConfigured={needsKey && !limitReached}
+                onCancel={keyFormOpen && !limitReached && !needsKey ? () => setKeyFormOpen(false) : undefined} />
             ) : (
               <>
                 {/* Message history */}
                 <div className="flex h-[40vh] flex-col overflow-y-auto px-4 py-3 space-y-3" aria-live="polite" aria-label="Chat messages">
-                  {showChips && (
-                    <div className="flex flex-wrap gap-2">
+                  {showChips && isInventoryPhase ? (
+                    <div className="flex flex-col gap-3 py-2">
+                      {/* Step 1 */}
+                      <div className="flex gap-3">
+                        {repoQuery.trim() ? (
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+                            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" /></svg>
+                          </span>
+                        ) : (
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-600 text-[10px] font-bold text-white">1</span>
+                        )}
+                        <div className="flex flex-col gap-1.5">
+                          <p className={`text-xs font-medium ${repoQuery.trim() ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'}`}>
+                            Filter repos above to narrow your scope
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {['lang:go', 'archived:false', 'stars:>500', 'pushed:>2024-01-01'].map((f) => (
+                              <button key={f} type="button"
+                                onClick={() => {
+                                  const tokens = repoQuery.trim().split(/\s+/).filter(Boolean)
+                                  const next = tokens.includes(f)
+                                    ? tokens.filter((t) => t !== f).join(' ')
+                                    : [...tokens, f].join(' ')
+                                  onRepoQueryChange?.(next)
+                                }}
+                                className={`rounded border px-2 py-0.5 font-mono text-[11px] transition-colors ${repoQuery.split(/\s+/).includes(f) ? 'border-sky-300 bg-sky-50 text-sky-700 dark:border-sky-700 dark:bg-sky-900/20 dark:text-sky-300' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-sky-900/20 dark:hover:text-sky-300'}`}>
+                                {f}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Connector */}
+                      <div className="ml-2.5 h-4 w-px bg-slate-200 dark:bg-slate-700" />
+                      {/* Step 2 */}
+                      <div className="flex gap-3">
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${repoQuery.trim() ? 'bg-sky-600 text-white' : 'border border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'}`}>2</span>
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-xs ${repoQuery.trim() ? 'font-medium text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'}`}>
+                              Ask AI about the filtered repos
+                            </p>
+                            {!hasKey && (
+                              <div className={`relative flex items-center gap-1 ${freeRemaining === null ? 'group/free cursor-help' : ''}`}>
+                                {Array.from({ length: FREE_LIMIT }, (_, i) => (
+                                  <span key={i} className={`inline-block h-1.5 w-1.5 rounded-full transition-colors ${freeRemaining === null ? 'bg-slate-200 dark:bg-slate-700' : i < freeRemaining ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                                ))}
+                                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                  {freeRemaining === null ? `${FREE_LIMIT} free` : freeRemaining > 0 ? `${freeRemaining} free` : 'limit reached'}
+                                </span>
+                                {freeRemaining === null && (
+                                  <span className="pointer-events-none invisible absolute bottom-full left-0 z-50 mb-2 w-52 rounded bg-slate-800 px-2.5 py-2 opacity-0 shadow-lg transition-opacity group-hover/free:visible group-hover/free:opacity-100 dark:bg-slate-700">
+                                    <span className="block text-[11px] leading-snug text-white">Free quota requires a server API key (<code className="rounded bg-slate-700 px-1 font-mono text-[10px]">ANTHROPIC_API_KEY</code>, <code className="rounded bg-slate-700 px-1 font-mono text-[10px]">OPENAI_API_KEY</code>, etc.). Add your own key below to chat without limits.</span>
+                                    <span className="absolute left-3 top-full border-4 border-transparent border-t-slate-800 dark:border-t-slate-700" />
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ORG_INVENTORY_STARTER_CHIPS.map((chip) => (
+                              <button key={chip} type="button"
+                                disabled={!repoQuery.trim()}
+                                onClick={() => void append({ role: 'user', content: chip })}
+                                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${repoQuery.trim() ? 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' : 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-600'}`}>
+                                {chip}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {messages.map((msg, idx) => (
+                    <React.Fragment key={msg.id}>
+                      {contextNotices.filter((n) => n.afterIndex === idx).map((n, ni) => (
+                        <div key={`notice-${idx}-${ni}`} className="flex items-center gap-2 py-1">
+                          <div className="flex-1 border-t border-dashed border-slate-200 dark:border-slate-700" />
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{n.label}</span>
+                          <div className="flex-1 border-t border-dashed border-slate-200 dark:border-slate-700" />
+                        </div>
+                      ))}
+                      {msg.role === 'user' ? (
+                        <div className="flex justify-end">
+                          <div className="max-w-[80%] rounded-2xl bg-sky-600 px-4 py-2 text-sm text-white">{msg.content}</div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="max-w-[85%] rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+                            {msg.content ? (
+                              <div className="prose prose-sm max-w-none dark:prose-invert">{renderMarkdown(msg.content)}</div>
+                            ) : (
+                              <span className="animate-pulse text-slate-400">●</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  {/* Notices added after all current messages */}
+                  {contextNotices.filter((n) => n.afterIndex >= messages.length).map((n, ni) => (
+                    <div key={`notice-end-${ni}`} className="flex items-center gap-2 py-1">
+                      <div className="flex-1 border-t border-dashed border-slate-200 dark:border-slate-700" />
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{n.label}</span>
+                      <div className="flex-1 border-t border-dashed border-slate-200 dark:border-slate-700" />
+                    </div>
+                  ))}
+
+                  {/* Persistent suggestion chips — always visible, not just before first message */}
+                  {!isLoading && !(isInventoryPhase && showChips) && (
+                    <div className="flex flex-wrap gap-2 pt-1">
                       {starterChips.map((chip) => (
                         <button key={chip} type="button"
                           onClick={() => void append({ role: 'user', content: chip })}
@@ -630,39 +759,23 @@ export function ChatPanel({
                       ))}
                     </div>
                   )}
-
-                  {messages.map((msg) => {
-                    if (msg.role === 'user') {
-                      return (
-                        <div key={msg.id} className="flex justify-end">
-                          <div className="max-w-[80%] rounded-2xl bg-sky-600 px-4 py-2 text-sm text-white">{msg.content}</div>
-                        </div>
-                      )
-                    }
-                    return (
-                      <div key={msg.id} className="flex flex-col items-start gap-1">
-                        <div className="max-w-[85%] rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                          {msg.content ? (
-                            <div className="prose prose-sm max-w-none dark:prose-invert">{renderMarkdown(msg.content)}</div>
-                          ) : (
-                            <span className="animate-pulse text-slate-400">●</span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Error banner */}
-                {chatError && (
-                  <div className="mx-4 mb-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200">
-                    <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0">
-                      <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
-                    </svg>
-                    <span>{chatError.message || 'Something went wrong — please try again.'}</span>
-                  </div>
-                )}
+                {/* Error banner — only for errors that aren't handled by showing the key form */}
+                {chatError && (() => {
+                  const parsed = parseApiError(chatError.message)
+                  if (parsed?.code === 'NOT_CONFIGURED' || parsed?.code === 'FREE_LIMIT_REACHED') return null
+                  const displayMsg = parsed?.userMessage ?? chatError.message ?? 'Something went wrong — please try again.'
+                  return (
+                    <div className="mx-4 mb-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700/50 dark:bg-amber-900/20 dark:text-amber-200">
+                      <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0">
+                        <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                      </svg>
+                      <span>{displayMsg}</span>
+                    </div>
+                  )
+                })()}
 
                 {/* Input */}
                 <form onSubmit={handleSubmit} className="border-t border-slate-200 px-4 py-3 dark:border-slate-700">

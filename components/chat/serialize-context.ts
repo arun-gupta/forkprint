@@ -183,10 +183,18 @@ export function serializeOrgInventoryContext(
   const { maxRepos = 500, sortBy = 'stars' } = opts
   const sorted = sortInventoryRepos(inventory.results, sortBy).slice(0, maxRepos)
 
+  const sliceSummary = {
+    totalRepos: sorted.length,
+    archived: sorted.filter((r) => r.archived).length,
+    forks: sorted.filter((r) => r.isFork).length,
+    languages: [...new Set(sorted.map((r) => r.primaryLanguage).filter(Boolean))],
+  }
+
   const payload = {
     org: inventory.org,
     phase: 'inventory',
-    summary: inventory.summary,
+    summary: sliceSummary,
+    totalOrgRepos: inventory.results.length,
     sortedBy: sortBy,
     maxReposIncluded: maxRepos,
     repos: sorted.map((r) => ({
@@ -198,6 +206,7 @@ export function serializeOrgInventoryContext(
       pushedAt: r.pushedAt,
       archived: r.archived,
       isFork: r.isFork,
+      license: r.licenseSpdxId !== 'unavailable' ? r.licenseSpdxId : r.licenseName !== 'unavailable' ? r.licenseName : null,
       topics: r.topics,
       description: r.description,
     })),
@@ -205,7 +214,7 @@ export function serializeOrgInventoryContext(
 
   const text = [
     `# Org Inventory Context (pre-analysis)`,
-    `Organization: ${inventory.org} · ${inventory.results.length} repos fetched, analysis not yet run`,
+    `Organization: ${inventory.org} · showing top ${sorted.length} of ${inventory.results.length} repos by ${sortBy}, analysis not yet run`,
     '',
     '```json',
     JSON.stringify(payload, null, 2),

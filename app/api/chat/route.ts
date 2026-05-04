@@ -47,6 +47,22 @@ function resolveModel(provider: ProviderId, modelId: string, apiKey: string) {
   }
 }
 
+// Priority order: whichever server key is configured first wins.
+const SERVER_KEY_CANDIDATES: { env: string; provider: ProviderId; modelId: string }[] = [
+  { env: 'ANTHROPIC_API_KEY', provider: 'anthropic', modelId: PROVIDERS.anthropic.models[FREE_TIER_MODEL].id },
+  { env: 'OPENAI_API_KEY',    provider: 'openai',    modelId: PROVIDERS.openai.models[FREE_TIER_MODEL].id },
+  { env: 'GOOGLE_API_KEY',    provider: 'google',    modelId: PROVIDERS.google.models[FREE_TIER_MODEL].id },
+  { env: 'GROQ_API_KEY',      provider: 'groq',      modelId: PROVIDERS.groq.models[FREE_TIER_MODEL].id },
+]
+
+function resolveServerKey(): { provider: ProviderId; modelId: string; key: string } | null {
+  for (const candidate of SERVER_KEY_CANDIDATES) {
+    const key = process.env[candidate.env]
+    if (key) return { provider: candidate.provider, modelId: candidate.modelId, key }
+  }
+  return null
+}
+
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -78,6 +94,12 @@ function buildSystemPrompt(contextType: 'repos' | 'org', context: string): strin
     '## Analysis Data',
     context,
   ].join('\n')
+}
+
+export async function GET() {
+  const serverConfig = resolveServerKey()
+  if (!serverConfig) return Response.json({ configured: false })
+  return Response.json({ configured: true, provider: serverConfig.provider, modelId: serverConfig.modelId })
 }
 
 export async function POST(request: Request) {
@@ -120,8 +142,8 @@ export async function POST(request: Request) {
     modelId = reqModel ?? PROVIDERS[provider].models[FREE_TIER_MODEL].id
     resolvedKey = apiKey!.trim()
   } else {
-    const serverKey = process.env.ANTHROPIC_API_KEY
-    if (!serverKey) {
+    const serverConfig = resolveServerKey()
+    if (!serverConfig) {
       return Response.json(
         { error: { code: 'NOT_CONFIGURED', message: "AI chat isn't available — please provide an API key." } },
         { status: 503 },
@@ -142,9 +164,9 @@ export async function POST(request: Request) {
       )
     }
     freeUsage.set(username, usedCount + 1)
-    provider = FREE_TIER_PROVIDER
-    modelId = PROVIDERS[FREE_TIER_PROVIDER].models[FREE_TIER_MODEL].id
-    resolvedKey = serverKey
+    provider = serverConfig.provider
+    modelId = serverConfig.modelId
+    resolvedKey = serverConfig.key
   }
 
   const model = resolveModel(provider, modelId, resolvedKey)
@@ -175,7 +197,7 @@ export async function POST(request: Request) {
       }
       if (msg.includes('429')) return 'Too many requests — please wait a moment and try again.'
       if (msg.includes('too large') || msg.includes('context_length')) {
-        return 'This analysis is too large to chat about. Try reducing the repo count using the slider.'
+        return 'This analysis is too large to chat about. Try narrowing the filter to fewer repos.'
       }
       return 'Something went wrong — please try again in a moment.'
     },
